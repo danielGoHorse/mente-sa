@@ -1,9 +1,9 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
-import { HomePage } from './home.page';
-import { HomePageRoutingModule } from './home-routing.module';
+import { IonicModule } from '@ionic/angular';
+import { MedicalContactPageRoutingModule } from './medical-contact-routing.module';
+import { MedicalContactPage } from './medical-contact.page';
 import { ComponentModule } from 'src/app/components/component.module';
 
 
@@ -14,13 +14,13 @@ import { ComponentModule } from 'src/app/components/component.module';
     CommonModule,
     FormsModule,
     IonicModule,
-    HomePageRoutingModule,
+    MedicalContactPageRoutingModule,
     ComponentModule
-    
   ],
   declarations: [
-    HomePage,
-    
+    MedicalContactPage,
+
   ]
 })
-export class HomePageModule {}
+export class MedicalContactPageModule {
+}

@@ -27,6 +27,42 @@ const routes: Routes = [
     path: 'reset-password',
     loadChildren: () => import('./pages/reset-password/reset-password.module').then( m => m.ResetPasswordPageModule)
   },
+  {
+    path: 'dashboard',
+    loadChildren: () => import('./pages/dashboard/dashboard.module').then( m => m.DashboardPageModule)
+  },
+  {
+    path: 'medical-contact',
+    loadChildren: () => import('./pages/medical-contact/medical-contact.module').then( m => m.MedicalContactPageModule)
+  },
+  {
+    path: 'tips',
+    loadChildren: () => import('./pages/tips/tips.module').then( m => m.TipsPageModule)
+  },
+  {
+    path: 'settings',
+    loadChildren: () => import('./pages/settings/settings.module').then( m => m.SettingsPageModule)
+  },
+  {
+    path: 'main-contact',
+    loadChildren: () => import('./pages/main-contact/main-contact.module').then( m => m.MainContactPageModule)
+  },
+  {
+    path: 'notes',
+    loadChildren: () => import('./pages/notes/notes.module').then( m => m.NotesPageModule)
+  },
+  {
+    path: 'mood',
+    loadChildren: () => import('./pages/mood/mood.module').then( m => m.MoodPageModule)
+  },
+  {
+    path: 'lessons',
+    loadChildren: () => import('./pages/lessons/lessons.module').then( m => m.LessonsPageModule)
+  },
+  {
+    path: 'relaxation-center',
+    loadChildren: () => import('./pages/relaxation-center/relaxation-center.module').then( m => m.RelaxationCenterPageModule)
+  },
 ];
 
 @NgModule({
