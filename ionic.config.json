@@ -1,0 +1,7 @@
+{
+  "name": "mente-sa",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
