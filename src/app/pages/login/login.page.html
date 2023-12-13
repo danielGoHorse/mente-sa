@@ -1,0 +1,50 @@
+<ion-content [fullscreen]="true">
+  <div class="header">
+    <ion-title class="title">Bem Vindo de Volta</ion-title>
+    <p class="subTitle">Acesse sua conta</p>
+  </div>
+
+  <form [formGroup]="loginForm">
+    <div class="ion-padding">
+      <ion-item>
+        <ion-input formControlName="email" placeholder="email" class="input"></ion-input>
+        <ion-icon name="person-outline"></ion-icon>
+      </ion-item>
+      <div class="error ion-padding" *ngIf="this.loginForm.controls?.['email'].touched 
+      && this.loginForm.controls?.['email'].invalid">
+        <ion-text *ngIf="errorControl.email.errors?.required">
+          Email é obrigatório
+        </ion-text>
+        <ion-text *ngIf="errorControl.email.errors?.pattern">
+          Email precisa ser válido
+        </ion-text>
+      </div>
+      <ion-item>
+        <ion-input formControlName="password" placeholder="senha" class="input"></ion-input>
+        <ion-icon name="lock-closed-outline"></ion-icon>
+      </ion-item>
+      <div *ngIf="this.loginForm.controls?.['password'].touched 
+      && this.loginForm.controls?.['password'].invalid">
+        <ion-text *ngIf="errorControl.password.errors?.required">
+          Senha é obrigatória
+        </ion-text>
+        <ion-text *ngIf="errorControl.password.errors?.pattern">
+          Senha precisa de no min. 8 digitos contendo
+          Letras maiuscula, minuscula e caracter especial
+          
+        </ion-text>
+      </div>
+      <div class="forgotPassword">
+        <a [routerLink]="['/reset-password']"  style="color:#FFC33F">Esqueceu a senha</a>
+      </div>
+      <div class="signupLink">
+        <p> É novo por aqui?<a [routerLink]="['/signup']"  style="color:#FFC33F">Registrar-se</a></p>
+      </div>
+    </div>
+    <ion-fab vertical="bottom" horizontal="end" style="margin-bottom: 30px;">
+      <ion-fab-button (click)="login()">
+        <ion-icon name="chevron-forward"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+  </form>
+</ion-content>
