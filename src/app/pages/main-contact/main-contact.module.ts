@@ -7,13 +7,15 @@ import { IonicModule } from '@ionic/angular';
 import { MainContactPageRoutingModule } from './main-contact-routing.module';
 
 import { MainContactPage } from './main-contact.page';
+import { ComponentModule } from 'src/app/components/component.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    MainContactPageRoutingModule
+    MainContactPageRoutingModule,
+    ComponentModule
   ],
   declarations: [MainContactPage]
 })

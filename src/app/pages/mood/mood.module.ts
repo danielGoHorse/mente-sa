@@ -7,13 +7,15 @@ import { IonicModule } from '@ionic/angular';
 import { MoodPageRoutingModule } from './mood-routing.module';
 
 import { MoodPage } from './mood.page';
+import { ComponentModule } from 'src/app/components/component.module';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    MoodPageRoutingModule
+    MoodPageRoutingModule,
+    ComponentModule
   ],
   declarations: [MoodPage]
 })

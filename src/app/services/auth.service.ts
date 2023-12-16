@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 
 @Injectable({
@@ -6,10 +6,20 @@ import { AngularFireAuth } from '@angular/fire/compat/auth';
 })
 export class AuthService {
 
+  showTabEmitter = new EventEmitter<boolean>();
+
   constructor(private afa: AngularFireAuth) { }
 
   async loginUser(email: string, password: string){
-    return this.afa.signInWithEmailAndPassword(email,password);
+
+    const user = this.afa.signInWithEmailAndPassword(email,password);
+    if(user){
+      this.showTabEmitter.emit(true)
+      return user;
+    }
+
+
+    
   }
   
   async registerUser(email: string, password: string){

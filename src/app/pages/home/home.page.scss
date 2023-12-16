@@ -9,7 +9,22 @@
 }
 
 .card-button{
-  height: 70px;
+  height: 60px;
     width: 100%;
-    --border-radius:40px;
+    --border-radius:2px 40px 2px 40px ;
+ 
+
 }
+
+ion-button{
+  // --background:#e2c4e2;
+  --background:hsl(300, 34%, 83%) !important;
+  // --box-shadow:transparent;
+
+  
+}
+
+ion-title{
+  --background-image: url('../../../assets/img/papel.png');
+}
+// E:\workspace\mente-sa\src\assets\img\papel.png
