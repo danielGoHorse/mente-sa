@@ -1,9 +1,63 @@
 <app-header></app-header>
-
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">main-contact</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <form>
+    <div class="ion-padding">
+      <ion-grid>
+        <ion-row class="title">
+          <ion-col></ion-col>
+          <ion-col size="auto">
+            <div style="width: 180px ;text-align: center"> Registre seu anjo da guarda</div>
+          </ion-col>
+          <ion-col></ion-col>
+        </ion-row>
+        <ion-row style="margin-top: 15%;">
+          <ion-col>
+            <ion-item>
+              <ion-input label="Nome" class="nome"></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-input label="E-mail" class="email"></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-input label="Telefone" class="telefone"></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-select label="Relação" placeholder="Relação">
+                <ion-select-option value="familia">Familiar</ion-select-option>
+                <ion-select-option value="amigo">Amigo</ion-select-option>
+                <ion-select-option value="namorada">Namorado ou Namorada</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <ion-button color="primary">Cadastrar</ion-button>
+        </ion-col>
+        <ion-col>
+          <ion-button color="primary">Voltar</ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+    
+
+  </form>
+  
 </ion-content>
+<app-panic-button></app-panic-button>
