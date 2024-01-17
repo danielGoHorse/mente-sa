@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { MainContact } from 'src/app/model/main-contact';
+import { MainContactService } from 'src/app/services/main-contact.service';
 import { MedicalContactService } from 'src/app/services/medical-contact.service';
 
 @Component({
@@ -8,9 +11,18 @@ import { MedicalContactService } from 'src/app/services/medical-contact.service'
 })
 export class MainContactPage implements OnInit {
 
-  constructor(private readonly service: MedicalContactService) { }
+  mainContacts: MainContact;
+  private mainContactSubscription: Subscription;
+
+  constructor(private readonly service: MainContactService) {
+    this.mainContactSubscription = this.service.getMed().subscribe(data => {
+      this.mainContacts = data
+    })
+   }
 
   ngOnInit() {
   }
+
+
 
 }
