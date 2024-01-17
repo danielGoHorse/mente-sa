@@ -18,29 +18,12 @@ export class MedicalContactService {
     private httpCliente: HttpClient,
   ) { }
 
-  getMainContact(): Observable<MedicalResponse<MedicalContact[]>> {
-    return this.httpCliente.get<MedicalResponse<MedicalContact[]>>(this.apiUrl);
-  }
-
-  getAllMainContact(): Observable<MedicalContact> {
-    return this.httpCliente.get(this.apiUrl).pipe(
-      map((res: any) => {
-        this.medContact = res;
-        return this.medContact;
-
-      })
-    )
-  }
-
-  getMed(){
+  getMed() {
     return this.httpCliente.get(this.apiUrl).pipe(
       map(res => {
         this.medContact = res;
-        console.log("this.medContact",this.medContact)
         return this.medContact;
-     
-
       })
     )
-    }
+  }
 }

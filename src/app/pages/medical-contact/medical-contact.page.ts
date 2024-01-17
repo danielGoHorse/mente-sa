@@ -10,24 +10,17 @@ import { MedicalContactService } from 'src/app/services/medical-contact.service'
 })
 export class MedicalContactPage implements OnInit {
 
-  listMeds = {};
+  listMeds: MedicalContact;
   private listMedSubscription: Subscription;
 
-  // listMed: MedicalContact[] = [];
-  allList: any;
-
   constructor(private service: MedicalContactService) {
-
     this.listMedSubscription = this.service.getMed().subscribe(data => {
-      this.listMeds = data;
+      this.listMeds = data
     })
+  }
 
+  ngOnInit(): void {
 
-
-    }
-
-  ngOnInit(): void{
- 
   }
 
 
