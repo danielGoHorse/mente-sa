@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false,
+  baseApiUrl: `http://localhost:9092/mentesa`,
   firebaseConfig: {
     apiKey: "AIzaSyAYYoy338OwGryUVTZNnYYMynEaBt-VHuw",
     authDomain: "blue-monkey-14390.firebaseapp.com",

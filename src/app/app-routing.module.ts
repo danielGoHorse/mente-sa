@@ -8,7 +8,7 @@ const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'landing',
+    redirectTo: 'login',
     pathMatch: 'full'
   },
   {
@@ -34,6 +34,10 @@ const routes: Routes = [
   {
     path: 'medical-contact',
     loadChildren: () => import('./pages/medical-contact/medical-contact.module').then( m => m.MedicalContactPageModule)
+  },
+  {
+    path: 'medical-register',
+    loadChildren: () => import('./pages/medical-contact/medical-register/medical-register.module').then( m => m.MedicalRegisterPageModule)
   },
   {
     path: 'tips',

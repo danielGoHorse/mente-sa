@@ -1,63 +1,51 @@
 <app-header></app-header>
 <ion-content [fullscreen]="true">
-  <form>
-    <div class="ion-padding">
+    <div class="container1">
+        <div class="card">
+          <ion-img src="assets/img/blueTotal.png"></ion-img>
+        </div>
+        
+      </div>
+      <div class="container1">
+        <ion-grid>
+          <ion-row>
+            <ion-col>
+              <ion-title>
+                Você não está sozinho
+              </ion-title>
+            </ion-col>
+           
+          </ion-row>
+        </ion-grid>
+      </div>
+        <!-- <ion-list *ngIf="!medicalContact.lenght"> -->
+  <ion-list>
+    <ion-item *ngFor="let item of [0]">
+      <ion-avatar slot="start">
+        <ion-skeleton-text animated></ion-skeleton-text>
+      </ion-avatar>
+      <ion-label>
+        <h3>
+          <ion-skeleton-text animated style="width: 50%;"></ion-skeleton-text>
+        </h3>
+        <p>
+          <ion-skeleton-text animated style="width: 50%;"></ion-skeleton-text>
+        </p>
+        <p>
+          <ion-skeleton-text animated style="width: 50%;"></ion-skeleton-text>
+        </p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
       <ion-grid>
-        <ion-row class="title">
-          <ion-col></ion-col>
-          <ion-col size="auto">
-            <div style="width: 180px ;text-align: center"> Registre seu anjo da guarda</div>
-          </ion-col>
-          <ion-col></ion-col>
-        </ion-row>
-        <ion-row style="margin-top: 15%;">
-          <ion-col>
-            <ion-item>
-              <ion-input label="Nome" class="nome"></ion-input>
-            </ion-item>
-          </ion-col>
-        </ion-row>
         <ion-row>
-          <ion-col>
-            <ion-item>
-              <ion-input label="E-mail" class="email"></ion-input>
-            </ion-item>
+          <ion-col style="text-align: center;">
+            <ion-button style="--border-color: #25a139; color:#25a139" fill="outline" [routerLink]="['/medical-register']">Add</ion-button>
           </ion-col>
-        </ion-row>
-        <ion-row>
-          <ion-col>
-            <ion-item>
-              <ion-input label="Telefone" class="telefone"></ion-input>
-            </ion-item>
-          </ion-col>
-        </ion-row>
-        <ion-row>
-          <ion-col>
-            <ion-item>
-              <ion-select label="Relação" placeholder="Relação">
-                <ion-select-option value="familia">Familiar</ion-select-option>
-                <ion-select-option value="amigo">Amigo</ion-select-option>
-                <ion-select-option value="namorada">Namorado ou Namorada</ion-select-option>
-              </ion-select>
-            </ion-item>
+          <ion-col style="text-align: center;">
+            <ion-button style="--border-color: #e21b1b; color:#e21b1b" fill="outline"  [routerLink]="['/home']">Voltar</ion-button>
           </ion-col>
         </ion-row>
       </ion-grid>
-    </div>
-
-    <ion-grid>
-      <ion-row>
-        <ion-col>
-          <ion-button color="primary">Cadastrar</ion-button>
-        </ion-col>
-        <ion-col>
-          <ion-button color="primary">Voltar</ion-button>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-    
-
-  </form>
-  
-</ion-content>
 <app-panic-button></app-panic-button>
+</ion-content>

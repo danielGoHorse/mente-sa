@@ -1,9 +1,33 @@
 <app-header></app-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">mood</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <div class="container1">
+    <div class="card">
+      <ion-img src="assets/img/blueTotal.png"></ion-img>
+    </div>
+    
+  </div>
+  <div class="container1">
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <ion-title>
+            Você não está sozinho
+          </ion-title>
+        </ion-col>
+       
+      </ion-row>
+    </ion-grid>
+  </div>
+  <ion-grid>
+    <ion-row>
+      <ion-col style="text-align: center;">
+        <ion-button style="--border-color: #25a139; color:#25a139" fill="outline" [routerLink]="['/medical-register']">Add</ion-button>
+      </ion-col>
+      <ion-col style="text-align: center;">
+        <ion-button style="--border-color: #e21b1b; color:#e21b1b" fill="outline"  [routerLink]="['/home']">Voltar</ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <app-panic-button></app-panic-button>
 </ion-content>

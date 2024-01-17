@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { MedicalContact } from 'src/app/model/medical-contact';
+import { MedicalContactService } from 'src/app/services/medical-contact.service';
 
 @Component({
   selector: 'app-medical-contact',
@@ -7,9 +10,26 @@ import { Component, OnInit } from '@angular/core';
 })
 export class MedicalContactPage implements OnInit {
 
-  constructor() { }
+  listMeds = {};
+  private listMedSubscription: Subscription;
 
-  ngOnInit() {
+  // listMed: MedicalContact[] = [];
+  allList: any;
+
+  constructor(private service: MedicalContactService) {
+
+    this.listMedSubscription = this.service.getMed().subscribe(data => {
+      this.listMeds = data;
+    })
+
+
+
+    }
+
+  ngOnInit(): void{
+ 
   }
+
+
 
 }

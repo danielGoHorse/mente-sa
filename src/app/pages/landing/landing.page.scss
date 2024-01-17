@@ -1,4 +1,4 @@
-.container{
+.container {
     text-align: center;
     display: block;
     margin: auto;
@@ -6,8 +6,12 @@
     width: 50%;
 }
 
-.container-text{
+.container-text {
     text-align: center;
-     margin-top: 50%;
+    margin-top: 50%;
 }
 
+ion-button {
+    height: 60px;
+    width: 180px;
+}

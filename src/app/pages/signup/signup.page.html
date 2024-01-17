@@ -8,7 +8,7 @@
     <div class="ion-padding">
       <ion-item>
         <ion-input formControlName="fullName" placeholder="usuário" class="input" [required]="true"></ion-input>
-        <ion-icon name="person-outline"></ion-icon>
+        <ion-icon name="person-outline" slot="end"></ion-icon>
       </ion-item>
       <div *ngIf="this.regForm.controls?.['fullName'].touched 
       && this.regForm.controls?.['fullName'].invalid">
@@ -18,7 +18,7 @@
       </div>
       <ion-item>
         <ion-input formControlName="email" placeholder="email" class="input"></ion-input>
-        <ion-icon name="person-outline"></ion-icon>
+        <ion-icon name="mail-outline" slot="end"></ion-icon>
       </ion-item>
       <div class="error ion-padding" *ngIf="this.regForm.controls?.['email'].touched 
       && this.regForm.controls?.['email'].invalid">
@@ -31,7 +31,7 @@
       </div>
       <ion-item>
         <ion-input formControlName="password" placeholder="senha" class="input"></ion-input>
-        <ion-icon name="lock-closed-outline"></ion-icon>
+        <ion-icon name="lock-closed-outline" slot="end"></ion-icon>
       </ion-item>
       <div *ngIf="this.regForm.controls?.['password'].touched 
       && this.regForm.controls?.['password'].invalid">
@@ -45,16 +45,18 @@
         </ion-text>
       </div>
       <div class="resetPassword">
-        <a [routerLink]="['/reset-password']" style="color:#FFC33F">Esqueceu a senha</a>
+        <a [routerLink]="['/reset-password']" style="color:#000">Esqueceu a senha</a>
       </div>
       <div class="loginLink">
-        <p> Já é Cadastrado?<a [routerLink]="['/login']" style="color:#FFC33F">Login</a></p>
+        <p> Já é Cadastrado?<a [routerLink]="['/login']" style="color:#000">Login</a></p>
       </div>
     </div>
-    <ion-fab vertical="bottom" horizontal="end" style="margin-bottom: 30px;">
-      <ion-fab-button (click)="singUp()">
-        <ion-icon name="chevron-forward"></ion-icon>
-      </ion-fab-button>
+    <ion-fab horizontal="center" style="margin-bottom: 10px;">
+      <ion-button  shape="round" color="tertiary" (click)="singUp()">
+        <ion-label>Cadastrar ></ion-label>
+      </ion-button>
     </ion-fab>
+
+ 
   </form>
 </ion-content>

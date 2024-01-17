@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { MedicalContactService } from 'src/app/services/medical-contact.service';
 
 @Component({
   selector: 'app-main-contact',
@@ -7,7 +8,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class MainContactPage implements OnInit {
 
-  constructor() { }
+  constructor(private readonly service: MedicalContactService) { }
 
   ngOnInit() {
   }

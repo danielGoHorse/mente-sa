@@ -1,13 +1,65 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>medical-register</ion-title>
-  </ion-toolbar>
-</ion-header>
-
+<app-header></app-header>
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">medical-register</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <form>
+    <div class="ion-padding">
+      <ion-grid>
+        <ion-row class="title">
+          <ion-col></ion-col>
+          <ion-col size="auto">
+            <div style="width: 180px"> Registre o profissional que lhe acompanha</div>
+          </ion-col>
+          <ion-col></ion-col>
+        </ion-row>
+        <ion-row style="margin-top: 15%;">
+          <ion-col>
+            <ion-item>
+              <ion-input label="Nome" class="nome"></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-input label="E-mail" class="email"></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-input label="Telefone" class="telefone"></ion-input>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col>
+            <ion-item>
+              <ion-select label="Especialidade" placeholder="Especialidade">
+                <ion-select-option value="psiquiatra">Psiquiatria</ion-select-option>
+                <ion-select-option value="psicologa">Psicologia</ion-select-option>
+                <ion-select-option value="mentor">Mentoria</ion-select-option>
+                <ion-select-option value="coach">Coach</ion-select-option>
+                <ion-select-option value="ld-relig">Líder Religioso</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <ion-grid>
+      <ion-row>
+        <ion-col>
+          <ion-button style="--border-color: #25a139;" fill="outline">Cadastrar</ion-button>
+        </ion-col>
+        <ion-col>
+          <ion-button style="--border-color: #25a139;" fill="outline"  [routerLink]="['/medical-contact']">Voltar</ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+    
+
+  </form>
+  
 </ion-content>
+<app-panic-button></app-panic-button>

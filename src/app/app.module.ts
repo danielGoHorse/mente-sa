@@ -10,6 +10,8 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { environment } from 'src/environments/environment';
 import { ComponentModule } from './components/component.module';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { HttpClientModule } from '@angular/common/http';
 
 
 @NgModule({
@@ -20,7 +22,9 @@ import { ComponentModule } from './components/component.module';
   imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, 
     AngularFireModule,
     ComponentModule,
+    HttpClientModule,
     AngularFireAuthModule,
+    FontAwesomeModule,
     AngularFireModule.initializeApp(environment.firebaseConfig)],
   providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
   bootstrap: [AppComponent],

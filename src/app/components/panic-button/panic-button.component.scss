@@ -10,12 +10,16 @@
 
   
 
-  ion-button{
-    --background:transparent;
-    --box-shadow:transparent;
+  // ion-button{
+  //   --background:transparent;
+  //   --box-shadow:transparent;
 
     
-  }
+  // }
+  ion-button {
+    height: 60px;
+    width: 180px;
+}
 
   img{
     height: 194px;

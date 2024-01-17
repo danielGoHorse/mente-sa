@@ -8,6 +8,7 @@ import { MainContactPageRoutingModule } from './main-contact-routing.module';
 
 import { MainContactPage } from './main-contact.page';
 import { ComponentModule } from 'src/app/components/component.module';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   imports: [

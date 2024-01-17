@@ -1,6 +1,6 @@
 <ion-content [fullscreen]="true">
   <div class="header">
-    <ion-title class="title">Bem Vindo de Volta</ion-title>
+    <ion-title class="title">Bem Vindo</ion-title>
     <p class="subTitle">Acesse sua conta</p>
   </div>
 
@@ -8,7 +8,7 @@
     <div class="ion-padding">
       <ion-item>
         <ion-input formControlName="email" placeholder="email" class="input"></ion-input>
-        <ion-icon name="person-outline"></ion-icon>
+        <ion-icon name="mail-outline" slot="end"></ion-icon>
       </ion-item>
       <div class="error ion-padding" *ngIf="this.loginForm.controls?.['email'].touched 
       && this.loginForm.controls?.['email'].invalid">
@@ -21,7 +21,7 @@
       </div>
       <ion-item>
         <ion-input formControlName="password" placeholder="senha" class="input"></ion-input>
-        <ion-icon name="lock-closed-outline"></ion-icon>
+        <ion-icon name="lock-closed-outline" slot="end"></ion-icon>
       </ion-item>
       <div *ngIf="this.loginForm.controls?.['password'].touched 
       && this.loginForm.controls?.['password'].invalid">
@@ -35,16 +35,26 @@
         </ion-text>
       </div>
       <div class="forgotPassword">
-        <a [routerLink]="['/reset-password']"  style="color:#FFC33F">Esqueceu a senha</a>
+        <a [routerLink]="['/reset-password']"  style="color:#000">Esqueceu a senha</a>
       </div>
-      <div class="signupLink">
-        <p> É novo por aqui?<a [routerLink]="['/signup']"  style="color:#FFC33F">Registrar-se</a></p>
-      </div>
+     
     </div>
-    <ion-fab vertical="bottom" horizontal="end" style="margin-bottom: 30px;">
-      <ion-fab-button (click)="login()">
-        <ion-icon name="chevron-forward"></ion-icon>
-      </ion-fab-button>
+    <ion-fab horizontal="center" style="margin-bottom: 10px;">
+      <ion-button  shape="round" color="tertiary"  (click)="login()">
+        <ion-label>Logar ></ion-label>
+      </ion-button>
     </ion-fab>
+    <div class="signupLink" style="text-align: center;">
+      <p> É novo por aqui? 
+    <br>
+  </p>
+    </div>
+    <div style="margin-top: 100px;">
+      <ion-fab horizontal="center" style="margin-bottom: 10px;">
+        <ion-button  shape="round" color="tertiary"  [routerLink]="['/signup']">
+          <ion-label>Cadastrar ></ion-label>
+        </ion-button>
+      </ion-fab>
+    </div>
   </form>
 </ion-content>
