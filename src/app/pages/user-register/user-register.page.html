@@ -1,0 +1,85 @@
+<ion-content [fullscreen]="true">
+  <div class="container">
+    <app-header></app-header>
+  <form [formGroup]="regForm" novalidate>
+    <div class="ion-padding">
+      <ion-item>
+        <ion-input formControlName="fullName" placeholder="usuário" class="input" [required]="true"></ion-input>
+        <ion-icon name="person-outline" slot="end"></ion-icon>
+      </ion-item>
+      <div *ngIf="this.regForm.controls?.['fullName'].touched 
+      && this.regForm.controls?.['fullName'].invalid">
+        <ion-text *ngIf="errorControl.fullName.errors?.required">
+          Nome é obrigatório
+        </ion-text>
+      </div>
+      <ion-item>
+        <ion-input formControlName="email" placeholder="email" class="input"></ion-input>
+        <ion-icon name="mail-outline" slot="end"></ion-icon>
+      </ion-item>
+      <div class="error ion-padding" *ngIf="this.regForm.controls?.['email'].touched 
+      && this.regForm.controls?.['email'].invalid">
+        <ion-text *ngIf="errorControl.email.errors?.required">
+          Email é obrigatório
+        </ion-text>
+        <ion-text *ngIf="errorControl.email.errors?.pattern">
+          Email precisa ser válido
+        </ion-text>
+      </div>
+      <ion-item>
+        <ion-input formControlName="telefone" placeholder="telefone" class="input"></ion-input>
+        <ion-icon name="call-outline" slot="end"></ion-icon>
+      </ion-item>
+      <ion-item>
+        <ion-input formControlName="password" placeholder="senha" class="input"></ion-input>
+        <ion-icon name="lock-closed-outline" slot="end"></ion-icon>
+      </ion-item>
+      <div *ngIf="this.regForm.controls?.['password'].touched 
+      && this.regForm.controls?.['password'].invalid">
+        <ion-text *ngIf="errorControl.password.errors?.required">
+          Senha é obrigatória
+        </ion-text>
+        <ion-text *ngIf="errorControl.password.errors?.pattern">
+          Senha precisa de no min. 8 digitos contendo
+          Letras maiuscula, minuscula e caracter especial
+
+        </ion-text>
+      </div>
+      <ion-item>
+        <ion-button fill="clear" [routerLink]="['/main-contact/register']"><ion-icon slot="start"
+            name="add-outline"></ion-icon>Cadastrar Anjo-da-Guarda</ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-button fill="clear" [routerLink]="['/main-contact/register']"><ion-icon slot="start"
+            name="add-outline"></ion-icon>Cadastrar Contatos Médicos</ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-button fill="clear" [routerLink]="['/preferences/music-register']"><ion-icon slot="start"
+            name="add-outline"></ion-icon>Cadastrar Músicas Preferidas</ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-button fill="clear" [routerLink]="['/preferences/places-register']"><ion-icon slot="start"
+            name="add-outline"></ion-icon>Cadastrar Lugares Preferidos</ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-button fill="clear" [routerLink]="['/preferences/photo-register']"><ion-icon slot="start"
+            name="add-outline"></ion-icon>Cadastrar Imagens Preferidas</ion-button>
+      </ion-item>
+
+
+    </div>
+    <ion-grid>
+      <ion-row>
+        <ion-col style="text-align: center;">
+          <ion-button class="action-button" style="--border-color: #25a139; color:#25a139" fill="outline" [routerLink]="['/home']">Add</ion-button>
+        </ion-col>
+        <ion-col style="text-align: center;">
+          <ion-button  class="action-button" style="--border-color: #e21b1b; color:#e21b1b" fill="outline"  [routerLink]="['/home']">Voltar</ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+
+  </form>
+</div>
+</ion-content>

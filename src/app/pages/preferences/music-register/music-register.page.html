@@ -1,0 +1,37 @@
+<!-- <ion-content [fullscreen]="true">
+  <div class="header">
+    <ion-title class="title">Bem Vindo</ion-title>
+    <p class="subTitle">Registre seu Anjo-da-Guarda</p>
+  </div>
+
+  <form [formGroup]="musicForm" novalidate>
+    <div class="ion-padding">
+      <ion-item>
+        <ion-input formControlName="fullName" placeholder="usuário" class="input" [required]="true"></ion-input>
+        <ion-icon name="person-outline" slot="end"></ion-icon>
+      </ion-item>
+      <div *ngIf="this.regForm.controls?.['fullName'].touched 
+      && this.regForm.controls?.['fullName'].invalid">
+        <ion-text *ngIf="errorControl.fullName.errors?.required">
+          Nome é obrigatório
+        </ion-text>
+      </div>
+      <ion-item>
+        <ion-input formControlName="email" placeholder="email" class="input"></ion-input>
+        <ion-icon name="mail-outline" slot="end"></ion-icon>
+      </ion-item>
+      <ion-item>
+        <ion-input formControlName="telefone" placeholder="telefone" class="input"></ion-input>
+        <ion-icon name="call-outline" slot="end"></ion-icon>
+      </ion-item>
+
+    </div>
+    <ion-fab horizontal="center" style="margin-bottom: 10px;">
+      <ion-button  shape="round" color="tertiary" (click)="singUp()">
+        <ion-label>Cadastrar ></ion-label>
+      </ion-button>
+    </ion-fab>
+
+
+  </form>
+</ion-content> -->

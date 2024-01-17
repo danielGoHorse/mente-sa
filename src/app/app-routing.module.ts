@@ -36,10 +36,6 @@ const routes: Routes = [
     loadChildren: () => import('./pages/medical-contact/medical-contact.module').then( m => m.MedicalContactPageModule)
   },
   {
-    path: 'medical-register',
-    loadChildren: () => import('./pages/medical-contact/medical-register/medical-register.module').then( m => m.MedicalRegisterPageModule)
-  },
-  {
     path: 'tips',
     loadChildren: () => import('./pages/tips/tips.module').then( m => m.TipsPageModule)
   },
@@ -66,6 +62,14 @@ const routes: Routes = [
   {
     path: 'relaxation-center',
     loadChildren: () => import('./pages/relaxation-center/relaxation-center.module').then( m => m.RelaxationCenterPageModule)
+  },
+  {
+    path: 'user-register',
+    loadChildren: () => import('./pages/user-register/user-register.module').then( m => m.UserRegisterPageModule)
+  },
+  {
+    path: 'preferences',
+    loadChildren: () => import('./pages/preferences/preferences.module').then( m => m.PreferencesModule)
   },
 ];
 

@@ -1,11 +1,25 @@
-ion-button{
-    margin-left: 60%;
-    --border-radius: 50%;
-    width: 50px;
-    height: 50px;
+// ion-button{
+//     margin-left: 60%;
+//     --border-radius: 50%;
+//     width: 50px;
+//     height: 50px;
     
-}
+// }
 
-ion-toolbar{
-    --background: #79f0e0;
-}
+// ion-toolbar{
+//     --background: #79f0e0;
+// }
+
+.container {
+    text-align: center;
+   padding: 0px 10px 0px 10px;
+  //  margin: 10px 10px 0px 10px;
+
+  } 
+.avatar {
+    vertical-align: middle;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #8c8c8c;
+    border-radius: 50%;
+  }

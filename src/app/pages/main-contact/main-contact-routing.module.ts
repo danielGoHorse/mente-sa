@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 import { MainContactPage } from './main-contact.page';
+import { MainRegisterPage } from './main-register/main-register.page';
 
 const routes: Routes = [
   {
@@ -9,9 +10,10 @@ const routes: Routes = [
     component: MainContactPage
   },
   {
-    path: 'main-register',
-    loadChildren: () => import('./main-register/main-register.module').then( m => m.MainRegisterPageModule)
+    path: 'register',
+    component: MainRegisterPage
   }
+ 
 ];
 
 @NgModule({

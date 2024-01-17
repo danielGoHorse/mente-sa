@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 import { MedicalContactPage } from './medical-contact.page';
+import { MedicalRegisterPage } from './medical-register/medical-register.page';
 
 const routes: Routes = [
   {
@@ -10,8 +11,7 @@ const routes: Routes = [
   },
   {
     path: 'medical-register',
-    loadChildren: () => import('./medical-register/medical-register.module').then( m => m.MedicalRegisterPageModule)
-  }
+    component: MedicalRegisterPage  }
 ];
 
 @NgModule({
