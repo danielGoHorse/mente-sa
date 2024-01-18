@@ -18,7 +18,7 @@ export class MainContactService {
   ) { }
 
   getMed() {
-    return this.httpCliente.get(this.apiUrl).pipe(
+    return this.httpCliente.get(`${this.apiUrl}consultaContatoPrincipal`).pipe(
       map(res => {
         this.mainContact = res;
         return this.mainContact;

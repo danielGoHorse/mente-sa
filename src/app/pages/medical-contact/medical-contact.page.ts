@@ -16,6 +16,7 @@ export class MedicalContactPage implements OnInit {
   constructor(private service: MedicalContactService) {
     this.listMedSubscription = this.service.getMed().subscribe(data => {
       this.listMeds = data
+     
     })
   }
 

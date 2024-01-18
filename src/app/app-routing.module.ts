@@ -71,6 +71,10 @@ const routes: Routes = [
     path: 'preferences',
     loadChildren: () => import('./pages/preferences/preferences.module').then( m => m.PreferencesModule)
   },
+  {
+    path: 'contacts',
+    loadChildren: () => import('./pages/contacts/contacts.module').then( m => m.ContactsPageModule)
+  },
 ];
 
 @NgModule({

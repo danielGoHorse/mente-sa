@@ -1,10 +1,7 @@
 <app-header></app-header>
 <ion-content [fullscreen]="true">
     <div class="container1">
-        <div class="card">
-          <ion-img src="assets/img/blueTotal.png"></ion-img>
-        </div>
-        
+          
       </div>
       <div class="container1">
         <ion-grid>
@@ -37,7 +34,6 @@
       </ion-label>
     </ion-item>
   </ion-list>
-  <ion-list>
     <ion-item-sliding *ngFor="let mainContact of mainContacts">
       <ion-item>
         <ion-label>
@@ -46,14 +42,13 @@
             {{mainContact.telefone}}
           </p>
           <p>
-            {{mainContact.email}}
+            <!-- {{mainContact.email}} -->
           </p>
         </ion-label>
       </ion-item>
 
     </ion-item-sliding>
 
-  </ion-list>
       <ion-grid>
         <ion-row>
           <ion-col style="text-align: center;">

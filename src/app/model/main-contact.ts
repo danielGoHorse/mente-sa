@@ -1,8 +1,8 @@
-export interface MainContact{
+export class MainContact{
     id?: number;
-    name?: string;
+    nome?: string;
     email?: string;
-    phoneNumber?: string;
+    telefone?: string;
     grauParentesto?: string;
 }
 
