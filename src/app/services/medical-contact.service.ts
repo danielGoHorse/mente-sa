@@ -18,12 +18,16 @@ export class MedicalContactService {
     private httpCliente: HttpClient,
   ) { }
 
-  getMed() {
+  getMedicalContact() {
     return this.httpCliente.get(this.apiUrl).pipe(
       map(res => {
         this.medContact = res;
         return this.medContact;
       })
     )
+  }
+
+  createMedicalContact(param: any){
+
   }
 }

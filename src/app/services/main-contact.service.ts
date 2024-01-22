@@ -17,12 +17,16 @@ export class MainContactService {
     private httpCliente: HttpClient,
   ) { }
 
-  getMed() {
+  getMainContact() {
     return this.httpCliente.get(`${this.apiUrl}consultaContatoPrincipal`).pipe(
       map(res => {
         this.mainContact = res;
         return this.mainContact;
       })
     )
+  }
+
+  createMainContact(param: any){
+    this.httpCliente.post(`${this.apiUrl}criar`, param)
   }
 }
