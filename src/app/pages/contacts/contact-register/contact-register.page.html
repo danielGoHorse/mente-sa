@@ -59,16 +59,34 @@
       </ion-grid>
     </div>
 
-    <ion-grid>
+    <div>
       <ion-row>
-        <ion-col style="text-align: center;">
-          <ion-button style="--border-color: #25a139; color:#25a139" fill="outline" [routerLink]="['/medical-register']">Add</ion-button>
-        </ion-col>
-        <ion-col style="text-align: center;">
-          <ion-button style="--border-color: #e21b1b; color:#e21b1b" fill="outline"  [routerLink]="['/user-register']">Voltar</ion-button>
-        </ion-col>
+        <ion-fab horizontal="center" style="margin-bottom: 10px;">
+          <ion-button shape="round" color="tertiary" [routerLink]="['/home']">
+            <ion-label>
+              < Voltar </ion-label>
+          </ion-button>
+        </ion-fab>
       </ion-row>
-    </ion-grid>
+    </div>
+    <div style="margin-top: 55px;">
+      <ion-row *ngIf="mainContact">
+        <ion-fab horizontal="center" style="margin-bottom: 10px;">
+          <ion-button shape="round" color="tertiary" (click)="clickButton('mainContact')"
+            [routerLink]="['/contacts/register']">
+            <ion-label>Cadastrar ></ion-label>
+          </ion-button>
+        </ion-fab>
+      </ion-row>
+      <ion-row *ngIf="!mainContact">
+        <ion-fab horizontal="center" style="margin-bottom: 10px;">
+          <ion-button shape="round" color="tertiary" (click)="clickButton('medicalContact')"
+            [routerLink]="['/contacts/register']">
+            <ion-label> Cadastrar > </ion-label>
+          </ion-button>
+        </ion-fab>
+      </ion-row>
+    </div>
     
 
   </form>

@@ -9,19 +9,19 @@
         </ion-row>
         <ion-row>
           <ion-col>
-            <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/relaxation-center']">
+            <ion-button style="--border-color: #beeec4;" color="tertiary" [routerLink]="['/relaxation-center']">
               <ion-icon src="../../../assets/icon/hands-praying-solid.svg" slot="icon-only"></ion-icon>
             </ion-button>
             <ion-label>Relaxar</ion-label>
           </ion-col>
           <ion-col>
-            <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/dashboard']">
+            <ion-button style="--border-color: #beeec4;" color="tertiary" [routerLink]="['/dashboard']">
               <ion-icon src="../../../assets/icon/chart-simple-solid.svg" slot="icon-only"></ion-icon>
             </ion-button>
             <ion-label>Progresso</ion-label>
           </ion-col>
           <ion-col>
-            <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/lessons']">
+            <ion-button style="--border-color: #beeec4;" color="tertiary" [routerLink]="['/lessons']">
               <ion-icon src="../../../assets/icon/clipboard-regular.svg" slot="icon-only"></ion-icon>
             </ion-button>
             <ion-label>Lições</ion-label>
@@ -31,7 +31,7 @@
         </ion-row>
         <ion-row>
           <ion-col>
-            <ion-button style="--border-color: #beeec4; height: 50px !important;"  [routerLink]="['/mood']">
+            <ion-button style="--border-color: #beeec4; height: 50px !important;" color="tertiary" [routerLink]="['/mood']">
               <ion-icon src="../../../assets/icon/face-smile-wink-regular.svg" slot="icon-only"></ion-icon>
             </ion-button>
             <ion-label>Humor</ion-label>
@@ -45,26 +45,33 @@
       <ion-grid style="margin-top: 60px;">
         <ion-row>
           <ion-col>
-            <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/main-contact']">
+            <ion-button style="--border-color: #beeec4;" color="tertiary" (click)="clickButton('mainContact')"  [routerLink]="['/contacts']">
               <ion-icon src="../../../assets/icon/hands-holding-child-solid.svg" slot="icon-only"></ion-icon>
 
             </ion-button>
             <ion-label>Anjo</ion-label>
           </ion-col>
           <ion-col>
-            <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/medical-contact']">
+            <ion-button style="--border-color: #beeec4;" color="tertiary" (click)="clickButton('medicalContact')" [routerLink]="['/contacts']" >
               <ion-icon src="../../../assets/icon/hand-holding-medical-solid.svg" slot="icon-only"></ion-icon>
             </ion-button>
             <ion-label>Médicos</ion-label>
           </ion-col>
           <ion-col>
-            <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/user-register']">
+            <ion-button style="--border-color: #beeec4;" color="tertiary" [routerLink]="['/user-register']">
               <ion-icon src="../../../assets/icon/paperclip-solid.svg" slot="icon-only"></ion-icon>
             </ion-button>
             <ion-label>Config</ion-label>
           </ion-col>
+          <ion-col>
+            <ion-item (click)="logout()">
+              <ion-icon name="exit-outline" slot="start"></ion-icon>
+              <ion-label>Sair</ion-label>
+            </ion-item>
+          </ion-col>
+          
           <!-- <ion-col>
-            <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/settings']">
+            <ion-button style="--border-color: #beeec4;" color="tertiary" [routerLink]="['/settings']">
               <ion-icon src="../../../assets/icon/gears-solid.svg" slot="icon-only"></ion-icon>
             </ion-button>
             <ion-label>Ajustes</ion-label>
@@ -81,85 +88,3 @@
 
 </ion-content>
 
-<!-- <app-header></app-header>
-<ion-content [fullscreen]="true">
-  <div class="container1">
-    <div class="card">
-      <ion-img src="assets/img/blueTotal.png"></ion-img>
-    </div>
-    
-  </div>
-  <div class="container1">
-    <ion-grid>
-      <ion-row>
-        <ion-col>
-          <ion-title>
-            Você não está sozinho
-          </ion-title>
-        </ion-col>
-       
-      </ion-row>
-    </ion-grid>
-  </div>
-  <div class="container2">
-    <ion-grid>
-      <ion-row>
-        <ion-col>
-          <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/relaxation-center']">
-             <ion-icon src="../../../assets/icon/hands-praying-solid.svg" slot="icon-only" ></ion-icon>
-          </ion-button>
-          <ion-label>Relaxar</ion-label>
-        </ion-col>
-        <ion-col>
-          <ion-button style="--border-color: #f47b17;" fill="outline" [routerLink]="['/dashboard']">
-            <ion-icon src="../../../assets/icon/chart-simple-solid.svg" slot="icon-only" ></ion-icon>
-          </ion-button>
-          <ion-label>Progresso</ion-label>
-        </ion-col>
-        <ion-col>
-          <ion-button style="--border-color: #2c12f1;" fill="outline" [routerLink]="['/lessons']">
-            <ion-icon src="../../../assets/icon/clipboard-regular.svg" slot="icon-only" ></ion-icon>
-          </ion-button>
-          <ion-label>Lições</ion-label>
-        </ion-col>
-        <ion-col>
-          <ion-button style="--border-color: #00d12a;" fill="outline" [routerLink]="['/mood']" >
-            <ion-icon src="../../../assets/icon/face-smile-wink-regular.svg" slot="icon-only" ></ion-icon>
-          </ion-button>
-          <ion-label>Humor</ion-label>
-        </ion-col>
-       
-      </ion-row>
-      <ion-row>
-        <ion-col>
-          <ion-button style="--border-color: #ff2ef1;" fill="outline" [routerLink]="['/main-contact']" >
-            <ion-icon src="../../../assets/icon/hands-holding-child-solid.svg" slot="icon-only" ></ion-icon>
-            
-          </ion-button>
-          <ion-label>Anjo</ion-label>
-        </ion-col>
-        <ion-col>
-          <ion-button style="--border-color: #25a139;" fill="outline" [routerLink]="['/medical-contact']" >
-            <ion-icon src="../../../assets/icon/hand-holding-medical-solid.svg" slot="icon-only" ></ion-icon>
-          </ion-button>
-          <ion-label>Médicos</ion-label>
-        </ion-col>
-        <ion-col>
-          <ion-button style="--border-color: #beeec4;" fill="outline" [routerLink]="['/notes']">
-            <ion-icon src="../../../assets/icon/paperclip-solid.svg" slot="icon-only" ></ion-icon>
-          </ion-button>
-          <ion-label>Notas</ion-label>
-        </ion-col>
-        <ion-col>
-          <ion-button style="--border-color: #757575;" fill="outline" [routerLink]="['/settings']">
-            <ion-icon src="../../../assets/icon/gears-solid.svg" slot="icon-only" ></ion-icon>
-          </ion-button>
-          <ion-label>Ajustes</ion-label>
-        </ion-col>
-       
-      </ion-row>
-    </ion-grid>
-  </div>
-  <app-panic-button></app-panic-button>
-
-</ion-content> -->

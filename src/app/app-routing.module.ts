@@ -32,20 +32,12 @@ const routes: Routes = [
     loadChildren: () => import('./pages/dashboard/dashboard.module').then( m => m.DashboardPageModule)
   },
   {
-    path: 'medical-contact',
-    loadChildren: () => import('./pages/medical-contact/medical-contact.module').then( m => m.MedicalContactPageModule)
-  },
-  {
     path: 'tips',
     loadChildren: () => import('./pages/tips/tips.module').then( m => m.TipsPageModule)
   },
   {
     path: 'settings',
     loadChildren: () => import('./pages/settings/settings.module').then( m => m.SettingsPageModule)
-  },
-  {
-    path: 'main-contact',
-    loadChildren: () => import('./pages/main-contact/main-contact.module').then( m => m.MainContactPageModule)
   },
   {
     path: 'notes',

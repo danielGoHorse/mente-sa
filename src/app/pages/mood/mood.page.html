@@ -1,33 +1,63 @@
-<app-header></app-header>
-
 <ion-content [fullscreen]="true">
-  <div class="container1">
-    <div class="card">
-      <ion-img src="assets/img/blueTotal.png"></ion-img>
+  <div class="container">
+    <app-header></app-header>
+    <div class="ion-padding">
+
+
+
+      <ion-item>
+        <ion-button fill="clear"><img src="../../../assets/img/very_happyMood.png" alt="Avatar" class="avatar">&nbsp;&nbsp;Estou
+          muito Feliz!</ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-button fill="clear"><img src="../../../assets/img/happyMood.png" alt="Avatar" class="avatar">&nbsp;&nbsp;Estou
+          Feliz!</ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-button fill="clear"><img src="../../../assets/img/normalMood.png" alt="Avatar" class="avatar">&nbsp;&nbsp;Ah...estou
+          normal!</ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-button fill="clear"><img src="../../../assets/img/sadMood.png" alt="Avatar" class="avatar">&nbsp;&nbsp;Não estou
+          bem...</ion-button>
+      </ion-item>
+      <ion-item>
+        <ion-button fill="clear"><img src="../../../assets/img/very_sadMood.png" alt="Avatar" class="avatar">&nbsp;&nbsp;Poxa, hoje
+          não dá...</ion-button>
+      </ion-item>
+
+
     </div>
-    
-  </div>
-  <div class="container1">
-    <ion-grid>
+    <div>
       <ion-row>
-        <ion-col>
-          <ion-title>
-            Você não está sozinho
-          </ion-title>
-        </ion-col>
-       
+        <ion-fab horizontal="center" style="margin-bottom: 10px;">
+          <ion-button class="button-action" shape="round" color="tertiary" [routerLink]="['/home']">
+            <ion-label>
+              < Voltar </ion-label>
+          </ion-button>
+        </ion-fab>
       </ion-row>
-    </ion-grid>
+    </div>
+    <div style="margin-top: 55px;">
+      <ion-row>
+        <ion-fab horizontal="center" style="margin-bottom: 10px;">
+          <ion-button class="button-action" shape="round" color="tertiary">
+            <ion-label>Cadastrar ></ion-label>
+          </ion-button>
+        </ion-fab>
+      </ion-row>
+    </div>
+    <!-- <ion-grid>
+      <ion-row>
+        <ion-col style="text-align: center;">
+          <ion-button class="action-button" style="--border-color: #25a139; color:#25a139" <img src="../../../assets/img/perfil.webp" alt="Avatar" class="avatar"> [routerLink]="['/home']">Add</ion-button>
+        </ion-col>
+        <ion-col style="text-align: center;">
+          <ion-button  class="action-button" style="--border-color: #e21b1b; color:#e21b1b" <img src="../../../assets/img/perfil.webp" alt="Avatar" class="avatar">  [routerLink]="['/home']">Voltar</ion-button>
+        </ion-col>
+      </ion-row>
+    </ion-grid> -->
+
+
   </div>
-  <ion-grid>
-    <ion-row>
-      <ion-col style="text-align: center;">
-        <ion-button style="--border-color: #25a139; color:#25a139" fill="outline" [routerLink]="['/medical-register']">Add</ion-button>
-      </ion-col>
-      <ion-col style="text-align: center;">
-        <ion-button style="--border-color: #e21b1b; color:#e21b1b" fill="outline"  [routerLink]="['/home']">Voltar</ion-button>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-  <app-panic-button></app-panic-button>
 </ion-content>

@@ -47,6 +47,7 @@ export class LoginPage implements OnInit {
         })
 
         if(user){
+          debugger
           loading.dismiss();
           this.router.navigate(['./home'])
         }else{

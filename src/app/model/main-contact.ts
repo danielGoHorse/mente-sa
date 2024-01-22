@@ -3,7 +3,9 @@ export class MainContact{
     nome?: string;
     email?: string;
     telefone?: string;
-    grauParentesto?: string;
+    grauParentesto?: GrauParentesco;
+    expertise?: Expertise;
+    tipo?: string;
 }
 
 export enum Expertise {
@@ -13,3 +15,10 @@ export enum Expertise {
    'COACH' = 4,
    'LIDER_RELIGIOSO' = 5,
 }
+
+export enum GrauParentesco {
+    'FAMILIAR' = 1,
+    'CONJUGE' = 2,
+    'AMIGO' = 3,
+    'NAMORADO' = 4
+ }

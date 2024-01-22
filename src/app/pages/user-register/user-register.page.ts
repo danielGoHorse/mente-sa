@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ShareService } from 'src/app/services/share.service';
 
 @Component({
   selector: 'app-user-register',
@@ -8,7 +9,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 })
 export class UserRegisterPage implements OnInit {
   regForm: FormGroup;
-  constructor( public formBuilder: FormBuilder, ) { }
+  constructor( public formBuilder: FormBuilder,private shareService: ShareService ) { }
 
   ngOnInit() {
     this.regForm = this.formBuilder.group({
@@ -26,6 +27,11 @@ export class UserRegisterPage implements OnInit {
       // mainContact:['',[]]
 
     })
+  }
+
+  clickButton(action: string){
+    this.shareService.changeValue(action)
+    // this.utilService.cliquei(action);
   }
 
 }
