@@ -18,7 +18,7 @@ export class UserService {
     private httpCliente: HttpClient) { }
 
   usuario: User
-
+  userSrc: any;
 
   authState$: Observable<firebase.default.User> = this.authFire.authState;
 
@@ -36,8 +36,12 @@ export class UserService {
   }
 
 
-  // createUser(param: any){
-  //   this.httpCliente.post(`${this.apiUrl}criar`, param)
-  // }
+  sendForm(form: any) {
+    this.userSrc = form;
+  }
+
+  public getForm(): any {
+    return this.userSrc;
+  }
 
 }

@@ -7,16 +7,6 @@
   <form [formGroup]="regForm" novalidate>
     <div class="ion-padding">
       <ion-item>
-        <ion-input formControlName="fullName" placeholder="usuário" class="input" [required]="true"></ion-input>
-        <ion-icon name="person-outline" slot="end"></ion-icon>
-      </ion-item>
-      <div *ngIf="this.regForm.controls?.['fullName'].touched 
-      && this.regForm.controls?.['fullName'].invalid">
-        <ion-text *ngIf="errorControl.fullName.errors?.required">
-          Nome é obrigatório
-        </ion-text>
-      </div>
-      <ion-item>
         <ion-input formControlName="email" placeholder="email" class="input"></ion-input>
         <ion-icon name="mail-outline" slot="end"></ion-icon>
       </ion-item>
@@ -59,4 +49,18 @@
 
  
   </form>
+  <ion-toast
+  [isOpen]="isErrorToastOpen"
+  color="warning"
+  message="Email já cadastrado"
+  [duration]="3000"
+  (didDismiss)="setErrorOpen(false)"
+></ion-toast>
+<ion-toast
+[isOpen]="isOkToastOpen"
+color="success"
+message="Email cadastrado com sucesso"
+[duration]="2000"
+(didDismiss)="setOkOpen(false)"
+></ion-toast>
 </ion-content>

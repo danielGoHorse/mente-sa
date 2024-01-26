@@ -1,25 +1,33 @@
-import { AfterViewInit, Component, EventEmitter, Input, Output } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
+import { User } from 'src/app/model/user';
 import { AuthService } from 'src/app/services/auth.service';
 import { ShareService } from 'src/app/services/share.service';
+import { UserService } from 'src/app/services/user.service';
 
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage implements AfterViewInit {
+export class HomePage implements OnInit {
 
+  user: User;
+  userCurrent: User;
  
 
   constructor(
     public router: Router,
     private authService: AuthService,
-    private shareService: ShareService) {}
+    private shareService: ShareService,
+    private userService: UserService) {
+      this.user = (this.userService.getForm() ? this.userService.getForm() : new User());
+      this.userCurrent = this.user
+     
+    }
 
-    ngAfterViewInit() {
-    const currentUser = this.authService.getProfile();
-    console.error(currentUser);
+    ngOnInit() {
+      Object.assign(this.userCurrent);
   }
 
   clickButton(action: string){

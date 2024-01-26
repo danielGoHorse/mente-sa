@@ -7,6 +7,9 @@ import { User } from 'src/app/model/user';
 import { AuthService } from 'src/app/services/auth.service';
 import { UserService } from 'src/app/services/user.service';
 
+import * as usuario from '../../../assets/db.json'
+
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
@@ -25,9 +28,9 @@ export class LoginPage implements OnInit {
     public authService: AuthService,
     public router: Router,
     private userService: UserService
-    ) { }
+  ) { }
 
-    displayName$: Observable<string> = this.userService.displayName$;
+  displayName$: Observable<string> = this.userService.displayName$;
 
   ngOnInit() {
     this.createForm();
@@ -48,40 +51,43 @@ export class LoginPage implements OnInit {
     if (!this.loginForm.valid) {
       return
     }
-    
+
 
     this.authService.loginUser(this.loginForm.getRawValue()).then(res => {
-      if(res){
-       
-        this.displayName$.subscribe(data =>{
+      if (res) {
+        //aqui estou buscando id do usuario logado
+        this.displayName$.subscribe(data => {
           let id = data
-         if(data){
-          debugger
-           this.userService.getUserById(id).subscribe((res => {
-             this.user = res;
-             this.userName = res.nome;
-             if(!this.user.status){
-              // this.userService.getToUser(this.user)
-              this.router.navigate(['/user-register']);
-             }else if(this.user.status){
-
+          if (data) {
+            //aqui eu realizo uma busca na aws do user logado com os dados através do id_Fire
+            this.userService.getUserById(id).subscribe((res => {
+              this.user = ((res));
+              this.userName = res.nome;
+              this.userService.sendForm(this.user);
               this.router.navigate(['/home']);
-             }
-           }))
-    
-           
-         }
-       })
+            }),(e) => {
+              if(e.error == 'Usuário não encontrado!'){
+                this.router.navigate(['/user-register']);
+              }
+              console.log(e.error);
+              
+            })
+
+
+
+
+          }
+        })
       }
-      
+
     })
   }
 
-  
-    // }){
-    //   
-    // }
-  
+
+  // }){
+  //   
+  // }
+
 
   // async login() {
   //   const loading = await this.loadingCtrl.create();

@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { User } from 'src/app/model/user';
 import { ShareService } from 'src/app/services/share.service';
+import { UserService } from 'src/app/services/user.service';
 
 @Component({
   selector: 'app-user-register',
@@ -9,9 +11,12 @@ import { ShareService } from 'src/app/services/share.service';
 })
 export class UserRegisterPage implements OnInit {
   regForm: FormGroup;
-  constructor( public formBuilder: FormBuilder,private shareService: ShareService ) { }
+  user!: User;
+  constructor( public formBuilder: FormBuilder,private shareService: ShareService, private userService: UserService ) { }
 
   ngOnInit() {
+    this.user = (this.userService.getForm() ? this.userService.getForm() : new User());
+    console.log('USER REGISTERRRRRR',this.user)
     this.regForm = this.formBuilder.group({
       fullName: ['', [Validators.required]],
       email: ['', [

@@ -11,6 +11,8 @@ import { AuthService } from 'src/app/services/auth.service';
 })
 export class SignupPage implements OnInit {
   regForm: FormGroup;
+  isErrorToastOpen = false;
+  isOkToastOpen = false;
 
   constructor(
     public formBuilder: FormBuilder,
@@ -24,7 +26,7 @@ export class SignupPage implements OnInit {
       email: ['', [
         Validators.required,
         Validators.email,
-        Validators.pattern("[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"),
+        // Validators.pattern("[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"),
       ]],
       password: ['', [
         Validators.required,
@@ -43,17 +45,23 @@ export class SignupPage implements OnInit {
     if (this.regForm?.valid) {
       const user = await this.authService.registerUser(this.regForm.value.email, this.regForm.value.password)
         .catch((error) =>{
-          console.log(error);
+          this.setErrorOpen(true);
           loading.dismiss();
         })
+        loading.dismiss();
+        this.setOkOpen(true)
+        setTimeout(()=>{                           
+          this.router.navigate(['./login'])
+      }, 3000);
 
-        if(user){
-          loading.dismiss();
-          this.router.navigate(['./home'])
-        }else{
-          console.log('provide correct values')
-        }
     }
   }
 
+  setErrorOpen(isOpen: boolean) {
+    this.isErrorToastOpen = isOpen;
+  }
+
+  setOkOpen(isOpen: boolean) {
+    this.isOkToastOpen = isOpen;
+  }
 }
