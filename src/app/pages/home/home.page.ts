@@ -10,7 +10,7 @@ import { UserService } from 'src/app/services/user.service';
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage implements OnInit {
+export class HomePage implements AfterViewInit {
 
   user: User;
   userCurrent: User;
@@ -22,12 +22,12 @@ export class HomePage implements OnInit {
     private shareService: ShareService,
     private userService: UserService) {
       this.user = (this.userService.getForm() ? this.userService.getForm() : new User());
-      this.userCurrent = this.user
      
     }
 
-    ngOnInit() {
-      Object.assign(this.userCurrent);
+    ngAfterViewInit() {
+      
+      // this.userCurrent = this.user
   }
 
   clickButton(action: string){
@@ -37,8 +37,8 @@ export class HomePage implements OnInit {
 
   async logout() {
     try {
-      this.router.navigate(['/login']);
       await this.authService.singOut();
+      this.router.navigate(['/login']);
     } catch (error) {
       console.error(error);
     }

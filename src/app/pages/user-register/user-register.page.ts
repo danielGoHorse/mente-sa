@@ -16,19 +16,12 @@ export class UserRegisterPage implements OnInit {
 
   ngOnInit() {
     this.user = (this.userService.getForm() ? this.userService.getForm() : new User());
-    console.log('USER REGISTERRRRRR',this.user)
+    
     this.regForm = this.formBuilder.group({
-      fullName: ['', [Validators.required]],
-      email: ['', [
-        Validators.required,
-        Validators.email,
-        Validators.pattern("[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"),
-      ]],
-      password: ['', [
-        Validators.required,
-        // Validators.pattern("(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}")
-      ]],
-      telefone:['',[ Validators.required,]],
+      fullName: [this.user.nome],
+      email: [this.user.email],
+      // password: [this.user.password],
+      telefone:[this.user.telefone],
       // mainContact:['',[]]
 
     })

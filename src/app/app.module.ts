@@ -12,6 +12,7 @@ import { environment } from 'src/environments/environment';
 import { ComponentModule } from './components/component.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { HttpClientModule } from '@angular/common/http';
+import { UserService } from './services/user.service';
 
 
 
@@ -27,7 +28,7 @@ import { HttpClientModule } from '@angular/common/http';
     AngularFireAuthModule,
     FontAwesomeModule,
     AngularFireModule.initializeApp(environment.firebaseConfig)],
-  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
+  providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }, UserService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
