@@ -31,8 +31,11 @@ export class UserService {
   )
 
   getUserById(id_fire: string){
-    const userTest = this.httpCliente.get<UserResponse>(`${this.apiUrl}`+ id_fire)
-    return userTest
+    return this.httpCliente.get<UserResponse>(`${this.apiUrl}`+ id_fire)
+  }
+
+  registerUser(param: any) {
+    return this.httpCliente.post<User>(`${this.apiUrl}criar`, param)
   }
 
 
