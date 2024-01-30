@@ -48,10 +48,7 @@ export class LoginPage implements AfterViewInit {
 
   login(email: any, password: any) {
     try {
-      debugger
       this.auth.loginUser(email, password).then(res => {
-        // this.credencials = JSON.stringify(res);
-        // this.user.id_fire = res.user.uid;
         const resposta = ((res))
         const values = Object.values(resposta);
         this.credencials = values

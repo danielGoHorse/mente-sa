@@ -4,12 +4,12 @@
   <form [formGroup]="regForm" novalidate>
     <div class="ion-padding">
       <ion-item>
-        <ion-input formControlName="fullName" placeholder="usuário" class="input" [required]="true"></ion-input>
+        <ion-input formControlName="nome" placeholder="usuário" class="input" [required]="true"></ion-input>
         <ion-icon name="person-outline" slot="end"></ion-icon>
       </ion-item>
-      <div *ngIf="this.regForm.controls?.['fullName'].touched 
-      && this.regForm.controls?.['fullName'].invalid">
-        <ion-text *ngIf="errorControl.fullName.errors?.required">
+      <div *ngIf="this.regForm.controls?.['nome'].touched 
+      && this.regForm.controls?.['nome'].invalid">
+        <ion-text *ngIf="errorControl.nome.errors?.required">
           Nome é obrigatório
         </ion-text>
       </div>
@@ -58,7 +58,7 @@
     <div style="margin-top: 55px;">
       <ion-row>
         <ion-fab horizontal="center" style="margin-bottom: 10px;">
-          <ion-button shape="round" color="tertiary">
+          <ion-button shape="round" color="tertiary" (click)="save()">
             <ion-label>Cadastrar ></ion-label>
           </ion-button>
         </ion-fab>

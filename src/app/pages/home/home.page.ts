@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
+import { ViewWillEnter } from '@ionic/angular';
 import { User } from 'src/app/model/user';
 import { AuthService } from 'src/app/services/auth.service';
 import { ShareService } from 'src/app/services/share.service';
@@ -10,9 +11,9 @@ import { UserService } from 'src/app/services/user.service';
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
 })
-export class HomePage implements AfterViewInit {
+export class HomePage implements ViewWillEnter {
 
-  user: User;
+  user : User;
   userCurrent: User;
 
 
@@ -21,22 +22,11 @@ export class HomePage implements AfterViewInit {
     private authService: AuthService,
     private shareService: ShareService,
     private userService: UserService) {
-    this.user = (this.userService.getForm() ? this.userService.getForm() : new User());
-
+    this.user = new User;
   }
 
-  ngAfterViewInit() {
-    console.log('HOME PAGE',this.user)
-
-
-
-
-    // if(this.user){
-    //   if (error == 'Usuário não encontrado!') {
-    //     this.router.navigate(['/user-register']);}
-    // }
-
-    // this.userCurrent = this.user
+  ionViewWillEnter() {
+    this.user = (this.userService.getForm() ? this.userService.getForm() : new User());
   }
 
   getUser() {

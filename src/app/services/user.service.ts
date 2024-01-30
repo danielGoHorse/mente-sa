@@ -38,6 +38,10 @@ export class UserService {
     return this.httpCliente.post<User>(`${this.apiUrl}criar`, param)
   }
 
+  toEditUser(param: any){
+    return this.httpCliente.put<User>(`${this.apiUrl}editar`, param)
+  }
+
 
   sendForm(form: any) {
     this.userSrc = form;
