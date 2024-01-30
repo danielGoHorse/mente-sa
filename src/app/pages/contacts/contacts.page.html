@@ -1,10 +1,10 @@
 <ion-content [fullscreen]="true">
   <div class="container">
     <app-header></app-header>
-    <ion-title *ngIf="mainContactList">
+    <ion-title size="large"*ngIf="mainContactList">
       Seu Anjo Anjo da Guarda
     </ion-title>
-    <ion-title *ngIf="!mainContactList">
+    <ion-title size="large"*ngIf="!mainContactList">
       Seus contatos médicos
     </ion-title>
     <ion-item *ngIf="mainContactList">

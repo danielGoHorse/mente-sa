@@ -32,3 +32,17 @@ ion-content{
 ion-item{
     --background:#d4e1f7 !important;
 }
+
+ion-title.title-large {
+    font-size: 35px;
+    font-weight: bold;
+    font-family: Georgia;
+    word-break: break-all;
+  }
+
+  ion-title.title-small {
+    font-size: 25px;
+    font-weight: bold;
+    font-family: Georgia;
+    word-break: break-all;
+  }
