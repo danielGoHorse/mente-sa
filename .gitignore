@@ -1,143 +1,59 @@
-const environment = {
-  app: {
-    name: ''
-  },
-  server: {
-    port: 3333,
-    maxRequestBodySize: '100mb'
-  },
-  logging: {
-    level: 'debug'
-  },
-  kafka: {
-    brokers: []
-  },
-  rabbitmq: {
-    url: ''
-  },
-  mongo: {
-    autoIndex: true,
-    keepAlive: true,
-    uri: ''
-  },
+import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
+import mongoose, { Schema } from 'mongoose'
 
-  caseUrl: 'http://casemanagement-backend-http-host.safra-applications-dev',
-  CustomerUrl: 'http://customersearch-backend-http-host.safra-applications-dev',
-  UserUrl: 'http://usermanagement-backend-http-host.safra-applications-dev',
-  FeeUrl: 'http://feemanagement-backend-http-host.safra-applications-dev',
-  ConductorUrl: 'http://conductor-ui.safra-applications-dev/api/workflow',
-  JackUrl: 'http://jackhenry-backend-http-host.safra-applications-dev',
-
-  dev: {
-    scheduleUrls: {
-      IntlPB3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',
-      USPBIndividual3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null',
-      USPBCorporation3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null',
-    }
-  },
-  local: {
-    scheduleUrls: {
-      IntlPB3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',
-      USPBIndividual3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null',
-      USPBCorporation3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null',
-    }
-  },
-  qa: {
-    scheduleUrls: {
-      IntlPB3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',
-      USPBIndividual3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null',
-      USPBCorporation3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null',
-    }
-  },
-  prd: {
-    scheduleUrls: {
-      IntlPB3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',
-      USPBIndividual3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null',
-      USPBCorporation3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null',
-    }
-  },
-
-  sqlserver: {
-    server: '',
-    user: '',
-    password: '',
-    database: ''
-  },
-
-};
-
-function getEnviromentConfig(){
-  const env = process.env.NODE_ENV?.toLocaleLowerCase() || 'dev';
-  console.log('current node>>>>>', env);
-  console.log('enviroment node>>>>>', environment[env]?.scheduleUrls)
-  return environment[env]?.scheduleUrls || {}
-}
-
-export { getEnviromentConfig };
-export default environment
-
-
-Achei esse arquivo launch.json
-{
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Api",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/src/app/api/index.js",
-      "env": {
-        "NODE_ENV": "Local",
-        "APP_NAME": "snb-fee-management",
-        "CONFIG_SERVER_APP_NAME": "snb-fee-management",
-        "CONFIG_SERVER_URL": "https://config.dev.k8s.safra.int",
-        "CONFIG_SERVER_USER": "safraconfigserver",
-        "CONFIG_SERVER_PASSWORD": "Sc$7@gfwertrlM22",
-        "SERVER_PORT": "3333",
-        "MONGODB_URI": "mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb",
-        "SQLSERVER_SERVER": "nydev01.snb.safra.int",
-        "SQLSERVER_USER": "userFeeMgmtConductor",
-        "SQLSERVER_PASSWORD": "userF33MgmtCond",
-        "SQLSERVER_DATABASE": "FeeMgmt"
-      }
+export const EquityTeamSchema = new Schema(
+  {
+    userName: {
+      type: String,
+      required: true
     },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Worker",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/src/app/worker/index.js",
-      "args": [
-        "relative path inside src/worker/namePathWorker/nameFileWorker.js"
-      ],
-      "env": {
-        "NODE_ENV": "Local",
-        "CONFIG_SERVER_APP_NAME": "config-server-app-name",
-        "CONFIG_SERVER_URL": "https://config.dev.k8s.safra.int",
-        "CONFIG_SERVER_USER": "safraconfigserver",
-        "CONFIG_SERVER_PASSWORD": "Sc$7@gfwertrlM22"
-      }
+    userNameFull: {
+      type: String,
+      required: true
     },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Seed",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/src/core/data/seeds/run.js",
-      "env": {
-        "NODE_ENV": "Local"
-      }
+    email: {
+      type: String,
+      requireid: true
     }
-  ]
-}
+  },
+  {
+    collection: 'EquityTeam',
+    timestamps: true
+  }
+)
 
+configureSchemaMongoToReturnId('toObject', EquityTeamSchema)
+
+export const EquityTeam = mongoose.model('EquityTeam', EquityTeamSchema)
+
+
+E me parece que esse cara aqui a gente tbm não esta mais precisando
+
+import { mssql } from "./mssql"
+
+mongoose.Promise = global.Promise
+
+export const startConnectionWithSql = ({ server, user, password, database }) => {
+  const config = {
+    server,
+    user,
+    password,
+    database,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true,
+    },
+  };
+  try {
+    mssql.close();
+    const connection = mssql.connect(config);
+    console.log('Connect to SQL Server successfully');
+    return connection;
+
+  } catch (err) {
+    console.log('Error connecting to SQL Server', err.message);
+    throw err;
+  }
+
+
+}
