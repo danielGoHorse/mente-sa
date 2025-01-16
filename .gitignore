@@ -30,3 +30,8 @@ export async function executeStoreProcedure(connection, query, parameters = {}) 
 
   return recordset
 }
+
+  const query = 'sp_get_feegroupinfo';
+    const parameters = { group_id: 1 }; // Opcional: omitir group_id para trazer todos
+    const result = await executeStoreProcedure(connection, query, parameters);
+    global.logger.info('Procedure Result:', result);
