@@ -236,3 +236,71 @@ export default class ApiServer {
     process.on('SIGTERM', gracefulShutdownHandler)
   }
 }
+
+
+import mssql from 'mssql'
+
+export async function connectToFeeMgmtDb() {
+  const { ...props } = global.environment.sqlserver
+  
+  const config = {
+    ...props,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true
+    }
+  }
+  await mssql.close()
+
+  return mssql.connect(config)
+}
+
+export async function executeStoreProcedure(connection, query, parameters = {}) {
+  const request = connection.request()
+
+  for (const key of Object.keys(parameters)) {
+    request.input(key, parameters[key])
+  }
+
+  const { recordset } = await request.execute(query)
+
+  await mssql.close()
+
+  if (recordset?.length === 0) return []
+
+  return recordset
+}
+
+import mongoose from 'mongoose'
+
+mongoose.Promise = global.Promise
+
+export const startConnectionWithMongoDb = ({ uri, autoIndex, keepAlive }) => {
+  const mongodbUri = uri
+
+  const connection = mongoose.connect(mongodbUri, {
+    autoIndex,
+    keepAlive
+  })
+
+  connection.then((db) => db).catch((err) => console.log(err))
+  return connection
+}
+
+export const configureSchemaMongoToReturnId = (
+  typeConvert,
+  SchemaModel,
+  enableVirtuals = true
+) => {
+  SchemaModel.set(typeConvert, {
+    transform: (document, returnObject) => {
+      delete returnObject._id
+      return returnObject
+    },
+    virtuals: enableVirtuals
+  })
+}
+
+
+
+
