@@ -1,59 +1,15 @@
-import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
-import mongoose, { Schema } from 'mongoose'
+import { executeStoreProcedure } from '#src/core/data/mssql/index.js';
 
-export const EquityTeamSchema = new Schema(
-  {
-    userName: {
-      type: String,
-      required: true
-    },
-    userNameFull: {
-      type: String,
-      required: true
-    },
-    email: {
-      type: String,
-      requireid: true
-    }
-  },
-  {
-    collection: 'EquityTeam',
-    timestamps: true
-  }
-)
+// Função para buscar a equipe de Equity
+export async function getEquityTeam(groupId) {
+  const query = 'sp_get_equity_team'; // Nome da stored procedure
+  const parameters = { group_id: groupId }; // Parâmetro de exemplo
 
-configureSchemaMongoToReturnId('toObject', EquityTeamSchema)
-
-export const EquityTeam = mongoose.model('EquityTeam', EquityTeamSchema)
-
-
-E me parece que esse cara aqui a gente tbm não esta mais precisando
-
-import { mssql } from "./mssql"
-
-mongoose.Promise = global.Promise
-
-export const startConnectionWithSql = ({ server, user, password, database }) => {
-  const config = {
-    server,
-    user,
-    password,
-    database,
-    options: {
-      encrypt: false,
-      trustServerCertificate: true,
-    },
-  };
   try {
-    mssql.close();
-    const connection = mssql.connect(config);
-    console.log('Connect to SQL Server successfully');
-    return connection;
-
+    const result = await executeStoreProcedure(global.sqlConnection, query, parameters);
+    return result; // Retorna o resultado da query
   } catch (err) {
-    console.log('Error connecting to SQL Server', err.message);
+    console.error('Error fetching Equity Team:', err.message);
     throw err;
   }
-
-
 }
