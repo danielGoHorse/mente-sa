@@ -1,30 +1,28 @@
-import ApiResponse from '#core/http/apiResponse.js';
-import environment from '#core/config/environment.js';
-
-export default async function feeScheduleGetEndpoint(req, res) {
-  try {
-    const { type } = req.params;
-
-    // Acessando as URLs do ambiente atual
-    const scheduleUrls = environment?.[process.env.NODE_ENV?.toLowerCase()]?.scheduleUrls;
-
-    // Verifica se as URLs estão configuradas corretamente
-    if (!scheduleUrls || !scheduleUrls[type]) {
-      const badRequestResponse = ApiResponse.createBadRequestResponse({ error: 'Invalid schedule type or configuration missing' });
-      return res.status(badRequestResponse.code).json(badRequestResponse.data);
+ dev: {
+    scheduleUrls: {
+      IntlPB3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',
+      USPBIndividual3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null',
+      USPBCorporation3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null',
     }
-
-    // Obtém a URL correspondente
-    const url = scheduleUrls[type];
-
-    // Cria uma resposta de sucesso com a URL
-    const okResponse = ApiResponse.createOkResponse({ url });
-    return res.status(okResponse.code).json(okResponse.data);
-
-  } catch (error) {
-    // Caso ocorra um erro inesperado, retorna status 500
-    global.logger.error('Error in feeScheduleGetEndpoint:', error.message);
-    const internalServerErrorResponse = ApiResponse.createInternalServerErrorResponse({ error: 'Internal Server Error' });
-    return res.status(internalServerErrorResponse.code).json(internalServerErrorResponse.data);
-  }
-}
+  },
+  local: {
+    scheduleUrls: {
+      IntlPB3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',
+      USPBIndividual3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null',
+      USPBCorporation3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null',
+    }
+  },
+  qa: {
+    scheduleUrls: {
+      IntlPB3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',
+      USPBIndividual3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null',
+      USPBCorporation3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null',
+    }
+  },
+  prd: {
+    scheduleUrls: {
+      IntlPB3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',
+      USPBIndividual3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null',
+      USPBCorporation3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null',
+    }
+  },
