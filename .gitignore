@@ -1,18 +1,30 @@
+import ApiResponse from '#core/http/apiResponse.js';
 import environment from '#core/config/environment.js';
 
 export default async function feeScheduleGetEndpoint(req, res) {
   try {
     const { type } = req.params;
 
-    // Acessando as URLs diretamente do environment
-    const scheduleUrls = environment[this.#env]?.scheduleUrls;
-    if (!scheduleUrls[type]) {
-      return res.status(400).json({ error: 'Invalid schedule type' });
+    // Acessando as URLs do ambiente atual
+    const scheduleUrls = environment?.[process.env.NODE_ENV?.toLowerCase()]?.scheduleUrls;
+
+    // Verifica se as URLs estão configuradas corretamente
+    if (!scheduleUrls || !scheduleUrls[type]) {
+      const badRequestResponse = ApiResponse.createBadRequestResponse({ error: 'Invalid schedule type or configuration missing' });
+      return res.status(badRequestResponse.code).json(badRequestResponse.data);
     }
 
+    // Obtém a URL correspondente
     const url = scheduleUrls[type];
-    res.status(200).json({ url });
+
+    // Cria uma resposta de sucesso com a URL
+    const okResponse = ApiResponse.createOkResponse({ url });
+    return res.status(okResponse.code).json(okResponse.data);
+
   } catch (error) {
-    res.status(500).json({ error: 'Internal Server Error' });
+    // Caso ocorra um erro inesperado, retorna status 500
+    global.logger.error('Error in feeScheduleGetEndpoint:', error.message);
+    const internalServerErrorResponse = ApiResponse.createInternalServerErrorResponse({ error: 'Internal Server Error' });
+    return res.status(internalServerErrorResponse.code).json(internalServerErrorResponse.data);
   }
 }
