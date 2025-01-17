@@ -1,21 +1,12 @@
-dev: {
-    scheduleUrls: {
-      IntlPB3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-      USPBIndividual3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-      USPBCorporation3: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-    },
-  },
-  qa: {
-    scheduleUrls: {
-      IntlPB3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-      USPBIndividual3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-      USPBCorporation3: 'https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-    },
-  },
-  prd: {
-    scheduleUrls: {
-      IntlPB3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-      USPBIndividual3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-      USPBCorporation3: 'https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=...',
-    },
-  },
+NODE_ENV = 'Local'
+APP_NAME = 'snb-fee-management'
+CONFIG_SERVER_APP_NAME = 'snb-fee-management'
+CONFIG_SERVER_URL = 'https://config.dev.k8s.safra.int'
+CONFIG_SERVER_USER = 'safraconfigserver'
+CONFIG_SERVER_PASSWORD = 'Sc$7@gfwertrlM22'
+SERVER_PORT = '3333'
+MONGODB_URI = 'mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb'
+SQLSERVER_SERVER = 'nydev01.snb.safra.int'
+SQLSERVER_USER = 'userFeeMgmtConductor'
+SQLSERVER_PASSWORD = 'userF33MgmtCond'
+SQLSERVER_DATABASE = 'FeeMgmt'
