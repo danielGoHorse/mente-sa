@@ -1,25 +1,69 @@
-import pino from 'pino'
 
-export const createLogger = (environment) => {
-  const streams = [{ stream: process.stdout }]
-
-  if (environment?.logging?.file) {
-    streams.push({
-      stream: pino.destination(environment?.logging?.file)
-    })
-  }
-
-  return pino(
-    {
-      level: environment?.logging?.level || 'debug',
-      redact: ['headers.authorization'],
-      formatters: {
-        level: (label) => {
-          return { level: label.toUpperCase() }
-        }
-      },
-      timestamp: pino.stdTimeFunctions.isoTime
-    },
-    pino.multistream(streams)
-  )
+[16:05:13.383] INFO (17444): Starting configuration for env: Local
+CONFIG_SERVER_APP_NAME: snb-fee-management
+CONFIG_SERVER_URL: https://config.dev.k8s.safra.int
+CONFIG_SERVER_USER: safraconfigserver
+CONFIG_SERVER_PASSWORD: Sc$7@gfwertrlM22
+[16:05:13.384] INFO (17444): Loading env using config server https://config.dev.k8s.safra.int
+[16:05:13.776] INFO (17444): bootstraping application
+[16:05:14.206] INFO (17444): Server started on :::5000
+MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
+    at _handleConnectionErrors (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)
+    at NativeConnection.openUri (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {
+  reason: TopologyDescription {
+    type: 'Unknown',
+    servers: Map(1) { 'mongodb.safra-data:27017' => [ServerDescription] },
+    stale: false,
+    compatible: true,
+    heartbeatFrequencyMS: 10000,
+    localThresholdMS: 15,
+    setName: null,
+    maxElectionId: null,
+    maxSetVersion: null,
+    commonWireVersion: 0,
+    logicalSessionTimeoutMinutes: null
+  },
+  code: undefined
 }
+[16:06:05.643] INFO (17444): request completed
+    req: {
+      "id": "29142fc29d8dbd60d6dbd5ad",
+      "method": "GET",
+      "url": "/v1/fee/schedule/IntlPB3",
+      "query": {},
+      "params": {},
+      "headers": {
+        "user-agent": "PostmanRuntime/7.43.0",
+        "accept": "*/*",
+        "postman-token": "f236b258-92a8-402d-a2ca-4e818da30add",
+        "host": "localhost:5000",
+        "accept-encoding": "gzip, deflate, br",
+        "connection": "keep-alive"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 64275
+    }
+    res: {
+      "statusCode": 400,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "29142fc29d8dbd60d6dbd5ad",
+        "x-correlation-id": "29142fc29d8dbd60d6dbd5ad",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "58",
+        "etag": "W/\"3a-J6DjF4MLEpiQJGydo4bzwxjpId8\""
+      }
+    }
+    responseTime: 5
