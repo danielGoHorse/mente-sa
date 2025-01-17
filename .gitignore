@@ -17,3 +17,18 @@ QA_SCHEDULE_URL_USPBCORPORATION3=https://minio-ui.qa.k8s.safra.int/api/v1/bucket
 PRD_SCHEDULE_URL_INTLPB3=https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null
 PRD_SCHEDULE_URL_USPBINDIVIDUAL3=https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null
 PRD_SCHEDULE_URL_USPBCORPORATION3=https://minio-ui.prd.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null
+
+
+function getScheduleUrls(env) {
+  return {
+    IntlPB3: process.env[`${env.toUpperCase()}_SCHEDULE_URL_INTLPB3`],
+    USPBIndividual3: process.env[`${env.toUpperCase()}_SCHEDULE_URL_USPBINDIVIDUAL3`],
+    USPBCorporation3: process.env[`${env.toUpperCase()}_SCHEDULE_URL_USPBCORPORATION3`],
+  };
+}
+
+// Exemplo de uso
+const currentEnv = process.env.NODE_ENV || 'local'; // Use o NODE_ENV para determinar o ambiente
+const scheduleUrls = getScheduleUrls(currentEnv);
+
+console.log('Current Schedule URLs:', scheduleUrls);
