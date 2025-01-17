@@ -1,82 +1,101 @@
-[16:44:30.922] INFO (22492): Starting configuration for env: Local
-CONFIG_SERVER_APP_NAME: snb-fee-management
-CONFIG_SERVER_URL: https://config.dev.k8s.safra.int
-CONFIG_SERVER_USER: safraconfigserver
-CONFIG_SERVER_PASSWORD: Sc$7@gfwertrlM22
-[16:44:30.923] INFO (22492): Loading env using config server https://config.dev.k8s.safra.int
-[16:44:31.302] INFO (22492): bootstraping application
-[16:44:31.667] INFO (22492): Server started on :::5000
-MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
-    at _handleConnectionErrors (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)
-    at NativeConnection.openUri (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {
-  reason: TopologyDescription {
-    type: 'Unknown',
-    servers: Map(1) { 'mongodb.safra-data:27017' => [ServerDescription] },
-    stale: false,
-    compatible: true,
-    heartbeatFrequencyMS: 10000,
-    localThresholdMS: 15,
-    setName: null,
-    maxElectionId: null,
-    maxSetVersion: null,
-    commonWireVersion: 0,
-    logicalSessionTimeoutMinutes: null
-  },
-  code: undefined
+Chat, tenho essse end point
+
+import FeeBranchPackageGetAllUseCase from './feeBranchPackageGetAllUseCase.js' 
+import ApiResponse from '#core/http/apiResponse.js'
+
+export default async function feeBranchPackageGetAllEndpoint(req, res) {
+  const useCase = new FeeBranchPackageGetAllUseCase()
+  const result = await useCase.execute(req)
+
+  if (result.isFailure) {
+    const badRequestResponse = ApiResponse.createBadRequestResponse({ error: result.error })
+    return res.status(badRequestResponse.code).json(badRequestResponse)
+  }
+
+  const okResponse = ApiResponse.createOkResponse(result.value)
+
+  res.json(okResponse)
 }
-[16:45:01.535] ERROR (22492): Error in feeScheduleGetEndpoint:
-[16:45:01.539] INFO (22492): request errored
-    req: {
-      "id": "4d9428d1fe547d51743d32c0",
-      "method": "GET",
-      "url": "/v1/fee/schedule/IntlPB3",
-      "query": {},
-      "params": {},
-      "headers": {
-        "user-agent": "PostmanRuntime/7.43.0",
-        "accept": "*/*",
-        "postman-token": "a0895ab6-6e4b-4105-87a2-1eb09a7c742a",
-        "host": "localhost:5000",
-        "accept-encoding": "gzip, deflate, br",
-        "connection": "keep-alive"
-      },
-      "remoteAddress": "::1",
-      "remotePort": 64818
+
+Com esse router
+
+import { Router } from 'express'
+import feeBranchPackageGetAllEndpoint from './feeBranchPackageGetAllEndpoint.js'
+
+const feeBranchPackageGetAllRouter = Router()
+
+feeBranchPackageGetAllRouter.get('/fee/branch', feeBranchPackageGetAllEndpoint)
+
+export default feeBranchPackageGetAllRouter
+
+E com esse useCase:
+
+import Result from '#features/shared/result.js'
+import { getBranchPackageOffice } from '#src/models/FeePackage.js'
+
+export default class feeBranchPackageGetAllUseCase {
+  async execute(req) {
+    const officePackages = await getBranchPackageOffice()
+
+    return Result.ok(officePackages)
+  }
+}
+
+
+Ao chamar no postman essa url:
+
+http://localhost:3333/v1/fee/branch
+
+
+Tomo esse erro....que provavelmente vem dessa function:
+
+export async function getBranchPackageOffice() {
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(connection, 'sp_get_branch_feepackage_info_offr', { })
+
+  const listOfficerPackage = recordset.map(record => {
+    const branchId = record.branch_id
+    const branchType = record.branch_type
+    const bussinessPackage = record.business_package
+    const bussinessPackageDescription = record.business_package_description
+    const city = record.city
+    const director = record.director.trim()
+    const individualPackage = record.individual_package
+    const individualPackageDescription = record.individual_package_description
+    const offPackage = record.off_package
+    const officerName = record.state
+    
+    return {
+       branchId, 
+       branchType,
+       bussinessPackage,
+       bussinessPackageDescription,
+       city,
+       director,
+       individualPackage,
+       individualPackageDescription,
+       offPackage,
+       officerName
     }
-    res: {
-      "statusCode": 500,
-      "headers": {
-        "cross-origin-embedder-policy": "require-corp",
-        "cross-origin-opener-policy": "same-origin",
-        "cross-origin-resource-policy": "same-origin",
-        "x-dns-prefetch-control": "off",
-        "x-frame-options": "SAMEORIGIN",
-        "strict-transport-security": "max-age=15552000; includeSubDomains",
-        "x-download-options": "noopen",
-        "x-content-type-options": "nosniff",
-        "origin-agent-cluster": "?1",
-        "x-permitted-cross-domain-policies": "none",
-        "referrer-policy": "no-referrer",
-        "x-xss-protection": "0",
-        "access-control-allow-origin": "*",
-        "x-request-id": "4d9428d1fe547d51743d32c0",
-        "x-correlation-id": "4d9428d1fe547d51743d32c0",
-        "content-type": "application/json; charset=utf-8",
-        "content-length": "26",
-        "etag": "W/\"1a-nO1SMtFqjAylRZvcD/JJ2LGv/qs\""
-      }
-    }
-    responseTime: 5
-    err: {
-      "type": "Error",
-      "message": "failed with status code 500",
-      "stack":
-          Error: failed with status code 500
-              at ServerResponse.onResFinished (H:\Documents\fee-management-backend\node_modules\pino-http\logger.js:113:40)
-              at ServerResponse.emit (node:events:525:35)
-              at onFinish (node:_http_outgoing:950:10)
-              at callback (node:internal/streams/writable:554:21)
-              at afterWrite (node:internal/streams/writable:499:5)
-              at afterWriteTick (node:internal/streams/writable:486:10)
-              at processTicksAndRejections (node:internal/process/task_queues:82:21)
-    }
+  })
+
+  return listOfficerPackage
+}
+
+
+[20:53:45.338] INFO (432): Starting configuration for env: Local
+[20:53:45.338] INFO (432): Loading env using file H:\Documents\fee-management-backend\.env
+[20:53:45.352] INFO (432): bootstraping application
+[20:53:45.758] INFO (432): Server started on :::3333
+[20:54:22.665] ERROR (432): Unhandled Promise Rejection: err: 
+[20:54:22.665] ERROR (432): RequestError: Invalid column name 'PackageID'.
+    at handleError (H:\Documents\fee-management-backend\node_modules\mssql\lib\tedious.js:888:15)
+    at Connection.emit (node:events:513:28)
+    at Parser.<anonymous> (H:\Documents\fee-management-backend\node_modules\tedious\lib\connection.js:716:12)
+    at Parser.emit (node:events:513:28)
+    at Parser.<anonymous> (H:\Documents\fee-management-backend\node_modules\tedious\lib\token\token-stream-parser.js:27:14)
+    at Parser.emit (node:events:513:28)
+    at addChunk (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:279:12)
+    at readableAddChunk (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:262:11)
+    at Parser.Readable.push (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:228:10)
+    at Parser.Transform.push (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_transform.js:132:32)
