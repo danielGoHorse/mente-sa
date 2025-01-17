@@ -1,25 +1,25 @@
+import pino from 'pino'
 
+export const createLogger = (environment) => {
+  const streams = [{ stream: process.stdout }]
 
-[15:44:17.520] INFO (22932): Starting configuration for env: Local
-CONFIG_SERVER_APP_NAME: snb-fee-management
-CONFIG_SERVER_URL: https://config.dev.k8s.safra.int
-CONFIG_SERVER_USER: safraconfigserver
-CONFIG_SERVER_PASSWORD: Sc$7@gfwertrlM22
-[15:44:17.522] INFO (22932): Loading env using config server https://config.dev.k8s.safra.int
-[15:44:18.014] INFO (22932): bootstraping application
-node:events:491
-      throw er; // Unhandled 'error' event
-      ^
+  if (environment?.logging?.file) {
+    streams.push({
+      stream: pino.destination(environment?.logging?.file)
+    })
+  }
 
-Error: ENOENT: no such file or directory, open 'H:\var\log\http.log'
-Emitted 'error' event on SonicBoom instance at:
-    at SonicBoom.filterBrokenPipe (H:\Documents\fee-management-backend\node_modules\pino\lib\tools.js:240:12)
-    at SonicBoom.emit (node:events:513:28)
-    at fileOpened (H:\Documents\fee-management-backend\node_modules\sonic-boom\index.js:36:15)
-    at FSReqCallback.oncomplete (node:fs:192:23) {
-  errno: -4058,
-  code: 'ENOENT',
-  syscall: 'open',
-  path: 'H:\\var\\log\\http.log'
+  return pino(
+    {
+      level: environment?.logging?.level || 'debug',
+      redact: ['headers.authorization'],
+      formatters: {
+        level: (label) => {
+          return { level: label.toUpperCase() }
+        }
+      },
+      timestamp: pino.stdTimeFunctions.isoTime
+    },
+    pino.multistream(streams)
+  )
 }
-[nodemon] app crashed - waiting for file changes before starting...
