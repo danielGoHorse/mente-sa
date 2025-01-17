@@ -1,29 +1,25 @@
-async #loadFromConfigServer() {
-  const configServerAppName = process.env.CONFIG_SERVER_APP_NAME;
-  const configServerUrl = process.env.CONFIG_SERVER_URL;
-  const configServerUser = process.env.CONFIG_SERVER_USER;
-  const configServerPassword = process.env.CONFIG_SERVER_PASSWORD;
 
-  console.log('CONFIG_SERVER_APP_NAME:', configServerAppName);
-  console.log('CONFIG_SERVER_URL:', configServerUrl);
-  console.log('CONFIG_SERVER_USER:', configServerUser);
-  console.log('CONFIG_SERVER_PASSWORD:', configServerPassword);
 
-  if (!configServerAppName) {
-    throw new Error('Application name must be provided');
-  }
+[15:44:17.520] INFO (22932): Starting configuration for env: Local
+CONFIG_SERVER_APP_NAME: snb-fee-management
+CONFIG_SERVER_URL: https://config.dev.k8s.safra.int
+CONFIG_SERVER_USER: safraconfigserver
+CONFIG_SERVER_PASSWORD: Sc$7@gfwertrlM22
+[15:44:17.522] INFO (22932): Loading env using config server https://config.dev.k8s.safra.int
+[15:44:18.014] INFO (22932): bootstraping application
+node:events:491
+      throw er; // Unhandled 'error' event
+      ^
 
-  if (!configServerUrl) {
-    throw new Error('Config server url must be provided');
-  }
-
-  if (!configServerUser) {
-    throw new Error('Config server user must be provided');
-  }
-
-  if (!configServerPassword) {
-    throw new Error('Config server password must be provided');
-  }
-
-  // Restante do código...
+Error: ENOENT: no such file or directory, open 'H:\var\log\http.log'
+Emitted 'error' event on SonicBoom instance at:
+    at SonicBoom.filterBrokenPipe (H:\Documents\fee-management-backend\node_modules\pino\lib\tools.js:240:12)
+    at SonicBoom.emit (node:events:513:28)
+    at fileOpened (H:\Documents\fee-management-backend\node_modules\sonic-boom\index.js:36:15)
+    at FSReqCallback.oncomplete (node:fs:192:23) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'H:\\var\\log\\http.log'
 }
+[nodemon] app crashed - waiting for file changes before starting...
