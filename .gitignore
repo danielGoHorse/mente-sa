@@ -1,12 +1,13 @@
-NODE_ENV = 'Local'
-APP_NAME = 'snb-fee-management'
-CONFIG_SERVER_APP_NAME = 'snb-fee-management'
-CONFIG_SERVER_URL = 'https://config.dev.k8s.safra.int'
-CONFIG_SERVER_USER = 'safraconfigserver'
-CONFIG_SERVER_PASSWORD = 'Sc$7@gfwertrlM22'
-SERVER_PORT = '3333'
-MONGODB_URI = 'mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb'
-SQLSERVER_SERVER = 'nydev01.snb.safra.int'
-SQLSERVER_USER = 'userFeeMgmtConductor'
-SQLSERVER_PASSWORD = 'userF33MgmtCond'
-SQLSERVER_DATABASE = 'FeeMgmt'
+DanielG@NYDEVVDI0027 MINGW64 /h/Documents/fee-management-backend (feat/schedulePdf-T615)
+$ git commit -m "schedule"
+'\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-backend'
+CMD.EXE was started with the above path as the current directory.
+UNC paths are not supported.  Defaulting to Windows directory.
+\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-backend\node_modules\@commitlint\cli\lib\cli.js:123
+        throw err;
+        ^
+
+TypeError: Could not find git root from C:\Windows
+    at getEditCommit (\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-backend\node_modules\@commitlint\read\lib\get-edit-commit.js:14:15)
+    at async main (\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-backend\node_modules\@commitlint\cli\lib\cli.js:168:19)
+husky - commit-msg hook exited with code 1 (error)
