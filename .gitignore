@@ -1,15 +1,41 @@
-import Result from '#features/shared/result.js'
-import { getBranchPackageOffice } from '#src/models/FeePackage.js'
+import FeeGroupGetAllUseCase  from './feeGroupGetAllUseCase.js' 
+import ApiResponse from '#core/http/apiResponse.js'
 
-export default class feeBranchPackageGetAllUseCase {
-  async execute(req) {
+export default async function feeGroupGetAllEndpoint(req, res) {
+  const useCase = new FeeGroupGetAllUseCase()
+  const result = await useCase.execute(req)
 
-    const officePackages = await getBranchPackageOffice()
-
-    return Result.ok(officePackages)
+  if (result.isFailure) {
+    const badRequestResponse = ApiResponse.createBadRequestResponse({ error: result.error })
+    return res.status(badRequestResponse.code).json(badRequestResponse)
   }
+
+  const okResponse = ApiResponse.createOkResponse(result.value)
+
+  res.json(okResponse)
 }
 
+
+import { Router } from 'express'
+import feeGroupGetAllEndpoint from './feeGroupGetAllEndpoint.js'
+
+const feeGroupInfoGetAllRouter = Router()
+
+feeGroupInfoGetAllRouter.get('/fee/group', feeGroupGetAllEndpoint)
+
+export default feeGroupInfoGetAllRouter
+
+import Result from '#features/shared/result.js'
+import { getFeegroupAll } from '#src/models/FeePackage.js'
+
+export default class FeeGroupGetAllUseCase {
+  async execute(req) {
+
+    const packages = await getFeegroupAll()
+
+    return Result.ok(packages)
+  }
+}
 
 import {
   connectToFeeMgmtDb,
@@ -37,23 +63,48 @@ export async function getAllFeePackage() {
   return listPackages.filter((item, index, self) => index === self.findIndex(x => x.id === item.id))
 }
 
-export async function getFeegroupInfo(id) {
+export async function getFeegroupById(id) {
   const connection = await connectToFeeMgmtDb()
   const recordset = await executeStoreProcedure(connection, 'sp_get_feegroup_info', {GroupId: id})
 
   const listFeegroupInfo = recordset.map(record => {
     const groupId = record.GroupId
-    const groupName = record.GroupName
-    const bussinessPackageId = record.BussinessPackageId
-    const bussinessPackage = record.BussinessPackage
-    const individualPackageId = record.IndividualPackageId
+    const groupName = record.GroupName === undefined ? null : record.GroupName
+    const businessPackageId = record.BusinessPackageId === undefined ? null : record.BusinessPackageId
+    const businessPackage = record.BusinessPackage === undefined ? null : record.BusinessPackage
+    const individualPackageId = record.IndividualPackageId 
     const individualPackage = record.IndividualPackage
 
     return {
       groupId,
       groupName,
-      bussinessPackageId,
-      bussinessPackage,
+      businessPackageId,
+      businessPackage,
+      individualPackageId,
+      individualPackage
+    }
+  })
+
+  return listFeegroupInfo
+}
+
+export async function getFeegroupAll() {
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(connection, 'sp_get_feegroup_info', {})
+
+  const listFeegroupInfo = recordset.map(record => {
+    const groupId = record.GroupId
+    const groupName = record.GroupName === undefined ? null : record.GroupName
+    const businessPackageId = record.BusinessPackageId === undefined ? null : record.BusinessPackageId
+    const businessPackage = record.BusinessPackage === undefined ? null : record.BusinessPackage
+    const individualPackageId = record.IndividualPackageId 
+    const individualPackage = record.IndividualPackage
+
+    return {
+      groupId,
+      groupName,
+      businessPackageId,
+      businessPackage,
       individualPackageId,
       individualPackage
     }
@@ -106,10 +157,33 @@ export async function getOfficerPackageAll() {
   return listOfficerPackage
 }
 
+
+export async function getFeegroup() {
+  const connection = await connectToFeeMgmtDb()
+
+  const recordset = await executeStoreProcedure(connection, 'sp_get_feegroupinfo', {})
+  
+  const listOfficerPackage = recordset.map(record => {
+    const officerId = record.OfficerId
+    const officerName = record.OfficerName
+    const branchName = record.BranchName
+    const officerPackage = record.OfficerPackage
+
+    return {
+      officerId,
+      officerName,
+      branchName,
+      officerPackage
+    }
+  })
+
+  return listOfficerPackage
+}
+
 export async function getBranchPackageOfficeById(id) {
   const connection = await connectToFeeMgmtDb()
   const recordset = await executeStoreProcedure(connection, 'sp_get_branch_feepackage_info_offr', {branch_code: id})
-
+  
   const listOfficerPackage = recordset.map(record => {
     const branchId = record.branch_id
     const branchType = record.branch_type
@@ -172,7 +246,6 @@ export async function getBranchPackageOffice() {
   return listOfficerPackage
 }
 
-
 export async function getFeePackageById(id) {
   const connection = await connectToFeeMgmtDb()
   const recordset = await executeStoreProcedure(connection, 'sp_get_feepackagedetails', { FeePackageId: id })
@@ -219,3 +292,4 @@ export async function getFeePackageById(id) {
 
   return packageResult
 }
+
