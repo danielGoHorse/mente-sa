@@ -1,30 +1,47 @@
-import ApiResponse from '#core/http/apiResponse.js';
-import environment from '#core/config/environment.js';
-
-export default async function feeScheduleGetEndpoint(req, res) {
-  try {
-    const { type } = req.params;
-
-    // Acessando as URLs do ambiente atual
-    const scheduleUrls = environment?.[process.env.NODE_ENV?.toLowerCase()]?.scheduleUrls;
-
-    // Verifica se as URLs estão configuradas corretamente
-    if (!scheduleUrls || !scheduleUrls[type]) {
-      const badRequestResponse = ApiResponse.createBadRequestResponse({ error: 'Invalid schedule type or configuration missing' });
-      return res.status(badRequestResponse.code).json(badRequestResponse.data);
+[11:43:10.224] INFO (12944): Starting configuration for env: Local
+[11:43:10.225] INFO (12944): Loading env using file H:\Documents\fee-management-backend\.env
+[11:43:10.261] INFO (12944): bootstraping application
+[11:43:10.643] INFO (12944): Server started on :::3333
+[11:43:21.160] INFO (12944): request completed
+    req: {
+      "id": "aa11ec7d959f14eea382fc70",
+      "method": "GET",
+      "url": "/v1/fee-schedule/IntlPB3",
+      "query": {},
+      "params": {},
+      "headers": {
+        "user-agent": "PostmanRuntime/7.43.0",
+        "accept": "*/*",
+        "postman-token": "54849e31-1489-404f-a5ae-a3e35ac8850b",
+        "host": "localhost:3333",
+        "accept-encoding": "gzip, deflate, br",
+        "connection": "keep-alive"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 61039
     }
+    res: {
+      "statusCode": 400,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "aa11ec7d959f14eea382fc70",
+        "x-correlation-id": "aa11ec7d959f14eea382fc70",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "58",
+        "etag": "W/\"3a-J6DjF4MLEpiQJGydo4bzwxjpId8\""
+      }
+    }
+    responseTime: 6
 
-    // Obtém a URL correspondente
-    const url = scheduleUrls[type];
-
-    // Cria uma resposta de sucesso com a URL
-    const okResponse = ApiResponse.createOkResponse({ url });
-    return res.status(okResponse.code).json(okResponse.data);
-
-  } catch (error) {
-    // Caso ocorra um erro inesperado, retorna status 500
-    global.logger.error('Error in feeScheduleGetEndpoint:', error.message);
-    const internalServerErrorResponse = ApiResponse.createInternalServerErrorResponse({ error: 'Internal Server Error' });
-    return res.status(internalServerErrorResponse.code).json(internalServerErrorResponse.data);
-  }
-}
