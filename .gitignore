@@ -1,4 +1,4 @@
-[13:09:06.913] INFO (22264): Starting configuration for env: Local
+ue [13:09:06.913] INFO (22264): Starting configuration for env: Local
 [13:09:06.914] INFO (22264): Loading env using file H:\Documents\fee-management-backend\.env
 [13:09:06.918] INFO (22264): bootstraping application
 MongooseError: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
