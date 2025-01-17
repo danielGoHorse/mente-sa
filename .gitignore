@@ -1,12 +1,11 @@
-
-[16:05:13.383] INFO (17444): Starting configuration for env: Local
+[16:44:30.922] INFO (22492): Starting configuration for env: Local
 CONFIG_SERVER_APP_NAME: snb-fee-management
 CONFIG_SERVER_URL: https://config.dev.k8s.safra.int
 CONFIG_SERVER_USER: safraconfigserver
 CONFIG_SERVER_PASSWORD: Sc$7@gfwertrlM22
-[16:05:13.384] INFO (17444): Loading env using config server https://config.dev.k8s.safra.int
-[16:05:13.776] INFO (17444): bootstraping application
-[16:05:14.206] INFO (17444): Server started on :::5000
+[16:44:30.923] INFO (22492): Loading env using config server https://config.dev.k8s.safra.int
+[16:44:31.302] INFO (22492): bootstraping application
+[16:44:31.667] INFO (22492): Server started on :::5000
 MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
     at _handleConnectionErrors (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)
     at NativeConnection.openUri (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {
@@ -25,9 +24,10 @@ MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
   },
   code: undefined
 }
-[16:06:05.643] INFO (17444): request completed
+[16:45:01.535] ERROR (22492): Error in feeScheduleGetEndpoint:
+[16:45:01.539] INFO (22492): request errored
     req: {
-      "id": "29142fc29d8dbd60d6dbd5ad",
+      "id": "4d9428d1fe547d51743d32c0",
       "method": "GET",
       "url": "/v1/fee/schedule/IntlPB3",
       "query": {},
@@ -35,16 +35,16 @@ MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
       "headers": {
         "user-agent": "PostmanRuntime/7.43.0",
         "accept": "*/*",
-        "postman-token": "f236b258-92a8-402d-a2ca-4e818da30add",
+        "postman-token": "a0895ab6-6e4b-4105-87a2-1eb09a7c742a",
         "host": "localhost:5000",
         "accept-encoding": "gzip, deflate, br",
         "connection": "keep-alive"
       },
       "remoteAddress": "::1",
-      "remotePort": 64275
+      "remotePort": 64818
     }
     res: {
-      "statusCode": 400,
+      "statusCode": 500,
       "headers": {
         "cross-origin-embedder-policy": "require-corp",
         "cross-origin-opener-policy": "same-origin",
@@ -59,11 +59,24 @@ MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
         "referrer-policy": "no-referrer",
         "x-xss-protection": "0",
         "access-control-allow-origin": "*",
-        "x-request-id": "29142fc29d8dbd60d6dbd5ad",
-        "x-correlation-id": "29142fc29d8dbd60d6dbd5ad",
+        "x-request-id": "4d9428d1fe547d51743d32c0",
+        "x-correlation-id": "4d9428d1fe547d51743d32c0",
         "content-type": "application/json; charset=utf-8",
-        "content-length": "58",
-        "etag": "W/\"3a-J6DjF4MLEpiQJGydo4bzwxjpId8\""
+        "content-length": "26",
+        "etag": "W/\"1a-nO1SMtFqjAylRZvcD/JJ2LGv/qs\""
       }
     }
     responseTime: 5
+    err: {
+      "type": "Error",
+      "message": "failed with status code 500",
+      "stack":
+          Error: failed with status code 500
+              at ServerResponse.onResFinished (H:\Documents\fee-management-backend\node_modules\pino-http\logger.js:113:40)
+              at ServerResponse.emit (node:events:525:35)
+              at onFinish (node:_http_outgoing:950:10)
+              at callback (node:internal/streams/writable:554:21)
+              at afterWrite (node:internal/streams/writable:499:5)
+              at afterWriteTick (node:internal/streams/writable:486:10)
+              at processTicksAndRejections (node:internal/process/task_queues:82:21)
+    }
