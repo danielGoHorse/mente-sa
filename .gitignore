@@ -1,19 +1,29 @@
-file:///H:/Documents/fee-management-backend/src/core/config/index.js:80
-      throw new Error('Application name must be provided')
-            ^
+async #loadFromConfigServer() {
+  const configServerAppName = process.env.CONFIG_SERVER_APP_NAME;
+  const configServerUrl = process.env.CONFIG_SERVER_URL;
+  const configServerUser = process.env.CONFIG_SERVER_USER;
+  const configServerPassword = process.env.CONFIG_SERVER_PASSWORD;
 
-Error: Application name must be provided
-    at Config.#loadFromConfigServer (file:///H:/Documents/fee-management-backend/src/core/config/index.js:80:13)
-    at Config.bootstrap (file:///H:/Documents/fee-management-backend/src/core/config/index.js:30:41)
-    at App.bootstrap (file:///H:/Documents/fee-management-backend/src/app/app.js:11:38)
-    at file:///H:/Documents/fee-management-backend/src/app/api/index.js:5:13
-    at file:///H:/Documents/fee-management-backend/src/app/api/index.js:7:3
-    at ModuleJob.run (node:internal/modules/esm/module_job:193:25)
-    at async Promise.all (index 0)
-    at async ESMLoader.import (node:internal/modules/esm/loader:526:24)
-    at async loadESM (node:internal/process/esm_loader:91:5)
-    at async handleMainPromise (node:internal/modules/run_main:65:12)
-[15:24:06.886] INFO (24932): Starting configuration for env: Local
-[nodemon] app crashed - waiting for file changes before starting...
+  console.log('CONFIG_SERVER_APP_NAME:', configServerAppName);
+  console.log('CONFIG_SERVER_URL:', configServerUrl);
+  console.log('CONFIG_SERVER_USER:', configServerUser);
+  console.log('CONFIG_SERVER_PASSWORD:', configServerPassword);
 
+  if (!configServerAppName) {
+    throw new Error('Application name must be provided');
+  }
 
+  if (!configServerUrl) {
+    throw new Error('Config server url must be provided');
+  }
+
+  if (!configServerUser) {
+    throw new Error('Config server user must be provided');
+  }
+
+  if (!configServerPassword) {
+    throw new Error('Config server password must be provided');
+  }
+
+  // Restante do código...
+}
