@@ -1,20 +1,27 @@
-#mountMiddlewares() {
-  const maxRequestBodySize =
-    global.environment.server.maxRequestBodySize || '100mb';
+Lord
 
-  // Configuração do CORS
-  this.#express.use(cors({
-    origin: '*', // Altere para origens específicas em produção
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }));
+ 
 
-  this.#express.use(helmet({ contentSecurityPolicy: false }));
-  this.#express.use(express.json({ limit: maxRequestBodySize }));
-  this.#express.use(
-    express.urlencoded({ limit: maxRequestBodySize, extended: true })
-  );
+Please create the following address in the Kong of the Fee Management project in the Dev environment:
 
-  this.#express.use(requestLogging());
-  this.#express.use(correlationId());
-}
+ 
+
+· Service: fee-management-backend
+
+ 
+
+· Name/ID: fee-management-backend
+
+ 
+
+· Path: /v1/fee/group
+
+ 
+
+· Method: GET
+
+ 
+
+ 
+
+Best regards
