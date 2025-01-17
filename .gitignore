@@ -1,134 +1,30 @@
-ue [13:09:06.913] INFO (22264): Starting configuration for env: Local
-[13:09:06.914] INFO (22264): Loading env using file H:\Documents\fee-management-backend\.env
-[13:09:06.918] INFO (22264): bootstraping application
-MongooseError: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
-    at _createMongoClient (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:768:11)
-    at NativeConnection.openUri (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:705:29)
-    at Mongoose.connect (H:\Documents\fee-management-backend\node_modules\mongoose\lib\index.js:406:15)
-    at startConnectionWithMongoDb (file:///H:/Documents/fee-management-backend/src/core/data/index.js:8:31)
-    at ApiServer.#bootstrap (file:///H:/Documents/fee-management-backend/src/app/api/apiServer.js:113:5)
-    at ApiServer.launch (file:///H:/Documents/fee-management-backend/src/app/api/apiServer.js:122:26)
-    at App.run (file:///H:/Documents/fee-management-backend/src/app/app.js:18:20)
-    at file:///H:/Documents/fee-management-backend/src/app/api/index.js:6:13
-[13:09:07.300] INFO (22264): Server started on :::undefined
-<div>
-  <h1 style="font-weight:normal">Aurora - Modern Application Development Template</h1>
-  <a href="https://gitlab.devops.k8s.safra.int/it-architecture/application-architecture/jarvis-nodejs-javascript-express/-/commits/develop">
-    <img alt="pipeline status" src="https://gitlab.devops.k8s.safra.int/it-architecture/application-architecture/jarvis-nodejs-javascript-express/badges/develop/pipeline.svg">
-  </a>
-  <a href="https://gitlab.devops.k8s.safra.int/it-architecture/application-architecture/jarvis-nodejs-javascript-express/-/commits/develop">
-    <img alt="pipeline status" src="https://gitlab.devops.k8s.safra.int/it-architecture/application-architecture/jarvis-nodejs-javascript-express/badges/develop/coverage.svg">
-  </a>
-  <a href="https://gitlab.devops.k8s.safra.int/it-architecture/application-architecture/jarvis-nodejs-javascript-express/-/releases">
-    <img alt="pipeline status" src="https://gitlab.devops.k8s.safra.int/it-architecture/application-architecture/jarvis-nodejs-javascript-express/-/badges/release.svg">
-  </a>
-</div>
+import ApiResponse from '#core/http/apiResponse.js';
+import environment from '#core/config/environment.js';
 
-## About
-There are many great project templates, however, Jarvis was created with the proposal to have a modern application development template based on microservice architecture.
+export default async function feeScheduleGetEndpoint(req, res) {
+  try {
+    const { type } = req.params;
 
-Jarvis is using the vertical slice architecture approach, the vertical slice architecture is a technique that helps us build maintainable applications by separating the application around features or “vertical slices”. In this approach, we think of the application code in terms of features rather than the layer it sits in. We treat each feature as a vertical slice.
+    // Acessando as URLs do ambiente atual
+    const scheduleUrls = environment?.[process.env.NODE_ENV?.toLowerCase()]?.scheduleUrls;
 
-Also, Jarvis provide a skeleton to implement APIs and events processing using Kafka or RabbitMQ.
+    // Verifica se as URLs estão configuradas corretamente
+    if (!scheduleUrls || !scheduleUrls[type]) {
+      const badRequestResponse = ApiResponse.createBadRequestResponse({ error: 'Invalid schedule type or configuration missing' });
+      return res.status(badRequestResponse.code).json(badRequestResponse.data);
+    }
 
-## Project Structure
-Basically the application contains 2 folders:
+    // Obtém a URL correspondente
+    const url = scheduleUrls[type];
 
-| Folder | Description
-| ------- | --- |
-| src | where the source code of the application resides. |
-| test | where the application tests resides. |
+    // Cria uma resposta de sucesso com a URL
+    const okResponse = ApiResponse.createOkResponse({ url });
+    return res.status(okResponse.code).json(okResponse.data);
 
-The src folder contains the application code and it is structured by:
-
-| Folder | Description
-| ------- | --- |
-| app | reposible for the application layer and is structure by api and worker. |
-| core | responsible to having core features for all application. |
-| features | most important, it is reponsible to have all the features of the application considering the vertical slice approach. |
-| shared | reponsible to having shared code across all application layers. |
-
-In other hand, test folder contains unit and integration folders.
-All unit tests should be placed under unit folder. For more information about unit testing, please check <a href="https://en.wikipedia.org/wiki/Unit_testing" target="_blank">this link.</a>
-All integration should be placed under integration folder. For more information about integration, please check <a href="https://en.wikipedia.org/wiki/Integration_testing" target="_blank">this link.</a>
-
-## Powered by
-- NodeJS
-- Javascript
-
-## Features
-- API using Express as web framework
-- Event processing, you can choose Kafka or RabbitMQ
-
-## Getting Started
-This is the instructions to setting up your project locally. To get a local copy up and running follow these steps.
-
-### Prerequisites
-
-- NodeJS v16.18
-- NPM or yarn (yarn preferred)
-
-### How to run the project
-
-1. Clone the git repository
-```sh
-  git@gitlab.devops.k8s.safra.int:it-architecture/application-architecture/jarvis-nodejs-javascript-express.git
-```
-
-2. Install NPM packages
-```sh
-  yarn install
-```
-
-3. Create a copy of .env.sample file to .env
-```sh
-  cp .env.sample .env
-```
-
-4. Run the server. By default it uses the 3333 port, if you need to change you can edit in .env file using the step 5
-```sh
-  yarn dev:server
-```
-
-4.1. Edit server port in .env file (OPTIONAL)
-```sh
-  PORT=3333
-```
-
-5. Run the worker (Event processing). Specify the worker in the first parameter
-```sh
-  yarn dev:worker ./src/app/worker/kafka/consumer.js
-```
-
-### Using code generators
-Thinking in accelerate your producitivity Jarvis has a built-in code generators that can be used to create code blocks for you! :)
-
-1. To use the generator just type the following command
-```sh
-  yarn g
-```
-
-2. Select the kind of generator that we want to use
-```sh
-  feature - Create a new feature
-  middleware - Create a new api middleware
-  worker - Create a new worker
-```
-
-3. Specify the name.
-```sh
-  What is your feature name?
-```
-
-4. That`s it. Enjoy!
-
-## Contributing
-Any contributions you make are greatly appreciated.
-<br><br>
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement". Don't forget to give the project a star! Thanks again!
-
-## License
-Distributed under the MIT License. See LICENSE.txt for more information.
-
-## Authors
-Gregory Serrao - [@gregperes](https://github.com/gregperes) - gregory.serrao@safra.com
+  } catch (error) {
+    // Caso ocorra um erro inesperado, retorna status 500
+    global.logger.error('Error in feeScheduleGetEndpoint:', error.message);
+    const internalServerErrorResponse = ApiResponse.createInternalServerErrorResponse({ error: 'Internal Server Error' });
+    return res.status(internalServerErrorResponse.code).json(internalServerErrorResponse.data);
+  }
+}
