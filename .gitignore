@@ -1,126 +1,32 @@
-Chat, existe uma tela aqui no projeto que recebe 3 dados
+DanielG@NYDEVVDI0027 MINGW64 /h/workspace/feeManagement/fee-management-frontend (develop)
+$ npm i
+npm ERR! code ERESOLVE
+npm ERR! ERESOLVE could not resolve
+npm ERR!
+npm ERR! While resolving: @conductor/global-activity-user@1.0.5
+npm ERR! Found: @mui/material@5.11.11
+npm ERR! node_modules/@mui/material
+npm ERR!   @mui/material@"5.11.11" from the root project
+npm ERR!   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
+npm ERR!   node_modules/@mui/icons-material
+npm ERR!     @mui/icons-material@"5.11.11" from the root project
+npm ERR!
+npm ERR! Could not resolve dependency:
+npm ERR! peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm ERR! node_modules/@conductor/global-activity-user
+npm ERR!   @conductor/global-activity-user@"^1.0.5" from the root project
+npm ERR!
+npm ERR! Conflicting peer dependency: @mui/material@5.16.14
+npm ERR! node_modules/@mui/material
+npm ERR!   peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm ERR!   node_modules/@conductor/global-activity-user
+npm ERR!     @conductor/global-activity-user@"^1.0.5" from the root project
+npm ERR!
+npm ERR! Fix the upstream dependency conflict, or retry
+npm ERR! this command with --force, or --legacy-peer-deps
+npm ERR! to accept an incorrect (and potentially broken) dependency resolution.
+npm ERR!
+npm ERR! See C:\Users\DanielG\AppData\Local\npm-cache\eresolve-report.txt for a full report.
 
-Standard Fees, Current Fees e Exceptions....
-
-Esses dados hj vem no Mongo Db.....o Standard e o Exceptions virão do SQL...
-
-Mas antes disso, precisamos entender a logica da chamada e envio desses dados
-
-Vou passar os dados desse cara pra vc me ajudar
-
-import FeeGetByCifUseCase from './feeGetByCifUseCase.js'
-import ApiResponse from '#core/http/apiResponse.js'
-
-export default async function feeGetByCifEndpoint(req, res) {
-  const useCase = new FeeGetByCifUseCase()
-  const result = await useCase.execute(req.body)
-
-  if (result.isFailure) {
-    const badRequestResponse = ApiResponse.createBadRequestResponse({
-      error: result.error
-    })
-    return res.status(badRequestResponse.code).json(badRequestResponse)
-  }
-
-  const okResponse = ApiResponse.createOkResponse(result.value)
-
-  res.json(okResponse)
-}
-
-
-import { Router } from 'express'
-import feeGetByCifEndpoint from './feeGetByCifEndpoint.js'
-
-const feeGetByCifRouter = Router()
-
-feeGetByCifRouter.post('/fee', feeGetByCifEndpoint)
-export default feeGetByCifRouter
-
-import { Fee } from '#src/models/entities/Fees.js'
-import Result from '#features/shared/result.js'
-import CustomerFees from '#src/models/CustomerFees.js'
-import BankAccountFee from '#src/models/BankAccountFee.js'
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
-import { FeeCase } from '#src/models/entities/FeeCase.js'
-import { Field } from '#src/models/entities/Fields.js'
-
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    global.logger.info('FeeGetByCifUseCase()')
-
-    const result = { fees: [] }
-    const fees = await this.#getFeeStandard([
-      {
-        feeType: 'Customer Fees'
-      },
-      {
-        feeType: 'Bank Account Fees'
-      },
-      {
-        feeType: 'Investment Account Fees'
-      }
-    ])
-
-    const customer = new CustomerFees(fees, customerAccount)
-    if (customer.fee) result.fees.push(customer.fee)
-    global.logger.info('After Customer Fees')
-    const bank = new BankAccountFee(fees, customerAccount)
-    if (bank.fee) result.fees.push(bank.fee)
-    global.logger.info('After Bank Account Fees')
-    const equityField = await Field.find({ code: 7 })
-    const investiment = new InvestimentAccountFee(
-      fees,
-      customerAccount,
-      equityField[0]
-    )
-    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee)
-    global.logger.info('After Investment Account Fees')
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED']
-      },
-      caseNumber: {
-        $exists: true
-      }
-    })
-    global.logger.info('After Fees Actives')
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id
-    }))
-
-    result.documentUrl =
-      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
-
-    global.logger.info(`documentUrl= ${result.document}`)
-
-    return Result.ok(result)
-  }
-
-  async #getFeeStandard(filter) {
-    global.logger.info('getFeeStandard()')
-
-    const feeResult = []
-
-    for await (const fee of Fee.find({
-      $or: filter
-    }).select({
-      feeType: 1,
-      feeGroups: {
-        name: 1,
-        fields: 1,
-        code: 1
-      }
-    })) {
-      feeResult.push(fee.toObject())
-    }
-
-    return feeResult
-  }
-}
-
-
-Passei o endpoint, o router e o usecase...
-Me fala se tem algum metodo especifico dentro deles que vc queira ver que eu te mando
-
+npm ERR! A complete log of this run can be found in:
+npm ERR!     C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-01-18T01_18_28_635Z-debug-0.log
