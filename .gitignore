@@ -1,458 +1,521 @@
-import React, { useState } from "react";
-import Image from "next/image";
-import { Tooltip } from "@mui/material";
-import Select from "@/@core/components/Select";
-import TextField from "@/@core/components/TextField";
-import ButtonIcon from "@/@core/components/ButtonIcon";
-import TouchableOpacity from "@/@core/components/TouchableOpacity";
-import InfoIcon from "@/assets/svg/info.svg";
-import Info2Icon from "@/assets/svg/info2.svg";
-import CloseCardIcon from "@/assets/svg/close-icon-card.svg";
-import CheckCardIcon from "@/assets/svg/check-icon-card.svg";
-import ErrorCircleIcon from "@/assets/svg/error-circle-color.svg";
-import CheckCircleIcon from "@/assets/svg/check-circle-color.svg";
-import NoteIcon from "@/assets/svg/note.svg";
-import ButtonSecondary from "@/assets/svg/button-secondary.svg";
-import CloseCircleIcon from "@/assets/svg/close-circle-dark.svg";
-import {
-  CardWrapper,
-  CardTitle,
-  CardText,
-  InputDiv,
-  TextNote,
-  Divider,
-  Div,
-} from "./styles";
-import { FeeField } from "@/@core/store/feeManagementStore";
-import SelectEquityOptionsModalModal, {
-  EquityAndCommission,
-} from "@/@core/components/SelectEquityOptionsModal";
-import { exceptionValidation } from "@/@core/utils/exceptionValidation";
-import { exceptionValidationLabel } from "@/@core/utils/exceptionValidationLabel";
-import NoteCard from "../Note";
+import React, { useEffect } from "react";
+import Paper from "@/@core/components/Paper";
+import Tabs from "./components/Tab";
+import CifRequest from "./components/cifRequest";
+import BankIcon from "@/assets/svg/bank-icon.svg";
+import ClientIcon from "@/assets/svg/client-icon.svg";
+import LocationIcon from "@/assets/svg/location-icon.svg";
+import OfficerIcon from "@/assets/svg/officer-icon.svg";
+import { MainContainer } from "./styles";
+import { useFeeManagementStore } from "@/@core/store/feeManagementStore";
+import Text from "@/@core/components/Text";
+import Animation from "@/@core/components/Animation";
+import animationData from "../../../assets/animation/bank-search.json";
+import { CircularProgress } from "@mui/material";
+import { useLoadingStore } from "@/@core/store/loadingStore";
+import { useParams } from "react-router-dom";
+import { FeeManagenmetProvider } from "@/services/feeManagementProvider";
+import { useNavigate } from "react-router-dom";
+import { useCustomerSearchStore } from "@/@core/store";
+import { CIFProvider } from "@/services/cifProvider";
+import { useRouter } from "next/router";
 
-interface ICard {
-  options: any;
-  type: "primary" | "secondary" | "success" | "error" | undefined;
-  note?: boolean;
-  noteKYC?: any;
-  noteDDA?: any;
-  margin?: number | string;
-  exception?: boolean;
-  onCancel?: () => void;
-  onApprove?: boolean;
-  requestApprove?: boolean;
-  editEquity?: boolean;
-  approvalResults?: any;
-  isModal?: boolean;
-  disabled?: boolean;
-  onChange: (payload: any, index: number) => void;
-  showRejectNote?: boolean;
-  onPressAprove: (options: any, index: number) => void;
-  onRejectPress: (options: any, index: number) => void;
-  index: number;
-  defaultValue: any;
-  onCaseId?: boolean;
-  clientValue?: any;
-  onEdit?: () => void;
-  onSelectedEquity?: (selected: boolean) => void;
-  selectedEquity?: boolean;
-}
+import GenericErrorMsgModal from "./components/GenericErrorMsgModal";
+import { useErrorStore } from "@/@core/store/errorStore";
+import { useDocumentStore } from "@/@core/store/documents";
 
-interface ITypes {
-  primary: string;
-  secondary: string;
-}
+const defaultOptions = {
+  loop: false,
+  autoplay: true,
+  animationData: animationData,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+  },
+};
 
-interface ExceptionsOptions {
-  value: string;
-  text: string;
-  visible: boolean;
-  _id: string;
-}
+export default function FeeManagement() {
+  const { feeData, isAprovalFlowDone, setIsAprovalFlowDone } =
+    useFeeManagementStore((state) => state);
 
-interface CurrentValues {
-  [index: number]: {
-    currentValue: string;
-  };
-}
+  const { errorGlobal, setErrorGlobal } = useErrorStore((state) => state);
 
-const Card = ({
-  options,
-  disabled,
-  type,
-  noteKYC,
-  noteDDA,
-  margin,
-  exception,
-  onCancel,
-  onApprove,
-  requestApprove,
-  editEquity,
-  approvalResults,
-  isModal,
-  showRejectNote,
-  onChange,
-  onEdit,
-  onPressAprove,
-  onRejectPress,
-  index,
-  defaultValue,
-  onCaseId,
-  clientValue,
-  onSelectedEquity,
-  selectedEquity,
-}: ICard) => {
-  const fees: ITypes = {
-    primary: "Standard Fees",
-    secondary: "Client Current Fees",
-  };
+  const navigate = useNavigate();
+  const { globalLoading } = useLoadingStore((state) => state);
+  const { feeCaseNumber, customerCif } = useParams();
+  const { getActiveFee, getFeeByCIF } = FeeManagenmetProvider();
+  const { search, setSearch } = useCustomerSearchStore((state) => state);
+  const { cifListSearch } = CIFProvider();
+  const router = useRouter();
+  const { setDocumentList } = useDocumentStore((state) => state);
 
-  const title: string =
-    type === "primary"
-      ? fees.primary
-      : type === "secondary"
-      ? fees.secondary
-      : "Exception Request";
-
-  const [modalSelected, setModalSelected] = useState<EquityAndCommission>();
-  const [currentValue, setCurrentValue] = useState<CurrentValues>([]);
-  const [firstSelectEditEquity, setFirstSelectEditEquity] = useState(true);
-
-  const disabledRejectButton =
-    options.slice(-1)[0]?.approved === true ? true : false;
-
-  const disabledApprovedButton =
-    options.slice(-1)[0]?.reject === true ? true : false;
-
-  const checkDisabled = (name: string, labelValue: string) => {
-    if (name === "Hold mail" && labelValue === "NOT APPLICABLE") {
-      return true;
+  useEffect(() => {
+    setDocumentList(feeData?.data?.documents || []);
+    if (customerCif) {
+      const baseRoute = "/app/feemanagement";
+      const route = baseRoute + "/" + customerCif;
+      setIsAprovalFlowDone(false);
+      if (!search || search === "") {
+        setSearch(customerCif);
+      }
+      if (feeCaseNumber) {
+        getActiveFee(feeCaseNumber).catch((error) => {
+          if ([400, 404].includes(error.response?.status)) {
+            navigate(route);
+          }
+        });
+      } else {
+        cifListSearch(customerCif).then((response) => {
+          if (response.data.data.customers.length > 0) {
+            getFeeByCIF(customerCif).catch((error) => {
+              if ([400, 404].includes(error.response?.status)) {
+                navigate(route);
+              }
+            });
+          } else {
+            router.replace(baseRoute);
+          }
+        });
+      }
     }
-    return false;
-  };
+  }, [feeCaseNumber, customerCif]);
 
-  return (
-    <CardWrapper margin={margin} type={type}>
+  if (globalLoading === false) {
+    if (feeData?.data?.fees?.length > 0) {
+      return (
+        <MainContainer>
+          <div
+            style={{ paddingTop: 24, width: "100%", height: "100%" }}
+            className="content-container"
+          >
+            <div style={{ display: "flex", marginBottom: 24 }}>
+              <Paper
+                title="CIF"
+                width="20%"
+                label={feeData.data.cif}
+                icon={BankIcon}
+                alt="Bank Acount"
+              />
+              <Paper
+                title="Client Name"
+                width="20%"
+                label={feeData.data.customerName}
+                icon={ClientIcon}
+                alt="Bank Acount"
+                margin="0px 16px"
+              />
+              <Paper
+                title="Client Address"
+                width="40%"
+                label={feeData.data.customerAddress}
+                icon={LocationIcon}
+                alt="Bank Acount"
+                margin="0px 16px 0px 0px"
+              />
+              <Paper
+                title="Client Officer"
+                width="20%"
+                label={feeData.data.customerAccountOfficer}
+                icon={OfficerIcon}
+                alt="Bank Acount"
+              />
+            </div>
+            {feeData?.data?.feesActives.length > 0 && !isAprovalFlowDone && (
+              <div
+                style={{
+                  justifyContent: "center",
+                  display: "flex",
+                  margin: "0px 0px 24px 0px",
+                }}
+              >
+                <CifRequest />
+              </div>
+            )}
+            <div style={{ minHeight: "60vh" }}>
+              <Tabs />
+            </div>
+          </div>
+        </MainContainer>
+      );
+    } else {
+      return (
+        <div
+          style={{
+            display: "flex",
+            height: "110vh",
+            background: "#f7f7f8",
+            alignItems: "center",
+            justifyContent: "center",
+            alignContent: "center",
+            flexDirection: "column",
+            textAlign: "center",
+          }}
+        >
+          <>
+            <Animation options={defaultOptions} width={250} height={200} />
+            <div style={{ marginTop: 24 }}>
+              <Text>Enter CIF or Short Name to get started.</Text>
+            </div>
+
+            <GenericErrorMsgModal
+              open={errorGlobal}
+              onClose={() => setErrorGlobal(false)}
+            />
+          </>
+        </div>
+      );
+    }
+  } else {
+    return (
       <div
         style={{
           display: "flex",
+          height: "110vh",
+          background: "#f7f7f8",
           alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
+          justifyContent: "center",
+          alignContent: "center",
+          flexDirection: "column",
+          textAlign: "center",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <CardTitle>{title}</CardTitle>
-          {type === "primary" && (
-            <Tooltip
-              arrow
-              title="Please refer to the tab: Fee Schedule - Reference Only"
-              placement="top"
-            >
-              <Image
-                src={InfoIcon}
-                width={20}
-                height={20}
-                alt="info"
-                style={{ marginLeft: 6 }}
-              />
-            </Tooltip>
-          )}
-        </div>
-        <div>
-          {!onCaseId && title === "Exception Request" && (
-            <TouchableOpacity onClick={onCancel}>
-              <Image src={CloseCircleIcon} width={22} height={22} alt="Close" />
-            </TouchableOpacity>
-          )}
-        </div>
+        <CircularProgress />
       </div>
+    );
+  }
+}
 
-      {options?.map((item: FeeField, index: number) => {
-        if (editEquity && item?.name !== "Equity and Options Commission") {
-          return;
-        }
-        return (
-          <div key={item?.id} style={{ width: "100%" }}>
-            <InputDiv>
-              <CardText>{item?.name}</CardText>
-              {item?.tooltip?.length !== 0
-                ? type === "primary" && (
-                    <Tooltip arrow title={item?.tooltip} placement="top">
-                      <Image
-                        src={Info2Icon}
-                        width={20}
-                        height={20}
-                        alt="info"
-                        style={{ marginLeft: 6 }}
-                      />
-                    </Tooltip>
-                  )
-                : null}
-            </InputDiv>
-            {type != "primary" && type != "secondary" ? (
-              <div style={{ display: "flex" }}>
-                {item?.name === "Equity and Options Commission" ? (
-                  <div style={{ width: "100%" }}>
-                    {editEquity && (
-                      <>
-                        <Select
-                          label={`Other: ${
-                            item.exceptionOptions[
-                              item.exceptionOptions.length - 1
-                            ].value
-                          }`}
-                          index={index}
-                          options={[
-                            item.exceptionOptions[
-                              item.exceptionOptions.length - 1
-                            ],
-                          ]}
-                          disabled={true}
-                          exception={exceptionValidation(
-                            defaultValue[index]?.labelValue,
-                            clientValue[index]?.labelValue,
-                            currentValue[index]?.currentValue ?? item.labelValue
-                          )}
-                        />
-                        <div style={{ marginTop: "16px" }}>
-                          <CardText>
-                            Select Equity and Options Commision to approve
-                          </CardText>
-                        </div>
-                      </>
-                    )}
-                    <SelectEquityOptionsModalModal
-                      exception={
-                        !editEquity
-                          ? exceptionValidation(
-                              defaultValue[index]?.labelValue,
-                              clientValue[index]?.labelValue,
-                              modalSelected?.text ?? item?.labelValue
-                            )
-                          : { result: "" }
-                      }
-                      onSelect={(selected: EquityAndCommission) => {
-                        item.labelValue = selected?.text;
-                        setModalSelected(selected);
-                        onChange(selected, index);
-                        setFirstSelectEditEquity(false);
-                        onSelectedEquity?.(true);
-                      }}
-                      selected={modalSelected}
-                      onError={selectedEquity}
-                      options={item?.exceptionOptions}
-                      defaultValue={item?.defaultValue}
-                      labelValue={item?.labelValue}
-                      disabled={disabled && !editEquity}
-                      disableOther={editEquity}
-                      rejected={approvalResults?.length > 1 && item.reject}
-                    />
-                  </div>
-                ) : (
-                  <Select
-                    label={item.labelValue ?? item.defaultValue}
-                    value={item.defaultValue}
-                    exception={exceptionValidation(
-                      defaultValue[index]?.labelValue,
-                      clientValue[index]?.labelValue,
-                      currentValue[index]?.currentValue ?? item.labelValue
-                    )}
-                    options={item?.exceptionOptions.sort(
-                      (itemA, itemB) =>
-                        parseFloat(itemA.value) - parseFloat(itemB.value)
-                    )}
-                    index={index}
-                    onChange={(e) => {
-                      onChange(e, index);
-                      setCurrentValue({
-                        ...currentValue,
-                        [index]: {
-                          currentValue: e.text,
-                        },
-                      });
-                    }}
-                    disabled={
-                      disabled || checkDisabled(item.name, item.labelValue)
-                    }
-                  />
-                )}
-              </div>
-            ) : (
-              <>
-                {title === "Client Current Fees" ? (
-                  <TextField
-                    value={item.labelValue ?? item?.defaultValue}
-                    onChange={() => {}}
-                    disabled
-                    exception={exceptionValidationLabel(
-                      defaultValue[index]?.labelValue,
-                      item.labelValue
-                    )}
-                  />
-                ) : (
-                  <TextField
-                    value={item.labelValue ?? item?.defaultValue}
-                    onChange={() => {}}
-                    disabled
-                  />
-                )}
-              </>
-            )}
+
+==================================================================
+
+import React from "react";
+import Modal from "@mui/material/Modal";
+import Image from "next/image";
+import Button from "@/@core/components/Button";
+import TouchableOpacity from "@/@core/components/TouchableOpacity";
+import closeIcon from "@/assets/svg/close.svg";
+import {
+  Container,
+  Title,
+  Text,
+  TextThin,
+  TableCell,
+  TableContainer,
+  TableRow,
+} from "./styles";
+import { FeeManagenmetProvider } from "@/services/feeManagementProvider";
+import ScrollableSection from "@/@core/components/ScrollableSection";
+
+interface IClientCurrentFeesModal {
+  cif: string;
+}
+
+interface ICustomerFee {
+  feeDescription: string;
+  feeCode: string;
+}
+
+const ClientCurrentFeesModal = ({ cif }: IClientCurrentFeesModal) => {
+  const { getCurrentFeesByCIF } = FeeManagenmetProvider();
+  const [customerFees, setCustomerFees] = React.useState<Array<ICustomerFee>>(
+    []
+  );
+  const [open, setOpen] = React.useState(false);
+  const handleOpen = () => {
+    getCurrentFeesByCIF(cif).then((response) => {
+      setCustomerFees(response.data.data);
+      setOpen(true);
+    });
+  };
+  const handleClose = () => setOpen(false);
+
+  return (
+    <div style={{ marginLeft: "15px" }}>
+      <Button outline onClick={handleOpen} style={{ width: "177px" }}>
+        Client Current Fees
+      </Button>
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Container>
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Title>Client Current Fees</Title>
+            <TouchableOpacity onClick={handleClose}>
+              <Image src={closeIcon} width={20} height={20} alt="close" />
+            </TouchableOpacity>
           </div>
-        );
-      })}
-
-      {noteKYC && type === "primary" && noteKYC.length > 0 ? (
-        <Div>
-          <CardText>KYC Mailing Status:</CardText>
-          <CardText style={{ marginLeft: 6 }}>
-            <b>{noteKYC}</b>
-          </CardText>
-          <Tooltip
-            arrow
-            title="Mailing Status update must follow the regular Operations procedure"
-            placement="top"
+          <div
+            style={{
+              margin: "20px 0px 16px 0px",
+            }}
           >
-            <Image
-              src={InfoIcon}
-              width={20}
-              height={20}
-              alt="info"
-              style={{ marginLeft: 5 }}
-            />
-          </Tooltip>
-        </Div>
-      ) : null}
+            <ScrollableSection>
+              <TableContainer>
+                <TableRow>
+                  <TableCell>
+                    <Text>Account</Text>
+                  </TableCell>
+                  <TableCell>
+                    <Text>Fee</Text>
+                  </TableCell>
+                </TableRow>
+                {customerFees.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>
+                      <TextThin>{item.feeCode}</TextThin>
+                    </TableCell>
+                    <TableCell>
+                      <TextThin>{item.feeDescription}</TextThin>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableContainer>
+            </ScrollableSection>
+          </div>
 
-      {noteDDA && (
-        <Div>
-          <CardText>Charges will be assessed to the DDA#:</CardText>
-          <CardText style={{ marginLeft: 6 }}>
-            <b>{noteDDA}</b>
-          </CardText>
-          <Tooltip
-            arrow
-            title="Customer fees are assessed to the main active DDA at the time of charge."
-            placement="top"
-          >
-            <Image
-              src={InfoIcon}
-              width={20}
-              height={20}
-              alt="info"
-              style={{ marginLeft: 5 }}
-            />
-          </Tooltip>
-        </Div>
-      )}
-
-      {!editEquity &&
-        approvalResults?.map((approver: any) => {
-          return approver.approved ? (
-            <div style={{ width: "100%" }}>
-              <Divider color="#73B9A1" />
-              <div style={{ display: "flex" }}>
-                <Image
-                  src={CheckCircleIcon}
-                  width={21}
-                  height={21}
-                  alt="info"
-                  style={{ marginRight: 8 }}
-                />
-                <div style={{ flex: 1, flexWrap: "wrap" }}>
-                  <TextNote>{approver.message}</TextNote>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ width: "100%" }}>
-              <Divider color="#F0BABB" />
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                  }}
-                >
-                  <Image
-                    src={ErrorCircleIcon}
-                    width={21}
-                    height={21}
-                    alt="info"
-                    style={{ marginRight: 8 }}
-                  />
-                  <div style={{ flex: 1, flexWrap: "wrap" }}>
-                    <TextNote>{approver.message}</TextNote>
-                  </div>
-                </div>
-                <TouchableOpacity>
-                  <NoteCard
-                    arrow="left"
-                    label="Note"
-                    width={78}
-                    height={36}
-                    onEdit={onEdit}
-                  />
-                </TouchableOpacity>
-              </div>
-            </div>
-          );
-        })}
-
-      {(requestApprove || editEquity) &&
-        type != "primary" &&
-        type != "secondary" &&
-        options.filter(
-          (field: any) =>
-            field.results && Object.values(field.results).includes("Rejected")
-        ).length === 0 && (
-          <>
-            <div
-              style={{
-                display: "flex",
-                width: "100%",
-                justifyContent: "space-between",
-              }}
-            >
-              <ButtonIcon
-                color="#CA3D3D"
-                activeColor="#a82e2e"
-                hoverColor="#d25b5b"
-                icon={CloseCardIcon}
-                onClick={() => onRejectPress(options, index)}
-                softDisabled={disabledRejectButton}
-              >
-                Reject
-              </ButtonIcon>
-              <ButtonIcon
-                color="#008056"
-                activeColor="#006141"
-                hoverColor="#009e6a"
-                icon={CheckCardIcon}
-                onClick={() => onPressAprove(options, index)}
-                softDisabled={disabledApprovedButton}
-              >
-                Approve
-              </ButtonIcon>
-            </div>
-            {showRejectNote ? (
-              <TouchableOpacity
-                style={{ marginTop: -5, width: "100%", display: "block" }}
-              >
-                <NoteCard arrow="top" label="Rejection Note" onEdit={onEdit} />
-              </TouchableOpacity>
-            ) : null}
-          </>
-        )}
-    </CardWrapper>
+          <div>
+            <TextThin>
+              *N/A: Refer to Front-Office desktop reference manual for procedure
+              to request changes. Contact the Trading Desk or Trade Support
+              teams if you have additional questions.
+            </TextThin>
+          </div>
+        </Container>
+      </Modal>
+    </div>
   );
 };
 
-export default Card;
+export default ClientCurrentFeesModal;
+
+
+========================================================================================
+
+import api from "@/@core/api";
+import { apiPathAddress } from "@/@core/api/apiAddress";
+import { useAuthStore, useCustomerSearchStore } from "@/@core/store";
+import { DocumentLinkData } from "@/@core/store/documents";
+import { useErrorStore } from "@/@core/store/errorStore";
+import {
+  FeeManagementData,
+  FeeManagementDataUpdate,
+  useFeeManagementStore,
+} from "@/@core/store/feeManagementStore";
+import { useLoadingStore } from "@/@core/store/loadingStore";
+import {
+  RevenueReportData,
+  useRevenueReportStore,
+} from "@/@core/store/revenueReportStore";
+import { useMutation } from "@tanstack/react-query";
+import { AxiosResponse } from "axios";
+import { useState } from "react";
+
+interface CaseAttributes {
+  name: string;
+  value: string;
+}
+
+interface Data {
+  conductorId: string;
+  caseId: string;
+  caseNumber: string;
+  userOwner: string;
+  feeManagementId: string;
+  cif: string;
+  caseAttributes: CaseAttributes[];
+}
+
+interface CreateCaseResponse {
+  code: number;
+  data: Data;
+}
+
+export function FeeManagenmetProvider() {
+  const { cif } = useCustomerSearchStore((state) => state);
+  const {
+    setFeeData,
+    newFeeRequest,
+    feeApprovedData,
+    newFeeRequestId,
+    setNewFeeRequestId,
+    rejectGroup,
+    setRejectGroup,
+  } = useFeeManagementStore((state) => state);
+  const { userData } = useAuthStore((state) => state);
+  const { setGlobalLoading } = useLoadingStore((state) => state);
+  const { setErrorGlobal } = useErrorStore((state) => state);
+  const { setRevenueReport } = useRevenueReportStore((state) => state);
+
+  const { mutateAsync: getFeeByCIF, isLoading: getFeeIsLoading } = useMutation(
+    ["getFeesByCIF"],
+    async (customerCif: string) => {
+      setGlobalLoading(true);
+      return await api.get(`${apiPathAddress.feeManagement}/${customerCif}`);
+    },
+    {
+      onSuccess: (response: AxiosResponse<FeeManagementData>) => {
+        response.data.data.fees.map((fees) => {
+          return fees.feeGroups.map((feeGroups) => {
+            return feeGroups.fields.map((fields) => {
+              return (fields.defaultLabelValue = fields.labelValue);
+            });
+          });
+        });
+        setFeeData(response.data);
+        setGlobalLoading(false);
+      },
+      onError(error, variables, context) {
+        console.log("Error on get feedata", error, variables, context);
+        setGlobalLoading(false);
+        setErrorGlobal(true);
+      },
+    }
+  );
+
+  const {
+    mutateAsync: getCurrentFeesByCIF,
+    isLoading: getCurrentFeesIsLoading,
+  } = useMutation(
+    ["getCurrentFeesByCIF"],
+    async (cif: string) => {
+      return await api.get(
+        `${apiPathAddress.conductorCustomer}/${cif}/fees/current`
+      );
+    },
+    {
+      onSuccess: (response: AxiosResponse) => {
+        return response;
+      },
+      onError(error, variables, context) {},
+    }
+  );
+
+  const { mutateAsync: newFeeCase, isLoading: newFeeCaseLoading } = useMutation(
+    ["newFeeRequest"],
+    async (newFeeCaseRequest: FeeManagementData) => {
+      setGlobalLoading(true);
+      return await api.post("/v1/conductor/fee/case", newFeeCaseRequest);
+    },
+    {
+      onSuccess: (result: AxiosResponse<CreateCaseResponse>) => {
+        setNewFeeRequestId(result.data.data.feeManagementId);
+        console.log(result.status);
+        setGlobalLoading(false);
+      },
+      onError: () => {
+        console.log(newFeeRequest);
+        setGlobalLoading(false);
+      },
+    }
+  );
+
+  const {
+    mutateAsync: getActiveFee,
+    isLoading: getActiveFeeLoading,
+    isSuccess: getActiveFeeSuccess,
+  } = useMutation(
+    ["getActiveFee"],
+    async (feedId: string) => {
+      setGlobalLoading(true);
+      return await api.get(`/v1/fee/case/${feedId}/${userData.userName}`);
+    },
+    {
+      onSuccess: (response: AxiosResponse<FeeManagementData>) => {
+        setFeeData(response.data);
+        setGlobalLoading(false);
+      },
+      onError: (error) => {
+        console.log(error);
+        setGlobalLoading(false);
+      },
+    }
+  );
+
+  const { mutateAsync: viewActiveFee, isLoading: getViewActiveFeeLoading } =
+    useMutation(
+      ["getViewActiveFee"],
+      async () => {
+        setGlobalLoading(true);
+        return await api.get(
+          `/v1/fee/case/${newFeeRequestId}/${userData.userName}`
+        );
+      },
+      {
+        onSuccess: (response: AxiosResponse<FeeManagementData>) => {
+          setFeeData(response.data);
+          setGlobalLoading(false);
+        },
+        onError: (error) => {
+          console.log(error);
+          setGlobalLoading(false);
+        },
+      }
+    );
+
+  const { mutateAsync: updateFeeCase, isLoading: updateFeeCaseLoading } =
+    useMutation(
+      ["putUpdateFeeCaseFee"],
+      async (updateFeeCase: FeeManagementDataUpdate) => {
+        setGlobalLoading(true);
+        return await api.put(`/v1/fee/case`, updateFeeCase);
+      },
+      {
+        onSuccess: (response: AxiosResponse<FeeManagementData>) => {
+          console.log(response);
+          setGlobalLoading(false);
+        },
+        onError: (error) => {
+          console.log(error);
+          setGlobalLoading(false);
+        },
+      }
+    );
+
+  const { mutateAsync: getRevenueReport } = useMutation(
+    ["getRevenueReport"],
+    async (cif: string) => {
+      return await api.get(`customer/v1/${cif}/revenue`);
+    },
+    {
+      onSuccess: (response: AxiosResponse<RevenueReportData>) => {
+        setRevenueReport(response.data);
+      },
+      onError: (error) => {},
+    }
+  );
+
+  const { mutateAsync: getFeeDocumentLink } = useMutation(
+    ["getFeeDocumentLink"],
+    async (documentName: string) => {
+      return await api.get(`/v1/file/feeMangementTemp/${documentName}`);
+    },
+    {
+      onSuccess: (response: AxiosResponse<DocumentLinkData>) => {},
+      onError: (error) => {},
+    }
+  );
+
+  return {
+    getFeeByCIF, // Buscar Fee por CIF
+    newFeeCase, // Criar novo fee
+    getActiveFee, // Buscar Active Fee
+    updateFeeCase,
+    viewActiveFee,
+    getCurrentFeesByCIF,
+    rejectGroup,
+    setRejectGroup,
+    getCurrentFeesIsLoading,
+    getFeeIsLoading, // Loading do carregamento do fee
+    getActiveFeeLoading, // Loading da busca do active Fee
+    newFeeCaseLoading, // Loading da criação do fee
+    updateFeeCaseLoading,
+    getViewActiveFeeLoading,
+    getActiveFeeSuccess,
+    getRevenueReport,
+    getFeeDocumentLink,
+  };
+}
+
+
