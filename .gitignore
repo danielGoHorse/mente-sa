@@ -1,1 +1,44 @@
+async #getFeeStandard(filter) {
+    logger.info('getFeeStandard()');
 
+    // Aqui usamos uma procedure fictícia `sp_get_standard_fees`
+    const connection = await connectToFeeMgmtDb(); // Conexão com SQL Server
+    const recordset = await executeStoreProcedure(connection, 'sp_get_standard_fees', {});
+
+    const feeResult = recordset.map((record) => {
+      return {
+        feeType: record.feeType,
+        feeGroups: [
+          {
+            name: record.feeGroup,
+            code: record.groupCode,
+            fields: [
+              {
+                code: record.fieldCode,
+                name: record.fieldName,
+                defaultValue: record.defaultValue,
+                isStandard: record.isStandard === 1,
+              },
+            ],
+          },
+        ],
+      };
+    });
+
+    return feeResult;
+  }
+
+
+  const useCase = new FeeGetByCifUseCase();
+  const result = await useCase.execute(req.body);
+
+  if (result.isFailure) {
+    const badRequestResponse = ApiResponse.createBadRequestResponse({
+      error: result.error,
+    });
+    return res.status(badRequestResponse.code).json(badRequestResponse);
+  }
+
+  const okResponse = ApiResponse.createOkResponse(result.value);
+
+  res.json(okResponse);
