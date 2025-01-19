@@ -94,3 +94,18 @@ export default class FeeGetByCifUseCase {
   }
 }
 
+
+Cannot redeclare block-scoped variable 'feesActives'.ts(2451)
+const feesActives: (Document<unknown, {}, {
+    createdAt: NativeDate;
+    updatedAt: NativeDate;
+} & {
+    fees: Types.DocumentArray<any> | any[] | {
+        [x: string]: any;
+    }[] | any[];
+    usersApprovers: Types.DocumentArray<any> | any[] | {
+        [x: string]: any;
+    }[] | any[];
+    ... 17 more ...;
+    userOwnerEmail?: unknown;
+}> & Omit<...>)[]
