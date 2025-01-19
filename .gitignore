@@ -1,91 +1,30 @@
-import { Fee } from '#src/models/entities/Fees.js';
-import Result from '#features/shared/result.js';
-import CustomerFees from '#src/models/CustomerFees.js';
-import BankAccountFee from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import { Field } from '#src/models/entities/Fields.js';
-import { connectToFeeMgmtDb, executeStoreProcedure } from '#src/models/db.js';
+async #getFeeStandard(filter) {
+  logger.info('getFeeStandard()');
 
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    global.logger.info('FeeGetByCifUseCase()');
+  // =====================
+  // Alteração para buscar Standard Fees do SQL
+  const connection = await connectToFeeMgmtDb();
+  const recordset = await executeStoreProcedure(connection, 'sp_get_standard_fees', {});
 
-    const result = { fees: [] };
+  const feeResult = recordset.map((record) => {
+    return {
+      feeType: record.feeType,
+      feeGroups: [
+        {
+          name: record.feeGroup,
+          code: record.groupCode,
+          fields: [
+            {
+              code: record.fieldCode,
+              name: record.fieldName,
+              defaultValue: record.defaultValue,
+              isStandard: record.isStandard === 1,
+            },
+          ],
+        },
+      ],
+    };
+  });
 
-    // =====================
-    // Alteração para buscar Standard Fees do SQL
-    const fees = await this.#getFeeStandardFromSQL();
-    // =====================
-
-    const customer = new CustomerFees(fees, customerAccount);
-    if (customer.fee) result.fees.push(customer.fee);
-    global.logger.info('After Customer Fees');
-
-    const bank = new BankAccountFee(fees, customerAccount);
-    if (bank.fee) result.fees.push(bank.fee);
-    global.logger.info('After Bank Account Fees');
-
-    const equityField = await Field.find({ code: 7 });
-    const investiment = new InvestimentAccountFee(
-      fees,
-      customerAccount,
-      equityField[0]
-    );
-    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
-    global.logger.info('After Investment Account Fees');
-
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED'],
-      },
-      caseNumber: {
-        $exists: true,
-      },
-    });
-    global.logger.info('After Fees Actives');
-
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id,
-    }));
-
-    result.documentUrl =
-      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
-
-    global.logger.info(`documentUrl= ${result.document}`);
-
-    return Result.ok(result);
-  }
-
-  async #getFeeStandardFromSQL() {
-    global.logger.info('getFeeStandardFromSQL()');
-
-    // Alteração para buscar os dados do SQL
-    const connection = await connectToFeeMgmtDb();
-    const recordset = await executeStoreProcedure(connection, 'sp_get_standard_fees', {});
-
-    const feeResult = recordset.map((record) => {
-      return {
-        feeType: record.feeType,
-        feeGroups: [
-          {
-            name: record.feeGroup,
-            code: record.groupCode,
-            fields: [
-              {
-                code: record.fieldCode,
-                name: record.fieldName,
-                defaultValue: record.defaultValue,
-                isStandard: record.isStandard === 1,
-              },
-            ],
-          },
-        ],
-      };
-    });
-
-    return feeResult;
-  }
+  return feeResult;
 }
