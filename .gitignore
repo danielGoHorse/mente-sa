@@ -1,10 +1,61 @@
-async #getFeeStandard(filter) {
-  logger.info('getFeeStandard()');
+async execute({ customerAccount }) {
+  global.logger.info('FeeGetByCifUseCase()');
+
+  const result = { fees: [] };
 
   // =====================
-  // Alteração para buscar Standard Fees do SQL
+  // Alteração para buscar Standard e Exception Fees do SQL
+  const standardFees = await this.#getFeeStandardFromSQL();
+  const exceptionFees = await this.#getFeeExceptionFromSQL();
+  const fees = [...standardFees, ...exceptionFees];
+  // =====================
+
+  const customer = new CustomerFees(fees, customerAccount);
+  if (customer.fee) result.fees.push(customer.fee);
+  global.logger.info('After Customer Fees');
+
+  const bank = new BankAccountFee(fees, customerAccount);
+  if (bank.fee) result.fees.push(bank.fee);
+  global.logger.info('After Bank Account Fees');
+
+  const equityField = await Field.find({ code: 7 });
+  const investiment = new InvestimentAccountFee(
+    fees,
+    customerAccount,
+    equityField[0]
+  );
+  if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
+  global.logger.info('After Investment Account Fees');
+
+  const feesActives = await FeeCase.find({
+    cif: customerAccount[0].cifno,
+    status: {
+      $nin: ['DONE', 'REJECTED'],
+    },
+    caseNumber: {
+      $exists: true,
+    },
+  });
+  global.logger.info('After Fees Actives');
+
+  result.feesActives = feesActives?.map((x) => ({
+    caseNumber: x.caseNumber,
+    id: x.id,
+  }));
+
+  result.documentUrl =
+    'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
+
+  global.logger.info(`documentUrl= ${result.document}`);
+
+  return Result.ok(result);
+}
+
+async #getFeeExceptionFromSQL() {
+  global.logger.info('getFeeExceptionFromSQL()');
+
   const connection = await connectToFeeMgmtDb();
-  const recordset = await executeStoreProcedure(connection, 'sp_get_standard_fees', {});
+  const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees', {});
 
   const feeResult = recordset.map((record) => {
     return {
@@ -18,7 +69,10 @@ async #getFeeStandard(filter) {
               code: record.fieldCode,
               name: record.fieldName,
               defaultValue: record.defaultValue,
-              isStandard: record.isStandard === 1,
+              isException: record.isException === 1,
+              exceptionOptions: record.exceptionOptions
+                ? JSON.parse(record.exceptionOptions)
+                : [],
             },
           ],
         },
@@ -27,4 +81,57 @@ async #getFeeStandard(filter) {
   });
 
   return feeResult;
+}
+=============================
+
+
+async #getFeeStandard(filter) {
+  logger.info('getFeeStandard()');
+
+  // =====================
+  // Alteração para buscar Standard Fees e Exception Fees do SQL
+  const connection = await connectToFeeMgmtDb();
+  const standardRecordset = await executeStoreProcedure(connection, 'sp_get_standard_fees', {});
+  const exceptionRecordset = await executeStoreProcedure(connection, 'sp_get_exception_fees', {});
+
+  const standardFees = standardRecordset.map((record) => ({
+    feeType: record.feeType,
+    feeGroups: [
+      {
+        name: record.feeGroup,
+        code: record.groupCode,
+        fields: [
+          {
+            code: record.fieldCode,
+            name: record.fieldName,
+            defaultValue: record.defaultValue,
+            isStandard: record.isStandard === 1,
+          },
+        ],
+      },
+    ],
+  }));
+
+  const exceptionFees = exceptionRecordset.map((record) => ({
+    feeType: record.feeType,
+    feeGroups: [
+      {
+        name: record.feeGroup,
+        code: record.groupCode,
+        fields: [
+          {
+            code: record.fieldCode,
+            name: record.fieldName,
+            defaultValue: record.defaultValue,
+            isException: record.isException === 1,
+            exceptionOptions: record.exceptionOptions
+              ? JSON.parse(record.exceptionOptions)
+              : [],
+          },
+        ],
+      },
+    ],
+  }));
+
+  return [...standardFees, ...exceptionFees];
 }
