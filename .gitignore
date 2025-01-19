@@ -1,8 +1,213 @@
-async #getFeeStandard(filter) {
+import { Fee } from '#src/models/entities/Fees.js'
+import Result from '#features/shared/result.js'
+import CustomerFees from '#src/models/CustomerFees.js'
+import BankAccountFee from '#src/models/BankAccountFee.js'
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    global.logger.info('FeeGetByCifUseCase()')
+
+    const result = { fees: [] }
+    const fees = await this.#getFeeStandard([
+      {
+        feeType: 'Customer Fees'
+      },
+      {
+        feeType: 'Bank Account Fees'
+      },
+      {
+        feeType: 'Investment Account Fees'
+      }
+    ])
+
+    const customer = new CustomerFees(fees, customerAccount)
+    if (customer.fee) result.fees.push(customer.fee)
+    global.logger.info('After Customer Fees')
+    const bank = new BankAccountFee(fees, customerAccount)
+    if (bank.fee) result.fees.push(bank.fee)
+    global.logger.info('After Bank Account Fees')
+    const equityField = await Field.find({ code: 7 })
+    const investiment = new InvestimentAccountFee(
+      fees,
+      customerAccount,
+      equityField[0]
+    )
+    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee)
+    global.logger.info('After Investment Account Fees')
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: {
+        $nin: ['DONE', 'REJECTED']
+      },
+      caseNumber: {
+        $exists: true
+      }
+    })
+    global.logger.info('After Fees Actives')
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }))
+
+    result.documentUrl =
+      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
+
+    global.logger.info(`documentUrl= ${result.document}`)
+
+    return Result.ok(result)
+  }
+
+  async #getFeeStandard(filter) {
+    global.logger.info('getFeeStandard()')
+
+    const feeResult = []
+
+    for await (const fee of Fee.find({
+      $or: filter
+    }).select({
+      feeType: 1,
+      feeGroups: {
+        name: 1,
+        fields: 1,
+        code: 1
+      }
+    })) {
+      feeResult.push(fee.toObject())
+    }
+
+    return feeResult
+  }
+}
+
+
+
+==========================================
+
+
+
+import Result from '#features/shared/result.js'
+import numberToCurrency from '#core/helpers/currency.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+import { Fee } from '#src/models/entities/Fees.js'
+const { logger } = global
+
+export default class FeeCaseCreateUseCase {
+  async execute(feeTicketRequest) {
+    logger.info('FeeCaseCreateUseCase()')
+    const feeTicket = new FeeCase(feeTicketRequest)
+
+    const fieldsDataBase = await this.#getFeeStandard([
+      {
+        feeType: 'Customer Fees'
+      },
+      {
+        feeType: 'Bank Account Fees'
+      },
+      {
+        feeType: 'Investment Account Fees'
+      }
+    ])
+
+    const allExceptions = this.#returnAllExceptions(fieldsDataBase)
+
+    logger.info('validateSync()')
+    const validate = feeTicket.validateSync()
+
+    if (validate && validate?.errors) {
+      return Result.fail(validate.errors)
+    }
+    let hasAnyChange = false
+    for (const fee of feeTicket.fees) {
+      for (const [groupIndex, group] of fee.feeGroups.entries()) {
+        for (const [fieldIndex, field] of group.fields.entries()) {
+          if (field.isException) {
+            // se for uma exception, verifica se é uma alteração
+            const newValue =
+              field.defaultValue !==
+              fee.feeGroups[groupIndex - 1].fields[fieldIndex].defaultValue
+            const validValue =
+              !!field.defaultValue && field.defaultValue !== 'NOT APPLICABLE'
+            field.hasChanged = newValue && validValue
+
+            if (field.hasChanged) {
+              hasAnyChange = true
+              fee.hasAnyChange = true
+              group.hasAnyChange = true
+              fee.feeGroups[groupIndex - 1].hasAnyChange = true
+              fee.feeGroups[groupIndex - 2].hasAnyChange = true
+            }
+
+            if (!field.hasChanged) {
+              field.defaultValue =
+                fee.feeGroups[groupIndex - 1].fields[fieldIndex].defaultValue
+            }
+          }
+
+          if (/^\d+$/.test(field.defaultValue)) {
+            // se o defaultvalue tiver apenas digitos
+            field.labelValue = numberToCurrency(field.defaultValue)
+            continue
+          }
+
+          // safekeeping ou equity
+          if (field.labelValue === 'Other') {
+            const other = field.exceptionOptions.filter(
+              (x) => x.text === 'Other'
+            )[0]
+            const fieldEquities = (
+              await Field.find({
+                code: 7,
+                isException: true
+              })
+            )[0]
+
+            field.exceptionOptions = [...fieldEquities.exceptionOptions, other]
+          } else if (
+            !field.labelValue ||
+            !field.labelValue.includes(field.defaultValue)
+          ) {
+            let exception = allExceptions.find(
+              (e) => e.value === field.defaultValue
+            )
+
+            if (!exception) {
+              exception = { text: '' }
+            }
+
+            field.labelValue = exception.text
+          }
+        }
+      }
+    }
+
+    if (!hasAnyChange) {
+      return Result.fail('Cannot create Fee Case without any change.')
+    }
+
+    feeTicket.fees = feeTicket.fees.filter((x) => x.hasAnyChange)
+    feeTicket.fees?.forEach((item) => {
+      item.feeGroups = item.feeGroups.filter((x) => x.hasAnyChange)
+    })
+
+    try {
+      const model = await feeTicket.save()
+      return Result.ok(model.toObject())
+    } catch (err) {
+      logger.error(err)
+      return Result.fail('Error when try to save Fee Case')
+    }
+  }
+
+
+  async #getFeeStandard(filter) {
     logger.info('getFeeStandard()');
 
-    // Aqui usamos uma procedure fictícia `sp_get_standard_fees`
-    const connection = await connectToFeeMgmtDb(); // Conexão com SQL Server
+    // INSERIR PROCEDURE APOS CRIADA
+    const connection = await connectToFeeMgmtDb(); 
     const recordset = await executeStoreProcedure(connection, 'sp_get_standard_fees', {});
 
     const feeResult = recordset.map((record) => {
@@ -28,7 +233,49 @@ async #getFeeStandard(filter) {
     return feeResult;
   }
 
+  #returnAllExceptions(fees) {
+    logger.info('returnAllExceptions()')
+    const allExceptions = new Set()
+    fees.forEach((fee) => {
+      fee.feeGroups.forEach((feeGroup) => {
+        feeGroup.fields.forEach((field) => {
+          if (field.isException) {
+            field.exceptionOptions.forEach(allExceptions.add, allExceptions)
+          }
+        })
+      })
+    })
+    return Array.from(allExceptions)
+  }
+}
 
+============================
+
+import FeeCaseCreateUseCase from './feeCaseCreateUseCase.js'
+import ApiResponse from '#core/http/apiResponse.js'
+
+export default async function feeCaseCreateEndpoint(req, res) {
+  const useCase = new FeeCaseCreateUseCase()
+  const result = await useCase.execute(req.body)
+
+  if (result.isFailure) {
+    const badRequestResponse = ApiResponse.createBadRequestResponse({
+      error: result.error
+    })
+    return res.status(badRequestResponse.code).json(badRequestResponse)
+  }
+
+  const okResponse = ApiResponse.createOkResponse(result.value)
+
+  res.json(okResponse)
+
+}
+===================================
+
+import FeeGetByCifUseCase from './feeGetByCifUseCase.js';
+import ApiResponse from '#core/http/apiResponse.js';
+
+export default async function feeGetByCifEndpoint(req, res) {
   const useCase = new FeeGetByCifUseCase();
   const result = await useCase.execute(req.body);
 
@@ -42,70 +289,5 @@ async #getFeeStandard(filter) {
   const okResponse = ApiResponse.createOkResponse(result.value);
 
   res.json(okResponse);
-
-
-import Result from '#features/shared/result.js';
-import { getStandardFeesFromSQL, getExceptionFeesFromSQL } from '#src/models/FeeQueries.js';
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import { Field } from '#src/models/entities/Fields.js';
-
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    global.logger.info('FeeGetByCifUseCase()');
-
-    const result = { fees: [] };
-
-    // Fetch Standard Fees from SQL Server
-    const standardFees = await getStandardFeesFromSQL();
-    result.fees.push({
-      feeType: 'Standard Fees',
-      feeGroups: standardFees,
-    });
-
-    // Fetch Exception Fees from SQL Server
-    const exceptionFees = await getExceptionFeesFromSQL();
-    result.fees.push({
-      feeType: 'Exception Request',
-      feeGroups: exceptionFees,
-    });
-
-    // Fetch Active Fees from MongoDB
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED'],
-      },
-      caseNumber: {
-        $exists: true,
-      },
-    });
-
-    global.logger.info('After Fees Actives');
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id,
-    }));
-
-    // Include Document URL
-    result.documentUrl =
-      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
-
-    return Result.ok(result);
-  }
 }
 
-
-Cannot redeclare block-scoped variable 'feesActives'.ts(2451)
-const feesActives: (Document<unknown, {}, {
-    createdAt: NativeDate;
-    updatedAt: NativeDate;
-} & {
-    fees: Types.DocumentArray<any> | any[] | {
-        [x: string]: any;
-    }[] | any[];
-    usersApprovers: Types.DocumentArray<any> | any[] | {
-        [x: string]: any;
-    }[] | any[];
-    ... 17 more ...;
-    userOwnerEmail?: unknown;
-}> & Omit<...>)[]
