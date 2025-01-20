@@ -1,14 +1,18 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+const _returnObj = listFee.map(element => {
+  let group = 'Fee Package';
 
-# Forçar o script a rodar no diretório do repositório
-cd "$(git rev-parse --show-toplevel)" || exit 1
+  if (element.groupName !== 'ERA' && element.groupName !== 'EFRA') {
+    return {
+      group,
+      package: [
+        { name: element.groupName },
+        { id: element.id }
+      ]
+    };
+  }
 
-# run commit lint
-npx commitlint --edit
+  // Retorna null ou um valor específico para os casos que não atendem a condição
+  return null;
+}).filter(item => item !== null); // Remove os itens nulos, se necessário
 
-# run eslint
-yarn lint
-
-# run tests
-yarn test
+console.log(_returnObj);
