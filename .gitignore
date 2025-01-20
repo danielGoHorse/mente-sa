@@ -1,17 +1,11 @@
-const _returnObj = listFee.reduce((acc, element) => {
-  let group = 'Fee Package';
-
-  if (element.groupName !== 'ERA' && element.groupName !== 'EFRA') {
-    acc.push({
-      group,
-      package: [
-        { name: element.groupName },
-        { id: element.id }
-      ]
-    });
-  }
-
-  return acc;
-}, []); // Inicializa com um array vazio
+const _returnObj = {
+  group: 'Fee Package',
+  packages: listFee
+    .filter(element => element.groupName !== 'ERA' && element.groupName !== 'EFRA') // Exclui 'ERA' e 'EFRA'
+    .map(element => ({
+      name: element.groupName,
+      id: element.id
+    }))
+};
 
 console.log(_returnObj);
