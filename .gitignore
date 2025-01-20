@@ -1,11 +1,20 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+$ pwd
+/h/Documents/fee-management-backend
 
-# run commit lint
-npx commitlint --edit
 
-# run eslint
-yarn lint
 
-# run tests
-yarn test
+DanielG@NYDEVVDI0027 MINGW64 /h/Documents/fee-management-backend (feat/standardFees)
+$ git commit -m "feat: implement new getByCif"
+'\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-backend'
+CMD.EXE was started with the above path as the current directory.
+UNC paths are not supported.  Defaulting to Windows directory.
+\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-backend\node_modules\@commitlint\cli\lib\cli.js:123
+        throw err;
+        ^
+
+TypeError: Could not find git root from C:\Windows
+    at getEditCommit (\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-backend\node_modules\@commitlint\read\lib\get-edit-commit.js:14:15)
+    at async main (\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-backend\node_modules\@commitlint\cli\lib\cli.js:168:19)
+
+Node.js v20.9.0
+husky - commit-msg hook exited with code 1 (error)
