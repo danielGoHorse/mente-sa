@@ -1,11 +1,9 @@
-const _returnObj = {
-  group: 'Fee Package',
-  packages: listFee
-    .filter(element => element.groupName !== 'ERA' && element.groupName !== 'EFRA') // Exclui 'ERA' e 'EFRA'
-    .map(element => ({
-      name: element.groupName,
-      id: element.id
-    }))
-};
+· Service: fee-management-backend
+ 
+· Name/ID: fee-management-backend
+ 
+· Path: /v1/fee/schedule/:type
+ 
+· Method: GET
 
-console.log(_returnObj);
+Att.: Daniel Gotardo
