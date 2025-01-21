@@ -1,1 +1,4 @@
-https://gitlab2.devops.k8s.safra.int/snb/config-server/development/-/merge_requests/203
+https://gitlab2.devops.k8s.safra.int/snb/config-server/development/-/merge_requests/2039:23 AM
+Oi Taka, bom dia...sobre essa ultima pergunta...era com relação a tela do Standard Fee e do Exception da tela do CIF with Active Request...que os dados era recebidos pelo mongo e agora estes dois devem ser recebidos pelo SQL
+
+A Duviida é se ja existem no BD Sql, se sim, quais são as procedures deles....
