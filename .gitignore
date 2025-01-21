@@ -1,9 +1,1 @@
-· Service: fee-management-backend
- 
-· Name/ID: fee-management-backend
- 
-· Path: /v1/fee/schedule/:type
- 
-· Method: GET
-
-Att.: Daniel Gotardo
+https://gitlab2.devops.k8s.safra.int/snb/config-server/development/-/merge_requests/203
