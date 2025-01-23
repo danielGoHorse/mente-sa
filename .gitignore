@@ -1,1 +1,52 @@
-https://gitlab2.devops.k8s.safra.int/snb/config-server/development/-/merge_requests/204
+C:\Program Files\nodejs\node.exe .\src\app\api\index.js
+
+
+ ███████╗ ███████╗ ███████╗     ███╗   ███╗  █████╗  ███╗   ██╗  █████╗ 
+ ██╔════╝ ██╔════╝ ██╔════╝     ████╗ ████║ ██╔══██╗ ████╗  ██║ ██╔══██╗
+ █████╗   █████╗   █████╗       ██╔████╔██║ ███████║ ██╔██╗ ██║ ███████║
+ ██╔══╝   ██╔══╝   ██╔══╝       ██║╚██╔╝██║ ██╔══██║ ██║╚██╗██║ ██╔══██║
+ ██║      ███████╗ ███████╗     ██║ ╚═╝ ██║ ██║  ██║ ██║ ╚████║ ██║  ██║
+ ╚═╝      ╚══════╝ ╚══════╝     ╚═╝     ╚═╝ ╚═╝  ╚═╝ ╚═╝  ╚═══╝ ╚═╝  ╚═╝
+
+  ██████╗  ███████╗ ███╗   ███╗ ███████╗ ███╗   ██╗ ████████╗      █████╗ 
+ ██╔════╝  ██╔════╝ ████╗ ████║ ██╔════╝ ████╗  ██║ ╚══██╔══╝     ██╔══██╗
+ ██║  ███╗ █████╗   ██╔████╔██║ █████╗   ██╔██╗ ██║    ██║        ███████║
+ ██║   ██║ ██╔══╝   ██║╚██╔╝██║ ██╔══╝   ██║╚██╗██║    ██║        ██╔══██║
+ ╚██████╔╝ ███████╗ ██║ ╚═╝ ██║ ███████╗ ██║ ╚████║    ██║        ██║  ██║
+  ╚═════╝  ╚══════╝ ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝        ╚═╝  ╚═╝
+
+ ██████╗  ██╗     ███████╗ ███████╗ ██████╗  ██╗   ██╗ ███████╗ ██████╗ 
+ ██╔══██╗ ██║     ██╔════╝ ██╔════╝ ██╔══██╗ ██║   ██║ ██╔════╝ ██╔══██╗
+ ██████╔╝ ██║     ███████╗ █████╗   ██████╔╝ ██║   ██║ █████╗   ██████╔╝
+ ██╔═══╝  ██║     ╚════██║ ██╔══╝   ██╔══██╗ ╚██╗ ██╔╝ ██╔══╝   ██╔══██╗
+ ██║      ██║     ███████║ ███████╗ ██║  ██║  ╚████╔╝  ███████╗ ██║  ██║
+ ╚═╝      ╚═╝     ╚══════╝ ╚══════╝ ╚═╝  ╚═╝   ╚═══╝   ╚══════╝ ╚═╝  ╚═╝
+Uncaught Error Error: ENOENT: no such file or directory, open 'H:\var\log\http.log'
+Emitted 'error' event on SonicBoom instance at:
+    --- FSREQCALLBACK ---
+    at init (<node_internals>/internal/inspector_async_hook:25:19)
+    at emitInitNative (<node_internals>/internal/async_hooks:202:43)
+    at open (<node_internals>/fs:548:15)
+    at openFile (h:\Documents\fee-management-backend\node_modules\sonic-boom\index.js:81:8)
+    at SonicBoom (h:\Documents\fee-management-backend\node_modules\sonic-boom\index.js:119:5)
+    at buildSafeSonicBoom (h:\Documents\fee-management-backend\node_modules\pino\lib\tools.js:214:18)
+    at module.exports.destination (h:\Documents\fee-management-backend\node_modules\pino\pino.js:199:12)
+    at createLogger (h:\Documents\fee-management-backend\src\core\logging\index.js:8:20)
+    at bootstrap (h:\Documents\fee-management-backend\src\core\config\index.js:35:20)
+    at processTicksAndRejections (<node_internals>/internal/process/task_queues:95:5)
+    --- await ---
+    at bootstrap (h:\Documents\fee-management-backend\src\app\app.js:11:38)
+    at <anonymous> (h:\Documents\fee-management-backend\src\app\api\index.js:5:13)
+    at <anonymous> (h:\Documents\fee-management-backend\src\app\api\index.js:7:3)
+    at run (<node_internals>/internal/modules/esm/module_job:217:25)
+    --- await ---
+    at import (<node_internals>/internal/modules/esm/loader:316:40)
+    at processTicksAndRejections (<node_internals>/internal/process/task_queues:95:5)
+    --- await ---
+    at <anonymous> (<node_internals>/internal/modules/run_main:56:28)
+    at loadESM (<node_internals>/internal/process/esm_loader:34:13)
+    at runMainESM (<node_internals>/internal/modules/run_main:53:21)
+    at executeUserEntryPoint (<node_internals>/internal/modules/run_main:79:5)
+    at <anonymous> (<node_internals>/internal/main/run_main_module:23:47)
+No debugger available, can not send 'variables'
+Process exited with code 1
