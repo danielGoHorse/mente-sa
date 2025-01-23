@@ -1,8 +1,1 @@
-MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
-    at _handleConnectionErrors (h:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)
-    at NativeConnection.openUri (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…modules\\mongoose\\lib\\connection.js:730:11)'}
-
-index.js:13
-arg0 =
-MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data\n    at _handleConnectionErrors (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)\n    at NativeConnection.openUri (H:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…modules\\mongoose\\lib\\connection.js:730:11)'}
-<anonymous> @ h:\Documents\fee-management-backend\src\core\data\index.js:13:54
+https://api.dev.k8s.safra.int/v1/fee/schedule/intlPB3
