@@ -1,21 +1,9 @@
-import { Fee } from '#src/models/entities/Fees.js'
-import Result from '#features/shared/result.js'
-import CustomerFees from '#src/models/CustomerFees.js'
-import BankAccountFee from '#src/models/BankAccountFee.js'
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
-import { FeeCase } from '#src/models/entities/FeeCase.js'
-import { Field } from '#src/models/entities/Fields.js'
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js'
-
 export default class FeeGetByCifUseCase {
   async execute({ customerAccount }) {
     const result = { fees: [] };
 
     // =====================
-    // Agora busca apenas os Standard Fees do SQL
+    // Buscar os Standard Fees do SQL
     const standardFees = await this.#getFeeStandardFromSQL(customerAccount[0].cifno);
     const fees = [...standardFees];
     // =====================
@@ -49,14 +37,18 @@ export default class FeeGetByCifUseCase {
       id: x.id,
     }));
 
-    const scheduleUrls = global.environment.scheduleUrls;
+    // =====================
+    // Obter o scheduleType baseado no fee carregado
+    const scheduleType = this.#getScheduleType(fees);
 
-    result.documentUrl =
-      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
+    // Obter a URL correta baseada no scheduleType
+    const scheduleUrls = global.environment.scheduleUrls;
+    result.documentUrl = scheduleUrls[scheduleType] || null;
+    // =====================
 
     return Result.ok(result);
   }
-  
+
   async #getFeeStandardFromSQL(cifno) {
     const connection = await connectToFeeMgmtDb();
     const recordset = await executeStoreProcedure(connection, 'sp_get_standard_fees', { cifno });
@@ -81,40 +73,23 @@ export default class FeeGetByCifUseCase {
 
     return feeResult;
   }
-}
 
+  // =====================
+  // Método para determinar o ScheduleType
+  #getScheduleType(fees) {
+    if (!fees || fees.length === 0) return null;
 
+    for (const fee of fees) {
+      if (fee.feeType === 'Investment Account Fees') {
+        return 'ScheduleofFeesIntlPB3';
+      } else if (fee.feeType === 'Customer Fees') {
+        return 'ScheduleofFeesUSPBIndividual3';
+      } else if (fee.feeType === 'Bank Account Fees') {
+        return 'ScheduleofFeesUSPBCorporation3';
+      }
+    }
 
-
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js'
-
-export default class FeeGetByPackageUseCase {
-  async execute({ feePackageId }) {
-    const connection = await connectToFeeMgmtDb();
-    const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees', { feePackageId });
-
-    const feeResult = recordset.map((record) => ({
-      feeType: record.feeType,
-      feeGroups: [
-        {
-          name: record.feeGroup,
-          code: record.groupCode,
-          fields: [
-            {
-              code: record.fieldCode,
-              name: record.fieldName,
-              defaultValue: record.defaultValue,
-              isException: record.isException === 1,
-              exceptionOptions: record.exceptionOptions ? JSON.parse(record.exceptionOptions) : [],
-            },
-          ],
-        },
-      ],
-    }));
-
-    return feeResult;
+    return null;
   }
+  // =====================
 }
