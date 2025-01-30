@@ -1,28 +1,15 @@
-  async #getFeeStandardFromSQL() {
-    global.logger.info('getFeeStandardFromSQL()');
+ const { cif } = req.params;
 
-    const connection = await connectToFeeMgmtDb();
-    const recordset = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', {});
-
-    const feeResult = recordset.map((record) => {
-      return {
-        feeType: record.feeType,
-        feeGroups: [
-          {
-            name: record.feeGroup,
-            code: record.groupCode,
-            fields: [
-              {
-                code: record.fieldCode,
-                name: record.fieldName,
-                defaultValue: record.defaultValue,
-                isStandard: record.isStandard === 1,
-              },
-            ],
-          },
-        ],
-      };
-    });
-
-    return feeResult;
+  if (!cif) {
+    return res.status(400).json(ApiResponse.createBadRequestResponse({ error: "CIF is required" }));
   }
+
+  const useCase = new FeeGetByCifUseCase();
+  const result = await useCase.execute({ customerAccount: [{ cifno: cif }] });
+
+  if (result.isFailure) {
+    return res.status(400).json(ApiResponse.createBadRequestResponse({ error: result.error }));
+  }
+
+  res.json(ApiResponse.createOkResponse(result.value));
+}
