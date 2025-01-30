@@ -1,1 +1,28 @@
-https://api.dev.k8s.safra.int/v1/fee/schedule/intlPB3
+  async #getFeeStandardFromSQL() {
+    global.logger.info('getFeeStandardFromSQL()');
+
+    const connection = await connectToFeeMgmtDb();
+    const recordset = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', {});
+
+    const feeResult = recordset.map((record) => {
+      return {
+        feeType: record.feeType,
+        feeGroups: [
+          {
+            name: record.feeGroup,
+            code: record.groupCode,
+            fields: [
+              {
+                code: record.fieldCode,
+                name: record.fieldName,
+                defaultValue: record.defaultValue,
+                isStandard: record.isStandard === 1,
+              },
+            ],
+          },
+        ],
+      };
+    });
+
+    return feeResult;
+  }
