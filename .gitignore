@@ -1,6 +1,10 @@
-[19:28:05.780] INFO (21120): request completed
+[19:29:54.834] INFO (23524): Starting configuration for env: Local
+[19:29:54.835] INFO (23524): Loading env using file H:\Documents\fee-management-backend\.env
+[19:29:54.845] INFO (23524): bootstraping application
+[19:29:55.169] INFO (23524): Server started on :::3333
+[19:30:00.744] INFO (23524): request completed
     req: {
-      "id": "0b37701d3a418df004fbcc6f",
+      "id": "8be96cc29320c1555dc17c5e",
       "method": "POST",
       "url": "/v1/fee",
       "query": {},
@@ -9,14 +13,14 @@
         "content-type": "application/json",
         "user-agent": "PostmanRuntime/7.43.0",
         "accept": "*/*",
-        "postman-token": "4da2ef1c-c691-4882-a734-c13e7ecf0b19",
+        "postman-token": "8f77a693-294d-4ec6-96c6-6ba9341a349d",
         "host": "localhost:3333",
         "accept-encoding": "gzip, deflate, br",
         "connection": "keep-alive",
         "content-length": "65"
       },
       "remoteAddress": "::1",
-      "remotePort": 61208
+      "remotePort": 61261
     }
     res: {
       "statusCode": 404,
@@ -34,11 +38,11 @@
         "referrer-policy": "no-referrer",
         "x-xss-protection": "0",
         "access-control-allow-origin": "*",
-        "x-request-id": "0b37701d3a418df004fbcc6f",
-        "x-correlation-id": "0b37701d3a418df004fbcc6f",
+        "x-request-id": "8be96cc29320c1555dc17c5e",
+        "x-correlation-id": "8be96cc29320c1555dc17c5e",
         "content-security-policy": "default-src 'none'",
         "content-type": "text/html; charset=utf-8",
         "content-length": 146
       }
     }
-    responseTime: 2
+    responseTime: 6
