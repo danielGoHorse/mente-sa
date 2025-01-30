@@ -1,1017 +1,196 @@
-FeeDescription: 'US Equities Commission',
-    FeeCode: 'BPS004',
-    Istransactional: true,
-    FeeType: 'Individual Fees',
-    FeeAmount: null,
-    Frequency: '$0.10 per share, min charge of $150 per trade',
-    'Branch City': 'New York',
-    'Branch State': 'NY',
-    OfficerId: '369   ',
-    Officer: 'Mordekhai Aghai           BR 7',
-    StandardException: 'Standard',
-    'Default Fee Package Id': 2,
-    'Default Fee Package': 'Domestic Individual',
-    'Default Fee Amount': null,
-    'Default Frequency': '$0.10 per share, min charge of $150 per trade'
-  },
-  {
-    CIFNO: 'F016583',
-    ACCTNO: 7115822,
-    FeeDescription: 'Account Maintenance Fee',
-    FeeCode: 'JH001',
-    Istransactional: false,
-    FeeType: 'Client Fees',
-    FeeAmount: 25,
-    Frequency: 'Monthly - Charged Quarterly',
-    'Branch City': 'New York',
-    'Branch State': 'NY',
-    OfficerId: '369   ',
-    Officer: 'Mordekhai Aghai           BR 7',
-    StandardException: 'Standard',
-    'Default Fee Package Id': 2,
-    'Default Fee Package': 'Domestic Individual',
-    'Default Fee Amount': 25,
-    'Default Frequency': 'Monthly - Charged Quarterly'
-  },
-  {
-    CIFNO: 'F016583',
-    ACCTNO: 7115822,
-    FeeDescription: 'Hold Mail Fee',
-    FeeCode: 'JH002',
-    Istransactional: false,
-    FeeType: 'Client Fees',
-    FeeAmount: 0,
-    Frequency: 'Annual - Charged Annual',
-    'Branch City': 'New York',
-    'Branch State': 'NY',
-    OfficerId: '369   ',
-    Officer: 'Mordekhai Aghai           BR 7',
-    StandardException: 'Standard',
-    'Default Fee Package Id': 2,
-    'Default Fee Package': 'Domestic Individual',
-    'Default Fee Amount': 0,
-    'Default Frequency': 'Annual - Charged Annual'
-  },
-  {
-    CIFNO: 'F016583',
-    ACCTNO: 7115822,
-    FeeDescription: 'FX Outgoing Wire Fee',
-    FeeCode: 'JH006',
-    Istransactional: true,
-    FeeType: 'Bank Account Fees',
-    FeeAmount: 0,
-    Frequency: null,
-    'Branch City': 'New York',
-    'Branch State': 'NY',
-    OfficerId: '369   ',
-    Officer: 'Mordekhai Aghai           BR 7',
-    StandardException: 'Exception',
-    'Default Fee Package Id': 2,
-    'Default Fee Package': 'Domestic Individual',
-    'Default Fee Amount': 25,
-    'Default Frequency': null
-  },
-  {
-    CIFNO: 'F016583',
-    ACCTNO: 7115822,
-    FeeDescription: 'FX Outgoing Wire (SafraLink) Fee',
-    FeeCode: 'JH007',
-    Istransactional: true,
-    FeeType: 'Bank Account Fees',
-    FeeAmount: 10,
-    Frequency: null,
-    'Branch City': 'New York',
-    'Branch State': 'NY',
-    OfficerId: '369   ',
-    Officer: 'Mordekhai Aghai           BR 7',
-    StandardException: 'Standard',
-    'Default Fee Package Id': 2,
-    'Default Fee Package': 'Domestic Individual',
-    'Default Fee Amount': 10,
-    'Default Frequency': null
-  }
-]
-≡ƒöì Fee Package ID encontrado: null
-≡ƒöì Exception Fees retornado: []
-≡ƒôî Iniciando organiza├º├úo dos Fees...
-≡ƒôî Mapeando Exception Options para FeeCode: JH001
-≡ƒôî Mapeando Exception Options para FeeCode: JH006
-≡ƒôî Mapeando Exception Options para FeeCode: JH006
-≡ƒöì Fees organizados: [
-  {
-    "feeType": "Individual Fees",
-    "feeGroups": [
-      {
-        "name": "Standard Fees",
-        "fields": [
-          {
-            "code": "BPS002",
-            "name": "Safekeeping of Securities",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS004",
-            "name": "US Equities Commission",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS005",
-            "name": "Options Commission",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS002",
-            "name": "Safekeeping of Securities",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS004",
-            "name": "US Equities Commission",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS005",
-            "name": "Options Commission",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS005",
-            "name": "Options Commission",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS002",
-            "name": "Safekeeping of Securities",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS004",
-            "name": "US Equities Commission",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS005",
-            "name": "Options Commission",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS002",
-            "name": "Safekeeping of Securities",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS004",
-            "name": "US Equities Commission",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          }
-        ]
-      },
-      {
-        "name": "Client Current Fees",
-        "fields": [
-          {
-            "code": "BPS003",
-            "name": "SSL Account Maintanance Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$375.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS003",
-            "name": "SSL Account Maintanance Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$375.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS003",
-            "name": "SSL Account Maintanance Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$375.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "BPS003",
-            "name": "SSL Account Maintanance Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$375.00",
-            "exceptionOptions": []
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "feeType": "Client Fees",
-    "feeGroups": [
-      {
-        "name": "Exception Request",
-        "fields": [
-          {
-            "code": "JH001",
-            "name": "Account Maintenance Fee",
-            "defaultValue": "",
-            "isStandard": false,
-            "isException": true,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          }
-        ]
-      },
-      {
-        "name": "Standard Fees",
-        "fields": [
-          {
-            "code": "JH002",
-            "name": "Hold Mail Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH002",
-            "name": "Hold Mail Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH002",
-            "name": "Hold Mail Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH002",
-            "name": "Hold Mail Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          }
-        ]
-      },
-      {
-        "name": "Client Current Fees",
-        "fields": [
-          {
-            "code": "JH001",
-            "name": "Account Maintenance Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$25.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH001",
-            "name": "Account Maintenance Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$25.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH001",
-            "name": "Account Maintenance Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$25.00",
-            "exceptionOptions": []
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "feeType": "Bank Account Fees",
-    "feeGroups": [
-      {
-        "name": "Exception Request",
-        "fields": [
-          {
-            "code": "JH006",
-            "name": "FX Outgoing Wire Fee",
-            "defaultValue": "",
-            "isStandard": false,
-            "isException": true,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH006",
-            "name": "FX Outgoing Wire Fee",
-            "defaultValue": "",
-            "isStandard": false,
-            "isException": true,
-            "isCurrentClient": false,
-            "labelValue": "",
-            "exceptionOptions": []
-          }
-        ]
-      },
-      {
-        "name": "Client Current Fees",
-        "fields": [
-          {
-            "code": "JH007",
-            "name": "FX Outgoing Wire (SafraLink) Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$10.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH006",
-            "name": "FX Outgoing Wire Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$25.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH007",
-            "name": "FX Outgoing Wire (SafraLink) Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$10.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH006",
-            "name": "FX Outgoing Wire Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$25.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH007",
-            "name": "FX Outgoing Wire (SafraLink) Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$10.00",
-            "exceptionOptions": []
-          },
-          {
-            "code": "JH007",
-            "name": "FX Outgoing Wire (SafraLink) Fee",
-            "defaultValue": "",
-            "isStandard": true,
-            "isException": false,
-            "isCurrentClient": true,
-            "labelValue": "$10.00",
-            "exceptionOptions": []
-          }
-        ]
-      }
-    ]
-  }
-]
-≡ƒöì Fees Ativos: []
-≡ƒöì Mapeando Schedule Type para Fee Package null: intlPB3
-≡ƒöì Documento URL: https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null    
-≡ƒôî Iniciando mapeamento dos Current Fees...
-≡ƒöì Current Fees: [
-  {
-    feeDescription: 'SSL Account Maintanance Fee - $375.00',
-    feeCode: 'Individual Fees 7113617'
-  },
-  {
-    feeDescription: 'FX Outgoing Wire (SafraLink) Fee - $10.00',
-    feeCode: 'Bank Account Fees 7113617'
-  },
-  {
-    feeDescription: 'SSL Account Maintanance Fee - $375.00',
-    feeCode: 'Individual Fees 7115342'
-  },
-  {
-    feeDescription: 'Account Maintenance Fee - $25.00',
-    feeCode: 'Client Fees 7115342'
-  },
-  {
-    feeDescription: 'FX Outgoing Wire Fee - $25.00',
-    feeCode: 'Bank Account Fees 7115342'
-  },
-  {
-    feeDescription: 'FX Outgoing Wire (SafraLink) Fee - $10.00',
-    feeCode: 'Bank Account Fees 7115342'
-  },
-  {
-    feeDescription: 'SSL Account Maintanance Fee - $375.00',
-    feeCode: 'Individual Fees 7115431'
-  },
-  {
-    feeDescription: 'Account Maintenance Fee - $25.00',
-    feeCode: 'Client Fees 7115431'
-  },
-  {
-    feeDescription: 'FX Outgoing Wire Fee - $25.00',
-    feeCode: 'Bank Account Fees 7115431'
-  },
-  {
-    feeDescription: 'FX Outgoing Wire (SafraLink) Fee - $10.00',
-    feeCode: 'Bank Account Fees 7115431'
-  },
-  {
-    feeDescription: 'SSL Account Maintanance Fee - $375.00',
-    feeCode: 'Individual Fees 7115822'
-  },
-  {
-    feeDescription: 'Account Maintenance Fee - $25.00',
-    feeCode: 'Client Fees 7115822'
-  },
-  {
-    feeDescription: 'FX Outgoing Wire (SafraLink) Fee - $10.00',
-    feeCode: 'Bank Account Fees 7115822'
-  }
-]
-Γ£à JSON FINAL: {
-  "customerName": "",
-  "customerAddress": "",
-  "customerAccountOfficer": "",
-  "branchState": "",
-  "feePackage": "",
-  "defaultFeePackage": "",
-  "cif": "F016583",
-  "fees": [
-    {
-      "feeType": "Individual Fees",
-      "feeGroups": [
-        {
-          "name": "Standard Fees",
-          "fields": [
-            {
-              "code": "BPS002",
-              "name": "Safekeeping of Securities",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS004",
-              "name": "US Equities Commission",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS005",
-              "name": "Options Commission",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS002",
-              "name": "Safekeeping of Securities",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS004",
-              "name": "US Equities Commission",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS005",
-              "name": "Options Commission",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS005",
-              "name": "Options Commission",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS002",
-              "name": "Safekeeping of Securities",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS004",
-              "name": "US Equities Commission",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS005",
-              "name": "Options Commission",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS002",
-              "name": "Safekeeping of Securities",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS004",
-              "name": "US Equities Commission",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            }
-          ]
-        },
-        {
-          "name": "Client Current Fees",
-          "fields": [
-            {
-              "code": "BPS003",
-              "name": "SSL Account Maintanance Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$375.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS003",
-              "name": "SSL Account Maintanance Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$375.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS003",
-              "name": "SSL Account Maintanance Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$375.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "BPS003",
-              "name": "SSL Account Maintanance Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$375.00",
-              "exceptionOptions": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "feeType": "Client Fees",
-      "feeGroups": [
-        {
-          "name": "Exception Request",
-          "fields": [
-            {
-              "code": "JH001",
-              "name": "Account Maintenance Fee",
-              "defaultValue": "",
-              "isStandard": false,
-              "isException": true,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            }
-          ]
-        },
-        {
-          "name": "Standard Fees",
-          "fields": [
-            {
-              "code": "JH002",
-              "name": "Hold Mail Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH002",
-              "name": "Hold Mail Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH002",
-              "name": "Hold Mail Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH002",
-              "name": "Hold Mail Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            }
-          ]
-        },
-        {
-          "name": "Client Current Fees",
-          "fields": [
-            {
-              "code": "JH001",
-              "name": "Account Maintenance Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$25.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH001",
-              "name": "Account Maintenance Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$25.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH001",
-              "name": "Account Maintenance Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$25.00",
-              "exceptionOptions": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "feeType": "Bank Account Fees",
-      "feeGroups": [
-        {
-          "name": "Exception Request",
-          "fields": [
-            {
-              "code": "JH006",
-              "name": "FX Outgoing Wire Fee",
-              "defaultValue": "",
-              "isStandard": false,
-              "isException": true,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH006",
-              "name": "FX Outgoing Wire Fee",
-              "defaultValue": "",
-              "isStandard": false,
-              "isException": true,
-              "isCurrentClient": false,
-              "labelValue": "",
-              "exceptionOptions": []
-            }
-          ]
-        },
-        {
-          "name": "Client Current Fees",
-          "fields": [
-            {
-              "code": "JH007",
-              "name": "FX Outgoing Wire (SafraLink) Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$10.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH006",
-              "name": "FX Outgoing Wire Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$25.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH007",
-              "name": "FX Outgoing Wire (SafraLink) Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$10.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH006",
-              "name": "FX Outgoing Wire Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$25.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH007",
-              "name": "FX Outgoing Wire (SafraLink) Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$10.00",
-              "exceptionOptions": []
-            },
-            {
-              "code": "JH007",
-              "name": "FX Outgoing Wire (SafraLink) Fee",
-              "defaultValue": "",
-              "isStandard": true,
-              "isException": false,
-              "isCurrentClient": true,
-              "labelValue": "$10.00",
-              "exceptionOptions": []
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "feesActives": [],
-  "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null",    
-  "currentFees": [
-    {
-      "feeDescription": "SSL Account Maintanance Fee - $375.00",
-      "feeCode": "Individual Fees 7113617"
-    },
-    {
-      "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $10.00",
-      "feeCode": "Bank Account Fees 7113617"
-    },
-    {
-      "feeDescription": "SSL Account Maintanance Fee - $375.00",
-      "feeCode": "Individual Fees 7115342"
-    },
-    {
-      "feeDescription": "Account Maintenance Fee - $25.00",
-      "feeCode": "Client Fees 7115342"
-    },
-    {
-      "feeDescription": "FX Outgoing Wire Fee - $25.00",
-      "feeCode": "Bank Account Fees 7115342"
-    },
-    {
-      "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $10.00",
-      "feeCode": "Bank Account Fees 7115342"
-    },
-    {
-      "feeDescription": "SSL Account Maintanance Fee - $375.00",
-      "feeCode": "Individual Fees 7115431"
-    },
-    {
-      "feeDescription": "Account Maintenance Fee - $25.00",
-      "feeCode": "Client Fees 7115431"
-    },
-    {
-      "feeDescription": "FX Outgoing Wire Fee - $25.00",
-      "feeCode": "Bank Account Fees 7115431"
-    },
-    {
-      "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $10.00",
-      "feeCode": "Bank Account Fees 7115431"
-    },
-    {
-      "feeDescription": "SSL Account Maintanance Fee - $375.00",
-      "feeCode": "Individual Fees 7115822"
-    },
-    {
-      "feeDescription": "Account Maintenance Fee - $25.00",
-      "feeCode": "Client Fees 7115822"
-    },
-    {
-      "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $10.00",
-      "feeCode": "Bank Account Fees 7115822"
-    }
-  ]
-}
-[20:26:39.799] INFO (25964): Result=true
-[20:26:39.806] INFO (25964): request completed
-    req: {
-      "id": "a99e2dbb7a846b1180caf28c",
-      "method": "POST",
-      "url": "/v1/fee",
-      "query": {},
-      "params": {},
-      "headers": {
-        "content-type": "application/json",
-        "user-agent": "PostmanRuntime/7.43.0",
-        "accept": "*/*",
-        "postman-token": "51b30087-818d-447f-8f59-2c799d59e3c4",
-        "host": "localhost:3333",
-        "accept-encoding": "gzip, deflate, br",
-        "connection": "keep-alive",
-        "content-length": "65"
-      },
-      "remoteAddress": "::1",
-      "remotePort": 62203
-    }
-    res: {
-      "statusCode": 200,
-      "headers": {
-        "cross-origin-embedder-policy": "require-corp",
-        "cross-origin-opener-policy": "same-origin",
-        "cross-origin-resource-policy": "same-origin",
-        "x-dns-prefetch-control": "off",
-        "x-frame-options": "SAMEORIGIN",
-        "strict-transport-security": "max-age=15552000; includeSubDomains",
-        "x-download-options": "noopen",
-        "x-content-type-options": "nosniff",
-        "origin-agent-cluster": "?1",
-        "x-permitted-cross-domain-policies": "none",
-        "referrer-policy": "no-referrer",
-        "x-xss-protection": "0",
-        "access-control-allow-origin": "*",
-        "x-request-id": "a99e2dbb7a846b1180caf28c",
-        "x-correlation-id": "a99e2dbb7a846b1180caf28c",
-        "content-type": "application/json; charset=utf-8",
-        "content-length": "7448",
-        "etag": "W/\"1d18-kSJcvbJPCfISE33hBX2h0UCM6yY\""
-      }
-    }
-    responseTime: 121
-[20:27:39.987] INFO (25964): Server received shutdown signal
-[20:27:39.987] INFO (25964): Waiting for open connections to be finished
-[20:27:39.989] INFO (25964): Server is closed
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import Result from '#features/shared/result.js'
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure
+} from '#core/data/mssql/index.js'
 
-DanielG@NYDEVVDI0027 MINGW64 /h/Documents/fee-management-backend (feat/standardFees)
-$
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    global.logger.info('FeeGetByCifUseCase()')
+
+    const cifno = customerAccount[0].cifno
+
+    // 🔍 1️⃣ Buscar os dados de Fees (Standard e Current)
+    const feesData = await this.#getFeesFromSQL(cifno)
+    console.log("🔍 Fees Data retornado:", feesData)
+
+    if (!feesData.length) {
+      return Result.fail({ message: "No data found for this CIF" })
+    }
+
+    // 🔍 2️⃣ Identificar Fee Package ID e Exception Fees
+    const feePackageId = feesData[0]['Default Fee Package Id'] || null
+    console.log(`🔍 Fee Package ID encontrado: ${feePackageId}`)
+
+    const exceptionData = feePackageId
+      ? await this.#getExceptionFeesFromSQL(feePackageId)
+      : []
+
+    console.log("🔍 Exception Fees retornado:", exceptionData)
+
+    // 🔍 3️⃣ Criando JSON Final com TODOS os dados
+    const result = {
+      cif: cifno,
+      customerAccountOfficer: feesData[0].Officer || '',
+      officerId: feesData[0].OfficerId || '',
+      branchCity: feesData[0]['Branch City'] || '',
+      branchState: feesData[0]['Branch State'] || '',
+      feePackage: feesData[0]['Default Fee Package'] || '',
+      defaultFeePackageId: feesData[0]['Default Fee Package Id'] || '',
+      fees: this.#mapFeesByCategory(feesData, exceptionData),
+      feesActives: await this.#getActiveFees(cifno),
+      documentUrl: this.#getDocumentUrl(feePackageId),
+      currentFees: this.#mapCurrentFees(feesData)
+    }
+
+    console.log("✅ JSON FINAL:", JSON.stringify(result, null, 2))
+    
+    return Result.ok(result)
+  }
+
+  /**
+   * 🔍 1️⃣ Buscar Standard e Current Fees do SQL
+   */
+  async #getFeesFromSQL(cifno) {
+    global.logger.info('getFeesFromSQL()')
+    const connection = await connectToFeeMgmtDb()
+    const recordset = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno })
+    console.log("🛠 Dados retornados da Procedure `sp_get_fees_byCIF`:", recordset)
+    return recordset
+  }
+
+  /**
+   * 🔍 2️⃣ Buscar Exception Fees por Fee Package
+   */
+  async #getExceptionFeesFromSQL(feePackageId) {
+    global.logger.info('getExceptionFeesFromSQL()')
+    const connection = await connectToFeeMgmtDb()
+    const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId })
+    console.log("🛠 Dados retornados da Procedure `sp_get_exception_fees_bypackage`:", recordset)
+    return recordset
+  }
+
+  /**
+   * 🔍 3️⃣ Buscar Fees Ativos (Casos Pendentes)
+   */
+  async #getActiveFees(cifno) {
+    const feesActives = await FeeCase.find({
+      cif: cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true }
+    })
+
+    return feesActives.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }))
+  }
+
+  /**
+   * 🔍 4️⃣ Organiza os Fees (Standard, Current, Exception)
+   */
+  #mapFeesByCategory(feesData, exceptionData) {
+    console.log("📌 Iniciando organização dos Fees...")
+
+    const mappedFees = []
+
+    feesData.forEach(record => {
+      const isException = record.StandardException === 'Exception'
+      const isCurrentClient = record.FeeAmount > 0
+
+      const field = {
+        code: record.FeeCode,
+        name: record.FeeDescription,
+        defaultValue: record['Default Fee Amount'] || '',
+        isStandard: !isException,
+        isException: isException,
+        isCurrentClient: isCurrentClient,
+        labelValue: record.FeeAmount ? `$${record.FeeAmount}.00` : '',
+        frequency: record.Frequency || '',
+        defaultFrequency: record['Default Frequency'] || '',
+        exceptionOptions: isException ? this.#parseExceptionOptions(exceptionData, record) : []
+      }
+
+      let feeGroup = mappedFees.find(f => f.feeType === record.FeeType)
+      if (!feeGroup) {
+        feeGroup = { feeType: record.FeeType, feeGroups: [] }
+        mappedFees.push(feeGroup)
+      }
+
+      let targetGroup
+      if (isException) {
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Exception Request')
+        if (!targetGroup) {
+          targetGroup = { name: 'Exception Request', fields: [] }
+          feeGroup.feeGroups.push(targetGroup)
+        }
+      } else if (isCurrentClient) {
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Client Current Fees')
+        if (!targetGroup) {
+          targetGroup = { name: 'Client Current Fees', fields: [] }
+          feeGroup.feeGroups.push(targetGroup)
+        }
+      } else {
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Standard Fees')
+        if (!targetGroup) {
+          targetGroup = { name: 'Standard Fees', fields: [] }
+          feeGroup.feeGroups.push(targetGroup)
+        }
+      }
+
+      targetGroup.fields.push(field)
+    })
+
+    return mappedFees
+  }
+
+  /**
+   * 🔍 5️⃣ Converte ExceptionOptions para o formato correto
+   */
+  #parseExceptionOptions(exceptionData, record) {
+    console.log(`📌 Mapeando Exception Options para FeeCode: ${record.FeeCode}`)
+    
+    return exceptionData
+      .filter(exc => exc.FeeCode === record.FeeCode)
+      .map(exc => ({
+        value: exc.Amount,
+        text: `$${exc.Amount}.00`,
+        visible: true,
+        retired: false
+      }))
+  }
+
+  /**
+   * 🔍 6️⃣ Determina a URL do Documento baseado no Fee Package
+   */
+  #getDocumentUrl(feePackageId) {
+    const scheduleUrls = global.environment.scheduleUrls
+    const packageMap = {
+      1: 'intlPB3',
+      2: 'uSPBIndividual3',
+      3: 'uSPBCorporation3',
+      4: 'efraPB3',
+      5: 'eraPB3'
+    }
+
+    const scheduleType = packageMap[feePackageId] || 'intlPB3'
+    console.log(`🔍 Mapeando Schedule Type para Fee Package ${feePackageId}: ${scheduleType}`)
+    
+    return scheduleUrls[scheduleType] || ''
+  }
+
+  /**
+   * 🔍 7️⃣ Mapear os valores de "currentFees"
+   */
+  #mapCurrentFees(feesData) {
+    console.log("📌 Iniciando mapeamento dos Current Fees...")
+    
+    return feesData
+      .filter(record => record.FeeAmount > 0)
+      .map(record => ({
+        feeDescription: `${record.FeeDescription} - $${record.FeeAmount}.00`,
+        feeCode: `${record.FeeType} ${record.ACCTNO}`
+      }))
+  }
+}
