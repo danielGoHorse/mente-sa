@@ -1,36 +1,13 @@
-async execute({ customerAccount }) {
-  global.logger.info(`FeeGetByCifUseCase() - CIF: ${customerAccount[0].cifno}`);
-
-  const result = { fees: [] };
-  const cif = customerAccount[0].cifno;
-
-  // Buscar dados do SQL
-  const standardFees = await this.#getFeeStandardFromSQL(cif);
-  const exceptionFees = await this.#getFeeExceptionFromSQL(cif);
-  const fees = [...standardFees, ...exceptionFees];
-
-  const customer = new CustomerFees(fees, customerAccount);
-  if (customer.fee) result.fees.push(customer.fee);
-  
-  const bank = new BankAccountFee(fees, customerAccount);
-  if (bank.fee) result.fees.push(bank.fee);
-
-  const equityField = await Field.find({ code: 7 });
-  const investiment = new InvestimentAccountFee(fees, customerAccount, equityField[0]);
-  if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
-
-  const feesActives = await FeeCase.find({
-    cif: cif,
-    status: { $nin: ['DONE', 'REJECTED'] },
-    caseNumber: { $exists: true },
-  });
-
-  result.feesActives = feesActives?.map((x) => ({
-    caseNumber: x.caseNumber,
-    id: x.id,
-  }));
-
-  result.documentUrl = 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
-
-  return Result.ok(result);
-}
+Unhandled Promise Rejection: err:  The server principal "userFeeMgmtConductor" is not able to access the database "KYC" under the current security context.
+apiServer.js:148
+RequestError: The server principal "userFeeMgmtConductor" is not able to access the database "KYC" under the current security context.
+    at handleError (H:\Documents\fee-management-backend\node_modules\mssql\lib\tedious.js:888:15)
+    at Connection.emit (node:events:514:28)
+    at Parser.<anonymous> (H:\Documents\fee-management-backend\node_modules\tedious\lib\connection.js:716:12)
+    at Parser.emit (node:events:514:28)
+    at Parser.<anonymous> (H:\Documents\fee-management-backend\node_modules\tedious\lib\token\token-stream-parser.js:27:14)
+    at Parser.emit (node:events:514:28)
+    at addChunk (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:279:12)
+    at readableAddChunk (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:262:11)
+    at Readable.push (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:228:10)
+    at Transform.push (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_transform.js:132:32)
