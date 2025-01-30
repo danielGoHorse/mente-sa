@@ -1,14 +1,241 @@
-sp_get_exception_fees_bypackage
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    global.logger.info('FeeGetByCifUseCase()')
 
-Que chama as exceptions, que vem assim:
+    const cifno = customerAccount[0].cifno;
 
-FeeCode|FeeDescription                  |FeeParameterOptionId|Amount|FreqDescription|
--------+--------------------------------+--------------------+------+---------------+
-JH001  |Account Maintenance Fee         |                  94|  0.00|               |
-JH006  |FX Outgoing Wire Fee            |                  93|  0.00|               |
-JH007  |FX Outgoing Wire (SafraLink) Fee|                  95|  0.00|               |
+    const result = {
+      customerName: '',
+      customerAddress: '',
+      customerAccountOfficer: '',
+      cif: cifno,
+      fees: [],
+      feesActives: [],
+      documentUrl: '',
+      currentFees: []
+    };
 
-De acordo com o feePackageId....
+    // 📌 1️⃣ - Buscar os dados da Procedure de Fees (Standard e Current)
+    const feesData = await this.#getFeesFromSQL(cifno);
 
-Tudo isso vira no resultado que o front espera....como estara este json pra eles receberem as informações
+    // 📌 2️⃣ - Buscar as Exception Fees baseadas no Fee Package
+    const exceptionData = await this.#getExceptionFeesFromSQL(feesData);
 
+    // 📌 3️⃣ - Organizar os dados no JSON esperado pelo front-end
+    result.fees = this.#mapFeesByCategory(feesData, exceptionData);
+
+    // 📌 4️⃣ - Buscar Fees Ativos (Casos Pendentes)
+    const feesActives = await FeeCase.find({
+      cif: cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true }
+    });
+
+    result.feesActives = feesActives.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }));
+
+    // 📌 5️⃣ - URL do Documento
+    result.documentUrl = `https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm`;
+
+    // 📌 6️⃣ - Mapear o "currentFees"
+    result.currentFees = this.#mapCurrentFees(feesData);
+
+    return Result.ok(result);
+  }
+
+  /**
+   * 📌 1️⃣ Buscar Standard e Current Fees do SQL
+   */
+  async #getFeesFromSQL(cifno) {
+    global.logger.info('getFeesFromSQL()');
+    const connection = await connectToFeeMgmtDb();
+    return await executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+  }
+
+  /**
+   * 📌 2️⃣ Buscar Exception Fees por Fee Package
+   */
+  async #getExceptionFeesFromSQL(feesData) {
+    global.logger.info('getExceptionFeesFromSQL()');
+
+    const feePackageId = feesData[0]?.DefaultFeePackageId;  // Pega o Fee Package Id do primeiro item
+    if (!feePackageId) return [];
+
+    const connection = await connectToFeeMgmtDb();
+    return await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
+  }
+
+  /**
+   * 📌 3️⃣ Organiza os Fees (Standard, Current, Exception)
+   */
+  #mapFeesByCategory(feesData, exceptionData) {
+    const mappedFees = [];
+
+    feesData.forEach(record => {
+      const isException = record.StandardException === 'Exception';
+      const isCurrentClient = record.FeeAmount > 0;
+
+      const field = {
+        code: record.FeeCode,
+        name: record.FeeDescription,
+        defaultValue: record.DefaultFeeAmount || '',
+        isStandard: !isException,
+        isException: isException,
+        isCurrentClient: isCurrentClient,
+        labelValue: record.FeeAmount ? `$${record.FeeAmount}.00` : '',
+        exceptionOptions: isException ? this.#parseExceptionOptions(exceptionData, record) : [],
+      };
+
+      let feeGroup = mappedFees.find(f => f.feeType === record.FeeType);
+      if (!feeGroup) {
+        feeGroup = { feeType: record.FeeType, feeGroups: [] };
+        mappedFees.push(feeGroup);
+      }
+
+      let targetGroup;
+      if (isException) {
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Exception Request');
+        if (!targetGroup) {
+          targetGroup = { name: 'Exception Request', fields: [] };
+          feeGroup.feeGroups.push(targetGroup);
+        }
+      } else if (isCurrentClient) {
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Client Current Fees');
+        if (!targetGroup) {
+          targetGroup = { name: 'Client Current Fees', fields: [] };
+          feeGroup.feeGroups.push(targetGroup);
+        }
+      } else {
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Standard Fees');
+        if (!targetGroup) {
+          targetGroup = { name: 'Standard Fees', fields: [] };
+          feeGroup.feeGroups.push(targetGroup);
+        }
+      }
+
+      targetGroup.fields.push(field);
+    });
+
+    return mappedFees;
+  }
+
+  /**
+   * 📌 4️⃣ Converte ExceptionOptions para o formato correto
+   */
+  #parseExceptionOptions(exceptionData, record) {
+    return exceptionData
+      .filter(exc => exc.FeeCode === record.FeeCode)
+      .map(exc => ({
+        value: exc.Amount,
+        text: `$${exc.Amount}.00`,
+        visible: true,
+        retired: false
+      }));
+  }
+
+  /**
+   * 📌 5️⃣ Mapear os valores de "currentFees"
+   */
+  #mapCurrentFees(feesData) {
+    return feesData
+      .filter(record => record.FeeAmount > 0)
+      .map(record => ({
+        feeDescription: `${record.FeeDescription} - $${record.FeeAmount}.00`,
+        feeCode: `${record.FeeType} ${record.ACCTNO}`
+      }));
+  }
+}
+
+
+
+
+{
+  "customerName": "NPK TRADING S.A.",
+  "customerAddress": "NPK TRADING S.A. SARANDI 690-ESC 105 MONTEVIDEO URUGUAY  11100",
+  "customerAccountOfficer": "571 Marcelo Fontanelli BR 30",
+  "cif": "NAA0010",
+  "fees": [
+    {
+      "feeType": "Customer Fees",
+      "feeGroups": [
+        {
+          "name": "Standard Fees",
+          "code": 1,
+          "fields": [
+            {
+              "code": "JH001",
+              "name": "Account Maintenance Fee",
+              "defaultValue": "600",
+              "isStandard": true,
+              "isException": false,
+              "isCurrentClient": false,
+              "labelValue": "$600.00",
+              "tooltip": "Charged: Semiannual",
+              "exceptionOptions": []
+            }
+          ]
+        },
+        {
+          "name": "Client Current Fees",
+          "code": 1,
+          "fields": [
+            {
+              "code": "JH001",
+              "name": "Account Maintenance Fee",
+              "defaultValue": "600",
+              "isStandard": false,
+              "isException": false,
+              "isCurrentClient": true,
+              "labelValue": "$600.00",
+              "exceptionOptions": []
+            }
+          ]
+        },
+        {
+          "name": "Exception Request",
+          "code": 1,
+          "fields": [
+            {
+              "code": "JH001",
+              "name": "Account Maintenance Fee",
+              "defaultValue": "",
+              "isStandard": false,
+              "isException": true,
+              "isCurrentClient": false,
+              "labelValue": "",
+              "exceptionOptions": [
+                {
+                  "value": "600",
+                  "text": "$600.00",
+                  "visible": true,
+                  "retired": false
+                },
+                {
+                  "value": "0",
+                  "text": "$0.00",
+                  "visible": true,
+                  "retired": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "feesActives": [
+    {
+      "caseNumber": "FEE1078",
+      "id": "659c7c6a07059445c666fffc"
+    }
+  ],
+  "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm",
+  "currentFees": [
+    {
+      "feeDescription": "Account Maintenance Fee - $600.00",
+      "feeCode": "Customer Fees 17226444"
+    }
+  ]
+}
