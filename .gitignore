@@ -34,3 +34,42 @@ async #getFeeExceptionFromSQL(cif) {
 
   return feeResult;
 }
+
+
+
+
+async #getFeeStandardFromSQL(cif) {
+  global.logger.info(`getFeeStandardFromSQL() - CIF: ${cif}`);
+
+  if (!cif) {
+    throw new Error('CIF is required to fetch standard fees');
+  }
+
+  const connection = await connectToFeeMgmtDb();
+  const recordset = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno: cif });
+
+  if (!recordset || recordset.length === 0) {
+    global.logger.warn(`No standard fees found for CIF: ${cif}`);
+    return [];
+  }
+
+  const feeResult = recordset.map((record) => ({
+    feeType: record.feeType,
+    feeGroups: [
+      {
+        name: record.feeGroup,
+        code: record.groupCode,
+        fields: [
+          {
+            code: record.fieldCode,
+            name: record.fieldName,
+            defaultValue: record.defaultValue,
+            isStandard: record.isStandard === 1,
+          },
+        ],
+      },
+    ],
+  }));
+
+  return feeResult;
+}
