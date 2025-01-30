@@ -1,189 +1,66 @@
-import { FeeCase } from '#src/models/entities/FeeCase.js'
-import Result from '#features/shared/result.js'
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js'
-
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    global.logger.info('FeeGetByCifUseCase()')
-
-    const cifno = customerAccount[0].cifno
-
-    const result = {
-      customerName: '',
-      customerAddress: '',
-      customerAccountOfficer: '',
-      branchState: '',
-      feePackage: '',
-      defaultFeePackage: '',
-      cif: cifno,
-      fees: [],
-      feesActives: [],
-      documentUrl: '',
-      currentFees: []
-    }
-
-    // 📌 1️⃣ - Buscar os dados de Fees (Standard e Current)
-    const feesData = await this.#getFeesFromSQL(cifno)
-    console.log("🔍 Fees Data retornado:", feesData)
-
-    // 📌 2️⃣ - Identificar o Fee Package ID e buscar as Exception Fees
-    const feePackageId = feesData[0]?.DefaultFeePackageId || null
-    console.log(`🔍 Fee Package ID encontrado: ${feePackageId}`)
-
-    const exceptionData = feePackageId
-      ? await this.#getExceptionFeesFromSQL(feePackageId)
-      : []
-
-    console.log("🔍 Exception Fees retornado:", exceptionData)
-
-    // 📌 3️⃣ - Preenchendo os dados do cliente (Officer, Branch State, Fee Package)
-    result.customerAccountOfficer = feesData[0]?.AccountOfficer || ''
-    result.branchState = feesData[0]?.BranchState || ''
-    result.feePackage = feesData[0]?.FeePackage || ''
-    result.defaultFeePackage = feesData[0]?.DefaultFeePackage || ''
-
-    // 📌 4️⃣ - Organizar os dados no JSON esperado pelo frontend
-    result.fees = this.#mapFeesByCategory(feesData, exceptionData)
-    console.log("🔍 Fees organizados:", JSON.stringify(result.fees, null, 2))
-
-    // 📌 5️⃣ - Buscar Fees Ativos (Casos Pendentes)
-    const feesActives = await FeeCase.find({
-      cif: cifno,
-      status: { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true }
-    })
-
-    result.feesActives = feesActives.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id
-    }))
-
-    console.log("🔍 Fees Ativos:", result.feesActives)
-
-    // 📌 6️⃣ - Determinar a URL do Documento baseado no Fee Package
-    result.documentUrl = this.#getDocumentUrl(feePackageId)
-    console.log("🔍 Documento URL:", result.documentUrl)
-
-    // 📌 7️⃣ - Mapear o "currentFees"
-    result.currentFees = this.#mapCurrentFees(feesData)
-    console.log("🔍 Current Fees:", result.currentFees)
-
-    console.log("✅ JSON FINAL:", JSON.stringify(result, null, 2))
-    
-    return Result.ok(result)
-  }
-
-  /**
-   * 📌 1️⃣ Buscar Standard e Current Fees do SQL
-   */
-  async #getFeesFromSQL(cifno) {
-    global.logger.info('getFeesFromSQL()')
-    const connection = await connectToFeeMgmtDb()
-    const recordset = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno })
-    console.log("🛠 Dados retornados da Procedure `sp_get_fees_byCIF`:", recordset)
-    return recordset
-  }
-
-  /**
-   * 📌 2️⃣ Buscar Exception Fees por Fee Package
-   */
-  async #getExceptionFeesFromSQL(feePackageId) {
-    global.logger.info('getExceptionFeesFromSQL()')
-    const connection = await connectToFeeMgmtDb()
-    const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId })
-    console.log("🛠 Dados retornados da Procedure `sp_get_exception_fees_bypackage`:", recordset)
-    return recordset
-  }
-
-  /**
-   * 📌 3️⃣ Organiza os Fees (Standard, Current, Exception)
-   */
-  #mapFeesByCategory(feesData, exceptionData) {
-    console.log("📌 Iniciando organização dos Fees...")
-
-    const mappedFees = []
-
-    feesData.forEach(record => {
-      const isException = record.StandardException === 'Exception'
-      const isCurrentClient = record.FeeAmount > 0
-
-      const field = {
-        code: record.FeeCode,
-        name: record.FeeDescription,
-        defaultValue: record.DefaultFeeAmount || '',
-        isStandard: !isException,
-        isException: isException,
-        isCurrentClient: isCurrentClient,
-        labelValue: record.FeeAmount ? `$${record.FeeAmount}.00` : '',
-        exceptionOptions: isException ? this.#parseExceptionOptions(exceptionData, record) : []
-      }
-
-      let feeGroup = mappedFees.find(f => f.feeType === record.FeeType)
-      if (!feeGroup) {
-        feeGroup = { feeType: record.FeeType, feeGroups: [] }
-        mappedFees.push(feeGroup)
-      }
-
-      let targetGroup
-      if (isException) {
-        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Exception Request')
-        if (!targetGroup) {
-          targetGroup = { name: 'Exception Request', fields: [] }
-          feeGroup.feeGroups.push(targetGroup)
-        }
-      } else if (isCurrentClient) {
-        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Client Current Fees')
-        if (!targetGroup) {
-          targetGroup = { name: 'Client Current Fees', fields: [] }
-          feeGroup.feeGroups.push(targetGroup)
-        }
-      } else {
-        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Standard Fees')
-        if (!targetGroup) {
-          targetGroup = { name: 'Standard Fees', fields: [] }
-          feeGroup.feeGroups.push(targetGroup)
-        }
-      }
-
-      targetGroup.fields.push(field)
-    })
-
-    return mappedFees
-  }
-
-  /**
-   * 📌 4️⃣ Determina a URL do Documento baseado no Fee Package
-   */
-  #getDocumentUrl(feePackageId) {
-    const scheduleUrls = global.environment.scheduleUrls
-    const packageMap = {
-      1: 'intlPB3',
-      2: 'uSPBIndividual3',
-      3: 'uSPBCorporation3',
-      4: 'efraPB3',
-      5: 'eraPB3'
-    }
-
-    const scheduleType = packageMap[feePackageId] || 'intlPB3'
-    console.log(`🔍 Mapeando Schedule Type para Fee Package ${feePackageId}: ${scheduleType}`)
-    
-    return scheduleUrls[scheduleType] || ''
-  }
-
-  /**
-   * 📌 5️⃣ Mapear os valores de "currentFees"
-   */
-  #mapCurrentFees(feesData) {
-    console.log("📌 Iniciando mapeamento dos Current Fees...")
-    
-    return feesData
-      .filter(record => record.FeeAmount > 0)
-      .map(record => ({
-        feeDescription: `${record.FeeDescription} - $${record.FeeAmount}.00`,
-        feeCode: `${record.FeeType} ${record.ACCTNO}`
-      }))
-  }
+[20:20:29.534] INFO (22944): bootstraping application
+[20:20:29.951] INFO (22944): Server started on :::3333
+[20:23:04.539] INFO (22944): FeeGetByCifUseCase()
+[20:23:04.540] INFO (22944): getFeesFromSQL()
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {
+  customerName: undefined,
+  customerAddress: undefined,
+  customerAccountOfficer: 'Mordekhai Aghai           BR 7',
+  branchState: undefined,
+  feePackage: undefined,
+  defaultFeePackage: undefined,
+  cif: 'F016583',
+  fees: [
+    { feeType: 'Individual Fees', feeGroups: [Array] },
+    { feeType: 'Client Fees', feeGroups: [Array] },
+    { feeType: 'Bank Account Fees', feeGroups: [Array] }
+  ],
+  feesActives: [],
+  documentUrl: 'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null',      
+  currentFees: []
 }
+[20:23:04.669] INFO (22944): Result=true
+[20:23:04.676] INFO (22944): request completed
+    req: {
+      "id": "ad87576bc84440eded6c582c",
+      "method": "POST",
+      "url": "/v1/fee",
+      "query": {},
+      "params": {},
+      "headers": {
+        "content-type": "application/json",
+        "user-agent": "PostmanRuntime/7.43.0",
+        "accept": "*/*",
+        "postman-token": "194b494d-4ce7-4203-8f6e-f7d199211699",
+        "host": "localhost:3333",
+        "accept-encoding": "gzip, deflate, br",
+        "connection": "keep-alive",
+        "content-length": "65"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 62086
+    }
+    res: {
+      "statusCode": 200,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "ad87576bc84440eded6c582c",
+        "x-correlation-id": "ad87576bc84440eded6c582c",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "6005",
+        "etag": "W/\"1775-wIRGtpTKjkfm5dd8Uu+q/tJjgbE\""
+      }
+    }
+    responseTime: 138
