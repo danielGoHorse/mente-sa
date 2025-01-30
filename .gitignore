@@ -1,13 +1,68 @@
-Unhandled Promise Rejection: err:  The server principal "userFeeMgmtConductor" is not able to access the database "KYC" under the current security context.
-apiServer.js:148
-RequestError: The server principal "userFeeMgmtConductor" is not able to access the database "KYC" under the current security context.
-    at handleError (H:\Documents\fee-management-backend\node_modules\mssql\lib\tedious.js:888:15)
-    at Connection.emit (node:events:514:28)
-    at Parser.<anonymous> (H:\Documents\fee-management-backend\node_modules\tedious\lib\connection.js:716:12)
-    at Parser.emit (node:events:514:28)
-    at Parser.<anonymous> (H:\Documents\fee-management-backend\node_modules\tedious\lib\token\token-stream-parser.js:27:14)
-    at Parser.emit (node:events:514:28)
-    at addChunk (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:279:12)
-    at readableAddChunk (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:262:11)
-    at Readable.push (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_readable.js:228:10)
-    at Transform.push (H:\Documents\fee-management-backend\node_modules\tedious\node_modules\readable-stream\lib\_stream_transform.js:132:32)
+import { Router } from 'express'
+import feeGetByPackageEndpoint from './feeGetByPackageEndpoint.js'
+
+const feeGetByPackageRouter = Router()
+
+// Nova rota para buscar Exception Fees por Fee Package ID
+feeGetByPackageRouter.get('/fee/exceptions/:feePackageId', feeGetByPackageEndpoint)
+
+export default feeGetByPackageRouter
+
+
+
+
+import FeeGetByPackageUseCase from './feeGetByPackageUseCase.js'
+import ApiResponse from '#core/http/apiResponse.js'
+
+export default async function feeGetByPackageEndpoint(req, res) {
+  const { feePackageId } = req.params;
+
+  if (!feePackageId) {
+    return res.status(400).json(ApiResponse.createBadRequestResponse({ error: "feePackageId is required" }));
+  }
+
+  const useCase = new FeeGetByPackageUseCase();
+  const result = await useCase.execute({ feePackageId });
+
+  if (result.isFailure) {
+    return res.status(400).json(ApiResponse.createBadRequestResponse({ error: result.error }));
+  }
+
+  res.json(ApiResponse.createOkResponse(result.value));
+}
+
+
+
+
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure
+} from '#core/data/mssql/index.js'
+
+export default class FeeGetByPackageUseCase {
+  async execute({ feePackageId }) {
+    const connection = await connectToFeeMgmtDb();
+    const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees', { feePackageId });
+
+    const feeResult = recordset.map((record) => ({
+      feeType: record.feeType,
+      feeGroups: [
+        {
+          name: record.feeGroup,
+          code: record.groupCode,
+          fields: [
+            {
+              code: record.fieldCode,
+              name: record.fieldName,
+              defaultValue: record.defaultValue,
+              isException: record.isException === 1,
+              exceptionOptions: record.exceptionOptions ? JSON.parse(record.exceptionOptions) : [],
+            },
+          ],
+        },
+      ],
+    }));
+
+    return feeResult;
+  }
+}
