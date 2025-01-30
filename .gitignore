@@ -1,3 +1,31 @@
+import BaseHttp from './BaseHttp.js'
+export default class FeeManagement extends BaseHttp {
+  #createUrl = 'v1/fee/case'
+  #getByAccounts = 'v1/fee'
+  #getUsersEmail = 'v1/email/feeCase/'
+
+  constructor({ logger, environment }) {
+    super(logger, environment.feeUrl)
+  }
+
+  async create(feeManagement) {
+    return await this.httpRequest.post(this.#createUrl, feeManagement)
+  }
+
+  async getFeeByAccount({ customerAccount }) {
+    const url = `${this.#getByAccounts}`
+    return await this.httpRequest.post(url, { customerAccount })
+  }
+
+  async getUsersToSendEmail(feeCaseId) {
+    const url = `${this.#getUsersEmail}${feeCaseId}`
+    return await this.httpRequest.get(url)
+  }
+}
+
+
+
+
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Card from "@/@core/components/Card";
