@@ -14,3 +14,25 @@ const result = {
   documentUrl: this.#getDocumentUrl(feePackageId),
   currentFees: this.#mapCurrentFees(feesData)
 }
+
+Esse é o do conductor:
+
+    const result = {
+      customerName: customerData?.customerAddress?.name || '',
+      customerShortName: customerData?.customerAddress?.shortName || '',
+      customerAddress: customerData?.customerAddress?.address || '',
+      customerAccountOfficer: customerData?.customerAddress?.officer || '',
+      cif: customerData?.customerAddress?.cif || cif, 
+      officerId: customerData?.customerAddress?.officerId || '',
+      branchCity: customerData?.customerAddress?.branchCity || '',
+      branchState: customerData?.customerAddress?.branchState || '',
+      feePackage: customerData?.customerAddress?.feePackage || '',
+      defaultFeePackageId: customerData?.customerAddress?.defaultFeePackageId || '',
+
+      fees: feesData.fees || [],
+      feesActives: feesData.feesActives || [],
+
+      documentUrl: feesData.documentUrl || '',
+
+      currentFees
+    }
