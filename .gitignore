@@ -1,526 +1,59 @@
-{
-    "code": 200,
-    "data": {
-        "customerName": "FRANCO JACK",
-        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
-        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
-        "cif": "F016583",
-        "fees": [
-            {
-                "feeType": "Individual Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "fields": [
-                            {
-                                "code": "BPS002",
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "0.35% /YR min $375.00/QTR",
-                                "defaultFrequency": "0.35% /YR min $375.00/QTR",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS004",
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "$0.10 per share, min charge of $150 per trade",
-                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS005",
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "$0.10 per share, min charge of $150 per trade",
-                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS002",
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "0.35% /YR min $375.00/QTR",
-                                "defaultFrequency": "0.35% /YR min $375.00/QTR",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS004",
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "$0.10 per share, min charge of $150 per trade",
-                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS005",
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "$0.10 per share, min charge of $150 per trade",
-                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS005",
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "$0.10 per share, min charge of $150 per trade",
-                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS002",
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "0.35% /YR min $375.00/QTR",
-                                "defaultFrequency": "0.35% /YR min $375.00/QTR",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS004",
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "$0.10 per share, min charge of $150 per trade",
-                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS005",
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "$0.10 per share, min charge of $150 per trade",
-                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS002",
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "0.35% /YR min $375.00/QTR",
-                                "defaultFrequency": "0.35% /YR min $375.00/QTR",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS004",
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "$0.10 per share, min charge of $150 per trade",
-                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "fields": [
-                            {
-                                "code": "BPS003",
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": 375,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$375.00",
-                                "frequency": "Quarterly on Day 1",
-                                "defaultFrequency": "Quarterly on Day 1",
-                                "amount": 375,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS003",
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": 375,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$375.00",
-                                "frequency": "Quarterly on Day 1",
-                                "defaultFrequency": "Quarterly on Day 1",
-                                "amount": 375,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS003",
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": 375,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$375.00",
-                                "frequency": "Quarterly on Day 1",
-                                "defaultFrequency": "Quarterly on Day 1",
-                                "amount": 375,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "BPS003",
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": 375,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$375.00",
-                                "frequency": "Quarterly on Day 1",
-                                "defaultFrequency": "Quarterly on Day 1",
-                                "amount": 375,
-                                "exceptionOptions": []
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "feeType": "Client Fees",
-                "feeGroups": [
-                    {
-                        "name": "Exception Request",
-                        "fields": [
-                            {
-                                "code": "JH001",
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": 25,
-                                "isStandard": false,
-                                "isException": true,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "",
-                                "defaultFrequency": "Monthly - Charged Quarterly",
-                                "amount": 25,
-                                "exceptionOptions": [
-                                    {
-                                        "value": 0,
-                                        "text": "$0.00",
-                                        "visible": true,
-                                        "retired": false
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Standard Fees",
-                        "fields": [
-                            {
-                                "code": "JH002",
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "Annual - Charged Annual",
-                                "defaultFrequency": "Annual - Charged Annual",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH002",
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "Annual - Charged Annual",
-                                "defaultFrequency": "Annual - Charged Annual",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH002",
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "Annual - Charged Annual",
-                                "defaultFrequency": "Annual - Charged Annual",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH002",
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "Annual - Charged Annual",
-                                "defaultFrequency": "Annual - Charged Annual",
-                                "amount": 0,
-                                "exceptionOptions": []
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "fields": [
-                            {
-                                "code": "JH001",
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": 25,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$25.00",
-                                "frequency": "Monthly - Charged Quarterly",
-                                "defaultFrequency": "Monthly - Charged Quarterly",
-                                "amount": 25,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH001",
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": 25,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$25.00",
-                                "frequency": "Monthly - Charged Quarterly",
-                                "defaultFrequency": "Monthly - Charged Quarterly",
-                                "amount": 25,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH001",
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": 25,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$25.00",
-                                "frequency": "Monthly - Charged Quarterly",
-                                "defaultFrequency": "Monthly - Charged Quarterly",
-                                "amount": 25,
-                                "exceptionOptions": []
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "feeType": "Bank Account Fees",
-                "feeGroups": [
-                    {
-                        "name": "Exception Request",
-                        "fields": [
-                            {
-                                "code": "JH006",
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": 25,
-                                "isStandard": false,
-                                "isException": true,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "",
-                                "defaultFrequency": "",
-                                "amount": 25,
-                                "exceptionOptions": [
-                                    {
-                                        "value": 0,
-                                        "text": "$0.00",
-                                        "visible": true,
-                                        "retired": false
-                                    }
-                                ]
-                            },
-                            {
-                                "code": "JH006",
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": 25,
-                                "isStandard": false,
-                                "isException": true,
-                                "isCurrentClient": false,
-                                "labelValue": "",
-                                "frequency": "",
-                                "defaultFrequency": "",
-                                "amount": 25,
-                                "exceptionOptions": [
-                                    {
-                                        "value": 0,
-                                        "text": "$0.00",
-                                        "visible": true,
-                                        "retired": false
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "fields": [
-                            {
-                                "code": "JH007",
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": 10,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$10.00",
-                                "frequency": "",
-                                "defaultFrequency": "",
-                                "amount": 10,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH006",
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": 25,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$25.00",
-                                "frequency": "",
-                                "defaultFrequency": "",
-                                "amount": 25,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH007",
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": 10,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$10.00",
-                                "frequency": "",
-                                "defaultFrequency": "",
-                                "amount": 10,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH006",
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": 25,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$25.00",
-                                "frequency": "",
-                                "defaultFrequency": "",
-                                "amount": 25,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH007",
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": 10,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$10.00",
-                                "frequency": "",
-                                "defaultFrequency": "",
-                                "amount": 10,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": "JH007",
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": 10,
-                                "isStandard": true,
-                                "isException": false,
-                                "isCurrentClient": true,
-                                "labelValue": "$10.00",
-                                "frequency": "",
-                                "defaultFrequency": "",
-                                "amount": 10,
-                                "exceptionOptions": []
-                            }
-                        ]
-                    }
-                ]
-            }
-        ],
-        "feesActives": [],
-        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
-        "currentFees": [
-            {
-                "feeDescription": "Hold Mail Fee (per annum) -  $0.00",
-                "feeCode": " Personal Checking -D 7113617"
-            },
-            {
-                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
-                "feeCode": " Personal Checking -D 7113617"
-            },
-            {
-                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
-                "feeCode": " Personal Checking -D 7115342"
-            },
-            {
-                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
-                "feeCode": " Personal Promise   D 7115431"
-            },
-            {
-                "feeDescription": "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
-                "feeCode": " Personal Savings 7115822"
-            },
-            {
-                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
-                "feeCode": " Personal Savings 7115822"
-            }
-        ]
+import Result from '#features/shared/result.js'
+
+export default class FeeCaseGetByCifUseCase {
+  async execute({ cif }, feeManagementModel, customerModel) {
+    global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`)
+
+    // 🔹 Buscar os detalhes do cliente pelo CIF
+    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif)
+
+    if (errCustomer) {
+      return Result.fail({ message: "It's not possible to get address cif" })
     }
+
+    const customerData = responseCustomer?.data?.customer || {}
+
+    // 🔹 Buscar as informações de Fee do cliente
+    global.logger.info('feeManagementModel.getFeeByAccount')
+    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData)
+
+    if (errFee) {
+      return Result.fail({ message: "It's not possible to get fee values" })
+    }
+
+    const feesData = responseFee?.data || {}
+
+    // 🔹 Mapear os "currentFees"
+    const currentFees = customerData?.customerCurrentFees?.map((x) => ({
+      feeDescription: x.feeDescription,
+      feeCode: x.feeCode
+    })) || []
+
+    // 🔹 Construindo o resultado final com **TODOS OS DADOS**
+    const result = {
+      customerName: customerData?.customerAddress?.name || '',
+      customerAddress: customerData?.customerAddress?.address || '',
+      customerAccountOfficer: customerData?.customerAddress?.officer || '',
+      cif: customerData?.customerAddress?.cif || cif, 
+      officerId: customerData?.customerAddress?.officerId || '',
+      branchCity: customerData?.customerAddress?.branchCity || '',
+      branchState: customerData?.customerAddress?.branchState || '',
+      feePackage: customerData?.customerAddress?.feePackage || '',
+      defaultFeePackageId: customerData?.customerAddress?.defaultFeePackageId || '',
+
+      // 🔹 **Certifique-se de que fees e feesActives vêm corretamente**
+      fees: feesData.fees || [],
+      feesActives: feesData.feesActives || [],
+
+      // 🔹 **URL do Documento**
+      documentUrl: feesData.documentUrl || '',
+
+      // 🔹 **Current Fees**
+      currentFees
+    }
+
+    global.logger.info('End process')
+
+    return Result.ok(result)
+  }
 }
