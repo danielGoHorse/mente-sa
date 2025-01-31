@@ -1,38 +1,19 @@
 const result = {
-  cif: cifno,
-  customerName: feesData[0].CustomerName?.trim() || '', 
-  customerShortName: feesData[0].CustomerShortName?.trim() || '', 
-  customerAddress: feesData[0].CustomerAddress?.trim() || '',
-  customerAccountOfficer: feesData[0].Officer?.trim() || '',
-  officerId: feesData[0].OfficerId?.trim() || '',
-  branchCity: feesData[0]['Branch City']?.trim() || feesData[0].branchCity?.trim() || '',
-  branchState: feesData[0]['Branch State']?.trim() || feesData[0].branchState?.trim() || '',
-  feePackage: feesData[0]['Default Fee Package']?.trim() || feesData[0].feePackage?.trim() || '',
-  defaultFeePackageId: feesData[0]['Default Fee Package Id'] || feesData[0].defaultFeePackageId || '',
-  fees: this.#mapFeesByCategory(feesData, exceptionData),
-  feesActives: await this.#getActiveFees(cifno),
-  documentUrl: this.#getDocumentUrl(feePackageId),
-  currentFees: this.#mapCurrentFees(feesData)
+  cif: feesData[0]?.CIFNO?.trim() || cifno, // Mantendo compatibilidade com conductor
+  customerName: feesData[0]?.CustomerName?.trim() || '', 
+  customerShortName: feesData[0]?.CustomerShortName?.trim() || '', 
+  customerAddress: feesData[0]?.CustomerAddress?.trim() || '',
+  customerAccountOfficer: feesData[0]?.Officer?.trim() || '',
+  officerId: feesData[0]?.OfficerId?.trim() || '',
+  branchCity: feesData[0]?.['Branch City']?.trim() || feesData[0]?.branchCity?.trim() || '',
+  branchState: feesData[0]?.['Branch State']?.trim() || feesData[0]?.branchState?.trim() || '',
+  feePackage: feesData[0]?.['Default Fee Package']?.trim() || feesData[0]?.feePackage?.trim() || '',
+  defaultFeePackageId: feesData[0]?.['Default Fee Package Id'] || feesData[0]?.defaultFeePackageId || '',
+
+  fees: feesData?.fees || this.#mapFeesByCategory(feesData, exceptionData),
+  feesActives: feesData?.feesActives || await this.#getActiveFees(cifno),
+
+  documentUrl: feesData?.documentUrl || this.#getDocumentUrl(feePackageId),
+
+  currentFees: feesData?.currentFees || this.#mapCurrentFees(feesData)
 }
-
-Esse é o do conductor:
-
-    const result = {
-      customerName: customerData?.customerAddress?.name || '',
-      customerShortName: customerData?.customerAddress?.shortName || '',
-      customerAddress: customerData?.customerAddress?.address || '',
-      customerAccountOfficer: customerData?.customerAddress?.officer || '',
-      cif: customerData?.customerAddress?.cif || cif, 
-      officerId: customerData?.customerAddress?.officerId || '',
-      branchCity: customerData?.customerAddress?.branchCity || '',
-      branchState: customerData?.customerAddress?.branchState || '',
-      feePackage: customerData?.customerAddress?.feePackage || '',
-      defaultFeePackageId: customerData?.customerAddress?.defaultFeePackageId || '',
-
-      fees: feesData.fees || [],
-      feesActives: feesData.feesActives || [],
-
-      documentUrl: feesData.documentUrl || '',
-
-      currentFees
-    }
