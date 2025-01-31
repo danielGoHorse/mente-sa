@@ -1,34 +1,532 @@
-CustomerName                            |CustomerShortName   |CustomerAddress                                                                  |CIFNO  |ACCTNO |FeeDescription                  |FeeCode|Istransactional|FeeType          |FeeAmount|Frequency                                    |Branch City|Branch State|OfficerId|Officer                       |StandardException|Default Fee Package Id|Default Fee Package|Default Fee Amount|Default Frequency                            |
-----------------------------------------+--------------------+---------------------------------------------------------------------------------+-------+-------+--------------------------------+-------+---------------+-----------------+---------+---------------------------------------------+-----------+------------+---------+------------------------------+-----------------+----------------------+-------------------+------------------+---------------------------------------------+
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|Account Maintenance Fee         |JH001  |              0|Client Fees      |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             25.00|Monthly - Charged Quarterly                  |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|Hold Mail Fee                   |JH002  |              0|Client Fees      |     0.00|Annual - Charged Annual                      |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|              0.00|Annual - Charged Annual                      |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|    25.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             25.00|                                             |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees|    10.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             10.00|                                             |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|Safekeeping of Securities       |BPS002 |              0|Individual Fees  |         |0.35% /YR min $375.00/QTR                    |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |0.35% /YR min $375.00/QTR                    |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|SSL Account Maintanance Fee     |BPS003 |              0|Individual Fees  |   375.00|Quarterly on Day 1                           |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|            375.00|Quarterly on Day 1                           |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|US Equities Commission          |BPS004 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |$0.10 per share, min charge of $150 per trade|
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|Options Commission              |BPS005 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |$0.10 per share, min charge of $150 per trade|
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115822|Account Maintenance Fee         |JH001  |              0|Client Fees      |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             25.00|Monthly - Charged Quarterly                  |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115822|Hold Mail Fee                   |JH002  |              0|Client Fees      |     0.00|Annual - Charged Annual                      |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|              0.00|Annual - Charged Annual                      |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115822|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|     0.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|             25.00|                                             |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115822|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees|    10.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             10.00|                                             |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115822|Safekeeping of Securities       |BPS002 |              0|Individual Fees  |         |0.35% /YR min $375.00/QTR                    |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |0.35% /YR min $375.00/QTR                    |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115822|SSL Account Maintanance Fee     |BPS003 |              0|Individual Fees  |   375.00|Quarterly on Day 1                           |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|            375.00|Quarterly on Day 1                           |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115822|US Equities Commission          |BPS004 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |$0.10 per share, min charge of $150 per trade|
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115342|Options Commission              |BPS005 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |$0.10 per share, min charge of $150 per trade|
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7113617|Account Maintenance Fee         |JH001  |              0|Client Fees      |     0.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|             25.00|Monthly - Charged Quarterly                  |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7113617|Hold Mail Fee                   |JH002  |              0|Client Fees      |     0.00|Annual - Charged Annual                      |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|              0.00|Annual - Charged Annual                      |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7113617|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|     0.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|             25.00|                                             |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7113617|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees|    10.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             10.00|                                             |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7113617|Safekeeping of Securities       |BPS002 |              0|Individual Fees  |         |0.35% /YR min $375.00/QTR                    |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |0.35% /YR min $375.00/QTR                    |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7113617|SSL Account Maintanance Fee     |BPS003 |              0|Individual Fees  |   375.00|Quarterly on Day 1                           |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|            375.00|Quarterly on Day 1                           |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7113617|US Equities Commission          |BPS004 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |$0.10 per share, min charge of $150 per trade|
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7113617|Options Commission              |BPS005 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |$0.10 per share, min charge of $150 per trade|
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115431|Account Maintenance Fee         |JH001  |              0|Client Fees      |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             25.00|Monthly - Charged Quarterly                  |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115431|Hold Mail Fee                   |JH002  |              0|Client Fees      |     0.00|Annual - Charged Annual                      |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|              0.00|Annual - Charged Annual                      |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115431|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|    25.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             25.00|                                             |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115431|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees|    10.00|                                             |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|             10.00|                                             |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115431|Safekeeping of Securities       |BPS002 |              0|Individual Fees  |         |0.35% /YR min $375.00/QTR                    |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |0.35% /YR min $375.00/QTR                    |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115431|SSL Account Maintanance Fee     |BPS003 |              0|Individual Fees  |   375.00|Quarterly on Day 1                           |New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|            375.00|Quarterly on Day 1                           |
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115431|US Equities Commission          |BPS004 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |$0.10 per share, min charge of $150 per trade|
-PPPP PPPPPP                             |PPPPPP PPPP         |2417 Tongass Ave #111                    PPP PPPP PP 99999                       |F016583|7115431|Options Commission              |BPS005 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|                  |$0.10 per share, min charge of $150 per trade|
+{
+    "code": 200,
+    "data": {
+        "customerName": "FRANCO JACK",
+        "customerShortName": "",
+        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
+        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
+        "cif": "F016583",
+        "officerId": "",
+        "branchCity": "",
+        "branchState": "",
+        "feePackage": "",
+        "defaultFeePackageId": "",
+        "fees": [
+            {
+                "feeType": "Client Fees",
+                "feeGroups": [
+                    {
+                        "name": "Client Current Fees",
+                        "fields": [
+                            {
+                                "code": "JH001",
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": 25,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$25.00",
+                                "frequency": "Monthly - Charged Quarterly",
+                                "defaultFrequency": "Monthly - Charged Quarterly",
+                                "amount": 25,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH001",
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": 25,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$25.00",
+                                "frequency": "Monthly - Charged Quarterly",
+                                "defaultFrequency": "Monthly - Charged Quarterly",
+                                "amount": 25,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH001",
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": 25,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$25.00",
+                                "frequency": "Monthly - Charged Quarterly",
+                                "defaultFrequency": "Monthly - Charged Quarterly",
+                                "amount": 25,
+                                "exceptionOptions": []
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "fields": [
+                            {
+                                "code": "JH002",
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "Annual - Charged Annual",
+                                "defaultFrequency": "Annual - Charged Annual",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH002",
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "Annual - Charged Annual",
+                                "defaultFrequency": "Annual - Charged Annual",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH002",
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "Annual - Charged Annual",
+                                "defaultFrequency": "Annual - Charged Annual",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH002",
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "Annual - Charged Annual",
+                                "defaultFrequency": "Annual - Charged Annual",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Exception Request",
+                        "fields": [
+                            {
+                                "code": "JH001",
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": 25,
+                                "isStandard": false,
+                                "isException": true,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "",
+                                "defaultFrequency": "Monthly - Charged Quarterly",
+                                "amount": 25,
+                                "exceptionOptions": [
+                                    {
+                                        "value": 0,
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Client Current Fees",
+                        "fields": [
+                            {
+                                "code": "JH006",
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": 25,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$25.00",
+                                "frequency": "",
+                                "defaultFrequency": "",
+                                "amount": 25,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH007",
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": 10,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$10.00",
+                                "frequency": "",
+                                "defaultFrequency": "",
+                                "amount": 10,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH007",
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": 10,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$10.00",
+                                "frequency": "",
+                                "defaultFrequency": "",
+                                "amount": 10,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH007",
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": 10,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$10.00",
+                                "frequency": "",
+                                "defaultFrequency": "",
+                                "amount": 10,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH006",
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": 25,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$25.00",
+                                "frequency": "",
+                                "defaultFrequency": "",
+                                "amount": 25,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "JH007",
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": 10,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$10.00",
+                                "frequency": "",
+                                "defaultFrequency": "",
+                                "amount": 10,
+                                "exceptionOptions": []
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Exception Request",
+                        "fields": [
+                            {
+                                "code": "JH006",
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": 25,
+                                "isStandard": false,
+                                "isException": true,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "",
+                                "defaultFrequency": "",
+                                "amount": 25,
+                                "exceptionOptions": [
+                                    {
+                                        "value": 0,
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false
+                                    }
+                                ]
+                            },
+                            {
+                                "code": "JH006",
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": 25,
+                                "isStandard": false,
+                                "isException": true,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "",
+                                "defaultFrequency": "",
+                                "amount": 25,
+                                "exceptionOptions": [
+                                    {
+                                        "value": 0,
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "feeType": "Individual Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "fields": [
+                            {
+                                "code": "BPS002",
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "0.35% /YR min $375.00/QTR",
+                                "defaultFrequency": "0.35% /YR min $375.00/QTR",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS004",
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "$0.10 per share, min charge of $150 per trade",
+                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS005",
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "$0.10 per share, min charge of $150 per trade",
+                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS002",
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "0.35% /YR min $375.00/QTR",
+                                "defaultFrequency": "0.35% /YR min $375.00/QTR",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS004",
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "$0.10 per share, min charge of $150 per trade",
+                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS005",
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "$0.10 per share, min charge of $150 per trade",
+                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS002",
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "0.35% /YR min $375.00/QTR",
+                                "defaultFrequency": "0.35% /YR min $375.00/QTR",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS004",
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "$0.10 per share, min charge of $150 per trade",
+                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS005",
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "$0.10 per share, min charge of $150 per trade",
+                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS002",
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "0.35% /YR min $375.00/QTR",
+                                "defaultFrequency": "0.35% /YR min $375.00/QTR",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS004",
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "$0.10 per share, min charge of $150 per trade",
+                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS005",
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "frequency": "$0.10 per share, min charge of $150 per trade",
+                                "defaultFrequency": "$0.10 per share, min charge of $150 per trade",
+                                "amount": 0,
+                                "exceptionOptions": []
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "fields": [
+                            {
+                                "code": "BPS003",
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": 375,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$375.00",
+                                "frequency": "Quarterly on Day 1",
+                                "defaultFrequency": "Quarterly on Day 1",
+                                "amount": 375,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS003",
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": 375,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$375.00",
+                                "frequency": "Quarterly on Day 1",
+                                "defaultFrequency": "Quarterly on Day 1",
+                                "amount": 375,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS003",
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": 375,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$375.00",
+                                "frequency": "Quarterly on Day 1",
+                                "defaultFrequency": "Quarterly on Day 1",
+                                "amount": 375,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": "BPS003",
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": 375,
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": true,
+                                "labelValue": "$375.00",
+                                "frequency": "Quarterly on Day 1",
+                                "defaultFrequency": "Quarterly on Day 1",
+                                "amount": 375,
+                                "exceptionOptions": []
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "feesActives": [],
+        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+        "currentFees": [
+            {
+                "feeDescription": "Hold Mail Fee (per annum) -  $0.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7115342"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Savings 7115822"
+            }
+        ]
+    }
+}
