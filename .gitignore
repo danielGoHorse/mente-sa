@@ -23,9 +23,10 @@ export default class FeeGetByCifUseCase {
       ? await this.#getExceptionFeesFromSQL(feePackageId)
       : []
 
-
     const result = {
       cif: cifno,
+      customerName: feesData[0].CustomerName || '', // 🟢 Incluindo Customer Name
+      customerAddress: feesData[0].CustomerAddress || '', // 🟢 Incluindo Customer Address
       customerAccountOfficer: feesData[0].Officer || '',
       officerId: feesData[0].OfficerId || '',
       branchCity: feesData[0]['Branch City'] || '',
@@ -38,7 +39,6 @@ export default class FeeGetByCifUseCase {
       currentFees: this.#mapCurrentFees(feesData)
     }
 
-    
     return Result.ok(result)
   }
 
@@ -49,14 +49,12 @@ export default class FeeGetByCifUseCase {
     return recordset
   }
 
- 
   async #getExceptionFeesFromSQL(feePackageId) {
     global.logger.info('getExceptionFeesFromSQL()')
     const connection = await connectToFeeMgmtDb()
     const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId })
     return recordset
   }
-
 
   async #getActiveFees(cifno) {
     const feesActives = await FeeCase.find({
@@ -71,14 +69,12 @@ export default class FeeGetByCifUseCase {
     }))
   }
 
-
   #mapFeesByCategory(feesData, exceptionData) {
-
-    const mappedFees = [];
+    const mappedFees = []
 
     feesData.forEach(record => {
-      const isException = record.StandardException === 'Exception';
-      const isCurrentClient = record.FeeAmount > 0;
+      const isException = record.StandardException === 'Exception'
+      const isCurrentClient = record.FeeAmount > 0
 
       const field = {
         code: record.FeeCode,
@@ -90,46 +86,44 @@ export default class FeeGetByCifUseCase {
         labelValue: record.FeeAmount ? `$${record.FeeAmount}.00` : '',
         frequency: record.Frequency || '',
         defaultFrequency: record['Default Frequency'] || '',
-        amount: record.FeeAmount || record['Default Fee Amount'] || 0, 
+        amount: record.FeeAmount || record['Default Fee Amount'] || 0,
         exceptionOptions: isException ? this.#parseExceptionOptions(exceptionData, record) : []
-      };
-
-      let feeGroup = mappedFees.find(f => f.feeType === record.FeeType);
-      if (!feeGroup) {
-        feeGroup = { feeType: record.FeeType, feeGroups: [] };
-        mappedFees.push(feeGroup);
       }
 
-      let targetGroup;
+      let feeGroup = mappedFees.find(f => f.feeType === record.FeeType)
+      if (!feeGroup) {
+        feeGroup = { feeType: record.FeeType, feeGroups: [] }
+        mappedFees.push(feeGroup)
+      }
+
+      let targetGroup
       if (isException) {
-        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Exception Request');
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Exception Request')
         if (!targetGroup) {
-          targetGroup = { name: 'Exception Request', fields: [] };
-          feeGroup.feeGroups.push(targetGroup);
+          targetGroup = { name: 'Exception Request', fields: [] }
+          feeGroup.feeGroups.push(targetGroup)
         }
       } else if (isCurrentClient) {
-        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Client Current Fees');
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Client Current Fees')
         if (!targetGroup) {
-          targetGroup = { name: 'Client Current Fees', fields: [] };
-          feeGroup.feeGroups.push(targetGroup);
+          targetGroup = { name: 'Client Current Fees', fields: [] }
+          feeGroup.feeGroups.push(targetGroup)
         }
       } else {
-        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Standard Fees');
+        targetGroup = feeGroup.feeGroups.find(g => g.name === 'Standard Fees')
         if (!targetGroup) {
-          targetGroup = { name: 'Standard Fees', fields: [] };
-          feeGroup.feeGroups.push(targetGroup);
+          targetGroup = { name: 'Standard Fees', fields: [] }
+          feeGroup.feeGroups.push(targetGroup)
         }
       }
 
-      targetGroup.fields.push(field);
-    });
+      targetGroup.fields.push(field)
+    })
 
-    return mappedFees;
+    return mappedFees
   }
 
-
   #parseExceptionOptions(exceptionData, record) {
-    
     return exceptionData
       .filter(exc => exc.FeeCode === record.FeeCode)
       .map(exc => ({
@@ -139,7 +133,6 @@ export default class FeeGetByCifUseCase {
         retired: false
       }))
   }
-
 
   #getDocumentUrl(feePackageId) {
     const scheduleUrls = global.environment.scheduleUrls
@@ -157,7 +150,6 @@ export default class FeeGetByCifUseCase {
   }
 
   #mapCurrentFees(feesData) {
-    
     return feesData
       .filter(record => record.FeeAmount > 0)
       .map(record => ({
@@ -166,9 +158,3 @@ export default class FeeGetByCifUseCase {
       }))
   }
 }
-
-
-
-
- "customerName": "FRANCO JACK",
-        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
