@@ -1,16 +1,9 @@
-[15:20:58.013] INFO (752): Loading env using file H:\workspace\feeManagement\conductor-fee-management\.env
-[15:20:58.019] INFO (752): bootstraping application
-[15:20:58.308] INFO (752): Server started on :::3001
-[15:21:05.414] INFO (752): customerModel.getCustomerDetailsByCif(F016583)
-[15:21:05.416] ERROR (752): Unhandled Promise Rejection: err: 
-[15:21:05.417] ERROR (752): TypeError: Invalid URL
-    at new URL (node:internal/url:775:36)
-    at HttpRequest.get (file:///H:/workspace/feeManagement/conductor-fee-management/src/core/http/httpRequest.js:69:17)
-    at Customer.getCustomerDetailsByCif (file:///H:/workspace/feeManagement/conductor-fee-management/src/models/Customer.js:10:35)
-    at FeeCaseGetByCifUseCase.execute (file:///H:/workspace/feeManagement/conductor-fee-management/src/features/feeCaseGetByCif/feeCaseGetByCifUseCase.js:7:65)
-    at feeCaseGetByCifEndpoint (file:///H:/workspace/feeManagement/conductor-fee-management/src/features/feeCaseGetByCif/feeCaseGetByCifEndpoint.js:10:32) 
-    at Layer.handle [as handle_request] (H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\layer.js:95:5)
-    at next (H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\route.js:144:13)
-    at Route.dispatch (H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\route.js:114:3)
-    at Layer.handle [as handle_request] (H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\layer.js:95:5)
-    at H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\index.js:284:15
+async getFeeByAccount({ customerAccount }) {
+    const url = `${this.#getByAccounts}`
+    return await this.httpRequest.post(url, { customerAccount })
+  }
+
+
+
+Tem como eu chamar nessa chamada diretamente meu localhost 3333???
+
