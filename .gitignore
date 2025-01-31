@@ -1,9 +1,127 @@
-async getFeeByAccount({ customerAccount }) {
-    const url = `${this.#getByAccounts}`
-    return await this.httpRequest.post(url, { customerAccount })
-  }
-
-
-
-Tem como eu chamar nessa chamada diretamente meu localhost 3333???
-
+{
+  customerAccount: [
+    {
+      cifno: "F016583",
+      ddaNumber: 7113617,
+      bpsAcctNumber: "",
+      feeType: 1,
+      feeDescription: "AccountMaintenance",
+      feeCode: "JH001",
+      bpsFeeTypeCode: "",
+      source: "JHA",
+      entity: "SNB/284",
+      feeAmount: 0,
+      isFeesStandard: "No",
+      kycMailingStatus: null,
+      feeGroup: 1,
+    },
+    {
+      cifno: "F016583",
+      ddaNumber: 7115431,
+      bpsAcctNumber: "",
+      feeType: 1,
+      feeDescription: "AccountMaintenance",
+      feeCode: "JH001",
+      bpsFeeTypeCode: "",
+      source: "JHA",
+      entity: "SNB/284",
+      feeAmount: 25,
+      isFeesStandard: "Yes",
+      kycMailingStatus: null,
+      feeGroup: 1,
+    },
+    {
+      cifno: "F016583",
+      ddaNumber: 7115822,
+      bpsAcctNumber: "",
+      feeType: 1,
+      feeDescription: "AccountMaintenance",
+      feeCode: "JH001",
+      bpsFeeTypeCode: "",
+      source: "JHA",
+      entity: "SNB/284",
+      feeAmount: 25,
+      isFeesStandard: "Yes",
+      kycMailingStatus: null,
+      feeGroup: 1,
+    },
+    {
+      cifno: "F016583",
+      ddaNumber: 7115822,
+      bpsAcctNumber: "",
+      feeType: 2,
+      feeDescription: "HoldMail",
+      feeCode: "JH002",
+      bpsFeeTypeCode: "",
+      source: "JHA",
+      entity: "SNB/284",
+      feeAmount: 0,
+      isFeesStandard: "Yes",
+      kycMailingStatus: "Print",
+      feeGroup: 1,
+    },
+    {
+      cifno: "F016583",
+      ddaNumber: 7115431,
+      bpsAcctNumber: "",
+      feeType: 2,
+      feeDescription: "HoldMail",
+      feeCode: "JH002",
+      bpsFeeTypeCode: "",
+      source: "JHA",
+      entity: "SNB/284",
+      feeAmount: 0,
+      isFeesStandard: "Yes",
+      kycMailingStatus: "Print",
+      feeGroup: 1,
+    },
+    {
+      cifno: "F016583",
+      ddaNumber: 7113617,
+      bpsAcctNumber: "",
+      feeType: 2,
+      feeDescription: "HoldMail",
+      feeCode: "JH002",
+      bpsFeeTypeCode: "",
+      source: "JHA",
+      entity: "SNB/284",
+      feeAmount: 0,
+      isFeesStandard: "Yes",
+      kycMailingStatus: "Print",
+      feeGroup: 1,
+    },
+  ],
+  customerAddress: {
+    cif: "F016583",
+    name: "FRANCO JACK",
+    address: "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
+    officer: "036 Sigalit Levy-Shabi        BR 4",
+    accountNumber: "7113617",
+  },
+  customerCurrentFees: [
+    {
+      feeCode: " Personal Checking -D 7113617",
+      feeDescription: "Hold Mail Fee (per annum) -  $0.00",
+    },
+    {
+      feeCode: " Personal Checking -D 7113617",
+      feeDescription: "USD/FX Outgoing Wire Fee $75.00",
+    },
+    {
+      feeCode: " Personal Checking -D 7115342",
+      feeDescription: "USD/FX Outgoing Wire Fee $75.00",
+    },
+    {
+      feeCode: " Personal Promise   D 7115431",
+      feeDescription: "USD/FX Outgoing Wire Fee $75.00",
+    },
+    {
+      feeCode: " Personal Savings 7115822",
+      feeDescription: "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
+    },
+    {
+      feeCode: " Personal Savings 7115822",
+      feeDescription: "USD/FX Outgoing Wire Fee $75.00",
+    },
+  ],
+}
