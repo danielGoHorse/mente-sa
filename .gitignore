@@ -2,15 +2,15 @@
     "code": 200,
     "data": {
         "customerName": "FRANCO JACK",
-        "customerShortName": "",
+        "customerShortName": "BBBBBB BBBB",
         "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
         "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
         "cif": "F016583",
-        "officerId": "",
-        "branchCity": "",
-        "branchState": "",
-        "feePackage": "",
-        "defaultFeePackageId": "",
+        "officerId": "369",
+        "branchCity": "New York",
+        "branchState": "NY",
+        "feePackage": "Domestic Individual",
+        "defaultFeePackageId": 2,
         "fees": [
             {
                 "name": "Client Current Fees",
@@ -32,8 +32,8 @@
                         "labelValue": "$0.00",
                         "tooltip": "Source: JHA",
                         "exceptionOptions": [],
-                        "createdAt": "2025-02-03T21:09:32.447Z",
-                        "updatedAt": "2025-02-03T21:09:32.447Z",
+                        "createdAt": "2025-02-03T21:16:34.806Z",
+                        "updatedAt": "2025-02-03T21:16:34.806Z",
                         "id": "7113617"
                     }
                 ]
@@ -58,8 +58,8 @@
                         "labelValue": "$25.00",
                         "tooltip": "Source: JHA",
                         "exceptionOptions": [],
-                        "createdAt": "2025-02-03T21:09:32.447Z",
-                        "updatedAt": "2025-02-03T21:09:32.447Z",
+                        "createdAt": "2025-02-03T21:16:34.806Z",
+                        "updatedAt": "2025-02-03T21:16:34.806Z",
                         "id": "7115431"
                     }
                 ]
@@ -84,8 +84,8 @@
                         "labelValue": "$25.00",
                         "tooltip": "Source: JHA",
                         "exceptionOptions": [],
-                        "createdAt": "2025-02-03T21:09:32.447Z",
-                        "updatedAt": "2025-02-03T21:09:32.447Z",
+                        "createdAt": "2025-02-03T21:16:34.806Z",
+                        "updatedAt": "2025-02-03T21:16:34.806Z",
                         "id": "7115822"
                     }
                 ]
@@ -110,8 +110,8 @@
                         "labelValue": "$0.00",
                         "tooltip": "Source: JHA",
                         "exceptionOptions": [],
-                        "createdAt": "2025-02-03T21:09:32.447Z",
-                        "updatedAt": "2025-02-03T21:09:32.447Z",
+                        "createdAt": "2025-02-03T21:16:34.806Z",
+                        "updatedAt": "2025-02-03T21:16:34.806Z",
                         "id": "7115822"
                     }
                 ]
@@ -136,8 +136,8 @@
                         "labelValue": "$0.00",
                         "tooltip": "Source: JHA",
                         "exceptionOptions": [],
-                        "createdAt": "2025-02-03T21:09:32.447Z",
-                        "updatedAt": "2025-02-03T21:09:32.447Z",
+                        "createdAt": "2025-02-03T21:16:34.806Z",
+                        "updatedAt": "2025-02-03T21:16:34.806Z",
                         "id": "7115431"
                     }
                 ]
@@ -162,8 +162,8 @@
                         "labelValue": "$0.00",
                         "tooltip": "Source: JHA",
                         "exceptionOptions": [],
-                        "createdAt": "2025-02-03T21:09:32.447Z",
-                        "updatedAt": "2025-02-03T21:09:32.447Z",
+                        "createdAt": "2025-02-03T21:16:34.806Z",
+                        "updatedAt": "2025-02-03T21:16:34.806Z",
                         "id": "7113617"
                     }
                 ]
@@ -187,8 +187,8 @@
                                 "amount": 25,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -204,8 +204,8 @@
                                 "amount": 25,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -221,8 +221,8 @@
                                 "amount": 25,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             }
                         ],
@@ -246,8 +246,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -263,8 +263,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -280,8 +280,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -297,8 +297,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             }
                         ],
@@ -330,8 +330,8 @@
                                     }
                                 ],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             }
                         ],
@@ -361,8 +361,8 @@
                                 "amount": 25,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -378,8 +378,8 @@
                                 "amount": 10,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -395,8 +395,8 @@
                                 "amount": 10,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -412,8 +412,8 @@
                                 "amount": 10,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -429,8 +429,8 @@
                                 "amount": 25,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -446,8 +446,8 @@
                                 "amount": 10,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             }
                         ],
@@ -479,8 +479,8 @@
                                     }
                                 ],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -504,8 +504,8 @@
                                     }
                                 ],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             }
                         ],
@@ -535,8 +535,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -552,8 +552,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -569,8 +569,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -586,8 +586,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -603,8 +603,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -620,8 +620,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -637,8 +637,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -654,8 +654,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -671,8 +671,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -688,8 +688,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -705,8 +705,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -722,8 +722,8 @@
                                 "amount": 0,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             }
                         ],
@@ -747,8 +747,8 @@
                                 "amount": 375,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -764,8 +764,8 @@
                                 "amount": 375,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -781,8 +781,8 @@
                                 "amount": 375,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             },
                             {
@@ -798,8 +798,8 @@
                                 "amount": 375,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-03T21:09:32.447Z",
-                                "updatedAt": "2025-02-03T21:09:32.447Z",
+                                "createdAt": "2025-02-03T21:16:34.806Z",
+                                "updatedAt": "2025-02-03T21:16:34.806Z",
                                 "id": ""
                             }
                         ],
@@ -812,7 +812,7 @@
             }
         ],
         "feesActives": [],
-        "documentUrl": "",
+        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
         "currentFees": [
             {
                 "feeDescription": "Hold Mail Fee (per annum) -  $0.00",
