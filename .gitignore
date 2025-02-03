@@ -1,53 +1,86 @@
-import Result from '#features/shared/result.js'
+import Result from '#features/shared/result.js';
 
 export default class FeeCaseGetByCifUseCase {
   async execute({ cif }, feeManagementModel, customerModel) {
-    // global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`)
+    // global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`);
 
-    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif)
+    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif);
 
     if (errCustomer) {
-      return Result.fail({ message: "It's not possible to get address cif" })
+      return Result.fail({ message: "It's not possible to get address cif" });
     }
 
-    const customerData = responseCustomer?.data?.customer || {}
+    const customerData = responseCustomer?.data?.customer || {};
 
-    // global.logger.info('feeManagementModel.getFeeByAccount')
-    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData)
+    // global.logger.info('feeManagementModel.getFeeByAccount');
+    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData);
 
     if (errFee) {
-      return Result.fail({ message: "It's not possible to get fee values" })
+      return Result.fail({ message: "It's not possible to get fee values" });
     }
 
-    const feesData = responseFee?.data || {}
+    const feesData = responseFee?.data || {};
 
     const currentFees = customerData?.customerCurrentFees?.map((x) => ({
-      feeDescription: x.feeDescription,
-      feeCode: x.feeCode
-    })) || []
+      feeDescription: x.feeDescription || '',
+      feeCode: x.feeCode || '',
+    })) || [];
 
     const result = {
       customerName: feesData?.customerName || '',
       customerShortName: feesData?.customerShortName || '',
       customerAddress: customerData?.customerAddress?.address || '',
       customerAccountOfficer: customerData?.customerAddress?.officer || '',
-      cif: customerData?.customerAddress?.cif || cif, 
+      cif: customerData?.customerAddress?.cif || cif,
       officerId: feesData?.officerId || '',
       branchCity: feesData?.branchCity || '',
       branchState: feesData?.branchState || '',
       feePackage: feesData?.feePackage || '',
       defaultFeePackageId: feesData?.defaultFeePackageId || '',
 
-      fees: feesData.fees || [],
+      fees: feesData.fees?.map(fee => ({
+        feeType: fee.feeType || '',
+        feeGroups: fee.feeGroups?.map(group => ({
+          visible: group.visible ?? true,
+          kycMailingStatus: group.kycMailingStatus || null,
+          name: group.name || '',
+          code: group.code || '',
+          accountNumber: group.accountNumber || '',
+          id: group.id || '',
+          cif: group.cif || '',
+          fields: group.fields?.map(field => ({
+            hasChanged: field.hasChanged ?? false,
+            code: field.code || '',
+            isException: field.isException ?? false,
+            name: field.name || '',
+            tooltip: field.tooltip || '',
+            defaultValue: field.defaultValue || '',
+            exceptionOptions: field.exceptionOptions?.map(option => ({
+              approvedByDoubleA: option.approvedByDoubleA || null,
+              value: option.value || '',
+              text: option.text || '',
+              visible: option.visible ?? true,
+              retired: option.retired ?? false,
+              _id: option._id || '',
+              parameterOptionId: option.parameterOptionId || ''
+            })) || [],
+            createdAt: field.createdAt || '',
+            updatedAt: field.updatedAt || '',
+            isCurrentClient: field.isCurrentClient ?? false,
+            isStandard: field.isStandard ?? false,
+            id: field.id || '',
+            labelValue: field.labelValue || ''
+          })) || []
+        })) || []
+      })) || [],
+
       feesActives: feesData.feesActives || [],
-
       documentUrl: feesData.documentUrl || '',
-
       currentFees
-    }
+    };
 
-    // global.logger.info('End process')
+    // global.logger.info('End process');
 
-    return Result.ok(result)
+    return Result.ok(result);
   }
 }
