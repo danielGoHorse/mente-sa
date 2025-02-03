@@ -1,86 +1,784 @@
-import Result from '#features/shared/result.js';
-
-export default class FeeCaseGetByCifUseCase {
-  async execute({ cif }, feeManagementModel, customerModel) {
-    // global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`);
-
-    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif);
-
-    if (errCustomer) {
-      return Result.fail({ message: "It's not possible to get address cif" });
+{
+    "code": 200,
+    "data": {
+        "customerName": "CCCC CCCCCC",
+        "customerShortName": "CCCCCC CCCC",
+        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
+        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
+        "cif": "F016583",
+        "officerId": "369",
+        "branchCity": "New York",
+        "branchState": "NY",
+        "feePackage": "Domestic Individual",
+        "defaultFeePackageId": 2,
+        "fees": [
+            {
+                "feeType": "Client Fees",
+                "feeGroups": [
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Client Current Fees",
+                        "code": "",
+                        "accountNumber": "",
+                        "id": "",
+                        "cif": "",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": "JH001",
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "tooltip": "",
+                                "defaultValue": 25,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH001",
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "tooltip": "",
+                                "defaultValue": 25,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH001",
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "tooltip": "",
+                                "defaultValue": 25,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$25.00"
+                            }
+                        ]
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Standard Fees",
+                        "code": "",
+                        "accountNumber": "",
+                        "id": "",
+                        "cif": "",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": "JH002",
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH002",
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH002",
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH002",
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            }
+                        ]
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Exception Request",
+                        "code": "",
+                        "accountNumber": "",
+                        "id": "",
+                        "cif": "",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": "JH001",
+                                "isException": true,
+                                "name": "Account Maintenance Fee",
+                                "tooltip": "",
+                                "defaultValue": 25,
+                                "exceptionOptions": [
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "",
+                                        "parameterOptionId": ""
+                                    }
+                                ],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "",
+                                "labelValue": ""
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Client Current Fees",
+                        "code": "",
+                        "accountNumber": "",
+                        "id": "",
+                        "cif": "",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": "JH006",
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "tooltip": "",
+                                "defaultValue": 25,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH007",
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "tooltip": "",
+                                "defaultValue": 10,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$10.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH007",
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "tooltip": "",
+                                "defaultValue": 10,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$10.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH007",
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "tooltip": "",
+                                "defaultValue": 10,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$10.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH006",
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "tooltip": "",
+                                "defaultValue": 25,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH007",
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "tooltip": "",
+                                "defaultValue": 10,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$10.00"
+                            }
+                        ]
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Exception Request",
+                        "code": "",
+                        "accountNumber": "",
+                        "id": "",
+                        "cif": "",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": "JH006",
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "tooltip": "",
+                                "defaultValue": 25,
+                                "exceptionOptions": [
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "",
+                                        "parameterOptionId": ""
+                                    }
+                                ],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "JH006",
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "tooltip": "",
+                                "defaultValue": 25,
+                                "exceptionOptions": [
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "",
+                                        "parameterOptionId": ""
+                                    }
+                                ],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "",
+                                "labelValue": ""
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "feeType": "Individual Fees",
+                "feeGroups": [
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Standard Fees",
+                        "code": "",
+                        "accountNumber": "",
+                        "id": "",
+                        "cif": "",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": "BPS002",
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS004",
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS005",
+                                "isException": false,
+                                "name": "Options Commission",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS002",
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS004",
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS005",
+                                "isException": false,
+                                "name": "Options Commission",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS002",
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS004",
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS005",
+                                "isException": false,
+                                "name": "Options Commission",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS002",
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS004",
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS005",
+                                "isException": false,
+                                "name": "Options Commission",
+                                "tooltip": "",
+                                "defaultValue": "",
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": ""
+                            }
+                        ]
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Client Current Fees",
+                        "code": "",
+                        "accountNumber": "",
+                        "id": "",
+                        "cif": "",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": "BPS003",
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "tooltip": "",
+                                "defaultValue": 375,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$375.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS003",
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "tooltip": "",
+                                "defaultValue": 375,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$375.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS003",
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "tooltip": "",
+                                "defaultValue": 375,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$375.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": "BPS003",
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "tooltip": "",
+                                "defaultValue": 375,
+                                "exceptionOptions": [],
+                                "createdAt": "",
+                                "updatedAt": "",
+                                "isCurrentClient": true,
+                                "isStandard": true,
+                                "id": "",
+                                "labelValue": "$375.00"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "feesActives": [],
+        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+        "currentFees": [
+            {
+                "feeDescription": "Hold Mail Fee (per annum) -  $0.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7115342"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Savings 7115822"
+            }
+        ]
     }
+}
 
-    const customerData = responseCustomer?.data?.customer || {};
 
-    // global.logger.info('feeManagementModel.getFeeByAccount');
-    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData);
 
-    if (errFee) {
-      return Result.fail({ message: "It's not possible to get fee values" });
-    }
 
-    const feesData = responseFee?.data || {};
 
-    const currentFees = customerData?.customerCurrentFees?.map((x) => ({
-      feeDescription: x.feeDescription || '',
-      feeCode: x.feeCode || '',
-    })) || [];
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    const result = {
-      customerName: feesData?.customerName || '',
-      customerShortName: feesData?.customerShortName || '',
-      customerAddress: customerData?.customerAddress?.address || '',
-      customerAccountOfficer: customerData?.customerAddress?.officer || '',
-      cif: customerData?.customerAddress?.cif || cif,
-      officerId: feesData?.officerId || '',
-      branchCity: feesData?.branchCity || '',
-      branchState: feesData?.branchState || '',
-      feePackage: feesData?.feePackage || '',
-      defaultFeePackageId: feesData?.defaultFeePackageId || '',
 
-      fees: feesData.fees?.map(fee => ({
-        feeType: fee.feeType || '',
-        feeGroups: fee.feeGroups?.map(group => ({
-          visible: group.visible ?? true,
-          kycMailingStatus: group.kycMailingStatus || null,
-          name: group.name || '',
-          code: group.code || '',
-          accountNumber: group.accountNumber || '',
-          id: group.id || '',
-          cif: group.cif || '',
-          fields: group.fields?.map(field => ({
-            hasChanged: field.hasChanged ?? false,
-            code: field.code || '',
-            isException: field.isException ?? false,
-            name: field.name || '',
-            tooltip: field.tooltip || '',
-            defaultValue: field.defaultValue || '',
-            exceptionOptions: field.exceptionOptions?.map(option => ({
-              approvedByDoubleA: option.approvedByDoubleA || null,
-              value: option.value || '',
-              text: option.text || '',
-              visible: option.visible ?? true,
-              retired: option.retired ?? false,
-              _id: option._id || '',
-              parameterOptionId: option.parameterOptionId || ''
-            })) || [],
-            createdAt: field.createdAt || '',
-            updatedAt: field.updatedAt || '',
-            isCurrentClient: field.isCurrentClient ?? false,
-            isStandard: field.isStandard ?? false,
-            id: field.id || '',
-            labelValue: field.labelValue || ''
-          })) || []
-        })) || []
-      })) || [],
-
-      feesActives: feesData.feesActives || [],
-      documentUrl: feesData.documentUrl || '',
-      currentFees
-    };
-
-    // global.logger.info('End process');
-
-    return Result.ok(result);
-  }
+{
+  customer: {
+    customerAccount: [
+      {
+        cifno: "F016583",
+        ddaNumber: 7113617,
+        bpsAcctNumber: "",
+        feeType: 1,
+        feeDescription: "AccountMaintenance",
+        feeCode: "JH001",
+        bpsFeeTypeCode: "",
+        source: "JHA",
+        entity: "SNB/284",
+        feeAmount: 0,
+        isFeesStandard: "No",
+        kycMailingStatus: null,
+        feeGroup: 1,
+      },
+      {
+        cifno: "F016583",
+        ddaNumber: 7115431,
+        bpsAcctNumber: "",
+        feeType: 1,
+        feeDescription: "AccountMaintenance",
+        feeCode: "JH001",
+        bpsFeeTypeCode: "",
+        source: "JHA",
+        entity: "SNB/284",
+        feeAmount: 25,
+        isFeesStandard: "Yes",
+        kycMailingStatus: null,
+        feeGroup: 1,
+      },
+      {
+        cifno: "F016583",
+        ddaNumber: 7115822,
+        bpsAcctNumber: "",
+        feeType: 1,
+        feeDescription: "AccountMaintenance",
+        feeCode: "JH001",
+        bpsFeeTypeCode: "",
+        source: "JHA",
+        entity: "SNB/284",
+        feeAmount: 25,
+        isFeesStandard: "Yes",
+        kycMailingStatus: null,
+        feeGroup: 1,
+      },
+      {
+        cifno: "F016583",
+        ddaNumber: 7115822,
+        bpsAcctNumber: "",
+        feeType: 2,
+        feeDescription: "HoldMail",
+        feeCode: "JH002",
+        bpsFeeTypeCode: "",
+        source: "JHA",
+        entity: "SNB/284",
+        feeAmount: 0,
+        isFeesStandard: "Yes",
+        kycMailingStatus: "Print",
+        feeGroup: 1,
+      },
+      {
+        cifno: "F016583",
+        ddaNumber: 7115431,
+        bpsAcctNumber: "",
+        feeType: 2,
+        feeDescription: "HoldMail",
+        feeCode: "JH002",
+        bpsFeeTypeCode: "",
+        source: "JHA",
+        entity: "SNB/284",
+        feeAmount: 0,
+        isFeesStandard: "Yes",
+        kycMailingStatus: "Print",
+        feeGroup: 1,
+      },
+      {
+        cifno: "F016583",
+        ddaNumber: 7113617,
+        bpsAcctNumber: "",
+        feeType: 2,
+        feeDescription: "HoldMail",
+        feeCode: "JH002",
+        bpsFeeTypeCode: "",
+        source: "JHA",
+        entity: "SNB/284",
+        feeAmount: 0,
+        isFeesStandard: "Yes",
+        kycMailingStatus: "Print",
+        feeGroup: 1,
+      },
+    ],
+    customerAddress: {
+      cif: "F016583",
+      name: "FRANCO JACK",
+      address: "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
+      officer: "036 Sigalit Levy-Shabi        BR 4",
+      accountNumber: "7113617",
+    },
+    customerCurrentFees: [
+      {
+        feeCode: " Personal Checking -D 7113617",
+        feeDescription: "Hold Mail Fee (per annum) -  $0.00",
+      },
+      {
+        feeCode: " Personal Checking -D 7113617",
+        feeDescription: "USD/FX Outgoing Wire Fee $75.00",
+      },
+      {
+        feeCode: " Personal Checking -D 7115342",
+        feeDescription: "USD/FX Outgoing Wire Fee $75.00",
+      },
+      {
+        feeCode: " Personal Promise   D 7115431",
+        feeDescription: "USD/FX Outgoing Wire Fee $75.00",
+      },
+      {
+        feeCode: " Personal Savings 7115822",
+        feeDescription: "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
+      },
+      {
+        feeCode: " Personal Savings 7115822",
+        feeDescription: "USD/FX Outgoing Wire Fee $75.00",
+      },
+    ],
+  },
 }
