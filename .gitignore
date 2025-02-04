@@ -1,3 +1,7 @@
-function formatCamelCaseToTitle(text) {
-  return text.replace(/([a-z])([A-Z])/g, '$1 $2'); // Adiciona espaço antes de letras maiúsculas
-}
+MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
+    at _handleConnectionErrors (h:\Documents\fee-management-backend-old\node_modules\mongoose\lib\connection.js:755:11)
+    at NativeConnection.openUri (h:\Documents\fee-management-backend-old\node_modules\mongoose\lib\connection.js:730:11)
+    at processTicksAndRejections (h:\Documents\fee-management-backend-old\lib\internal\process\task_queues.js:95:5)
+    at runNextTicks (h:\Documents\fee-management-backend-old\lib\internal\process\task_queues.js:64:3)
+    at listOnTimeout (h:\Documents\fee-management-backend-old\lib\internal\timers.js:540:9)
+    at process.processTimers (node:internal/timers:514:7) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…ss.processTimers (node:internal/timers:514:7)'}
