@@ -14,6 +14,7 @@ export default class FeeCaseGetByCifUseCase {
     }
 
     const feesData = responseFee?.data || {};
+    const timestamp = new Date().toISOString();
 
     const currentFees = [
       ...(customerData?.customerCurrentFees?.map(x => ({
@@ -23,57 +24,56 @@ export default class FeeCaseGetByCifUseCase {
       ...(feesData?.currentFees || [])
     ];
 
-    const timestamp = new Date().toISOString();
-
-    const fees = [
-      ...(customerData?.customerAccount?.map(fee => ({
+    const formattedFees = customerData?.customerAccount?.map(fee => ({
+      feeGroups: [{
         name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
         visible: true,
         kycMailingStatus: fee.kycMailingStatus || null,
         code: fee.feeGroup,
         accountNumber: fee.ddaNumber || '',
         cif: fee.cifno,
-        id: fee.entity, 
-        fields: [
-          {
-            hasChanged: false, 
-            code: fee.feeCode,
-            name: fee.feeDescription,
-            defaultValue: fee.feeAmount?.toString() || '',
-            isStandard: fee.isFeesStandard === "Yes",
-            isException: fee.isFeesStandard === "No",
-            isCurrentClient: false,
-            labelValue: `$${fee.feeAmount.toFixed(2)}`,
-            tooltip: fee.source ? `Source: ${fee.source}` : '',
-            exceptionOptions: [],
-            createdAt: timestamp,
-            updatedAt: timestamp,
-            id: fee.ddaNumber.toString(), 
-          }
-        ]
-      })) || []),
-      ...(feesData?.fees?.map(feeGroup => ({
-        ...feeGroup,
-        id: feeGroup.id || '', 
-        feeGroups: feeGroup.feeGroups.map(group => ({
-          ...group,
-          id: group.id || '',
-          cif: group.cif || '',
-          accountNumber: group.accountNumber || '',
-          fields: group.fields.map(field => ({
-            ...field,
-            hasChanged: field.hasChanged || false,
-            createdAt: field.createdAt || timestamp,
-            updatedAt: field.updatedAt || timestamp,
-            id: field._id || '', 
-            exceptionOptions: field.exceptionOptions?.map(opt => ({
-              ...opt,
-              parameterOptionId: opt.parameterOptionId || '',
-            })) || []
-          }))
+        id: "0000000000",
+        fields: [{
+          hasChanged: false,
+          code: fee.feeCode,
+          name: fee.feeDescription,
+          defaultValue: fee.feeAmount?.toString() || '',
+          isStandard: fee.isFeesStandard === "Yes",
+          isException: fee.isFeesStandard === "No",
+          isCurrentClient: false,
+          labelValue: `$${fee.feeAmount.toFixed(2)}`,
+          tooltip: fee.source ? `Source: ${fee.source}` : '',
+          exceptionOptions: [],
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          id: fee.ddaNumber.toString()
+        }]
+      }],
+      feeType: "Customer Fees",
+      id: "0000000000000"
+    })) || [];
+
+    const formattedFeeGroups = feesData?.fees?.map(feeGroup => ({
+      ...feeGroup,
+      id: feeGroup.id || "0000000000000",
+      feeGroups: feeGroup.feeGroups.map(group => ({
+        ...group,
+        id: group.id || "0000000000",
+        cif: group.cif || '',
+        accountNumber: group.accountNumber || '',
+        fields: group.fields.map(field => ({
+          ...field,
+          hasChanged: field.hasChanged || false,
+          createdAt: field.createdAt || timestamp,
+          updatedAt: field.updatedAt || timestamp,
+          id: field._id || "0000000000",
+          exceptionOptions: field.exceptionOptions?.map(opt => ({
+            ...opt,
+            parameterOptionId: opt.parameterOptionId || "0000000000",
+          })) || []
         }))
-      })) || [])
-    ];
+      }))
+    })) || [];
 
     const result = {
       customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
@@ -86,7 +86,7 @@ export default class FeeCaseGetByCifUseCase {
       branchState: feesData?.branchState || '',
       feePackage: feesData?.feePackage || '',
       defaultFeePackageId: feesData?.defaultFeePackageId || '',
-      fees,
+      fees: [...formattedFees, ...formattedFeeGroups],
       feesActives: feesData?.feesActives || [],
       documentUrl: feesData?.documentUrl || '',
       currentFees
