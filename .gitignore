@@ -1,7 +1,14 @@
-MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
-    at _handleConnectionErrors (h:\Documents\fee-management-backend-old\node_modules\mongoose\lib\connection.js:755:11)
-    at NativeConnection.openUri (h:\Documents\fee-management-backend-old\node_modules\mongoose\lib\connection.js:730:11)
-    at processTicksAndRejections (h:\Documents\fee-management-backend-old\lib\internal\process\task_queues.js:95:5)
-    at runNextTicks (h:\Documents\fee-management-backend-old\lib\internal\process\task_queues.js:64:3)
-    at listOnTimeout (h:\Documents\fee-management-backend-old\lib\internal\timers.js:540:9)
-    at process.processTimers (node:internal/timers:514:7) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…ss.processTimers (node:internal/timers:514:7)'}
+      "env": {
+        "NODE_ENV": "Local",
+        "APP_NAME": "snb-fee-management",
+        "CONFIG_SERVER_APP_NAME": "snb-fee-management",
+        "CONFIG_SERVER_URL": "https://config.dev.k8s.safra.int",
+        "CONFIG_SERVER_USER": "safraconfigserver",
+        "CONFIG_SERVER_PASSWORD": "Sc$7@gfwertrlM22",
+        "SERVER_PORT": "3333",
+        "MONGODB_URI": "mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb",
+        "SQLSERVER_SERVER": "nydev01.snb.safra.int",
+        "SQLSERVER_USER": "userFeeMgmtConductor",
+        "SQLSERVER_PASSWORD": "userF33MgmtCond",
+        "SQLSERVER_DATABASE": "FeeMgmt"
+      }
