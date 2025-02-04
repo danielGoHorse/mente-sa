@@ -1,14 +1,83 @@
-      "env": {
-        "NODE_ENV": "Local",
-        "APP_NAME": "snb-fee-management",
-        "CONFIG_SERVER_APP_NAME": "snb-fee-management",
-        "CONFIG_SERVER_URL": "https://config.dev.k8s.safra.int",
-        "CONFIG_SERVER_USER": "safraconfigserver",
-        "CONFIG_SERVER_PASSWORD": "Sc$7@gfwertrlM22",
-        "SERVER_PORT": "3333",
-        "MONGODB_URI": "mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb",
-        "SQLSERVER_SERVER": "nydev01.snb.safra.int",
-        "SQLSERVER_USER": "userFeeMgmtConductor",
-        "SQLSERVER_PASSWORD": "userF33MgmtCond",
-        "SQLSERVER_DATABASE": "FeeMgmt"
+import { Fee } from '#src/models/entities/Fees.js'
+import Result from '#features/shared/result.js'
+import CustomerFees from '#src/models/CustomerFees.js'
+import BankAccountFee from '#src/models/BankAccountFee.js'
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+   // global.logger.info('FeeGetByCifUseCase()')
+
+    const result = { fees: [] }
+    const fees = await this.#getFeeStandard([
+      {
+        feeType: 'Customer Fees'
+      },
+      {
+        feeType: 'Bank Account Fees'
+      },
+      {
+        feeType: 'Investment Account Fees'
       }
+    ])
+
+    const customer = new CustomerFees(fees, customerAccount)
+    if (customer.fee) result.fees.push(customer.fee)
+   // global.logger.info('After Customer Fees')
+    const bank = new BankAccountFee(fees, customerAccount)
+    if (bank.fee) result.fees.push(bank.fee)
+   // global.logger.info('After Bank Account Fees')
+    const equityField = await Field.find({ code: 7 })
+    const investiment = new InvestimentAccountFee(
+      fees,
+      customerAccount,
+      equityField[0]
+    )
+    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee)
+   // global.logger.info('After Investment Account Fees')
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: {
+        $nin: ['DONE', 'REJECTED']
+      },
+      caseNumber: {
+        $exists: true
+      }
+    })
+   // global.logger.info('After Fees Actives')
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }))
+
+    result.documentUrl =
+      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
+
+   // global.logger.info(`documentUrl= ${result.document}`)
+
+    return Result.ok(result)
+  }
+
+  async #getFeeStandard(filter) {
+   // global.logger.info('getFeeStandard()')
+
+    const feeResult = []
+
+    for await (const fee of Fee.find({
+      $or: filter
+    }).select({
+      feeType: 1,
+      feeGroups: {
+        name: 1,
+        fields: 1,
+        code: 1
+      }
+    })) {
+      feeResult.push(fee.toObject())
+    }
+
+    return feeResult
+  }
+}
