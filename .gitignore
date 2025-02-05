@@ -52,3 +52,67 @@ export default class FeeCaseGetByCifUseCase {
   }
 }
 
+
+
+
+import BaseHttp from './BaseHttp.js'
+export default class FeeManagement extends BaseHttp {
+  #createUrl = 'v1/fee/case'
+  #getByAccounts = 'v1/fee'
+  #getUsersEmail = 'v1/email/feeCase/'
+
+  constructor({ logger, environment }) {
+    super(logger, environment.feeUrl)
+  }
+
+  async create(feeManagement) {
+    return await this.httpRequest.post(this.#createUrl, feeManagement)
+  }
+
+  async getFeeByAccount({ customerAccount }) {
+    const url = `${this.#getByAccounts}`
+    return await this.httpRequest.post(url, { customerAccount })
+  }
+
+  async getUsersToSendEmail(feeCaseId) {
+    const url = `${this.#getUsersEmail}${feeCaseId}`
+    return await this.httpRequest.get(url)
+  }
+}
+
+
+import { Router } from 'express'
+import feeCaseGetByCifEndpoint from './feeCaseGetByCifEndpoint.js'
+
+const feeCaseGetByCifRouter = Router()
+
+feeCaseGetByCifRouter.get('/conductor/fee/:cif', feeCaseGetByCifEndpoint)
+
+export default feeCaseGetByCifRouter
+
+
+import FeeCaseGetByCifUseCase from './feeCaseGetByCifUseCase.js'
+import ApiResponse from '#core/http/apiResponse.js'
+import FeeManagement from '#src/models/FeeManagement.js'
+import Customer from '#src/models/Customer.js'
+
+export default async function feeCaseGetByCifEndpoint(req, res) {
+  const useCase = new FeeCaseGetByCifUseCase()
+  const feeManagement = new FeeManagement(global)
+  const customer = new Customer(global)
+  const result = await useCase.execute(req.params, feeManagement, customer)
+
+  if (result.isFailure) {
+    const badRequestResponse = ApiResponse.createBadRequestResponse({
+      error: result.error
+    })
+    return res.status(badRequestResponse.code).json(badRequestResponse)
+  }
+
+  const okResponse = ApiResponse.createOkResponse(result.value)
+
+  res.json(okResponse)
+}
+
+
+
