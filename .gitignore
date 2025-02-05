@@ -1,321 +1,542 @@
-{
-  "_id": {
-    "$oid": "6468f46eff51aa9d77d84a1b"
-  },
-  "feeType": "Bank Account Fees",
-  "feeGroups": [
-    {
-      "name": "Standard Fees",
-      "code": 2,
-      "fields": [
-        {
-          "code": 3,
-          "isException": false,
-          "name": "Incoming Wire",
-          "defaultValue": "0",
-          "tooltip": "Charged: Per Transaction",
-          "exceptionOptions": [],
-          "_id": {
-            "$oid": "6468f46eff51aa9d77d849fc"
-          },
-          "createdAt": {
-            "$date": "2023-05-20T16:25:31.436Z"
-          },
-          "updatedAt": {
-            "$date": "2023-05-20T16:25:31.436Z"
-          },
-          "isCurrentClient": false,
-          "isStandard": true
-        },
-        {
-          "code": 4,
-          "isException": false,
-          "name": "Outgoing Wire",
-          "defaultValue": "75",
-          "tooltip": "Charged: Per Transaction",
-          "exceptionOptions": [],
-          "_id": {
-            "$oid": "6468f46eff51aa9d77d849fd"
-          },
-          "createdAt": {
-            "$date": "2023-05-20T16:25:31.436Z"
-          },
-          "updatedAt": {
-            "$date": "2023-05-20T16:25:31.436Z"
-          },
-          "isCurrentClient": false,
-          "isStandard": true
-        }
-      ],
-      "visible": true,
-      "_id": {
-        "$oid": "6468f46eff51aa9d77d849fe"
+import { Fee } from '#src/models/entities/Fees.js'
+import Result from '#features/shared/result.js'
+import CustomerFees from '#src/models/CustomerFees.js'
+import BankAccountFee from '#src/models/BankAccountFee.js'
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+   // global.logger.info('FeeGetByCifUseCase()')
+
+    const result = { fees: [] }
+    const fees = await this.#getFeeStandard([
+      {
+        feeType: 'Customer Fees'
       },
-      "createdAt": {
-        "$date": "2023-05-20T16:25:31.436Z"
+      {
+        feeType: 'Bank Account Fees'
       },
-      "updatedAt": {
-        "$date": "2023-05-20T16:25:31.436Z"
+      {
+        feeType: 'Investment Account Fees'
       }
-    },
-    {
-      "name": "Client Current Fees",
-      "code": 2,
-      "fields": [
-        {
-          "code": 3,
-          "isException": false,
-          "name": "Incoming Wire",
-          "defaultValue": "10",
-          "exceptionOptions": [],
-          "_id": {
-            "$oid": "6468f46eff51aa9d77d84a01"
-          },
-          "createdAt": {
-            "$date": "2023-05-20T16:25:31.437Z"
-          },
-          "updatedAt": {
-            "$date": "2023-05-20T16:25:31.437Z"
-          },
-          "isCurrentClient": true,
-          "isStandard": false
-        },
-        {
-          "code": 4,
-          "isException": false,
-          "name": "Outgoing Wire",
-          "defaultValue": "75",
-          "exceptionOptions": [],
-          "_id": {
-            "$oid": "6468f46eff51aa9d77d84a02"
-          },
-          "createdAt": {
-            "$date": "2023-05-20T16:25:31.437Z"
-          },
-          "updatedAt": {
-            "$date": "2023-05-20T16:25:31.437Z"
-          },
-          "isCurrentClient": true,
-          "isStandard": false
-        }
-      ],
-      "visible": true,
-      "_id": {
-        "$oid": "6468f46eff51aa9d77d84a03"
+    ])
+
+    const customer = new CustomerFees(fees, customerAccount)
+    if (customer.fee) result.fees.push(customer.fee)
+   // global.logger.info('After Customer Fees')
+    const bank = new BankAccountFee(fees, customerAccount)
+    if (bank.fee) result.fees.push(bank.fee)
+   // global.logger.info('After Bank Account Fees')
+    const equityField = await Field.find({ code: 7 })
+    const investiment = new InvestimentAccountFee(
+      fees,
+      customerAccount,
+      equityField[0]
+    )
+    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee)
+   // global.logger.info('After Investment Account Fees')
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: {
+        $nin: ['DONE', 'REJECTED']
       },
-      "createdAt": {
-        "$date": "2023-05-20T16:25:31.437Z"
-      },
-      "updatedAt": {
-        "$date": "2023-05-20T16:25:31.437Z"
+      caseNumber: {
+        $exists: true
       }
-    },
-    {
-      "name": "Exception Request",
-      "code": 2,
-      "fields": [
-        {
-          "code": 3,
-          "isException": true,
-          "name": "Incoming Wire",
-          "defaultValue": "",
-          "exceptionOptions": [
-            {
-              "value": "10",
-              "text": "$10.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "6468f46eff51aa9d77d84a07"
-              },
-              "parameterOptionId": 17
-            },
-            {
-              "value": "0",
-              "text": "$0.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "6468f46eff51aa9d77d84a08"
-              },
-              "parameterOptionId": 18
-            }
-          ],
-          "_id": {
-            "$oid": "6468f46eff51aa9d77d84a06"
-          },
-          "createdAt": {
-            "$date": "2023-05-20T16:25:31.437Z"
-          },
-          "updatedAt": {
-            "$date": "2023-05-20T16:25:31.437Z"
-          },
-          "isCurrentClient": false,
-          "isStandard": false
-        },
-        {
-          "code": 4,
-          "isException": true,
-          "name": "Outgoing Wire",
-          "defaultValue": "",
-          "exceptionOptions": [
-            {
-              "value": "75",
-              "text": "$75.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "6468f46eff51aa9d77d84a0a"
-              },
-              "parameterOptionId": 7
-            },
-            {
-              "value": "60",
-              "text": "$60.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "6468f46eff51aa9d77d84a0b"
-              },
-              "parameterOptionId": 49
-            },
-            {
-              "value": "50",
-              "text": "$50.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "6468f46eff51aa9d77d84a0c"
-              },
-              "parameterOptionId": 48
-            },
-            {
-              "value": "40",
-              "text": "$40.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "9468f46eff51aa9d77d84a0d"
-              },
-              "parameterOptionId": 46
-            },
-            {
-              "value": "35",
-              "text": "$35.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "8468f46eff51aa9d77d84a0d"
-              },
-              "parameterOptionId": 45
-            },
-            {
-              "value": "30",
-              "text": "$30.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "6468f46eff51aa9d77d84a0d"
-              },
-              "parameterOptionId": 44
-            },
-            {
-              "value": "25",
-              "text": "$25.00",
-              "visible": true,
-              "retired": false,
-              "_id": {
-                "$oid": "7468f46eff51aa9d77d84a0d"
-              },
-              "parameterOptionId": 43
-            },
-            {
-              "value": "20",
-              "text": "$20.00",
-              "visible": true,
-              "retired": true,
-              "_id": {
-                "$oid": "6468f46eff51aa9d77d84a0e"
-              },
-              "parameterOptionId": 42
-            },
-            {
-              "value": "10",
-              "text": "$10.00",
-              "visible": true,
-              "retired": true,
-              "_id": {
-                "$oid": "6468f46eff51aa9d77d84a0f"
-              },
-              "parameterOptionId": 40
-            }
-          ],
-          "_id": {
-            "$oid": "6468f46eff51aa9d77d84a09"
-          },
-          "createdAt": {
-            "$date": "2023-05-20T16:25:31.437Z"
-          },
-          "updatedAt": {
-            "$date": "2023-05-20T16:25:31.437Z"
-          },
-          "isCurrentClient": false,
-          "isStandard": false
-        }
-      ],
-      "visible": true,
-      "_id": {
-        "$oid": "6468f46eff51aa9d77d84a10"
-      },
-      "createdAt": {
-        "$date": "2023-05-20T16:25:31.437Z"
-      },
-      "updatedAt": {
-        "$date": "2023-05-20T16:25:31.437Z"
+    })
+   // global.logger.info('After Fees Actives')
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }))
+
+    result.documentUrl =
+      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
+
+   // global.logger.info(`documentUrl= ${result.document}`)
+
+    return Result.ok(result)
+  }
+
+  async #getFeeStandard(filter) {
+   // global.logger.info('getFeeStandard()')
+
+    const feeResult = []
+
+    for await (const fee of Fee.find({
+      $or: filter
+    }).select({
+      feeType: 1,
+      feeGroups: {
+        name: 1,
+        fields: 1,
+        code: 1
       }
+    })) {
+      feeResult.push(fee.toObject())
     }
-  ],
-  "createdAt": {
-    "$date": "2023-05-20T16:25:31.444Z"
-  },
-  "updatedAt": {
-    "$date": "2023-05-20T16:25:31.444Z"
-  },
-  "__v": 0
+
+    return feeResult
+  }
 }
 
 
 
- CustomerName	CustomerShortName	CustomerAddress	CIFNO	ACCTNO	FeeDescription	FeeCode	Istransactional	FeeType	FeeAmount	Frequency	Branch City	Branch State	OfficerId	Officer	StandardException	Default Fee Package Id	Default Fee Package	Default Fee Amount	Default Frequency
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	Account Maintenance Fee	JH001	0	Client Fees	25.00	Monthly - Charged Quarterly	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	25.00	Monthly - Charged Quarterly
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	Hold Mail Fee	JH002	0	Client Fees	0.00	Annual - Charged Annual	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	0.00	Annual - Charged Annual
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	25.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	25.00	NULL
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	10.00	NULL
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	Safekeeping of Securities	BPS002	0	Individual Fees	NULL	0.35% /YR min $375.00/QTR	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	0.35% /YR min $375.00/QTR
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	SSL Account Maintanance Fee	BPS003	0	Individual Fees	375.00	Quarterly on Day 1	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	375.00	Quarterly on Day 1
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	US Equities Commission	BPS004	1	Individual Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	$0.10 per share, min charge of $150 per trade
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	Options Commission	BPS005	1	Individual Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	$0.10 per share, min charge of $150 per trade
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115822	Account Maintenance Fee	JH001	0	Client Fees	25.00	Monthly - Charged Quarterly	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	25.00	Monthly - Charged Quarterly
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115822	Hold Mail Fee	JH002	0	Client Fees	0.00	Annual - Charged Annual	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	0.00	Annual - Charged Annual
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115822	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	0.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Exception	2	Domestic Individual	25.00	NULL
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115822	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	10.00	NULL
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115822	Safekeeping of Securities	BPS002	0	Individual Fees	NULL	0.35% /YR min $375.00/QTR	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	0.35% /YR min $375.00/QTR
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115822	SSL Account Maintanance Fee	BPS003	0	Individual Fees	375.00	Quarterly on Day 1	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	375.00	Quarterly on Day 1
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115822	US Equities Commission	BPS004	1	Individual Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	$0.10 per share, min charge of $150 per trade
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115342	Options Commission	BPS005	1	Individual Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	$0.10 per share, min charge of $150 per trade
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7113617	Account Maintenance Fee	JH001	0	Client Fees	0.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Exception	2	Domestic Individual	25.00	Monthly - Charged Quarterly
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7113617	Hold Mail Fee	JH002	0	Client Fees	0.00	Annual - Charged Annual	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	0.00	Annual - Charged Annual
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7113617	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	0.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Exception	2	Domestic Individual	25.00	NULL
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7113617	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	10.00	NULL
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7113617	Safekeeping of Securities	BPS002	0	Individual Fees	NULL	0.35% /YR min $375.00/QTR	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	0.35% /YR min $375.00/QTR
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7113617	SSL Account Maintanance Fee	BPS003	0	Individual Fees	375.00	Quarterly on Day 1	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	375.00	Quarterly on Day 1
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7113617	US Equities Commission	BPS004	1	Individual Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	$0.10 per share, min charge of $150 per trade
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7113617	Options Commission	BPS005	1	Individual Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	$0.10 per share, min charge of $150 per trade
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115431	Account Maintenance Fee	JH001	0	Client Fees	25.00	Monthly - Charged Quarterly	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	25.00	Monthly - Charged Quarterly
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115431	Hold Mail Fee	JH002	0	Client Fees	0.00	Annual - Charged Annual	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	0.00	Annual - Charged Annual
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115431	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	25.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	25.00	NULL
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115431	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00	NULL	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	10.00	NULL
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115431	Safekeeping of Securities	BPS002	0	Individual Fees	NULL	0.35% /YR min $375.00/QTR	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	0.35% /YR min $375.00/QTR
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115431	SSL Account Maintanance Fee	BPS003	0	Individual Fees	375.00	Quarterly on Day 1	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	375.00	Quarterly on Day 1
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115431	US Equities Commission	BPS004	1	Individual Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	$0.10 per share, min charge of $150 per trade
-FFFF FFFFFF                             	FFFFFF FFFF         	2417 Tongass Ave #111                    FFF FFFF FF 99999                       	F016583	7115431	Options Commission	BPS005	1	Individual Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	NULL	$0.10 per share, min charge of $150 per trade                
+_id
+6468f46eff51aa9d77d849ee
+feeType
+"Customer Fees"
+
+feeGroups
+Array (3)
+
+0
+Object
+
+1
+Object
+name
+"Client Current Fees"
+code
+1
+
+fields
+Array (2)
+visible
+true
+_id
+6468f46eff51aa9d77d849de
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+
+2
+Object
+name
+"Exception Request"
+code
+1
+
+fields
+Array (2)
+visible
+true
+_id
+6468f46eff51aa9d77d849e7
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+createdAt
+2023-05-20T16:25:31.444+00:00
+updatedAt
+2023-05-20T16:25:31.444+00:00
+__v
+0
+_id
+6468f46eff51aa9d77d84a1b
+feeType
+"Bank Account Fees"
+
+feeGroups
+Array (3)
+
+0
+Object
+name
+"Standard Fees"
+code
+2
+
+fields
+Array (2)
+visible
+true
+_id
+6468f46eff51aa9d77d849fe
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+
+1
+Object
+name
+"Client Current Fees"
+code
+2
+
+fields
+Array (2)
+visible
+true
+_id
+6468f46eff51aa9d77d84a03
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+
+2
+Object
+name
+"Exception Request"
+code
+2
+
+fields
+Array (2)
+visible
+true
+_id
+6468f46eff51aa9d77d84a10
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+createdAt
+2023-05-20T16:25:31.444+00:00
+updatedAt
+2023-05-20T16:25:31.444+00:00
+__v
+0
+_id
+6468f46eff51aa9d77d84a56
+feeType
+"Investment Account Fees"
+
+feeGroups
+Array (3)
+
+0
+Object
+name
+"Standard Fees"
+code
+3
+
+fields
+Array (3)
+
+0
+Object
+code
+6
+isException
+false
+name
+"Safekeeping-Custody"
+defaultValue
+"A021"
+tooltip
+"Charged: Quarterly"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2d
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+isCurrentClient
+false
+isStandard
+true
+
+1
+Object
+code
+5
+isException
+false
+name
+"SSL Account Maintenance"
+defaultValue
+"375"
+tooltip
+"Charged: Quarterly"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2e
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+isCurrentClient
+false
+isStandard
+true
+
+2
+Object
+code
+7
+isException
+false
+name
+"Equity and Options Commission"
+tooltip
+"Charged: Per Trade"
+defaultValue
+"E3"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2f
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+false
+isStandard
+true
+visible
+true
+_id
+6468f46eff51aa9d77d84a30
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+
+1
+Object
+name
+"Client Current Fees"
+code
+3
+
+fields
+Array (3)
+
+0
+Object
+code
+6
+isException
+false
+name
+"Safekeeping-Custody"
+defaultValue
+"A021"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a34
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+
+1
+Object
+code
+5
+isException
+false
+name
+"SSL Account Maintenance"
+defaultValue
+"375"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a35
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+
+2
+Object
+code
+7
+isException
+false
+name
+"Equity and Options Commission"
+defaultValue
+"E3"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a36
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+visible
+true
+_id
+6468f46eff51aa9d77d84a37
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+
+2
+Object
+name
+"Exception Request"
+code
+3
+
+fields
+Array (3)
+
+0
+Object
+code
+6
+isException
+true
+name
+"Safekeeping-Custody"
+defaultValue
+""
+
+exceptionOptions
+Array (99)
+
+0
+Object
+text
+"A032 - 0.50% per year with a minimum of $375.00 per quarter"
+value
+"A032"
+visible
+true
+retired
+false
+approvedByDoubleA
+true
+
+1
+Object
+
+2
+Object
+
+3
+Object
+
+4
+Object
+
+5
+Object
+
+6
+Object
+
+7
+Object
+
+8
+Object
+
+9
+Object
+
+10
+Object
+
+11
+Object
+
+12
+Object
+
+13
+Object
+
+14
+Object
+
+15
+Object
+
+16
+Object
+
+17
+Object
+
+18
+Object
+
+19
+Object
+
+20
+Object
+
+21
+Object
+
+22
+Object
+
+23
+Object
+
+24
+Object
+Show 74 more fields in exceptionOptions
+_id
+6468f46eff51aa9d77d84a3b
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+false
+isStandard
+false
+
+1
+Object
+
+2
+Object
+visible
+true
+_id
+6468f46eff51aa9d77d84a48
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2024-11-16T12:30:04.294+00:00
+createdAt
+2023-05-20T16:25:31.445+00:00
+updatedAt
+2024-11-16T12:30:04.295+00:00
+__v
+1
+
+
+
+
