@@ -1,47 +1,40 @@
->>>>>>>>>>environment.customerUrl>>>>>>>>>>>>>>> http://localhost:5000
-≡ƒö╣ Base URL: http://localhost:5000
-≡ƒö╣ Path: customer/v1/F016583
-≡ƒö╣ URL Final: http://localhost:5000/customer/v1/F016583
-❌ Erro ao construir a URL: Request failed with status code 404
-[03:30:13.148] INFO (24884): request completed
-    req: {
-      "id": "4fe8d6bceb7e56b8eca53edb",
-      "method": "GET",
-      "url": "/v1/conductor/fee/F016583",
-      "query": {},
-      "params": {},
-      "headers": {
-        "user-agent": "PostmanRuntime/7.43.0",
-        "accept": "*/*",
-        "postman-token": "046a1c3c-e645-43a5-a3bd-5fa0204fbb6b",
-        "host": "localhost:3001",
-        "accept-encoding": "gzip, deflate, br",
-        "connection": "keep-alive"
-      },
-      "remoteAddress": "::1",
-      "remotePort": 57077
+{
+  "fees": {
+    "code": 200,
+    "data": {
+      "customerName": "",
+      "customerShortName": "",
+      "customerAddress": "",
+      "customerAccountOfficer": "",
+      "cif": "F016583",
+      "officerId": "",
+      "branchCity": "",
+      "branchState": "",
+      "feePackage": "",
+      "defaultFeePackageId": "",
+      "fees": [
+        {
+          "CustomerName": "DDDD DDDDDD",
+          "CustomerShortName": "DDDDDD DDDD",
+          "CustomerAddress": "2417 Tongass Ave #111 DDD DDDD DD 77777",
+          "CIFNO": "F016583",
+          "ACCTNO": 7115342,
+          "FeeDescription": "Account Maintenance Fee",
+          "FeeCode": "JH001",
+          "Istransactional": false,
+          "FeeType": "Client Fees",
+          "FeeAmount": 25,
+          "Frequency": "Monthly - Charged Quarterly"
+        }
+      ],
+      "feesActives": [
+        {
+          "caseNumber": "12345",
+          "id": "mocked-active-fee-1"
+        }
+      ],
+      "documentUrl": "",
+      "currentFees": []
     }
-    res: {
-      "statusCode": 400,
-      "headers": {
-        "cross-origin-embedder-policy": "require-corp",
-        "cross-origin-opener-policy": "same-origin",
-        "cross-origin-resource-policy": "same-origin",
-        "x-dns-prefetch-control": "off",
-        "x-frame-options": "SAMEORIGIN",
-        "strict-transport-security": "max-age=15552000; includeSubDomains",
-        "x-download-options": "noopen",
-        "x-content-type-options": "nosniff",
-        "origin-agent-cluster": "?1",
-        "x-permitted-cross-domain-policies": "none",
-        "referrer-policy": "no-referrer",
-        "x-xss-protection": "0",
-        "access-control-allow-origin": "*",
-        "x-request-id": "4fe8d6bceb7e56b8eca53edb",
-        "x-correlation-id": "4fe8d6bceb7e56b8eca53edb",
-        "content-type": "application/json; charset=utf-8",
-        "content-length": "80",
-        "etag": "W/\"50-d5CG1mdN8h36K2VpTgoRZvyT0rU\""
-      }
-    }
-    responseTime: 111
+  }
+}
