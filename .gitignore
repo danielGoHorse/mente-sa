@@ -19,3 +19,21 @@ JH007  |FX Outgoing Wire (SafraLink) Fee|                  95|  0.00|           
     const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId })
     return recordset
   }
+
+
+
+
+  #getDocumentUrl(feePackageId) {
+    const scheduleUrls = global.environment.scheduleUrls
+    const packageMap = {
+      1: 'intlPB3',
+      2: 'uSPBIndividual3',
+      3: 'uSPBCorporation3',
+      4: 'efraPB3',
+      5: 'eraPB3'
+    }
+
+    const scheduleType = packageMap[feePackageId] || ''
+    
+    return scheduleUrls[scheduleType] || ''
+  }
