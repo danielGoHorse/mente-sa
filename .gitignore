@@ -1,88 +1,101 @@
-import Result from '#features/shared/result.js'
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js'
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    global.logger.info(`Fetching fees for CIF: ${customerAccount[0].cifno}`)
+import Result from '#features/shared/result.js';
 
-    // Buscar Fees pelo CIF no SQL
-    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno)
-    if (!feesData) {
-      return Result.fail({ message: "It's not possible to get fee values" })
+export default class FeeCaseGetByCifUseCase {
+  async execute({ cif }, feeManagementModel, customerModel) {
+    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif);
+    if (errCustomer) {
+      return Result.fail({ message: "It's not possible to get address cif" });
     }
-    
-    // Buscar Exceptions pelo FeePackageId
-    global.logger.info(`Fetching exceptions for FeePackageId: ${customerAccount[0].feePackageId}`)
-    const exceptionFees = await this.#getExceptionFeesFromSQL(customerAccount[0].feePackageId)
-    if (!exceptionFees) {
-      return Result.fail({ message: "It's not possible to get exception fee values" })
-    }
-    
-    // Mock de dados que ainda não existem na base SQL
-    const feesActives = [
-      { caseNumber: "12345", id: "mocked-active-fee-1" },
-      { caseNumber: "67890", id: "mocked-active-fee-2" }
-    ]
-    
-    const documentUrl = this.#getDocumentUrl(customerAccount[0].feePackageId)
-    
-    // Montando o payload final
-    const result = {
-      customerName: customerAccount[0].customerName || '',
-      customerShortName: customerAccount[0].customerShortName || '',
-      customerAddress: customerAccount[0].customerAddress || '',
-      customerAccountOfficer: customerAccount[0].customerAccountOfficer || '',
-      cif: customerAccount[0].cifno,
-      officerId: customerAccount[0].officerId || '',
-      branchCity: customerAccount[0].branchCity || '',
-      branchState: customerAccount[0].branchState || '',
-      feePackage: customerAccount[0].feePackage || '',
-      defaultFeePackageId: customerAccount[0].feePackageId || '',
-      
-      fees: feesData,
-      feesActives,
-      
-      documentUrl,
 
-      currentFees: exceptionFees.map(fee => ({
-        feeDescription: fee.FeeDescription,
-        feeCode: fee.FeeCode,
-        amount: fee.Amount,
-        frequency: fee.FreqDescription || 'Mocked Frequency'
+    const customerData = responseCustomer?.data?.customer || {};
+    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData);
+    if (errFee) {
+      return Result.fail({ message: "It's not possible to get fee values" });
+    }
+
+    function formatCamelCaseToTitle(text) {
+      return text.replace(/([a-z])([A-Z])/g, '$1 $2');
+    }
+
+    const feesData = responseFee?.data || {};
+    const timestamp = new Date().toISOString();
+
+    const currentFees = [
+      ...(customerData?.customerCurrentFees?.map(x => ({
+        feeDescription: x.feeDescription || '',
+        feeCode: x.feeCode || ''
+      })) || []),
+      ...(feesData?.currentFees || [])
+    ];
+
+    const formattedFees = customerData?.customerAccount?.map(fee => ({
+      feeGroups: [{
+        name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
+        visible: true,
+        kycMailingStatus: fee.kycMailingStatus || null,
+        code: fee.feeGroup,
+        accountNumber: fee.ddaNumber || '',
+        cif: fee.cifno,
+        id:'',
+        fields: [{
+          hasChanged: false,
+          code: fee.feeCode,
+          name:  formatCamelCaseToTitle(fee.feeDescription),
+          defaultValue: fee.feeAmount?.toString() || '',
+          isStandard: fee.isFeesStandard === "Yes",
+          isException: fee.isFeesStandard === "No",
+          isCurrentClient: false,
+          labelValue: `$${fee.feeAmount.toFixed(2)}`,
+          tooltip: fee.source ? `Source: ${fee.source}` : '',
+          exceptionOptions: [],
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          id: fee.ddaNumber.toString()
+        }]
+      }],
+      feeType: "Customer Fees",
+      id:  '',
+    })) || [];
+
+    const formattedFeeGroups = feesData?.fees?.map(feeGroup => ({
+      ...feeGroup,
+      id: '',
+      feeGroups: feeGroup.feeGroups.map(group => ({
+        ...group,
+        id: group.id || '',
+        cif: group.cif || '',
+        accountNumber: group.accountNumber || '',
+        fields: group.fields.map(field => ({
+          ...field,
+          hasChanged: field.hasChanged || false,
+          createdAt: field.createdAt || timestamp,
+          updatedAt: field.updatedAt || timestamp,
+          id: field._id || '',
+          exceptionOptions: field.exceptionOptions?.map(opt => ({
+            ...opt,
+            parameterOptionId: opt.parameterOptionId || '',
+          })) || []
+        }))
       }))
-    }
-    
+    })) || [];
+
+    const result = {
+      customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
+      customerShortName: feesData?.customerShortName || '',
+      customerAddress: customerData?.customerAddress?.address || '',
+      customerAccountOfficer: customerData?.customerAddress?.officer || '',
+      cif: customerData?.customerAddress?.cif || cif,
+      officerId: feesData?.officerId || '',
+      branchCity: feesData?.branchCity || '',
+      branchState: feesData?.branchState || '',
+      feePackage: feesData?.feePackage || '',
+      defaultFeePackageId: feesData?.defaultFeePackageId || '',
+      fees: [...formattedFees, ...formattedFeeGroups],
+      feesActives: feesData?.feesActives || [],
+      documentUrl: feesData?.documentUrl || '',
+      currentFees
+    };
     global.logger.info('End process')
-    return Result.ok(result)
-  }
-
-  async #getFeesFromSQL(cifno) {
-    global.logger.info('getFeesFromSQL()')
-    const connection = await connectToFeeMgmtDb()
-    const recordset = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno })
-    return recordset
-  }
-
-  async #getExceptionFeesFromSQL(feePackageId) {
-    global.logger.info('getExceptionFeesFromSQL()')
-    const connection = await connectToFeeMgmtDb()
-    const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId })
-    return recordset
-  }
-
-  #getDocumentUrl(feePackageId) {
-    const scheduleUrls = global.environment.scheduleUrls
-    const packageMap = {
-      1: 'intlPB3',
-      2: 'uSPBIndividual3',
-      3: 'uSPBCorporation3',
-      4: 'efraPB3',
-      5: 'eraPB3'
-    }
-    
-    const scheduleType = packageMap[feePackageId] || ''
-    return scheduleUrls[scheduleType] || ''
+    return Result.ok(result);
   }
 }
