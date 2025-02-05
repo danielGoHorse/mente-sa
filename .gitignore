@@ -1,64 +1,68 @@
 import Result from '#features/shared/result.js';
 
-export default class FeeCaseGetByCifUseCase {
-  async execute({ cif }, feeManagementModel) {
-    global.logger.info(`Buscando dados do cliente para CIF: ${cif}`);
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    const cif = customerAccount[0]?.cifno;
+    const feePackageId = customerAccount[0]?.feePackageId;
 
-    // Buscar taxas do SQL
-    const [errFees, responseFees] = await feeManagementModel.getFeesFromSQL(cif);
-    if (errFees) {
-      return Result.fail({ message: "Erro ao buscar taxas do banco" });
+    if (!cif) {
+      return Result.fail({ message: "CIF não informado" });
     }
 
-    const feesData = responseFees?.data || [];
+    global.logger.info(`Fetching fees for CIF: ${cif}`);
 
-    // Organizar os dados básicos do cliente (extraindo do primeiro registro)
-    const firstFee = feesData.length > 0 ? feesData[0] : {};
+    // Buscar Fees pelo CIF no SQL
+    const feesData = await this.#getFeesFromSQL(cif);
+    if (!feesData || feesData.length === 0) {
+      return Result.fail({ message: "It's not possible to get fee values" });
+    }
 
-    const customerInfo = {
-      customerName: firstFee.CustomerName || "Nome Padrão",
-      customerShortName: firstFee.CustomerShortName || "",
-      customerAddress: firstFee.CustomerAddress || "",
-      customerAccountOfficer: firstFee.Officer || "",
-      cif: cif,
-      officerId: firstFee.OfficerId?.trim() || "",
-      branchCity: firstFee["Branch City"] || "",
-      branchState: firstFee["Branch State"] || "",
-      branchType: firstFee["Branch Type"] || "",
-    };
-
-    // Criar estrutura de `fees`
-    const fees = this.#organizeFees(feesData);
-
-    // Buscar as taxas de exceção pelo `feePackageId`
-    const feePackageId = firstFee["Default Fee Package Id"] || null;
+    // Buscar Exceptions pelo FeePackageId
     let exceptionFees = [];
     if (feePackageId) {
-      const [errExceptionFees, responseExceptionFees] =
-        await feeManagementModel.getExceptionFeesFromSQL(feePackageId);
-      if (!errExceptionFees) {
-        exceptionFees = responseExceptionFees?.data || [];
+      global.logger.info(`Fetching exceptions for FeePackageId: ${feePackageId}`);
+      exceptionFees = await this.#getExceptionFeesFromSQL(feePackageId);
+      if (!exceptionFees) {
+        return Result.fail({ message: "It's not possible to get exception fee values" });
       }
     }
 
-    // Criar estrutura de `feesActives` (mockado por enquanto)
+    // Mock de dados que ainda não existem na base SQL
     const feesActives = [
       { caseNumber: "12345", id: "mocked-active-fee-1" },
       { caseNumber: "67890", id: "mocked-active-fee-2" },
     ];
 
-    // Criar estrutura de `currentFees`
-    const currentFees = feesData.map(fee => ({
-      feeDescription: `${fee.FeeDescription} - $${fee.FeeAmount || "0.00"}`,
-      feeCode: `Conta ${fee.ACCTNO}`,
-    }));
-
-    // Gerar `documentUrl` baseado no `feePackageId`
+    // Construindo `documentUrl`
     const documentUrl = this.#getDocumentUrl(feePackageId);
 
+    // Organizar os dados básicos do cliente
+    const customerInfo = {
+      customerName: customerAccount[0]?.customerName || '',
+      customerShortName: customerAccount[0]?.customerShortName || '',
+      customerAddress: customerAccount[0]?.customerAddress || '',
+      customerAccountOfficer: customerAccount[0]?.customerAccountOfficer || '',
+      cif,
+      officerId: customerAccount[0]?.officerId || '',
+      branchCity: customerAccount[0]?.branchCity || '',
+      branchState: customerAccount[0]?.branchState || '',
+      branchType: customerAccount[0]?.branchType || '',
+      feePackage: customerAccount[0]?.feePackage || '',
+      defaultFeePackageId: feePackageId || '',
+    };
+
+    // Construindo `currentFees`
+    const currentFees = exceptionFees.map(fee => ({
+      feeDescription: fee.FeeDescription,
+      feeCode: fee.FeeCode,
+      amount: fee.Amount,
+      frequency: fee.FreqDescription || 'Mocked Frequency',
+    }));
+
+    // Montando o payload final
     const result = {
       ...customerInfo,
-      fees,
+      fees: this.#organizeFees(feesData),
       feesActives,
       documentUrl,
       currentFees,
@@ -66,6 +70,26 @@ export default class FeeCaseGetByCifUseCase {
 
     global.logger.info("Processamento finalizado com sucesso");
     return Result.ok(result);
+  }
+
+  /**
+   * Busca as taxas no SQL pelo CIF
+   */
+  async #getFeesFromSQL(cifno) {
+    global.logger.info('getFeesFromSQL()');
+    const connection = await connectToFeeMgmtDb();
+    const recordset = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+    return recordset?.data || [];
+  }
+
+  /**
+   * Busca as exceções de taxas no SQL pelo FeePackageId
+   */
+  async #getExceptionFeesFromSQL(feePackageId) {
+    global.logger.info('getExceptionFeesFromSQL()');
+    const connection = await connectToFeeMgmtDb();
+    const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
+    return recordset?.data || [];
   }
 
   /**
@@ -91,7 +115,7 @@ export default class FeeCaseGetByCifUseCase {
       if (!feeGroup) {
         feeGroup = {
           name: "Standard Fees",
-          code: fee.ACCTNO, 
+          code: fee.ACCTNO,
           fields: [],
           cif: fee.CIFNO,
           accountNumber: fee.ACCTNO,
@@ -126,14 +150,14 @@ export default class FeeCaseGetByCifUseCase {
   #getDocumentUrl(feePackageId) {
     const scheduleUrls = global.environment.scheduleUrls;
     const packageMap = {
-      1: "intlPB3",
-      2: "uSPBIndividual3",
-      3: "uSPBCorporation3",
-      4: "efraPB3",
-      5: "eraPB3",
+      1: 'intlPB3',
+      2: 'uSPBIndividual3',
+      3: 'uSPBCorporation3',
+      4: 'efraPB3',
+      5: 'eraPB3'
     };
 
-    const scheduleType = packageMap[feePackageId] || "";
-    return scheduleUrls[scheduleType] || "";
+    const scheduleType = packageMap[feePackageId] || '';
+    return scheduleUrls[scheduleType] || '';
   }
 }
