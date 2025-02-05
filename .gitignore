@@ -1,40 +1,32 @@
-{
-  "fees": {
-    "code": 200,
-    "data": {
-      "customerName": "",
-      "customerShortName": "",
-      "customerAddress": "",
-      "customerAccountOfficer": "",
-      "cif": "F016583",
-      "officerId": "",
-      "branchCity": "",
-      "branchState": "",
-      "feePackage": "",
-      "defaultFeePackageId": "",
-      "fees": [
-        {
-          "CustomerName": "DDDD DDDDDD",
-          "CustomerShortName": "DDDDDD DDDD",
-          "CustomerAddress": "2417 Tongass Ave #111 DDD DDDD DD 77777",
-          "CIFNO": "F016583",
-          "ACCTNO": 7115342,
-          "FeeDescription": "Account Maintenance Fee",
-          "FeeCode": "JH001",
-          "Istransactional": false,
-          "FeeType": "Client Fees",
-          "FeeAmount": 25,
-          "Frequency": "Monthly - Charged Quarterly"
-        }
-      ],
-      "feesActives": [
-        {
-          "caseNumber": "12345",
-          "id": "mocked-active-fee-1"
-        }
-      ],
-      "documentUrl": "",
-      "currentFees": []
+import BaseHttp from './BaseHttp.js';
+
+export default class Customer extends BaseHttp {
+  #getCustomerDetails = 'customer/v1';
+
+  constructor({ logger, environment }) {
+    super(logger, environment.customerUrl);
+    console.log("🔹 Customer Base URL:", environment.customerUrl);
+  }
+
+  async getCustomerDetailsByCif(cif) {
+    if (!this.baseUrl) {
+      console.error("❌ Erro: Base URL não está definida!");
+      throw new Error("Base URL não definida para Customer.");
+    }
+
+    const url = `${this.baseUrl}/${this.#getCustomerDetails}/${cif}`;
+    console.log("🔹 URL do Customer gerada:", url);
+
+    try {
+      const [error, response] = await this.httpRequest.get(url);
+      if (error) {
+        console.error("❌ Erro ao buscar detalhes do cliente:", error);
+        return [error, null];
+      }
+      return [null, response];
+    } catch (err) {
+      console.error("❌ Exceção ao chamar a API do Customer:", err.message);
+      return [err.message, null];
     }
   }
 }
