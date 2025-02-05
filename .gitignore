@@ -1,163 +1,34 @@
-import Result from '#features/shared/result.js';
-
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    const cif = customerAccount[0]?.cifno;
-    const feePackageId = customerAccount[0]?.feePackageId;
-
-    if (!cif) {
-      return Result.fail({ message: "CIF não informado" });
-    }
-
-    global.logger.info(`Fetching fees for CIF: ${cif}`);
-
-    // Buscar Fees pelo CIF no SQL
-    const feesData = await this.#getFeesFromSQL(cif);
-    if (!feesData || feesData.length === 0) {
-      return Result.fail({ message: "It's not possible to get fee values" });
-    }
-
-    // Buscar Exceptions pelo FeePackageId
-    let exceptionFees = [];
-    if (feePackageId) {
-      global.logger.info(`Fetching exceptions for FeePackageId: ${feePackageId}`);
-      exceptionFees = await this.#getExceptionFeesFromSQL(feePackageId);
-      if (!exceptionFees) {
-        return Result.fail({ message: "It's not possible to get exception fee values" });
-      }
-    }
-
-    // Mock de dados que ainda não existem na base SQL
-    const feesActives = [
-      { caseNumber: "12345", id: "mocked-active-fee-1" },
-      { caseNumber: "67890", id: "mocked-active-fee-2" },
-    ];
-
-    // Construindo `documentUrl`
-    const documentUrl = this.#getDocumentUrl(feePackageId);
-
-    // Organizar os dados básicos do cliente
-    const customerInfo = {
-      customerName: customerAccount[0]?.customerName || '',
-      customerShortName: customerAccount[0]?.customerShortName || '',
-      customerAddress: customerAccount[0]?.customerAddress || '',
-      customerAccountOfficer: customerAccount[0]?.customerAccountOfficer || '',
-      cif,
-      officerId: customerAccount[0]?.officerId || '',
-      branchCity: customerAccount[0]?.branchCity || '',
-      branchState: customerAccount[0]?.branchState || '',
-      branchType: customerAccount[0]?.branchType || '',
-      feePackage: customerAccount[0]?.feePackage || '',
-      defaultFeePackageId: feePackageId || '',
-    };
-
-    // Construindo `currentFees`
-    const currentFees = exceptionFees.map(fee => ({
-      feeDescription: fee.FeeDescription,
-      feeCode: fee.FeeCode,
-      amount: fee.Amount,
-      frequency: fee.FreqDescription || 'Mocked Frequency',
-    }));
-
-    // Montando o payload final
-    const result = {
-      ...customerInfo,
-      fees: this.#organizeFees(feesData),
-      feesActives,
-      documentUrl,
-      currentFees,
-    };
-
-    global.logger.info("Processamento finalizado com sucesso");
-    return Result.ok(result);
-  }
-
-  /**
-   * Busca as taxas no SQL pelo CIF
-   */
-  async #getFeesFromSQL(cifno) {
-    global.logger.info('getFeesFromSQL()');
-    const connection = await connectToFeeMgmtDb();
-    const recordset = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
-    return recordset?.data || [];
-  }
-
-  /**
-   * Busca as exceções de taxas no SQL pelo FeePackageId
-   */
-  async #getExceptionFeesFromSQL(feePackageId) {
-    global.logger.info('getExceptionFeesFromSQL()');
-    const connection = await connectToFeeMgmtDb();
-    const recordset = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
-    return recordset?.data || [];
-  }
-
-  /**
-   * Organiza os dados das taxas em `feeType` e `feeGroups`
-   */
-  #organizeFees(feesData) {
-    const groupedFees = {};
-
-    feesData.forEach(fee => {
-      const feeType = fee.FeeType || "Unknown Fees";
-      if (!groupedFees[feeType]) {
-        groupedFees[feeType] = {
-          feeType,
-          feeGroups: [],
-          id: `fee-type-${feeType.replace(/\s/g, "-").toLowerCase()}`,
-        };
-      }
-
-      let feeGroup = groupedFees[feeType].feeGroups.find(
-        group => group.accountNumber === fee.ACCTNO
-      );
-
-      if (!feeGroup) {
-        feeGroup = {
-          name: "Standard Fees",
-          code: fee.ACCTNO,
-          fields: [],
-          cif: fee.CIFNO,
-          accountNumber: fee.ACCTNO,
-          visible: true,
-          kycMailingStatus: null,
-          id: `fee-group-${fee.ACCTNO}`,
-        };
-        groupedFees[feeType].feeGroups.push(feeGroup);
-      }
-
-      feeGroup.fields.push({
-        code: fee.FeeCode,
-        name: fee.FeeDescription,
-        isStandard: fee.StandardException === "Standard",
-        isCurrentClient: fee.StandardException === "Client",
-        isException: fee.StandardException === "Exception",
-        defaultValue: fee.FeeAmount?.toString() || "0",
-        hasChanged: false,
-        tooltip: `Charged: ${fee.Frequency || "N/A"}`,
-        exceptionOptions: [],
-        id: `fee-field-${fee.FeeCode}`,
-        labelValue: `$${fee.FeeAmount || "0.00"}`,
-      });
-    });
-
-    return Object.values(groupedFees);
-  }
-
-  /**
-   * Retorna a URL do documento baseado no `feePackageId`
-   */
-  #getDocumentUrl(feePackageId) {
-    const scheduleUrls = global.environment.scheduleUrls;
-    const packageMap = {
-      1: 'intlPB3',
-      2: 'uSPBIndividual3',
-      3: 'uSPBCorporation3',
-      4: 'efraPB3',
-      5: 'eraPB3'
-    };
-
-    const scheduleType = packageMap[feePackageId] || '';
-    return scheduleUrls[scheduleType] || '';
-  }
-}
+CustomerName                            |CustomerShortName   |CustomerAddress                                                                  |CIFNO  |ACCTNO |FeeDescription                  |FeeCode|Istransactional|FeeType          |FeeAmount|Frequency                                    |Branch City|Branch State|Branch Type|OfficerId|Officer                       |StandardException|Default Fee Package Id|Default Fee Package|Default Package Type|Default Fee Amount|Default Frequency                            |
+----------------------------------------+--------------------+---------------------------------------------------------------------------------+-------+-------+--------------------------------+-------+---------------+-----------------+---------+---------------------------------------------+-----------+------------+-----------+---------+------------------------------+-----------------+----------------------+-------------------+--------------------+------------------+---------------------------------------------+
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|Account Maintenance Fee         |JH001  |              0|Client Fees      |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|Monthly - Charged Quarterly                  |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|Hold Mail Fee                   |JH002  |              0|Client Fees      |     0.00|Annual - Charged Annual                      |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |              0.00|Annual - Charged Annual                      |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|    25.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|                                             |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees|    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|Safekeeping of Securities       |BPS002 |              0|Individual Fees  |         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|SSL Account Maintanance Fee     |BPS003 |              0|Individual Fees  |   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|US Equities Commission          |BPS004 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|Options Commission              |BPS005 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115822|Account Maintenance Fee         |JH001  |              0|Client Fees      |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|Monthly - Charged Quarterly                  |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115822|Hold Mail Fee                   |JH002  |              0|Client Fees      |     0.00|Annual - Charged Annual                      |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |              0.00|Annual - Charged Annual                      |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115822|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|                                             |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115822|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees|    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115822|Safekeeping of Securities       |BPS002 |              0|Individual Fees  |         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115822|SSL Account Maintanance Fee     |BPS003 |              0|Individual Fees  |   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115822|US Equities Commission          |BPS004 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115342|Options Commission              |BPS005 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7113617|Account Maintenance Fee         |JH001  |              0|Client Fees      |     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|Monthly - Charged Quarterly                  |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7113617|Hold Mail Fee                   |JH002  |              0|Client Fees      |     0.00|Annual - Charged Annual                      |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |              0.00|Annual - Charged Annual                      |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7113617|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|                                             |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7113617|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees|    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7113617|Safekeeping of Securities       |BPS002 |              0|Individual Fees  |         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7113617|SSL Account Maintanance Fee     |BPS003 |              0|Individual Fees  |   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7113617|US Equities Commission          |BPS004 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7113617|Options Commission              |BPS005 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115431|Account Maintenance Fee         |JH001  |              0|Client Fees      |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|Monthly - Charged Quarterly                  |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115431|Hold Mail Fee                   |JH002  |              0|Client Fees      |     0.00|Annual - Charged Annual                      |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |              0.00|Annual - Charged Annual                      |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115431|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|    25.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|                                             |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115431|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees|    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115431|Safekeeping of Securities       |BPS002 |              0|Individual Fees  |         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115431|SSL Account Maintanance Fee     |BPS003 |              0|Individual Fees  |   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115431|US Equities Commission          |BPS004 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+DDDD DDDDDD                             |DDDDDD DDDD         |2417 Tongass Ave #111                    DDD DDDD DD 77777                       |F016583|7115431|Options Commission              |BPS005 |              1|Individual Fees  |         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
