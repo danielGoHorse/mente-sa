@@ -28,6 +28,8 @@ export default class FeeGetByCifUseCase {
       officerId: feesData[0]?.OfficerId?.trim() || '',
       branchCity: feesData[0]?.['Branch City']?.trim() || '',
       branchState: feesData[0]?.['Branch State']?.trim() || '',
+      branchType: feesData[0]?.['Branch Type']?.trim() || '',
+      defaultPackageType: feesData[0]?.['Default Package Type'] || '',
       feePackage: feesData[0]?.['Default Fee Package']?.trim() || '',
       defaultFeePackageId: feesData[0]?.['Default Fee Package Id'] || '',
       fees: this.#mapFeesByCategory(feesData, exceptionData),
