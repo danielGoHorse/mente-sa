@@ -1,136 +1,47 @@
->>>>>>>>>>>>environment>>>>>>>>>>>>> {
-  app: { name: 'Aurora API' },
-  server: { port: '3001', maxRequestBodySize: '100mb' },
-  logging: { level: 'debug', file: '' },
-  kafka: { brokers: [ 'localhost:9093' ] },
-  rabbitmq: { url: 'amqp://admin:admin@localhost:5672' },
-  caseUrl: undefined,
-  customerUrl: 'http://localhost:5000',
-  userUrl: 'http://localhost:5000',
-  feeUrl: undefined,
-  conductorUrl: undefined,
-  notifyUrl: undefined,
-  jackUrl: undefined
-}
-
-
-
-import dotenv from 'dotenv'
-import path from 'path'
-import fs from 'fs'
-import configServer from 'nice-cloud-config-client'
-
-import environment from './environment.js'
-import { createLogger } from '#core/logging/index.js'
-import { configureEnvironmentConfigServer } from './configureEnvironment.js'
-
-export default class Config {
-  #env
-  #logger
-
-  constructor(env = process.env.NODE_ENV) {
-    this.#env = env || 'Local'
-    // this.#logger = createLogger(environment)
-  }
-
-  async bootstrap() {
-    // this.#logger.info(`Starting configuration for env: ${this.#env}`)
-
-    const strategies = new Map()
-    strategies.set('local', this.#loadEnvFromFile.bind(this))
-    strategies.set('development', this.#loadFromConfigServer.bind(this))
-    strategies.set('staging', this.#loadFromConfigServer.bind(this))
-    strategies.set('production', this.#loadFromConfigServer.bind(this))
-
-    const strategyForEnvironment = strategies.get(this.#env.toLocaleLowerCase())
-    const environmentWithValues = await strategyForEnvironment()
-
-    Object.freeze(environmentWithValues)
-
-    // Create a new logger using the final configuration
-    // this.#logger = createLogger(environmentWithValues)
-
-    return environmentWithValues
-  }
-
-  logger() {
-    return this.#logger
-  }
-
-  async #loadEnvFromFile() {
-    const envFile = '.env'
-    const envPath = path.resolve(path.dirname(''), envFile)
-
-    
-    // this.#logger.info(`Loading env using file ${envPath}`)
-
-    if (fs.existsSync(envPath)) {
-      dotenv.config({ path: envPath })
+>>>>>>>>>>environment.customerUrl>>>>>>>>>>>>>>> http://localhost:5000
+≡ƒö╣ Base URL: http://localhost:5000
+≡ƒö╣ Path: customer/v1/F016583
+≡ƒö╣ URL Final: http://localhost:5000/customer/v1/F016583
+❌ Erro ao construir a URL: Request failed with status code 404
+[03:30:13.148] INFO (24884): request completed
+    req: {
+      "id": "4fe8d6bceb7e56b8eca53edb",
+      "method": "GET",
+      "url": "/v1/conductor/fee/F016583",
+      "query": {},
+      "params": {},
+      "headers": {
+        "user-agent": "PostmanRuntime/7.43.0",
+        "accept": "*/*",
+        "postman-token": "046a1c3c-e645-43a5-a3bd-5fa0204fbb6b",
+        "host": "localhost:3001",
+        "accept-encoding": "gzip, deflate, br",
+        "connection": "keep-alive"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 57077
     }
-
-    environment.app.name = process.env.APP_NAME
-    environment.server.port = process.env.SERVER_PORT
-    environment.server.maxRequestBodySize =
-      process.env.SERVER_MAX_REQUEST_BODY_SIZE
-    environment.logging.level = process.env.LOGGING_LEVEL
-    environment.logging.file = process.env.LOGGING_FILE
-    environment.kafka.brokers = process.env.KAFKA_BROKERS?.split(',')
-    environment.rabbitmq.url = process.env.RABBITMQ_URL
-    environment.caseUrl = process.env.CASE_URL
-    environment.conductorUrl = process.env.CONDUCTOR_URL
-    environment.customerUrl = process.env.CUSTOMER_URL
-    environment.userUrl = process.env.CUSTOMER_URL
-    environment.feeUrl = process.env.FEE_URL
-    environment.notifyUrl = process.env.NOTIFY_URL
-    environment.jackUrl = process.env.JACK_URL
-    console.log('>>>>>>>>>>>>environment>>>>>>>>>>>>>',environment)
-    return environment
-  }
-
-  async #loadFromConfigServer() {
-    const configServerAppName = process.env.CONFIG_SERVER_APP_NAME
-    const configServerUrl = process.env.CONFIG_SERVER_URL
-    const configServerUser = process.env.CONFIG_SERVER_USER
-    const configServerPassword = process.env.CONFIG_SERVER_PASSWORD
-
-    if (!configServerAppName) {
-      throw new Error('Application name must be provided')
-    }
-
-    if (!configServerUrl) {
-      throw new Error('Config server url must be provided')
-    }
-
-    if (!configServerUser) {
-      throw new Error('Config server user must be provided')
-    }
-
-    if (!configServerPassword) {
-      throw new Error('Config server password must be provided')
-    }
-
-    // this.#logger.info(`Loading env using config server ${configServerUrl}`)
-
-    const configuration = await configServer.load({
-      rejectUnauthorized: false,
-      name: configServerAppName,
-      endpoint: configServerUrl,
-      profiles: this.#env,
-      auth: {
-        user: configServerUser,
-        pass: configServerPassword
+    res: {
+      "statusCode": 400,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "4fe8d6bceb7e56b8eca53edb",
+        "x-correlation-id": "4fe8d6bceb7e56b8eca53edb",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "80",
+        "etag": "W/\"50-d5CG1mdN8h36K2VpTgoRZvyT0rU\""
       }
-    })
-
-    if (configuration instanceof Error) {
-      throw configuration
     }
-
-    return configureEnvironmentConfigServer(
-      environment,
-      configuration.properties,
-      '.',
-      configuration
-    )
-  }
-}
+    responseTime: 111
