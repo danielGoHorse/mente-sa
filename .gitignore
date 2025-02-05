@@ -1,35 +1,8 @@
-#mapFeesByCategory(feesData, exceptionData) {
-    const allowedFeeTypes = ["Customer Fees", "Bank Account Fees", "Investment Account Fees"];
-
+#mapCurrentFees(feesData) {
     return feesData
-        .filter(record => allowedFeeTypes.includes(record.FeeType))
-        .map(record => {
-            const feeGroups = [{
-                name: record.StandardException === 'Exception' ? "Exception Request" : "Standard Fees",
-                fields: [{
-                    code: record.FeeCode,
-                    name: record.FeeDescription,
-                    amount: record.FeeAmount || 0,
-                    labelValue: record.FeeAmount ? `$${record.FeeAmount}.00` : '',
-                    isException: record.StandardException === 'Exception',
-                    exceptionOptions: record.StandardException === 'Exception' ? this.#parseExceptionOptions(exceptionData, record) : []
-                }]
-            }];
-
-            // ⚠️ Filtrando feeGroups para garantir que só passem os que têm "FX Outgoing Wire Fee"
-            const filteredFeeGroups = feeGroups.filter(group =>
-                group.fields.some(field => field.name === "FX Outgoing Wire Fee")
-            );
-
-            // ⚠️ Se nenhum grupo atender o critério, retornamos `null`, removendo o fee da resposta final.
-            if (filteredFeeGroups.length === 0) {
-                return null;
-            }
-
-            return {
-                feeType: record.FeeType,
-                feeGroups: filteredFeeGroups
-            };
-        })
-        .filter(Boolean); // Remove `null` do array final
+        .filter(record => record.FeeAmount > 0 && record.FeeDescription === "FX Outgoing Wire Fee") // 🔍 Filtra apenas FX Outgoing Wire Fee
+        .map(record => ({
+            feeDescription: `${record.FeeDescription} - $${record.FeeAmount}.00`,
+            feeCode: record.FeeType
+        }));
 }
