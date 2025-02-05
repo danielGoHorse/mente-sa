@@ -1,13 +1,99 @@
+import axios from 'axios'
+import https from 'https'
+export default class HttpRequest {
+  #logger = undefined
+  #baseUrl = undefined
+  #request = undefined
+  constructor(logger, baseUrl) {
+    // this.#logger = logger
+    this.#baseUrl = baseUrl
+    this.#request = axios.create({
+      baseURL: baseUrl,
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false
+      })
+    })
+  }
 
-Unhandled Promise Rejection: err:  Invalid URL
-TypeError: Invalid URL
-    at new URL (node:internal/url:775:36)
-    at HttpRequest.get (file:///H:/workspace/feeManagement/conductor-fee-management/src/core/http/httpRequest.js:69:17)
-    at Customer.getCustomerDetailsByCif (file:///H:/workspace/feeManagement/conductor-fee-management/src/models/Customer.js:10:35)
-    at FeeCaseGetByCifUseCase.execute (file:///H:/workspace/feeManagement/conductor-fee-management/src/features/feeCaseGetByCif/feeCaseGetByCifUseCase.js:107:27)
-    at feeCaseGetByCifEndpoint (file:///H:/workspace/feeManagement/conductor-fee-management/src/features/feeCaseGetByCif/feeCaseGetByCifEndpoint.js:10:32)
-    at Layer.handle [as handle_request] (H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\layer.js:95:5)
-    at next (H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\route.js:144:13)
-    at Route.dispatch (H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\route.js:114:3)
-    at Layer.handle [as handle_request] (H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\layer.js:95:5)
-    at H:\workspace\feeManagement\conductor-fee-management\node_modules\express\lib\router\index.js:284:15
+  async post(path, body) {
+    const url = new URL(path, this.#baseUrl)
+    const messageError = `It's not possible to request to ${url}`
+    try {
+      const response = await this.#request.post(path, body, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const responseJson = response.data
+
+      if (response.status !== 200) {
+        return [responseJson, null]
+      }
+      return [null, responseJson]
+    } catch (err) {
+      // this.#logger.error(err)
+      if (err.response.status === 400) {
+        return [err?.response?.data]
+      }
+      return [messageError, null]
+    }
+  }
+
+  async put(path, body) {
+    const url = new URL(path, this.#baseUrl)
+    const messageError = `It's not possible to request to ${url}`
+    try {
+      const response = await this.#request.put(path, body, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const responseJson = response.data
+
+      if (response.status !== 200) {
+        return [responseJson, null]
+      }
+      return [null, responseJson]
+    } catch (err) {
+      // this.#logger.error(err)
+      if (err.response.status === 400) {
+        return [err?.response?.data]
+      }
+      return [messageError, null]
+    }
+  }
+
+  async get(path) {
+    const url = new URL(path, this.#baseUrl)
+    const messageError = `Its' not possible to request to ${url}`
+
+    try {
+      const response = await this.#request.get(url.toString())
+      const responseJson = response.data
+      if (response.status !== 200) {
+        return [responseJson, null]
+      }
+
+      return [null, responseJson]
+    } catch (err) {
+      // this.#logger.error(err)
+      return [messageError, null]
+    }
+  }
+}
+
+import BaseHttp from './BaseHttp.js'
+export default class Customer extends BaseHttp {
+  #getCustomerDetails = 'customer/v1'
+  constructor({ logger, environment }) {
+    super(logger, environment.customerUrl)
+  }
+
+  async getCustomerDetailsByCif(cif) {
+    const url = `${this.#getCustomerDetails}/${cif}`
+    return await this.httpRequest.get(url)
+  }
+}
+
