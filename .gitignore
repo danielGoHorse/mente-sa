@@ -1,99 +1,20 @@
-import axios from 'axios'
-import https from 'https'
-export default class HttpRequest {
-  #logger = undefined
-  #baseUrl = undefined
-  #request = undefined
-  constructor(logger, baseUrl) {
-    // this.#logger = logger
-    this.#baseUrl = baseUrl
-    this.#request = axios.create({
-      baseURL: baseUrl,
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
-      })
-    })
-  }
+async get(path) {
+    console.log("🔹 Base URL:", this.#baseUrl);
+    console.log("🔹 Path:", path);
 
-  async post(path, body) {
-    const url = new URL(path, this.#baseUrl)
-    const messageError = `It's not possible to request to ${url}`
     try {
-      const response = await this.#request.post(path, body, {
-        headers: {
-          'Content-Type': 'application/json'
+        const url = new URL(path, this.#baseUrl);
+        console.log("🔹 URL Final:", url.toString());
+
+        const response = await this.#request.get(url.toString());
+        const responseJson = response.data;
+        if (response.status !== 200) {
+            return [responseJson, null];
         }
-      })
 
-      const responseJson = response.data
-
-      if (response.status !== 200) {
-        return [responseJson, null]
-      }
-      return [null, responseJson]
+        return [null, responseJson];
     } catch (err) {
-      // this.#logger.error(err)
-      if (err.response.status === 400) {
-        return [err?.response?.data]
-      }
-      return [messageError, null]
+        console.error("❌ Erro ao construir a URL:", err.message);
+        return ["Erro ao construir a URL", null];
     }
-  }
-
-  async put(path, body) {
-    const url = new URL(path, this.#baseUrl)
-    const messageError = `It's not possible to request to ${url}`
-    try {
-      const response = await this.#request.put(path, body, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      const responseJson = response.data
-
-      if (response.status !== 200) {
-        return [responseJson, null]
-      }
-      return [null, responseJson]
-    } catch (err) {
-      // this.#logger.error(err)
-      if (err.response.status === 400) {
-        return [err?.response?.data]
-      }
-      return [messageError, null]
-    }
-  }
-
-  async get(path) {
-    const url = new URL(path, this.#baseUrl)
-    const messageError = `Its' not possible to request to ${url}`
-
-    try {
-      const response = await this.#request.get(url.toString())
-      const responseJson = response.data
-      if (response.status !== 200) {
-        return [responseJson, null]
-      }
-
-      return [null, responseJson]
-    } catch (err) {
-      // this.#logger.error(err)
-      return [messageError, null]
-    }
-  }
 }
-
-import BaseHttp from './BaseHttp.js'
-export default class Customer extends BaseHttp {
-  #getCustomerDetails = 'customer/v1'
-  constructor({ logger, environment }) {
-    super(logger, environment.customerUrl)
-  }
-
-  async getCustomerDetailsByCif(cif) {
-    const url = `${this.#getCustomerDetails}/${cif}`
-    return await this.httpRequest.get(url)
-  }
-}
-
