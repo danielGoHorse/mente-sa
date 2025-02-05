@@ -1,8 +1,240 @@
-#mapCurrentFees(feesData) {
+import { FeeCase } from '#src/models/entities/FeeCase.js';
+import Result from '#features/shared/result.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure
+} from '#core/data/mssql/index.js';
+
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    global.logger.info('FeeGetByCifUseCase()');
+
+    const cifno = customerAccount[0].cifno;
+    const feesData = await this.#getFeesFromSQL(cifno);
+
+    if (!feesData.length) {
+      return Result.fail({ message: "No data found for this CIF" });
+    }
+
+    const feePackageId = feesData[0]['Default Fee Package Id'] || null;
+    const exceptionData = feePackageId ? await this.#getExceptionFeesFromSQL(feePackageId) : [];
+
+    const result = {
+      cif: feesData[0]?.CIFNO?.trim() || cifno,
+      customerName: feesData[0]?.CustomerName?.trim() || '',
+      customerShortName: feesData[0]?.CustomerShortName?.trim() || '',
+      customerAddress: feesData[0]?.CustomerAddress?.trim() || '',
+      customerAccountOfficer: feesData[0]?.Officer?.trim() || '',
+      officerId: feesData[0]?.OfficerId?.trim() || '',
+      branchCity: feesData[0]?.['Branch City']?.trim() || '',
+      branchState: feesData[0]?.['Branch State']?.trim() || '',
+      branchType: feesData[0]?.['Branch Type']?.trim() || '',
+      defaultPackageType: feesData[0]?.['Default Package Type'] || '',
+      feePackage: feesData[0]?.['Default Fee Package']?.trim() || '',
+      defaultFeePackageId: feesData[0]?.['Default Fee Package Id'] || '',
+      fees: this.#mapFeesByCategory(feesData, exceptionData),
+      feesActives: await this.#getActiveFees(cifno),
+      documentUrl: this.#getDocumentUrl(feePackageId),
+      currentFees: this.#mapCurrentFees(feesData)
+    };
+
+    return Result.ok(result);
+  }
+
+  async #getFeesFromSQL(cifno) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+  }
+
+  async #getExceptionFeesFromSQL(feePackageId) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
+  }
+
+  async #getActiveFees(cifno) {
+    const feesActives = await FeeCase.find({
+      cif: cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true }
+    });
+
+    return feesActives.map(x => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }));
+  }
+
+  #mapFeesByCategory(feesData, exceptionData) {
+    const allowedFeeTypes = ["Customer Fees", "Bank Account Fees", "Investment Account Fees"];
+
     return feesData
-        .filter(record => record.FeeAmount > 0 && record.FeeDescription === "FX Outgoing Wire Fee") // 🔍 Filtra apenas FX Outgoing Wire Fee
+        .filter(record => allowedFeeTypes.includes(record.FeeType))
+        .map(record => {
+            const feeGroups = [{
+                name: record.StandardException === 'Exception' ? "Exception Request" : "Standard Fees",
+                fields: [{
+                    code: record.FeeCode,
+                    name: record.FeeDescription,
+                    amount: record.FeeAmount || 0,
+                    labelValue: record.FeeAmount ? `$${record.FeeAmount}.00` : '',
+                    isException: record.StandardException === 'Exception',
+                    exceptionOptions: record.StandardException === 'Exception' ? this.#parseExceptionOptions(exceptionData, record) : []
+                }]
+            }];
+
+            const filteredFeeGroups = feeGroups.filter(group =>
+                group.fields.some(field => field.name === "FX Outgoing Wire Fee")
+            );
+
+            if (filteredFeeGroups.length === 0) {
+                return null;
+            }
+
+            return {
+                feeType: record.FeeType,
+                feeGroups: filteredFeeGroups
+            };
+        })
+        .filter(Boolean); 
+}
+
+  #parseExceptionOptions(exceptionData, record) {
+    return exceptionData
+      .filter(exc => exc.FeeCode === record.FeeCode)
+      .map(exc => ({
+        value: exc.Amount,
+        text: `$${exc.Amount}.00`
+      }));
+  }
+
+  #getDocumentUrl(feePackageId) {
+    return global.environment.scheduleUrls?.[feePackageId] || '';
+  }
+
+  // #mapCurrentFees(feesData) {
+  //   return feesData
+  //     .filter(record => record.FeeAmount > 0)
+  //     .map(record => ({
+  //       feeDescription: `${record.FeeDescription} - $${record.FeeAmount}.00`,
+  //       feeCode: record.FeeType
+  //     }));
+  // }
+
+  #mapCurrentFees(feesData) {
+    return feesData
+        .filter(record => record.FeeAmount > 0 && record.FeeDescription === "FX Outgoing Wire Fee") 
         .map(record => ({
             feeDescription: `${record.FeeDescription} - $${record.FeeAmount}.00`,
             feeCode: record.FeeType
         }));
+}
+}
+
+import Result from '#features/shared/result.js';
+
+export default class FeeCaseGetByCifUseCase {
+  async execute({ cif }, feeManagementModel, customerModel) {
+    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif);
+    if (errCustomer) {
+      return Result.fail({ message: "It's not possible to get address cif" });
+    }
+
+    const customerData = responseCustomer?.data?.customer || {};
+    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData);
+    if (errFee) {
+      return Result.fail({ message: "It's not possible to get fee values" });
+    }
+
+    function formatCamelCaseToTitle(text) {
+      return text.replace(/([a-z])([A-Z])/g, '$1 $2');
+    }
+
+    const feesData = responseFee?.data || {};
+    const timestamp = new Date().toISOString();
+
+    const currentFees = [
+      ...(customerData?.customerCurrentFees?.map(x => ({
+        feeDescription: x.feeDescription || '',
+        feeCode: x.feeCode || ''
+      })) || []),
+      ...(feesData?.currentFees || [])
+    ];
+
+    const formattedFees = customerData?.customerAccount
+      ?.filter(fee => ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(fee.feeType))
+      .map(fee => ({
+        feeGroups: [{
+          name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
+          visible: true,
+          kycMailingStatus: fee.kycMailingStatus || null,
+          code: fee.feeGroup,
+          accountNumber: fee.ddaNumber || '',
+          cif: fee.cifno,
+          id: '',
+          fields: [{
+            hasChanged: false,
+            code: fee.feeCode,
+            name: formatCamelCaseToTitle(fee.feeDescription),
+            defaultValue: fee.feeAmount?.toString() || '',
+            isStandard: fee.isFeesStandard === "Yes",
+            isException: fee.isFeesStandard === "No",
+            isCurrentClient: false,
+            labelValue: `$${fee.feeAmount.toFixed(2)}`,
+            tooltip: fee.source ? `Source: ${fee.source}` : '',
+            exceptionOptions: [],
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            id: fee.ddaNumber.toString()
+          }]
+        }],
+        feeType: fee.feeType,
+        id: '',
+      })) || [];
+
+    const formattedFeeGroups = feesData?.fees
+      ?.filter(feeGroup => ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeGroup.feeType))
+      .map(feeGroup => ({
+        ...feeGroup,
+        id: '',
+        feeGroups: feeGroup.feeGroups.map(group => ({
+          ...group,
+          id: group.id || '',
+          cif: group.cif || '',
+          accountNumber: group.accountNumber || '',
+          fields: group.fields.map(field => ({
+            ...field,
+            hasChanged: field.hasChanged || false,
+            createdAt: field.createdAt || timestamp,
+            updatedAt: field.updatedAt || timestamp,
+            id: field._id || '',
+            exceptionOptions: field.exceptionOptions?.map(opt => ({
+              ...opt,
+              parameterOptionId: opt.parameterOptionId || '',
+            })) || []
+          }))
+        }))
+      })) || [];
+
+    const result = {
+      customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
+      customerShortName: feesData?.customerShortName || '',
+      customerAddress: customerData?.customerAddress?.address || '',
+      customerAccountOfficer: customerData?.customerAddress?.officer || '',
+      cif: customerData?.customerAddress?.cif || cif,
+      officerId: feesData?.officerId || '',
+      branchCity: feesData?.branchCity || '',
+      branchState: feesData?.branchState || '',
+      branchType: feesData?.branchType || '',
+      feePackage: feesData?.feePackage || '',
+      defaultFeePackageType: feesData?.defaultFeePackageType || '',
+      defaultFeePackageId: feesData?.defaultFeePackageId || '',
+      fees: [...formattedFees, ...formattedFeeGroups],
+      feesActives: feesData?.feesActives || [],
+      documentUrl: feesData?.documentUrl || '',
+      currentFees
+    };
+
+    // global.logger.info('End process');
+    return Result.ok(result);
+  }
 }
