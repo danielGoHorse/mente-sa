@@ -1,20 +1,45 @@
-async get(path) {
-    console.log("🔹 Base URL:", this.#baseUrl);
-    console.log("🔹 Path:", path);
-
-    try {
-        const url = new URL(path, this.#baseUrl);
-        console.log("🔹 URL Final:", url.toString());
-
-        const response = await this.#request.get(url.toString());
-        const responseJson = response.data;
-        if (response.status !== 200) {
-            return [responseJson, null];
-        }
-
-        return [null, responseJson];
-    } catch (err) {
-        console.error("❌ Erro ao construir a URL:", err.message);
-        return ["Erro ao construir a URL", null];
+≡ƒö╣ Base URL: undefined
+❌ Erro ao construir a URL: Invalid URL
+≡ƒö╣ Path: customer/v1/F016583
+[03:18:50.566] INFO (19068): request completed
+    req: {
+      "id": "12c6c96138d7632f57e828d0",
+      "method": "GET",
+      "url": "/v1/conductor/fee/F016583",
+      "query": {},
+      "params": {},
+      "headers": {
+        "user-agent": "PostmanRuntime/7.43.0",
+        "accept": "*/*",
+        "postman-token": "d5efb1db-b112-4bd9-b4bd-da371e27ac9b",
+        "host": "localhost:3001",
+        "accept-encoding": "gzip, deflate, br",
+        "connection": "keep-alive"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 56858
     }
-}
+    res: {
+      "statusCode": 400,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "12c6c96138d7632f57e828d0",
+        "x-correlation-id": "12c6c96138d7632f57e828d0",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "80",
+        "etag": "W/\"50-d5CG1mdN8h36K2VpTgoRZvyT0rU\""
+      }
+    }
+    responseTime: 9
