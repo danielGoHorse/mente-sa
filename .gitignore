@@ -1,108 +1,441 @@
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import Result from '#features/shared/result.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js';
-
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    global.logger.info('FeeGetByCifUseCase()');
-
-    const cifno = customerAccount[0].cifno;
-
-    const feesData = await this.#getFeesFromSQL(cifno);
-    if (!feesData.length) {
-      return Result.fail({ message: "No data found for this CIF" });
-    }
-
-    const feePackageId = feesData[0]['Default Fee Package Id'] || null;
-    const exceptionData = feePackageId
-      ? await this.#getExceptionFeesFromSQL(feePackageId)
-      : [];
-
-    const result = {
-      cif: feesData[0]?.CIFNO?.trim() || cifno,
-      customerName: feesData[0]?.CustomerName?.trim() || '',
-      customerShortName: feesData[0]?.CustomerShortName?.trim() || '',
-      customerAddress: feesData[0]?.CustomerAddress?.trim() || '',
-      customerAccountOfficer: feesData[0]?.Officer?.trim() || '',
-      officerId: feesData[0]?.OfficerId?.trim() || '',
-      branchCity: feesData[0]?.['Branch City']?.trim() || '',
-      branchState: feesData[0]?.['Branch State']?.trim() || '',
-      feePackage: feesData[0]?.['Default Fee Package']?.trim() || '',
-      defaultFeePackageId: feesData[0]?.['Default Fee Package Id'] || '',
-      fees: this.#mapFeesByCategory(feesData, exceptionData),
-      feesActives: await this.#getActiveFees(cifno),
-      documentUrl: this.#getDocumentUrl(feePackageId),
-      currentFees: this.#mapCurrentFees(feesData)
-    };
-
-    return Result.ok(result);
-  }
-
-  async #getFeesFromSQL(cifno) {
-    const connection = await connectToFeeMgmtDb();
-    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
-  }
-
-  async #getExceptionFeesFromSQL(feePackageId) {
-    const connection = await connectToFeeMgmtDb();
-    return executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
-  }
-
-  async #getActiveFees(cifno) {
-    const feesActives = await FeeCase.find({
-      cif: cifno,
-      status: { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true }
-    });
-
-    return feesActives.map(x => ({
-      caseNumber: x.caseNumber,
-      id: x.id
-    }));
-  }
-
-  #mapFeesByCategory(feesData, exceptionData) {
-    const allowedFeeTypes = ["Customer Fees", "Bank Account Fees", "Investment Account Fees"];
-    return feesData
-      .filter(record => allowedFeeTypes.includes(record.FeeType))
-      .map(record => ({
-        feeType: record.FeeType,
-        feeGroups: [{
-          name: record.StandardException === 'Exception' ? "Exception Request" : "Standard Fees",
-          fields: [{
-            code: record.FeeCode,
-            name: record.FeeDescription,
-            amount: record.FeeAmount || 0,
-            labelValue: record.FeeAmount ? `$${record.FeeAmount}.00` : '',
-            isException: record.StandardException === 'Exception',
-            exceptionOptions: record.StandardException === 'Exception' ? this.#parseExceptionOptions(exceptionData, record) : []
-          }]
-        }]
-      }));
-  }
-
-  #parseExceptionOptions(exceptionData, record) {
-    return exceptionData
-      .filter(exc => exc.FeeCode === record.FeeCode)
-      .map(exc => ({
-        value: exc.Amount,
-        text: `$${exc.Amount}.00`
-      }));
-  }
-
-  #getDocumentUrl(feePackageId) {
-    return global.environment.scheduleUrls?.[feePackageId] || '';
-  }
-
-  #mapCurrentFees(feesData) {
-    return feesData
-      .filter(record => record.FeeAmount > 0)
-      .map(record => ({
-        feeDescription: `${record.FeeDescription} - $${record.FeeAmount}.00`,
-        feeCode: record.FeeType
-      }));
-  }
+{
+    "customerName": "NPK TRADING S.A.",
+    "customerShortName": "JJJ JJJJJJJ J.J.",
+    "customerAddress": "NPK TRADING S.A. SARANDI 690-ESC 105 MONTEVIDEO URUGUAY  11100",
+    "customerAccountOfficer": "571 Marcelo Fontanelli       BR 30",
+    "cif": "NAA0010",
+    "officerId": "571",
+    "branchCity": "New York",
+    "branchState": "NY",
+    "feePackage": "",
+    "defaultFeePackageId": "",
+    "fees": [
+        {
+            "feeGroups": [
+                {
+                    "name": "Client Current Fees",
+                    "visible": true,
+                    "kycMailingStatus": null,
+                    "code": 1,
+                    "accountNumber": 17226444,
+                    "cif": "NAA0010",
+                    "id": "",
+                    "fields": [
+                        {
+                            "hasChanged": false,
+                            "code": "JH001",
+                            "name": "Account Maintenance",
+                            "defaultValue": "600",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": false,
+                            "labelValue": "$600.00",
+                            "tooltip": "Source: JHA",
+                            "exceptionOptions": [],
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": "17226444"
+                        }
+                    ]
+                }
+            ],
+            "feeType": "Customer Fees",
+            "id": ""
+        },
+        {
+            "feeGroups": [
+                {
+                    "name": "Client Current Fees",
+                    "visible": true,
+                    "kycMailingStatus": "Hold Mail",
+                    "code": 1,
+                    "accountNumber": 17226444,
+                    "cif": "NAA0010",
+                    "id": "",
+                    "fields": [
+                        {
+                            "hasChanged": false,
+                            "code": "JH002",
+                            "name": "Hold Mail",
+                            "defaultValue": "600",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": false,
+                            "labelValue": "$600.00",
+                            "tooltip": "Source: JHA",
+                            "exceptionOptions": [],
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": "17226444"
+                        }
+                    ]
+                }
+            ],
+            "feeType": "Customer Fees",
+            "id": ""
+        },
+        {
+            "feeGroups": [
+                {
+                    "name": "Standard Fees",
+                    "visible": true,
+                    "kycMailingStatus": null,
+                    "code": 2,
+                    "accountNumber": 17226444,
+                    "cif": "NAA0010",
+                    "id": "",
+                    "fields": [
+                        {
+                            "hasChanged": false,
+                            "code": "JH010",
+                            "name": "USD/FXIncoming Wire",
+                            "defaultValue": "10",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": false,
+                            "labelValue": "$10.00",
+                            "tooltip": "Source: JHA",
+                            "exceptionOptions": [],
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": "17226444"
+                        }
+                    ]
+                }
+            ],
+            "feeType": "Customer Fees",
+            "id": ""
+        },
+        {
+            "feeGroups": [
+                {
+                    "name": "Standard Fees",
+                    "visible": true,
+                    "kycMailingStatus": null,
+                    "code": 3,
+                    "accountNumber": 17226444,
+                    "cif": "NAA0010",
+                    "id": "",
+                    "fields": [
+                        {
+                            "hasChanged": false,
+                            "code": "A053",
+                            "name": "Safekeeping Custody",
+                            "defaultValue": "375",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": false,
+                            "labelValue": "$375.00",
+                            "tooltip": "Source: BPS",
+                            "exceptionOptions": [],
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": "17226444"
+                        }
+                    ]
+                }
+            ],
+            "feeType": "Customer Fees",
+            "id": ""
+        },
+        {
+            "feeType": "Bank Account Fees",
+            "feeGroups": [
+                {
+                    "name": "Client Current Fees",
+                    "fields": [
+                        {
+                            "code": "JH006",
+                            "name": "FX Outgoing Wire Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": true,
+                            "labelValue": "$95.00",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 95,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        },
+                        {
+                            "code": "JH010",
+                            "name": "USD/FX Incoming Wire Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": true,
+                            "labelValue": "$10.00",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 10,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        },
+                        {
+                            "code": "JH009",
+                            "name": "USD Outgoing Wire (SafraLink) Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": true,
+                            "labelValue": "$35.00",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 35,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        },
+                        {
+                            "code": "JH009",
+                            "name": "USD Outgoing Wire (SafraLink) Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": true,
+                            "labelValue": "$25.00",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 25,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        },
+                        {
+                            "code": "JH007",
+                            "name": "FX Outgoing Wire (SafraLink) Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": true,
+                            "labelValue": "$95.00",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 95,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        }
+                    ],
+                    "id": "",
+                    "cif": "",
+                    "accountNumber": ""
+                },
+                {
+                    "name": "Exception Request",
+                    "fields": [
+                        {
+                            "code": "JH003",
+                            "name": "Paper Statement Fee",
+                            "defaultValue": "",
+                            "isStandard": false,
+                            "isException": true,
+                            "isCurrentClient": false,
+                            "labelValue": "",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 0,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        }
+                    ],
+                    "id": "",
+                    "cif": "",
+                    "accountNumber": ""
+                },
+                {
+                    "name": "Standard Fees",
+                    "fields": [
+                        {
+                            "code": "JH005",
+                            "name": "Foreign Currency Account - EUR Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": false,
+                            "labelValue": "",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 0,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        }
+                    ],
+                    "id": "",
+                    "cif": "",
+                    "accountNumber": ""
+                }
+            ],
+            "id": ""
+        },
+        {
+            "feeType": "Customer Fees",
+            "feeGroups": [
+                {
+                    "name": "Client Current Fees",
+                    "fields": [
+                        {
+                            "code": "JH001",
+                            "name": "Account Maintenance Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": true,
+                            "labelValue": "$600.00",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 600,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        },
+                        {
+                            "code": "JH001",
+                            "name": "Account Maintenance Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": true,
+                            "labelValue": "$600.00",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 600,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        },
+                        {
+                            "code": "JH002",
+                            "name": "Hold Mail Fee",
+                            "defaultValue": "",
+                            "isStandard": true,
+                            "isException": false,
+                            "isCurrentClient": true,
+                            "labelValue": "$600.00",
+                            "frequency": "",
+                            "defaultFrequency": "",
+                            "amount": 600,
+                            "exceptionOptions": [],
+                            "hasChanged": false,
+                            "createdAt": "2025-02-05T15:41:26.650Z",
+                            "updatedAt": "2025-02-05T15:41:26.650Z",
+                            "id": ""
+                        }
+                    ],
+                    "id": "",
+                    "cif": "",
+                    "accountNumber": ""
+                }
+            ],
+            "id": ""
+        }
+    ],
+    "feesActives": [
+        {
+            "caseNumber": "FEE1078",
+            "id": "659c7c6a07059445c666fffc"
+        },
+        {
+            "caseNumber": "FEE2697",
+            "id": "66463531e0cfba0a5156a06f"
+        },
+        {
+            "caseNumber": "FEE2799",
+            "id": "6654eeffe0cfba0a5156b063"
+        }
+    ],
+    "documentUrl": "",
+    "currentFees": [
+        {
+            "feeDescription": "Account Maintenance Fee $1,200 (S/A $600) -  $600.00",
+            "feeCode": " Corporate Checking F 17226444"
+        },
+        {
+            "feeDescription": "Hold Mail Fee (per annum) -  $600.00",
+            "feeCode": " Corporate Checking F 17226444"
+        },
+        {
+            "feeDescription": "USD/FX Outgoing Wire Fee $20.00",
+            "feeCode": " Corporate Checking F 17226444"
+        },
+        {
+            "feeDescription": "Custody/A032 0.50% /YR min $375.00/QTR",
+            "feeCode": "SNBNY custody 20002089"
+        },
+        {
+            "feeDescription": "Equity Comm/E3 $0.10 per share, min charge of $150 per trade",
+            "feeCode": "SNBNY custody 20002089"
+        },
+        {
+            "feeDescription": "Option Comm/E3 $0.05 per share, min charge of $150 per trade",
+            "feeCode": "SNBNY custody 20002089"
+        },
+        {
+            "feeDescription": "JSAM IM Fee/YR 1.00% (**)",
+            "feeCode": "SNBNY custody 20500868"
+        },
+        {
+            "feeDescription": "Equity Comm/E3 $0.10 per share, min charge of $150 per trade",
+            "feeCode": "SSL retail 20103939"
+        },
+        {
+            "feeDescription": "Option Comm/E3 $0.05 per share, min charge of $150 per trade",
+            "feeCode": "SSL retail 20103939"
+        },
+        {
+            "feeDescription": "FX Outgoing Wire Fee - $95.00",
+            "feeCode": "Bank Account Fees 17226444"
+        },
+        {
+            "feeDescription": "Account Maintenance Fee - $600.00",
+            "feeCode": "Customer Fees 17226444"
+        },
+        {
+            "feeDescription": "Account Maintenance Fee - $600.00",
+            "feeCode": "Customer Fees 17226444"
+        },
+        {
+            "feeDescription": "USD/FX Incoming Wire Fee - $10.00",
+            "feeCode": "Bank Account Fees 17226444"
+        },
+        {
+            "feeDescription": "Hold Mail Fee - $600.00",
+            "feeCode": "Customer Fees 17226444"
+        },
+        {
+            "feeDescription": "USD Outgoing Wire (SafraLink) Fee - $35.00",
+            "feeCode": "Bank Account Fees 17226444"
+        },
+        {
+            "feeDescription": "USD Outgoing Wire (SafraLink) Fee - $25.00",
+            "feeCode": "Bank Account Fees 17226444"
+        },
+        {
+            "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $95.00",
+            "feeCode": "Bank Account Fees 17226444"
+        }
+    ]
 }
