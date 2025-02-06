@@ -15,13 +15,19 @@ export default class FeeCaseGetByCifUseCase {
 
     function normalizeFeeName(text) {
       return text
-        .replace(/([a-z])([A-Z])/g, '$1 $2') 
-        .replace(/[_-]/g, ' ') 
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/[_-]/g, ' ')
         .trim();
     }
 
     const feesData = responseFee?.data || {};
     const timestamp = new Date().toISOString();
+
+    // Novos campos adicionados para compatibilidade com o frontend
+    const packageName = feesData.packageName || "N/A";
+    const packageType = feesData.packageType || "N/A";
+    const branchType = feesData.branchType || "N/A";
+    const branchLocation = feesData.branchLocation || "N/A";
 
     const currentFees = [
       ...(customerData?.customerCurrentFees?.map(x => ({
@@ -64,13 +70,13 @@ export default class FeeCaseGetByCifUseCase {
           name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
           visible: true,
           kycMailingStatus: fee.kycMailingStatus || null,
-          code: fee.feeCode, 
-          accountNumber: fee.ddaNumber || '',
-          cif: fee.cifno,
+          code: fee.feeCode || "",
+          accountNumber: fee.ddaNumber || "",
+          cif: fee.cifno || "",
           id: '',
           fields: [{
             hasChanged: false,
-            code: feeCodeMap[normalizedFeeName] || fee.feeCode, 
+            code: feeCodeMap[normalizedFeeName] || fee.feeCode || "",
             name: normalizedFeeName,
             defaultValue: fee.feeAmount?.toString() || '',
             isStandard: fee.isFeesStandard === "Yes",
@@ -81,10 +87,10 @@ export default class FeeCaseGetByCifUseCase {
             exceptionOptions: [],
             createdAt: timestamp,
             updatedAt: timestamp,
-            id: fee.ddaNumber.toString()
+            id: fee.ddaNumber?.toString() || ""
           }]
         }],
-        feeType: feeTypeMap[fee.feeType],
+        feeType: feeTypeMap[fee.feeType] || "",
         id: '',
       };
     });
@@ -104,7 +110,7 @@ export default class FeeCaseGetByCifUseCase {
             hasChanged: field.hasChanged || false,
             createdAt: field.createdAt || timestamp,
             updatedAt: field.updatedAt || timestamp,
-            id: field._id || '',
+            id: field._id || field.id || '',
             exceptionOptions: field.exceptionOptions?.map(opt => ({
               ...opt,
               parameterOptionId: opt.parameterOptionId || '',
@@ -122,10 +128,13 @@ export default class FeeCaseGetByCifUseCase {
       officerId: feesData?.officerId || '',
       branchCity: feesData?.branchCity || '',
       branchState: feesData?.branchState || '',
-      branchType: feesData?.branchType || '',
+      branchType,
+      branchLocation,
       feePackage: feesData?.feePackage || '',
       defaultFeePackageId: feesData?.defaultFeePackageId || '',
       defaultPackageType: feesData?.defaultPackageType || '',
+      packageName,
+      packageType,
       fees: [...formattedFees, ...formattedFeeGroups],
       feesActives: feesData?.feesActives || [],
       documentUrl: feesData?.documentUrl || '',
