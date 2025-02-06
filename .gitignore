@@ -1,4 +1,3 @@
-
 import Result from '#features/shared/result.js';
 
 export default class FeeCaseGetByCifUseCase {
@@ -72,11 +71,11 @@ export default class FeeCaseGetByCifUseCase {
     const formattedFees = filteredCustomerAccounts.map(fee => {
       const normalizedFeeName = normalizeFeeName(fee.feeDescription);
       return {
-        // Definimos o feeType padronizado
         feeType: feeTypeMap[fee.feeType] || "",
-        // Aqui vem um array de 'feeGroups'
         feeGroups: [
           {
+            // Se fee.feeGroup === 1 -> "Client Current Fees", senão "Standard Fees"
+            // (Ajuste conforme sua lógica)
             name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
             visible: true,
             kycMailingStatus: fee.kycMailingStatus || null,
@@ -118,7 +117,6 @@ export default class FeeCaseGetByCifUseCase {
         .map(feeGroup => ({
           feeType: feeGroup.feeType,
           id: "",
-          // Ajuste cada 'feeGroups' contido dentro
           feeGroups: feeGroup.feeGroups.map(group => ({
             ...group,
             id: group.id || "",
@@ -139,28 +137,62 @@ export default class FeeCaseGetByCifUseCase {
           }))
         })) || [];
 
-    // Agora vamos agrupar TUDO por feeType.
-    // Primeiro unimos formattedFees e formattedFeeGroups num único array:
+    // Unir os arrays
     const allFees = [...formattedFees, ...formattedFeeGroups];
 
-    // Defina os 3 feeTypes que você quer exibir/retornar
+    // FeeTypes de interesse
     const feeTypesToGroup = [
       "Customer Fees",
       "Bank Account Fees",
       "Investment Account Fees"
     ];
 
+    // 1) Agrupa por feeType
+    // 2) Dentro de cada feeType, agrupa feeGroups por 'name' ("Standard Fees", "Client Current Fees", "Exception Request")
     const groupedFees = feeTypesToGroup.map(type => {
+      // Filtra todos os que tenham esse feeType
       const itemsOfThisType = allFees.filter(item => item.feeType === type);
 
+      // Concatena todos os feeGroups num só array
       const combinedFeeGroups = itemsOfThisType.flatMap(item => item.feeGroups || []);
+
+      // Aqui podemos ter 3 possíveis nomes:
+      // "Standard Fees", "Client Current Fees", "Exception Request"
+      // Se você tem alguma regra extra para "Exception Request", fique à vontade para ajustar.
+      const mapByName = {
+        "Standard Fees": [],
+        "Client Current Fees": [],
+        "Exception Request": []
+      };
+
+      // Distribui cada feeGroup para o array correto
+      for (const group of combinedFeeGroups) {
+        if (group.name === "Standard Fees") {
+          mapByName["Standard Fees"].push(group);
+        } else if (group.name === "Client Current Fees") {
+          mapByName["Client Current Fees"].push(group);
+        } else {
+          // Se o name não é nenhum dos dois acima, consideramos "Exception Request"
+          mapByName["Exception Request"].push(group);
+        }
+      }
+
+      // Converte o map em array
+      // Se quiser manter inclusive grupos vazios, remova o .filter(...)
+      const feeGroups = Object.entries(mapByName)
+        .map(([name, groups]) => ({
+          name,
+          feeGroups: groups
+        }))
+        .filter(obj => obj.feeGroups.length > 0);
 
       return {
         feeType: type,
-        feeGroups: combinedFeeGroups
+        feeGroups
       };
     });
 
+    // Montagem do result final
     const result = {
       customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
       customerShortName: feesData?.customerShortName || '',
