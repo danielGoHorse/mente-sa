@@ -1,43 +1,50 @@
+const rawCustomerAccounts = customerData?.customerAccount || []; 
 
-Raw Customer Accounts: (2) [{…}, {…}]
-arg1: (2) [{…}, {…}]
-0: {cifno: 'F016583', ddaNumber: 7115822, bpsAcctNumber: '', feeType: 1, feeDescription: 'AccountMaintenance', …}
-bpsAcctNumber: ''
-bpsFeeTypeCode: ''
-cifno: 'F016583'
-ddaNumber: 7115822
-entity: 'SNB/284'
-feeAmount: 25
-feeCode: 'JH001'
-feeDescription: 'AccountMaintenance'
-feeGroup: 1
-feeType: 1
-isFeesStandard: 'Yes'
-kycMailingStatus: null
-source: 'JHA'
-[[Prototype]]: Object
-1: {cifno: 'F016583', ddaNumber: 7115822, bpsAcctNumber: '', feeType: 2, feeDescription: 'HoldMail', …}
-bpsAcctNumber: ''
-bpsFeeTypeCode: ''
-cifno: 'F016583'
-ddaNumber: 7115822
-entity: 'SNB/284'
-feeAmount: 0
-feeCode: 'JH002'
-feeDescription: 'HoldMail'
-feeGroup: 1
-feeType: 2
-isFeesStandard: 'Yes'
-kycMailingStatus: 'Print'
-source: 'JHA'
-[[Prototype]]: Object
-length: 2
-[[Prototype]]: Array(0)
-[[Prototype]]: Object
-Checking feeType: 1
-Checking feeType: 2
-Filtered Customer Accounts: (0) []
-arg1: (0) []
-length: 0
-[[Prototype]]: Array(0)
-[[Prototype]]: Object
+const feeTypeMap = {
+  1: "Customer Fees",
+  2: "Bank Account Fees",
+  3: "Investment Account Fees"
+};
+
+// Log dos valores antes do filtro
+console.log("Raw Customer Accounts:", rawCustomerAccounts);
+
+const filteredCustomerAccounts = rawCustomerAccounts.filter(fee => {
+  const feeTypeString = feeTypeMap[fee.feeType] || ""; // Converte número para string correspondente
+  console.log(`Checking feeType after mapping: ${feeTypeString}`); // Debug
+  return ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeTypeString);
+});
+
+// Log para ver se algum dado foi filtrado
+console.log("Filtered Customer Accounts:", filteredCustomerAccounts);
+
+const formattedFees = filteredCustomerAccounts.map(fee => ({
+  feeGroups: [{
+    name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
+    visible: true,
+    kycMailingStatus: fee.kycMailingStatus || null,
+    code: fee.feeCode,
+    accountNumber: fee.ddaNumber || '',
+    cif: fee.cifno,
+    id: '',
+    fields: [{
+      hasChanged: false,
+      code: fee.feeCode, // Ajustado para referenciar corretamente o código da taxa
+      name: formatCamelCaseToTitle(fee.feeDescription),
+      defaultValue: fee.feeAmount?.toString() || '',
+      isStandard: fee.isFeesStandard === "Yes",
+      isException: fee.isFeesStandard === "No",
+      isCurrentClient: false,
+      labelValue: fee.feeAmount ? `$${fee.feeAmount.toFixed(2)}` : '',
+      tooltip: fee.source ? `Source: ${fee.source}` : '',
+      exceptionOptions: [],
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      id: fee.ddaNumber.toString()
+    }]
+  }],
+  feeType: feeTypeString, // Agora, feeType é a string correta
+  id: '',
+}));
+
+console.log("Final formattedFees:", formattedFees);
