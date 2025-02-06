@@ -28,45 +28,45 @@ export default class FeeCaseGetByCifUseCase {
       ...(feesData?.currentFees || [])
     ];
 
-    // Mapeamento de feeType numérico para string
     const feeTypeMap = {
       1: "Customer Fees",
       2: "Bank Account Fees",
       3: "Investment Account Fees"
     };
 
-    // Mapeamento de/para entre nomes e códigos
     const feeCodeMap = {
+      "Account Maintenance Fee": 1,
       "Account Maintenance": 1,
       "Hold Mail": 2,
       "Incoming Wire": 3,
-      "Outgoing Wire": 4,
+      "FX Outgoing Wire Fee": 4,
+      "SSL Account Maintanance Fee": 5,
       "Safekeeping-Custody": 6,
-      "SSL Account Maintenance": 5,
-      "Equity and Options Commission": 7
+      "Safekeeping of Securities": 6,
+      "US Equities Commission": 7
     };
 
-    const rawCustomerAccounts = customerData?.customerAccount || [];
+    const rawCustomerAccounts = customerData?.customerAccount || []; 
 
-    // Filtrando apenas os feeTypes permitidos
+
     const filteredCustomerAccounts = rawCustomerAccounts.filter(fee => {
-      const feeTypeString = feeTypeMap[fee.feeType] || "";
+      const feeTypeString = feeTypeMap[fee.feeType] || ""; 
       return ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeTypeString);
     });
 
-    // Formatando os Fees para envio correto ao Frontend
+
     const formattedFees = filteredCustomerAccounts.map(fee => ({
       feeGroups: [{
         name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
         visible: true,
         kycMailingStatus: fee.kycMailingStatus || null,
-        code: fee.feeCode, // Mantém o código vindo da API
+        code: fee.feeCode,
         accountNumber: fee.ddaNumber || '',
         cif: fee.cifno,
         id: '',
         fields: [{
           hasChanged: false,
-          code: feeCodeMap[formatCamelCaseToTitle(fee.feeDescription)] || fee.feeCode, // Mapeia código pelo nome
+          code: feeCodeMap[formatCamelCaseToTitle(fee.feeDescription)] || fee.feeCode, 
           name: formatCamelCaseToTitle(fee.feeDescription),
           defaultValue: fee.feeAmount?.toString() || '',
           isStandard: fee.isFeesStandard === "Yes",
@@ -80,9 +80,10 @@ export default class FeeCaseGetByCifUseCase {
           id: fee.ddaNumber.toString()
         }]
       }],
-      feeType: feeTypeMap[fee.feeType],
+      feeType: feeTypeMap[fee.feeType], 
       id: '',
     }));
+
 
     const formattedFeeGroups = feesData?.fees
       ?.filter(feeGroup => ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeGroup.feeType))
