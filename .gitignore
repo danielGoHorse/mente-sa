@@ -1,39 +1,24 @@
-FX Outgoing Wire Fee            |JH006 
-FX Outgoing Wire (SafraLink) Fee|JH007 
-Safekeeping of Securities       |BPS002
-SSL Account Maintanance Fee     |BPS003
-US Equities Commission          |BPS004
-Options Commission              |BPS005
-Account Maintenance Fee         |JH001 
-Hold Mail Fee                   |JH002 
-FX Outgoing Wire Fee            |JH006 
-FX Outgoing Wire (SafraLink) Fee|JH007 
-Safekeeping of Securities       |BPS002
-SSL Account Maintanance Fee     |BPS003
-US Equities Commission          |BPS004
-Options Commission              |BPS005
-FX Outgoing Wire Fee            |JH006 
-FX Outgoing Wire (SafraLink) Fee|JH007 
-Safekeeping of Securities       |BPS002
-SSL Account Maintanance Fee     |BPS003
-US Equities Commission          |BPS004
-Options Commission              |BPS005
-FX Outgoing Wire Fee            |JH006 
-FX Outgoing Wire (SafraLink) Fee|JH007 
-Safekeeping of Securities       |BPS002
-SSL Account Maintanance Fee     |BPS003
-US Equities Commission          |BPS004
-Options Commission              |BPS005
-
-
-Account Maintenance (JHA - DDA)
-Hold Mail Services
-Outgoing Wire Transfers
- (USD/Foreign Exchange)- Manual
-Outgoing Wire Transfers
- (USD/Foreign Exchange)-Online/token
-Safekeeping of Securities
-SSL Account Maintenance Fee
-US Equities
-Equity Options
-
+Fee Name	Code
+FX Outgoing Wire Fee	JH006
+FX Outgoing Wire (SafraLink) Fee	JH007
+Safekeeping of Securities	BPS002
+SSL Account Maintanance Fee	BPS003
+US Equities Commission	BPS004
+Options Commission	BPS005
+Account Maintenance Fee	JH001
+Hold Mail Fee	JH002
+Account Maintenance (JHA - DDA)	
+Hold Mail Services	
+Outgoing Wire Transfers (USD/Foreign Exchange)- Manual	
+Outgoing Wire Transfers (USD/Foreign Exchange)-Online/token	
+Safekeeping of Securities	
+SSL Account Maintenance Fee	
+US Equities	
+Equity Options	
+Account Maintenance	1
+Hold Mail	2
+Incoming Wire	3
+Outgoing Wire	4
+Safekeeping-Custody	6
+SSL Account Maintenance	5
+Equity and Options Comission	7
