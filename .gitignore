@@ -2,7 +2,7 @@
     "code": 200,
     "data": {
         "customerName": "FRANCO JACK",
-        "customerShortName": "PMPMPP MPPM",
+        "customerShortName": "OFOFOO FOOF",
         "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
         "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
         "cif": "F016583",
@@ -14,8 +14,8 @@
         "feePackage": "Domestic Individual",
         "defaultFeePackageId": 2,
         "defaultPackageType": "Individual",
-        "packageName": "N/A",
-        "packageType": "N/A",
+        "packageName": "Domestic Individual",
+        "packageType": "Individual",
         "fees": [
             {
                 "feeGroups": [
@@ -39,8 +39,8 @@
                                 "labelValue": "$25.00",
                                 "tooltip": "Source: JHA",
                                 "exceptionOptions": [],
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": "7115822"
                             }
                         ]
@@ -71,8 +71,8 @@
                                 "labelValue": "",
                                 "tooltip": "Source: JHA",
                                 "exceptionOptions": [],
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": "7115822"
                             }
                         ]
@@ -95,8 +95,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -121,8 +121,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -147,8 +147,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -173,8 +173,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -199,8 +199,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -225,8 +225,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -251,8 +251,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -277,8 +277,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -309,8 +309,8 @@
                                     }
                                 ],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -335,8 +335,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -361,8 +361,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -387,8 +387,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -413,8 +413,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -439,8 +439,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -471,8 +471,8 @@
                                     }
                                 ],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -497,8 +497,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -523,8 +523,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -549,8 +549,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -575,8 +575,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -601,8 +601,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -627,8 +627,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -653,8 +653,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -679,8 +679,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -705,8 +705,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -731,8 +731,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
@@ -757,8 +757,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T14:51:14.718Z",
-                                "updatedAt": "2025-02-06T14:51:14.718Z",
+                                "createdAt": "2025-02-06T15:02:30.442Z",
+                                "updatedAt": "2025-02-06T15:02:30.442Z",
                                 "id": ""
                             }
                         ],
