@@ -35,12 +35,14 @@ export default class FeeCaseGetByCifUseCase {
       ...(feesData?.currentFees || [])
     ];
 
+    // Mapa de FeeType
     const feeTypeMap = {
       1: "Customer Fees",
       2: "Bank Account Fees",
       3: "Investment Account Fees"
     };
 
+    // Mapa de FeeCode
     const feeCodeMap = {
       "Account Maintenance": 1,
       "Hold Mail": 2,
@@ -54,69 +56,114 @@ export default class FeeCaseGetByCifUseCase {
       "Options Commission": 11
     };
 
+    // Filtrar accounts apenas daqueles FeeTypes que interessam
     const rawCustomerAccounts = customerData?.customerAccount || [];
-
     const filteredCustomerAccounts = rawCustomerAccounts.filter(fee => {
       const feeTypeString = feeTypeMap[fee.feeType] || "";
-      return ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeTypeString);
+      return [
+        "Customer Fees",
+        "Bank Account Fees",
+        "Investment Account Fees"
+      ].includes(feeTypeString);
     });
 
+    // Construir "formattedFees" a partir dos dados do customer
     const formattedFees = filteredCustomerAccounts.map(fee => {
       const normalizedFeeName = normalizeFeeName(fee.feeDescription);
       return {
-        feeGroups: [{
-          name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
-          visible: true,
-          kycMailingStatus: fee.kycMailingStatus || null,
-          code: fee.feeCode || "",
-          accountNumber: fee.ddaNumber || "",
-          cif: fee.cifno || "",
-          id: '',
-          fields: [{
-            hasChanged: false,
-            code: feeCodeMap[normalizedFeeName] || fee.feeCode || "",
-            name: normalizedFeeName,
-            defaultValue: fee.feeAmount?.toString() || '',
-            isStandard: fee.isFeesStandard === "Yes",
-            isException: fee.isFeesStandard === "No",
-            isCurrentClient: false,
-            labelValue: fee.feeAmount ? `$${fee.feeAmount.toFixed(2)}` : '',
-            tooltip: fee.source ? `Source: ${fee.source}` : '',
-            exceptionOptions: [],
-            createdAt: timestamp,
-            updatedAt: timestamp,
-            id: fee.ddaNumber?.toString() || ""
-          }]
-        }],
+        // Definimos o feeType padronizado
         feeType: feeTypeMap[fee.feeType] || "",
-        id: '',
+        // Aqui vem um array de 'feeGroups'
+        feeGroups: [
+          {
+            name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
+            visible: true,
+            kycMailingStatus: fee.kycMailingStatus || null,
+            code: fee.feeCode || "",
+            accountNumber: fee.ddaNumber || "",
+            cif: fee.cifno || "",
+            id: "",
+            fields: [
+              {
+                hasChanged: false,
+                code: feeCodeMap[normalizedFeeName] || fee.feeCode || "",
+                name: normalizedFeeName,
+                defaultValue: fee.feeAmount?.toString() || "",
+                isStandard: fee.isFeesStandard === "Yes",
+                isException: fee.isFeesStandard === "No",
+                isCurrentClient: false,
+                labelValue: fee.feeAmount ? `$${fee.feeAmount.toFixed(2)}` : "",
+                tooltip: fee.source ? `Source: ${fee.source}` : "",
+                exceptionOptions: [],
+                createdAt: timestamp,
+                updatedAt: timestamp,
+                id: fee.ddaNumber?.toString() || ""
+              }
+            ]
+          }
+        ],
+        id: ""
       };
     });
 
-    const formattedFeeGroups = feesData?.fees
-      ?.filter(feeGroup => ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeGroup.feeType))
-      .map(feeGroup => ({
-        ...feeGroup,
-        id: '',
-        feeGroups: feeGroup.feeGroups.map(group => ({
-          ...group,
-          id: group.id || '',
-          cif: group.cif || '',
-          accountNumber: group.accountNumber || '',
-          fields: group.fields.map(field => ({
-            ...field,
-            hasChanged: field.hasChanged || false,
-            createdAt: field.createdAt || timestamp,
-            updatedAt: field.updatedAt || timestamp,
-            id: field._id || field.id || '',
-            exceptionOptions: field.exceptionOptions?.map(opt => ({
-              ...opt,
-              parameterOptionId: opt.parameterOptionId || '',
-            })) || []
+    // Construir "formattedFeeGroups" a partir do "feesData" original
+    const formattedFeeGroups =
+      feesData?.fees
+        ?.filter(feeGroup =>
+          ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(
+            feeGroup.feeType
+          )
+        )
+        .map(feeGroup => ({
+          feeType: feeGroup.feeType,
+          id: "",
+          // Ajuste cada 'feeGroups' contido dentro
+          feeGroups: feeGroup.feeGroups.map(group => ({
+            ...group,
+            id: group.id || "",
+            cif: group.cif || "",
+            accountNumber: group.accountNumber || "",
+            fields: group.fields.map(field => ({
+              ...field,
+              hasChanged: field.hasChanged || false,
+              createdAt: field.createdAt || timestamp,
+              updatedAt: field.updatedAt || timestamp,
+              id: field._id || field.id || "",
+              exceptionOptions:
+                field.exceptionOptions?.map(opt => ({
+                  ...opt,
+                  parameterOptionId: opt.parameterOptionId || ""
+                })) || []
+            }))
           }))
-        }))
-      })) || [];
+        })) || [];
 
+    // Agora vamos agrupar TUDO por feeType.
+    // Primeiro unimos formattedFees e formattedFeeGroups num único array:
+    const allFees = [...formattedFees, ...formattedFeeGroups];
+
+    // Defina os 3 feeTypes que você quer exibir/retornar
+    const feeTypesToGroup = [
+      "Customer Fees",
+      "Bank Account Fees",
+      "Investment Account Fees"
+    ];
+
+    // Fazemos o "group by" para cada feeType de interesse
+    const groupedFees = feeTypesToGroup.map(type => {
+      // Filtramos tudo que tiver esse feeType
+      const itemsOfThisType = allFees.filter(item => item.feeType === type);
+
+      // Unir todos os feeGroups desses itens
+      const combinedFeeGroups = itemsOfThisType.flatMap(item => item.feeGroups || []);
+
+      return {
+        feeType: type,
+        feeGroups: combinedFeeGroups
+      };
+    });
+
+    // Montamos o result final
     const result = {
       customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
       customerShortName: feesData?.customerShortName || '',
@@ -132,7 +179,8 @@ export default class FeeCaseGetByCifUseCase {
       defaultPackageType: feesData?.defaultPackageType || '',
       packageName,
       packageType,
-      fees: [...formattedFees, ...formattedFeeGroups],
+      // Aqui, em vez de espalhar tudo junto, retornamos já agrupado
+      fees: groupedFees,
       feesActives: feesData?.feesActives || [],
       documentUrl: feesData?.documentUrl || '',
       currentFees
