@@ -1,130 +1,386 @@
-import Result from '#features/shared/result.js';
 
-export default class FeeCaseGetByCifUseCase {
-  async execute({ cif }, feeManagementModel, customerModel) {
-    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif);
-    if (errCustomer) {
-      return Result.fail({ message: "It's not possible to get address cif" });
-    }
+_id
+6468f46eff51aa9d77d849ee
+feeType
+"Customer Fees"
 
-    const customerData = responseCustomer?.data?.customer || {};
-    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData);
-    if (errFee) {
-      return Result.fail({ message: "It's not possible to get fee values" });
-    }
+feeGroups
+Array (3)
 
-    function formatCamelCaseToTitle(text) {
-      return text.replace(/([a-z])([A-Z])/g, '$1 $2');
-    }
+0
+Object
+name
+"Standard Fees"
+code
+1
 
-    const feesData = responseFee?.data || {};
-    const timestamp = new Date().toISOString();
+fields
+Array (2)
 
-    const currentFees = [
-      ...(customerData?.customerCurrentFees?.map(x => ({
-        feeDescription: x.feeDescription || '',
-        feeCode: x.feeCode || ''
-      })) || []),
-      ...(feesData?.currentFees || [])
-    ];
+0
+Object
+code
+1
+isException
+false
+name
+"Account Maintenance"
+tooltip
+"Charged: Semiannual"
+defaultValue
+"600"
 
-    // Mapeamento de feeType numérico para string
-    const feeTypeMap = {
-      1: "Customer Fees",
-      2: "Bank Account Fees",
-      3: "Investment Account Fees"
-    };
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849d7
+createdAt
+2023-05-20T16:25:31.435+00:00
+updatedAt
+2023-05-20T16:25:31.435+00:00
+isCurrentClient
+false
+isStandard
+true
 
-    const rawCustomerAccounts = customerData?.customerAccount || []; 
+1
+Object
+code
+2
+isException
+false
+name
+"Hold Mail"
+defaultValue
+"600"
+tooltip
+"Charged: Annually"
 
-    // Log para depuração
-    console.log("Raw Customer Accounts:", rawCustomerAccounts);
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849d8
+createdAt
+2023-05-20T16:25:31.435+00:00
+updatedAt
+2023-05-20T16:25:31.435+00:00
+isCurrentClient
+false
+isStandard
+true
+visible
+true
+_id
+6468f46eff51aa9d77d849d9
+createdAt
+2023-05-20T16:25:31.435+00:00
+updatedAt
+2023-05-20T16:25:31.435+00:00
 
-    // Filtrando apenas os feeTypes permitidos
-    const filteredCustomerAccounts = rawCustomerAccounts.filter(fee => {
-      const feeTypeString = feeTypeMap[fee.feeType] || ""; // Converte número para string correspondente
-      console.log(`Checking feeType after mapping: ${feeTypeString}`); // Debug
-      return ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeTypeString);
-    });
+1
+Object
 
-    console.log("Filtered Customer Accounts:", filteredCustomerAccounts);
+2
+Object
+createdAt
+2023-05-20T16:25:31.444+00:00
+updatedAt
+2023-05-20T16:25:31.444+00:00
+__v
+0
+_id
+6468f46eff51aa9d77d84a1b
+feeType
+"Bank Account Fees"
 
-    // Formatando os Fees para envio correto ao Frontend
-    const formattedFees = filteredCustomerAccounts.map(fee => ({
-      feeGroups: [{
-        name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
-        visible: true,
-        kycMailingStatus: fee.kycMailingStatus || null,
-        code: fee.feeCode,
-        accountNumber: fee.ddaNumber || '',
-        cif: fee.cifno,
-        id: '',
-        fields: [{
-          hasChanged: false,
-          code: fee.feeCode, // Agora referenciando corretamente o código da taxa
-          name: formatCamelCaseToTitle(fee.feeDescription),
-          defaultValue: fee.feeAmount?.toString() || '',
-          isStandard: fee.isFeesStandard === "Yes",
-          isException: fee.isFeesStandard === "No",
-          isCurrentClient: false,
-          labelValue: fee.feeAmount ? `$${fee.feeAmount.toFixed(2)}` : '',
-          tooltip: fee.source ? `Source: ${fee.source}` : '',
-          exceptionOptions: [],
-          createdAt: timestamp,
-          updatedAt: timestamp,
-          id: fee.ddaNumber.toString()
-        }]
-      }],
-      feeType: feeTypeMap[fee.feeType], // Agora feeType é a string correta
-      id: '',
-    }));
+feeGroups
+Array (3)
 
-    console.log("Final formattedFees:", formattedFees);
+0
+Object
+name
+"Standard Fees"
+code
+2
 
-    const formattedFeeGroups = feesData?.fees
-      ?.filter(feeGroup => ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeGroup.feeType))
-      .map(feeGroup => ({
-        ...feeGroup,
-        id: '',
-        feeGroups: feeGroup.feeGroups.map(group => ({
-          ...group,
-          id: group.id || '',
-          cif: group.cif || '',
-          accountNumber: group.accountNumber || '',
-          fields: group.fields.map(field => ({
-            ...field,
-            hasChanged: field.hasChanged || false,
-            createdAt: field.createdAt || timestamp,
-            updatedAt: field.updatedAt || timestamp,
-            id: field._id || '',
-            exceptionOptions: field.exceptionOptions?.map(opt => ({
-              ...opt,
-              parameterOptionId: opt.parameterOptionId || '',
-            })) || []
-          }))
-        }))
-      })) || [];
+fields
+Array (2)
 
-    const result = {
-      customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
-      customerShortName: feesData?.customerShortName || '',
-      customerAddress: customerData?.customerAddress?.address || '',
-      customerAccountOfficer: customerData?.customerAddress?.officer || '',
-      cif: customerData?.customerAddress?.cif || cif,
-      officerId: feesData?.officerId || '',
-      branchCity: feesData?.branchCity || '',
-      branchState: feesData?.branchState || '',
-      branchType: feesData?.branchType || '',
-      feePackage: feesData?.feePackage || '',
-      defaultFeePackageId: feesData?.defaultFeePackageId || '',
-      defaultPackageType: feesData?.defaultPackageType || '',
-      fees: [...formattedFees, ...formattedFeeGroups],
-      feesActives: feesData?.feesActives || [],
-      documentUrl: feesData?.documentUrl || '',
-      currentFees
-    };
+0
+Object
+code
+3
+isException
+false
+name
+"Incoming Wire"
+defaultValue
+"0"
+tooltip
+"Charged: Per Transaction"
 
-    global.logger.info('End process');
-    return Result.ok(result);
-  }
-}
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849fc
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+isCurrentClient
+false
+isStandard
+true
+
+1
+Object
+code
+4
+isException
+false
+name
+"Outgoing Wire"
+defaultValue
+"75"
+tooltip
+"Charged: Per Transaction"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849fd
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+isCurrentClient
+false
+isStandard
+true
+visible
+true
+_id
+6468f46eff51aa9d77d849fe
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+
+1
+Object
+
+2
+Object
+createdAt
+2023-05-20T16:25:31.444+00:00
+updatedAt
+2023-05-20T16:25:31.444+00:00
+__v
+0
+_id
+6468f46eff51aa9d77d84a56
+feeType
+"Investment Account Fees"
+
+feeGroups
+Array (3)
+
+0
+Object
+name
+"Standard Fees"
+code
+3
+
+fields
+Array (3)
+
+0
+Object
+code
+6
+isException
+false
+name
+"Safekeeping-Custody"
+defaultValue
+"A021"
+tooltip
+"Charged: Quarterly"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2d
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+isCurrentClient
+false
+isStandard
+true
+
+1
+Object
+code
+5
+isException
+false
+name
+"SSL Account Maintenance"
+defaultValue
+"375"
+tooltip
+"Charged: Quarterly"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2e
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+isCurrentClient
+false
+isStandard
+true
+
+2
+Object
+code
+7
+isException
+false
+name
+"Equity and Options Commission"
+tooltip
+"Charged: Per Trade"
+defaultValue
+"E3"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2f
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+false
+isStandard
+true
+visible
+true
+_id
+6468f46eff51aa9d77d84a30
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+
+1
+Object
+name
+"Client Current Fees"
+code
+3
+
+fields
+Array (3)
+
+0
+Object
+code
+6
+isException
+false
+name
+"Safekeeping-Custody"
+defaultValue
+"A021"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a34
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+
+1
+Object
+code
+5
+isException
+false
+name
+"SSL Account Maintenance"
+defaultValue
+"375"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a35
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+
+2
+Object
+code
+7
+isException
+false
+name
+"Equity and Options Commission"
+defaultValue
+"E3"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a36
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+visible
+true
+_id
+6468f46eff51aa9d77d84a37
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+
+2
+Object
+createdAt
+2023-05-20T16:25:31.445+00:00
+updatedAt
+2024-11-16T12:30:04.295+00:00
+__v
+1
+
+
+
+
+
