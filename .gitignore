@@ -1,230 +1,504 @@
-import Result from '#features/shared/result.js';
-
-export default class FeeCaseGetByCifUseCase {
-  async execute({ cif }, feeManagementModel, customerModel) {
-    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif);
-    if (errCustomer) {
-      return Result.fail({ message: "It's not possible to get address cif" });
-    }
-
-    const customerData = responseCustomer?.data?.customer || {};
-    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData);
-    if (errFee) {
-      return Result.fail({ message: "It's not possible to get fee values" });
-    }
-
-    function normalizeFeeName(text) {
-      return text
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .replace(/[_-]/g, ' ')
-        .trim();
-    }
-
-    const feesData = responseFee?.data || {};
-    const timestamp = new Date().toISOString();
-
-    const packageName = feesData.feePackage || "N/A";
-    const packageType = feesData.defaultPackageType || "N/A";
-    const branchType = feesData.branchType || "N/A";
-
-    const currentFees = [
-      ...(customerData?.customerCurrentFees?.map(x => ({
-        feeDescription: x.feeDescription || '',
-        feeCode: x.feeCode || ''
-      })) || []),
-      ...(feesData?.currentFees || [])
-    ];
-
-    // Mapa de FeeType
-    const feeTypeMap = {
-      1: "Customer Fees",
-      2: "Bank Account Fees",
-      3: "Investment Account Fees"
-    };
-
-    // Mapa de FeeCode
-    const feeCodeMap = {
-      "Account Maintenance": 1,
-      "Hold Mail": 2,
-      "Incoming Wire": 3,
-      "Outgoing Wire": 4,
-      "Safekeeping Custody": 6,
-      "SSL Account Maintenance": 5,
-      "Equity and Options Commission": 7,
-      "FX Outgoing Wire Fee": 8,
-      "US Equities Commission": 10,
-      "Options Commission": 11
-    };
-
-    // Filtrar accounts apenas daqueles FeeTypes que interessam
-    const rawCustomerAccounts = customerData?.customerAccount || [];
-    const filteredCustomerAccounts = rawCustomerAccounts.filter(fee => {
-      const feeTypeString = feeTypeMap[fee.feeType] || "";
-      return [
-        "Customer Fees",
-        "Bank Account Fees",
-        "Investment Account Fees"
-      ].includes(feeTypeString);
-    });
-
-    // Construir "formattedFees" a partir dos dados do customer
-    const formattedFees = filteredCustomerAccounts.map(fee => {
-      const normalizedFeeName = normalizeFeeName(fee.feeDescription);
-      return {
-        // Definimos o feeType padronizado
-        feeType: feeTypeMap[fee.feeType] || "",
-        // Aqui vem um array de 'feeGroups'
-        feeGroups: [
-          {
-            name: fee.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
-            visible: true,
-            kycMailingStatus: fee.kycMailingStatus || null,
-            code: fee.feeCode || "",
-            accountNumber: fee.ddaNumber || "",
-            cif: fee.cifno || "",
-            id: "",
-            fields: [
-              {
-                hasChanged: false,
-                code: feeCodeMap[normalizedFeeName] || fee.feeCode || "",
-                name: normalizedFeeName,
-                defaultValue: fee.feeAmount?.toString() || "",
-                isStandard: fee.isFeesStandard === "Yes",
-                isException: fee.isFeesStandard === "No",
-                isCurrentClient: false,
-                labelValue: fee.feeAmount ? `$${fee.feeAmount.toFixed(2)}` : "",
-                tooltip: fee.source ? `Source: ${fee.source}` : "",
-                exceptionOptions: [],
-                createdAt: timestamp,
-                updatedAt: timestamp,
-                id: fee.ddaNumber?.toString() || ""
-              }
-            ]
-          }
+{
+    "code": 200,
+    "data": {
+        "customerName": "FRANCO JACK",
+        "customerShortName": "AAAAAA AAAA",
+        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
+        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
+        "cif": "F016583",
+        "officerId": "369",
+        "branchCity": "New York",
+        "branchState": "NY",
+        "branchType": "Domestic",
+        "feePackage": "Domestic Individual",
+        "defaultFeePackageId": 2,
+        "defaultPackageType": "Individual",
+        "packageName": "Domestic Individual",
+        "packageType": "Individual",
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "fields": [
+                            {
+                                "code": "JH001",
+                                "name": "Account Maintenance Fee",
+                                "amount": 25,
+                                "labelValue": "$25.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "JH002",
+                                "name": "Hold Mail Fee",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "name": "Account Maintenance",
+                                "defaultValue": "25",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "$25.00",
+                                "tooltip": "Source: JHA",
+                                "exceptionOptions": [],
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": "7115822"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Exception Request",
+                        "fields": []
+                    }
+                ]
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "fields": [
+                            {
+                                "code": "JH006",
+                                "name": "FX Outgoing Wire Fee",
+                                "amount": 25,
+                                "labelValue": "$25.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "JH007",
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "amount": 10,
+                                "labelValue": "$10.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "JH007",
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "amount": 10,
+                                "labelValue": "$10.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "JH007",
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "amount": 10,
+                                "labelValue": "$10.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "JH006",
+                                "name": "FX Outgoing Wire Fee",
+                                "amount": 25,
+                                "labelValue": "$25.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "JH007",
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "amount": 10,
+                                "labelValue": "$10.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "name": "Hold Mail",
+                                "defaultValue": "0",
+                                "isStandard": true,
+                                "isException": false,
+                                "isCurrentClient": false,
+                                "labelValue": "",
+                                "tooltip": "Source: JHA",
+                                "exceptionOptions": [],
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": "7115822"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Exception Request",
+                        "fields": [
+                            {
+                                "code": "JH006",
+                                "name": "FX Outgoing Wire Fee",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": true,
+                                "exceptionOptions": [
+                                    {
+                                        "value": 0,
+                                        "text": "$0.00",
+                                        "parameterOptionId": ""
+                                    }
+                                ],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "JH006",
+                                "name": "FX Outgoing Wire Fee",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": true,
+                                "exceptionOptions": [
+                                    {
+                                        "value": 0,
+                                        "text": "$0.00",
+                                        "parameterOptionId": ""
+                                    }
+                                ],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "feeType": "Investment Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "fields": [
+                            {
+                                "code": "BPS002",
+                                "name": "Safekeeping of Securities",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS003",
+                                "name": "SSL Account Maintanance Fee",
+                                "amount": 375,
+                                "labelValue": "$375.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS004",
+                                "name": "US Equities Commission",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS005",
+                                "name": "Options Commission",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS002",
+                                "name": "Safekeeping of Securities",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS003",
+                                "name": "SSL Account Maintanance Fee",
+                                "amount": 375,
+                                "labelValue": "$375.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS004",
+                                "name": "US Equities Commission",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS005",
+                                "name": "Options Commission",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS002",
+                                "name": "Safekeeping of Securities",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS003",
+                                "name": "SSL Account Maintanance Fee",
+                                "amount": 375,
+                                "labelValue": "$375.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS004",
+                                "name": "US Equities Commission",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS005",
+                                "name": "Options Commission",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS002",
+                                "name": "Safekeeping of Securities",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS003",
+                                "name": "SSL Account Maintanance Fee",
+                                "amount": 375,
+                                "labelValue": "$375.00",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS004",
+                                "name": "US Equities Commission",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            },
+                            {
+                                "code": "BPS005",
+                                "name": "Options Commission",
+                                "amount": 0,
+                                "labelValue": "",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "hasChanged": false,
+                                "createdAt": "2025-02-06T18:10:22.521Z",
+                                "updatedAt": "2025-02-06T18:10:22.521Z",
+                                "id": ""
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "fields": []
+                    },
+                    {
+                        "name": "Exception Request",
+                        "fields": []
+                    }
+                ]
+            }
         ],
-        id: ""
-      };
-    });
-
-    // Construir "formattedFeeGroups" a partir do "feesData" original
-    const formattedFeeGroups =
-      feesData?.fees
-        ?.filter(feeGroup =>
-          ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(
-            feeGroup.feeType
-          )
-        )
-        .map(feeGroup => ({
-          feeType: feeGroup.feeType,
-          id: "",
-          feeGroups: feeGroup.feeGroups.map(group => ({
-            ...group,
-            id: group.id || "",
-            cif: group.cif || "",
-            accountNumber: group.accountNumber || "",
-            fields: group.fields.map(field => ({
-              ...field,
-              hasChanged: field.hasChanged || false,
-              createdAt: field.createdAt || timestamp,
-              updatedAt: field.updatedAt || timestamp,
-              id: field._id || field.id || "",
-              exceptionOptions:
-                field.exceptionOptions?.map(opt => ({
-                  ...opt,
-                  parameterOptionId: opt.parameterOptionId || ""
-                })) || []
-            }))
-          }))
-        })) || [];
-
-    // Agora unimos os dois em allFees
-    const allFees = [...formattedFees, ...formattedFeeGroups];
-
-    // FeeTypes que você deseja no resultado
-    const feeTypesToGroup = [
-      "Customer Fees",
-      "Bank Account Fees",
-      "Investment Account Fees"
-    ];
-
-    // Nomes possíveis de feeGroups que você quer agrupar
-    // Se quiser sempre nessa ordem, deixe esse array fixo
-    const groupNames = ["Standard Fees", "Client Current Fees", "Exception Request"];
-
-    // AGRUPAR por feeType e APACHATAR por name
-    const groupedFees = feeTypesToGroup.map(type => {
-      // 1) filtra todos os items com esse feeType
-      const itemsOfThisType = allFees.filter(item => item.feeType === type);
-
-      // 2) junta todos os feeGroups num só array
-      const combinedFeeGroups = itemsOfThisType.flatMap(item => item.feeGroups || []);
-
-      // 3) vamos fazer um "mapByName" => name => array de fields
-      const mapByName = {};
-
-      for (const group of combinedFeeGroups) {
-        // O "group.name" pode ser "Standard Fees", "Client Current Fees", etc.
-        // Se não for um desses, cai como "Exception Request".
-        let groupName = group.name;
-        if (!groupNames.includes(groupName)) {
-          groupName = "Exception Request";
-        }
-
-        // Cria um array se não existir
-        if (!mapByName[groupName]) {
-          mapByName[groupName] = [];
-        }
-
-        // Junta os fields deste feeGroup num array único
-        // Obs: se seu objeto tiver 'fields' ou se for 'fields: [ ... ]'
-        // tome cuidado com aninhamentos extras
-        if (Array.isArray(group.fields)) {
-          mapByName[groupName].push(...group.fields);
-        }
-      }
-
-      // 4) monta o array final feeGroups
-      //    se você quiser *sempre* retornar os 3 nomes (mesmo se estiver vazio),
-      //    percorra groupNames fixo e crie um objeto.
-      //    se quer omitir vazios, você faz um filter.
-      const feeGroups = groupNames
-        .map(name => ({
-          name,
-          fields: mapByName[name] || []
-        }))
-        // Se deseja remover completamente os grupos vazios, ative o filter:
-        // .filter(gr => gr.fields.length > 0)
-        ;
-
-      return {
-        feeType: type,
-        feeGroups
-      };
-    });
-
-    // Monta o result final
-    const result = {
-      customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
-      customerShortName: feesData?.customerShortName || '',
-      customerAddress: customerData?.customerAddress?.address || '',
-      customerAccountOfficer: customerData?.customerAddress?.officer || '',
-      cif: customerData?.customerAddress?.cif || cif,
-      officerId: feesData?.officerId || '',
-      branchCity: feesData?.branchCity || '',
-      branchState: feesData?.branchState || '',
-      branchType,
-      feePackage: feesData?.feePackage || '',
-      defaultFeePackageId: feesData?.defaultFeePackageId || '',
-      defaultPackageType: feesData?.defaultPackageType || '',
-      packageName,
-      packageType,
-      fees: groupedFees,             // <<--- Agora sim “achatado”
-      feesActives: feesData?.feesActives || [],
-      documentUrl: feesData?.documentUrl || '',
-      currentFees
-    };
-
-    global.logger.info('End process');
-    return Result.ok(result);
-  }
+        "feesActives": [],
+        "documentUrl": "",
+        "currentFees": [
+            {
+                "feeDescription": "Hold Mail Fee (per annum) -  $0.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7115342"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "FX Outgoing Wire Fee - $25.00",
+                "feeCode": "Bank Account Fees"
+            },
+            {
+                "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $10.00",
+                "feeCode": "Bank Account Fees"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee - $375.00",
+                "feeCode": "Investment Account Fees"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee - $25.00",
+                "feeCode": "Customer Fees"
+            },
+            {
+                "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $10.00",
+                "feeCode": "Bank Account Fees"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee - $375.00",
+                "feeCode": "Investment Account Fees"
+            },
+            {
+                "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $10.00",
+                "feeCode": "Bank Account Fees"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee - $375.00",
+                "feeCode": "Investment Account Fees"
+            },
+            {
+                "feeDescription": "FX Outgoing Wire Fee - $25.00",
+                "feeCode": "Bank Account Fees"
+            },
+            {
+                "feeDescription": "FX Outgoing Wire (SafraLink) Fee - $10.00",
+                "feeCode": "Bank Account Fees"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee - $375.00",
+                "feeCode": "Investment Account Fees"
+            }
+        ]
+    }
 }
