@@ -2,7 +2,7 @@
     "code": 200,
     "data": {
         "customerName": "FRANCO JACK",
-        "customerShortName": "JJJJJJ JJJJ",
+        "customerShortName": "PPPPPP PPPP",
         "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
         "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
         "cif": "F016583",
@@ -33,8 +33,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T20:28:17.932Z",
-                                "updatedAt": "2025-02-06T20:28:17.932Z",
+                                "createdAt": "2025-02-06T20:39:17.612Z",
+                                "updatedAt": "2025-02-06T20:39:17.612Z",
                                 "id": "7115822",
                                 "isStandard": true,
                                 "isCurrentClient": false,
@@ -99,8 +99,8 @@
                                 "isException": false,
                                 "exceptionOptions": [],
                                 "hasChanged": false,
-                                "createdAt": "2025-02-06T20:28:17.932Z",
-                                "updatedAt": "2025-02-06T20:28:17.932Z",
+                                "createdAt": "2025-02-06T20:39:17.612Z",
+                                "updatedAt": "2025-02-06T20:39:17.612Z",
                                 "id": "7115822",
                                 "isStandard": true,
                                 "isCurrentClient": false,
@@ -584,7 +584,3 @@
         ]
     }
 }
-
-
-
-
