@@ -14,11 +14,27 @@ export default class FeeCaseGetByCifUseCase {
     }
 
     /**
+     * Mapeamento de nomes (coluna SQL -> nome REAL).
+     */
+    const nameMapping = {
+      "Account Maintenance Fee": "Account Maintenance (JHA - DDA)",
+      "Hold Mail Fee": "Hold Mail Services",
+      "FX Outgoing Wire Fee": "Outgoing Wire Transfers (USD/Foreign Exchange)- Manual",
+      "FX Outgoing Wire (SafraLink) Fee": "Outgoing Wire Transfers (USD/Foreign Exchange)-Online/token",
+      "Safekeeping of Securities": "Safekeeping of Securities",
+      "SSL Account Maintanance Fee": "SSL Account Maintenance Fee",
+      "US Equities Commission": "US Equities",
+      "Options Commission": "Equity Options",
+      "Incoming Wire": "Incoming Wire"
+    };
+
+    /**
      * Garante que cada field terá sempre as mesmas propriedades
      * (com valores padrão se estiverem ausentes).
      */
     function unifyFieldShape(field) {
-      return {
+      // Primeiro aplicamos os defaults
+      const shapedField = {
         code: field.code ?? "",
         name: field.name ?? "",
         defaultValue: field.defaultValue ?? "",
@@ -33,6 +49,13 @@ export default class FeeCaseGetByCifUseCase {
         isCurrentClient: field.isCurrentClient ?? false,
         tooltip: field.tooltip ?? ""
       };
+
+      // Depois, se o nome original estiver no mapeamento, substituímos
+      if (nameMapping[shapedField.name]) {
+        shapedField.name = nameMapping[shapedField.name];
+      }
+
+      return shapedField;
     }
 
     /**
@@ -142,7 +165,7 @@ export default class FeeCaseGetByCifUseCase {
 
       const combinedGroups = itemsOfThisType.flatMap(item => item.feeGroups || []);
 
-     
+      // Agrupamento (merge) para evitar repetição do mesmo name/account/cif/kyc
       const mapOfGroups = {};
 
       for (const group of combinedGroups) {
@@ -167,11 +190,10 @@ export default class FeeCaseGetByCifUseCase {
         mapOfGroups[key].fields.push(...group.fields);
       }
 
-      // 4) Agora convertendo esse mapa em array
+      // Convertendo esse mapa em array
       const mergedGroupsArray = Object.values(mapOfGroups);
 
-      // 5) Ordenamos pela prioridade:
-      //    "Standard Fees" (1), "Client Current Fees" (2), "Exception Request" (3)
+      // Ordenamos pela prioridade: "Standard Fees" (1), "Client Current Fees" (2), "Exception Request" (3)
       const nameOrder = {
         "Standard Fees": 1,
         "Client Current Fees": 2,
@@ -212,6 +234,6 @@ export default class FeeCaseGetByCifUseCase {
     };
 
     global.logger.info('End process');
-   return Result.ok(result)
+    return Result.ok(result);
   }
 }
