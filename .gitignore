@@ -1,217 +1,94 @@
-{
-  "Bank Account Fees": {
-    feeType: "Bank Account Fees",
-    feeGroups: [
-      {
-        name: "Standard Fees",
-        code: 1,
-        fields: [
-          {
-            code: 4,
-            name: "FX Outgoing Wire Fee",
-            defaultValue: "25",
-            tooltip: "",
-            isException: false,
-          },
-          {
-            code: 8,
-            name: "FX Outgoing Wire (SafraLink) Fee",
-            defaultValue: "10",
-            tooltip: "",
-            isException: false,
-          },
-          {
-            code: 4,
-            name: "FX Outgoing Wire Fee",
-            defaultValue: "",
-            tooltip: "",
-            isException: false,
-          },
-          {
-            code: 8,
-            name: "FX Outgoing Wire (SafraLink) Fee",
-            defaultValue: "10",
-            tooltip: "",
-            isException: false,
-          },
-          {
-            code: 4,
-            name: "FX Outgoing Wire Fee",
-            defaultValue: "",
-            tooltip: "",
-            isException: false,
-          },
-          {
-            code: 8,
-            name: "FX Outgoing Wire (SafraLink) Fee",
-            defaultValue: "10",
-            tooltip: "",
-            isException: false,
-          },
-          {
-            code: 4,
-            name: "FX Outgoing Wire Fee",
-            defaultValue: "25",
-            tooltip: "",
-            isException: false,
-          },
-          {
-            code: 8,
-            name: "FX Outgoing Wire (SafraLink) Fee",
-            defaultValue: "10",
-            tooltip: "",
-            isException: false,
-          },
-        ],
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    const result = { fees: [] };
+    
+    // Buscar e estruturar os dados do SQL
+    const fees = await this.#getFeesStructuredFromSQL(customerAccount);
+    
+    const customer = new CustomerFees(fees, customerAccount);
+    if (customer.fee) result.fees.push(customer.fee);
+    
+    const bank = new BankAccountFee(fees, customerAccount);
+    if (bank.fee) result.fees.push(bank.fee);
+    
+    const equityField = await Field.find({ code: 7 });
+    const investiment = new InvestimentAccountFee(
+      fees,
+      customerAccount,
+      equityField[0]
+    );
+    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
+    
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: {
+        $nin: ['DONE', 'REJECTED']
       },
-    ],
-  },
-  "Investment Account Fees": {
-    feeType: "Investment Account Fees",
-    feeGroups: [
-      {
-        name: "Standard Fees",
-        code: 1,
-        fields: [
-          {
-            code: 6,
-            name: "Safekeeping of Securities",
-            defaultValue: "",
-            tooltip: "Charged: 0.35% /YR min $375.00/QTR",
-            isException: false,
-          },
-          {
-            code: 5,
-            name: "SSL Account Maintanance Fee",
-            defaultValue: "375",
-            tooltip: "Charged: Quarterly on Day 1",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "US Equities Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "Options Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-          {
-            code: 6,
-            name: "Safekeeping of Securities",
-            defaultValue: "",
-            tooltip: "Charged: 0.35% /YR min $375.00/QTR",
-            isException: false,
-          },
-          {
-            code: 5,
-            name: "SSL Account Maintanance Fee",
-            defaultValue: "375",
-            tooltip: "Charged: Quarterly on Day 1",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "US Equities Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "Options Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-          {
-            code: 6,
-            name: "Safekeeping of Securities",
-            defaultValue: "",
-            tooltip: "Charged: 0.35% /YR min $375.00/QTR",
-            isException: false,
-          },
-          {
-            code: 5,
-            name: "SSL Account Maintanance Fee",
-            defaultValue: "375",
-            tooltip: "Charged: Quarterly on Day 1",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "US Equities Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "Options Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-          {
-            code: 6,
-            name: "Safekeeping of Securities",
-            defaultValue: "",
-            tooltip: "Charged: 0.35% /YR min $375.00/QTR",
-            isException: false,
-          },
-          {
-            code: 5,
-            name: "SSL Account Maintanance Fee",
-            defaultValue: "375",
-            tooltip: "Charged: Quarterly on Day 1",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "US Equities Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "Options Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-        ],
-      },
-    ],
-  },
-  "Customer Fees": {
-    feeType: "Customer Fees",
-    feeGroups: [
-      {
-        name: "Standard Fees",
-        code: 1,
-        fields: [
-          {
-            code: 1,
-            name: "Account Maintenance Fee",
-            defaultValue: "25",
-            tooltip: "Charged: Monthly - Charged Quarterly",
-            isException: false,
-          },
-          {
-            code: 2,
-            name: "Hold Mail Fee",
-            defaultValue: "",
-            tooltip: "Charged: Annual - Charged Annual",
-            isException: false,
-          },
-        ],
-      },
-    ],
-  },
+      caseNumber: {
+        $exists: true
+      }
+    });
+    
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }));
+
+    result.documentUrl =
+      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
+
+    return Result.ok(result);
+  }
+
+  async #getFeesStructuredFromSQL(customerAccount) {
+    // Obter os dados do SQL
+    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
+    
+    // Estruturar os dados agrupados
+    const groupedFees = {};
+
+    for (const fee of feesData) {
+        const { FeeType, FeeDescription, FeeCode, FeeAmount, Frequency } = fee;
+
+        // Converter FeeCode via de/para
+        const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+
+        // Criar feeType se ainda não existir
+        if (!groupedFees[FeeType]) {
+            groupedFees[FeeType] = {
+                feeType: FeeType,
+                feeGroups: [{
+                    name: "Standard Fees",
+                    code: 1, // Código fixo para agrupar como "Standard Fees"
+                    fields: []
+                }]
+            };
+        }
+
+        // Verificar se já existe um campo com o mesmo código
+        const existingField = groupedFees[FeeType].feeGroups[0].fields.find(field => field.code === mappedCode);
+
+        if (!existingField) {
+            groupedFees[FeeType].feeGroups[0].fields.push({
+                code: mappedCode,
+                name: FeeDescription,
+                defaultValue: FeeAmount ? FeeAmount.toString() : "",
+                tooltip: Frequency ? `Charged: ${Frequency}` : "",
+                isException: false
+            });
+        } else {
+            // Se já existir, garantir que defaultValue seja atualizado corretamente
+            if (!existingField.defaultValue && FeeAmount) {
+                existingField.defaultValue = FeeAmount.toString();
+            }
+        }
+    }
+    
+    return Object.values(groupedFees);
+  }
+
+  async #getFeesFromSQL(cifno) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+  }
 }
