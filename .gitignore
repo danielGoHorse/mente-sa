@@ -1,24 +1,217 @@
-Fee Name	Code
-FX Outgoing Wire Fee	JH006
-FX Outgoing Wire (SafraLink) Fee	JH007
-Safekeeping of Securities	BPS002
-SSL Account Maintanance Fee	BPS003
-US Equities Commission	BPS004
-Options Commission	BPS005
-Account Maintenance Fee	JH001
-Hold Mail Fee	JH002
-Account Maintenance (JHA - DDA)	
-Hold Mail Services	
-Outgoing Wire Transfers (USD/Foreign Exchange)- Manual	
-Outgoing Wire Transfers (USD/Foreign Exchange)-Online/token	
-Safekeeping of Securities	
-SSL Account Maintenance Fee	
-US Equities	
-Equity Options	
-Account Maintenance	1
-Hold Mail	2
-Incoming Wire	3
-Outgoing Wire	4
-Safekeeping-Custody	6
-SSL Account Maintenance	5
-Equity and Options Comission	7
+import Result from '#features/shared/result.js';
+
+export default class FeeCaseGetByCifUseCase {
+  async execute({ cif }, feeManagementModel, customerModel) {
+    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif);
+    if (errCustomer) {
+      return Result.fail({ message: "It's not possible to get address cif" });
+    }
+
+    const customerData = responseCustomer?.data?.customer || {};
+    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData);
+    if (errFee) {
+      return Result.fail({ message: "It's not possible to get fee values" });
+    }
+
+    /**
+     * Garante que cada field terá sempre as mesmas propriedades
+     * (com valores padrão se estiverem ausentes).
+     */
+    function unifyFieldShape(field) {
+      return {
+        code: field.code ?? "",
+        name: field.name ?? "",
+        defaultValue: field.defaultValue ?? "",
+        labelValue: field.labelValue ?? "",
+        isException: field.isException ?? false,
+        exceptionOptions: field.exceptionOptions ?? [],
+        hasChanged: field.hasChanged ?? false,
+        createdAt: field.createdAt ?? "",
+        updatedAt: field.updatedAt ?? "",
+        id: field.id ?? "",
+        isStandard: field.isStandard ?? false,
+        isCurrentClient: field.isCurrentClient ?? false,
+        tooltip: field.tooltip ?? ""
+      };
+    }
+
+    /**
+     * Garante que cada feeGroup tenha `name`, `accountNumber`, `cif`,
+     * `kycMailingStatus` e `fields` (sempre array).
+     */
+    function unifyFeeGroupShape(group) {
+      return {
+        name: group.name ?? "",
+        accountNumber: group.accountNumber ?? "",
+        cif: group.cif ?? "",
+        kycMailingStatus: group.kycMailingStatus ?? "",
+        fields: Array.isArray(group.fields)
+          ? group.fields.map(unifyFieldShape)
+          : []
+      };
+    }
+
+    /**
+     * Apenas se precisar normalizar nomes (ex.: "AccountMaintenanceFee" -> "Account Maintenance Fee").
+     */
+    function normalizeFeeName(text = "") {
+      return text
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/[_-]/g, ' ')
+        .trim();
+    }
+
+    const feesData = responseFee?.data || {};
+    const timestamp = new Date().toISOString();
+
+    const packageName = feesData.feePackage || "N/A";
+    const packageType = feesData.defaultPackageType || "N/A";
+    const branchType = feesData.branchType || "N/A";
+
+    const currentFees = [
+      ...(customerData?.customerCurrentFees?.map(x => ({
+        feeDescription: x.feeDescription || '',
+        feeCode: x.feeCode || ''
+      })) || []),
+      ...(feesData?.currentFees || [])
+    ];
+
+    // Mapa do FeeType
+    const feeTypeMap = {
+      1: "Customer Fees",
+      2: "Bank Account Fees",
+      3: "Investment Account Fees"
+    };
+
+    // Filtra apenas os FeeTypes relevantes do lado do "customer"
+    const rawCustomerAccounts = customerData?.customerAccount || [];
+    const filteredCustomerAccounts = rawCustomerAccounts.filter(acc => {
+      const feeTypeString = feeTypeMap[acc.feeType] || "";
+      return ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeTypeString);
+    });
+
+    // Construir array a partir do "customerData"
+    const formattedFeesFromCustomer = filteredCustomerAccounts.map(acc => {
+      const normalizedName = normalizeFeeName(acc.feeDescription);
+
+      const field = {
+        code: acc.feeCode || "",
+        name: normalizedName,
+        defaultValue: acc.feeAmount?.toString() || "",
+        labelValue: acc.feeAmount > 0 ? `$${acc.feeAmount.toFixed(2)}` : "",
+        isException: acc.isFeesStandard === "No",
+        exceptionOptions: [],
+        hasChanged: false,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        id: acc.ddaNumber?.toString() || "",
+        isStandard: acc.isFeesStandard === "Yes",
+        isCurrentClient: false,
+        tooltip: acc.source ? `Source: ${acc.source}` : ""
+      };
+
+      return {
+        feeType: feeTypeMap[acc.feeType] || "",
+        feeGroups: [
+          unifyFeeGroupShape({
+            name: acc.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
+            accountNumber: acc.ddaNumber?.toString() ?? "",
+            cif: acc.cifno?.toString() ?? "",
+            kycMailingStatus: acc.kycMailingStatus ?? "",
+            fields: [field]
+          })
+        ]
+      };
+    });
+
+    // Construir array a partir do "feesData"
+    const formattedFeeGroupsFromData =
+      feesData?.fees?.map(fg => ({
+        feeType: fg.feeType || "",
+        feeGroups: fg.feeGroups?.map(g => unifyFeeGroupShape(g)) || []
+      })) || [];
+
+    // Unir ambos
+    const allFees = [...formattedFeesFromCustomer, ...formattedFeeGroupsFromData];
+
+    // Quais FeeTypes aparecerão
+    const feeTypesToReturn = ["Customer Fees", "Bank Account Fees", "Investment Account Fees"];
+
+    const groupedFees = feeTypesToReturn.map(type => {
+      const itemsOfThisType = allFees.filter(item => item.feeType === type);
+
+      const combinedGroups = itemsOfThisType.flatMap(item => item.feeGroups || []);
+
+     
+      const mapOfGroups = {};
+
+      for (const group of combinedGroups) {
+        // Monta uma chave única para cada grupo
+        const key = [
+          group.name,
+          group.accountNumber,
+          group.cif,
+          group.kycMailingStatus
+        ].join("||");
+
+        if (!mapOfGroups[key]) {
+          mapOfGroups[key] = {
+            name: group.name,
+            accountNumber: group.accountNumber,
+            cif: group.cif,
+            kycMailingStatus: group.kycMailingStatus,
+            fields: []
+          };
+        }
+        // Concatena os fields
+        mapOfGroups[key].fields.push(...group.fields);
+      }
+
+      // 4) Agora convertendo esse mapa em array
+      const mergedGroupsArray = Object.values(mapOfGroups);
+
+      // 5) Ordenamos pela prioridade:
+      //    "Standard Fees" (1), "Client Current Fees" (2), "Exception Request" (3)
+      const nameOrder = {
+        "Standard Fees": 1,
+        "Client Current Fees": 2,
+        "Exception Request": 3
+      };
+      mergedGroupsArray.sort((a, b) => {
+        const priorityA = nameOrder[a.name] ?? 9999;
+        const priorityB = nameOrder[b.name] ?? 9999;
+        return priorityA - priorityB;
+      });
+
+      return {
+        feeType: type,
+        feeGroups: mergedGroupsArray
+      };
+    });
+
+    // Monta o objeto final
+    const result = {
+      customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
+      customerShortName: feesData?.customerShortName || '',
+      customerAddress: customerData?.customerAddress?.address || '',
+      customerAccountOfficer: customerData?.customerAddress?.officer || '',
+      cif: customerData?.customerAddress?.cif || cif,
+      officerId: feesData?.officerId || '',
+      branchCity: feesData?.branchCity || '',
+      branchState: feesData?.branchState || '',
+      branchType,
+      feePackage: feesData?.feePackage || '',
+      defaultFeePackageId: feesData?.defaultFeePackageId || '',
+      defaultPackageType: feesData?.defaultPackageType || '',
+      packageName,
+      packageType,
+      fees: groupedFees,
+      feesActives: feesData?.feesActives || [],
+      documentUrl: feesData?.documentUrl || '',
+      currentFees
+    };
+
+    global.logger.info('End process');
+   return Result.ok(result)
+  }
+}
