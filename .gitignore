@@ -1,11 +1,11 @@
-DanielG@NYDEVVDI0027 MINGW64 /h/fee-management-frontend (feat/new-data-fee)
-$ npm rum dev
+PS H:\fee-management-frontend-feat-new-data-fee> $env:CHOKIDAR_USEPOLLING="true"
+PS H:\fee-management-frontend-feat-new-data-fee> npm rum dev
 
 > snb-conductor@0.1.0 dev
 > next dev
 
 ready - started server on 0.0.0.0:3000, url: http://localhost:3000
-warn  - Invalid next.config.js options detected: 
+warn  - Invalid next.config.js options detected:
 warn  -     The value at .compiler.styledComponents must be a boolean but it was a number.
 warn  -     The value at .compiler.styledComponents must be an object but it was a number.
 warn  -     The value at .compiler.styledComponents must match exactly one schema in oneOf.
@@ -18,101 +18,98 @@ Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\s
 Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG'
 Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys'
 Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS'
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend'
-<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend as file
-<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js
 Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG'
 Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS'
 Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys'
 Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG'
 Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS'
 Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys'
-error - Module not found: Error: Can't resolve './H:/fee-management-frontend/node_modules/next/dist/client/dev/amp-dev' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend'
+error - Module not found: Error: Can't resolve './H:/fee-management-frontend-feat-new-data-fee/node_modules/next/dist/client/dev/amp-dev' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee'
 wait  - compiling...
-error - Module not found: Error: Can't resolve './H:/fee-management-frontend/node_modules/next/dist/client/dev/amp-dev' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend'
+error - Module not found: Error: Can't resolve './H:/fee-management-frontend-feat-new-data-fee/node_modules/next/dist/client/dev/amp-dev' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee'
 wait  - compiling...
-event - compiled successfully in 211 ms (28 modules)
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend'
-<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend as file
-<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend'
-<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend as file
-<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js
+event - compiled successfully in 91 ms (28 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js
 wait  - compiling /login (client and server)...
-error - ./H:/fee-management-frontend
-Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\src\pages\login\index.tsx'
+error - ./H:/fee-management-frontend-feat-new-data-fee
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\src\pages\login\index.tsx'
 
 https://nextjs.org/docs/messages/module-not-found
 wait  - compiling...
-error - ./H:/fee-management-frontend
-Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\src\pages\login\index.tsx'
+error - ./H:/fee-management-frontend-feat-new-data-fee
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\src\pages\login\index.tsx'
 
 https://nextjs.org/docs/messages/module-not-found
 wait  - compiling /_error (client and server)...
-error - ./H:/fee-management-frontend
-Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\src\pages\login\index.tsx'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js
+error - ./H:/fee-management-frontend-feat-new-data-fee
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\src\pages\login\index.tsx'
 
 https://nextjs.org/docs/messages/module-not-found
-error - Error: Cannot find module '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\.next\fallback-build-manifest.json'
+error - Error: Cannot find module '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\.next\fallback-build-manifest.json'
 Require stack:
-- H:\fee-management-frontend\node_modules\next\dist\server\load-components.js
-- H:\fee-management-frontend\node_modules\next\dist\build\utils.js
-- H:\fee-management-frontend\node_modules\next\dist\cli\next-dev.js
-- H:\fee-management-frontend\node_modules\next\dist\lib\commands.js
-- H:\fee-management-frontend\node_modules\next\dist\bin\next
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\load-components.js
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\build\utils.js
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\cli\next-dev.js
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\lib\commands.js
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\bin\next
     at Module._resolveFilename (node:internal/modules/cjs/loader:1048:15)
-    at mod._resolveFilename (H:\fee-management-frontend\node_modules\next\dist\build\webpack\require-hook.js:23:32)
+    at mod._resolveFilename (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\build\webpack\require-hook.js:23:32)
     at Module._load (node:internal/modules/cjs/loader:901:27)
     at Module.require (node:internal/modules/cjs/loader:1115:19)
     at require (node:internal/modules/helpers:130:18)
-    at Object.loadDefaultErrorComponentsImpl [as loadDefaultErrorComponents] (H:\fee-management-frontend\node_modules\next\dist\server\load-components.js:23:24)
-    at DevServer.getFallbackErrorComponents (H:\fee-management-frontend\node_modules\next\dist\server\dev\next-dev-server.js:1153:43)
+    at Object.loadDefaultErrorComponentsImpl [as loadDefaultErrorComponents] (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\load-components.js:23:24)
+    at DevServer.getFallbackErrorComponents (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\dev\next-dev-server.js:1153:43)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async DevServer.renderErrorToResponseImpl (H:\fee-management-frontend\node_modules\next\dist\server\base-server.js:1306:40) {
+    at async DevServer.renderErrorToResponseImpl (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\base-server.js:1306:40) {
   code: 'MODULE_NOT_FOUND',
   requireStack: [
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\server\\load-components.js',
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\build\\utils.js',
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\cli\\next-dev.js',
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\lib\\commands.js',
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\bin\\next'
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\server\\load-components.js',
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\build\\utils.js',
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\cli\\next-dev.js',
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\lib\\commands.js',
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\bin\\next'
   ]
 }
-Error: Cannot find module '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\.next\fallback-build-manifest.json'
+Error: Cannot find module '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\.next\fallback-build-manifest.json'
 Require stack:
-- H:\fee-management-frontend\node_modules\next\dist\server\load-components.js
-- H:\fee-management-frontend\node_modules\next\dist\build\utils.js
-- H:\fee-management-frontend\node_modules\next\dist\cli\next-dev.js
-- H:\fee-management-frontend\node_modules\next\dist\lib\commands.js
-- H:\fee-management-frontend\node_modules\next\dist\bin\next
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\load-components.js
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\build\utils.js
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\cli\next-dev.js
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\lib\commands.js
+- H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\bin\next
     at Module._resolveFilename (node:internal/modules/cjs/loader:1048:15)
-    at mod._resolveFilename (H:\fee-management-frontend\node_modules\next\dist\build\webpack\require-hook.js:23:32)
+    at mod._resolveFilename (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\build\webpack\require-hook.js:23:32)
     at Module._load (node:internal/modules/cjs/loader:901:27)
     at Module.require (node:internal/modules/cjs/loader:1115:19)
     at require (node:internal/modules/helpers:130:18)
-    at Object.loadDefaultErrorComponentsImpl [as loadDefaultErrorComponents] (H:\fee-management-frontend\node_modules\next\dist\server\load-components.js:23:24)
-    at DevServer.getFallbackErrorComponents (H:\fee-management-frontend\node_modules\next\dist\server\dev\next-dev-server.js:1153:43)
-    at async DevServer.renderErrorToResponseImpl (H:\fee-management-frontend\node_modules\next\dist\server\base-server.js:1306:40)
-    at async pipe.req.req (H:\fee-management-frontend\node_modules\next\dist\server\base-server.js:1190:30)
-    at async DevServer.pipeImpl (H:\fee-management-frontend\node_modules\next\dist\server\base-server.js:458:25)
-    at async DevServer.run (H:\fee-management-frontend\node_modules\next\dist\server\dev\next-dev-server.js:822:28)
-    at async DevServer.handleRequestImpl (H:\fee-management-frontend\node_modules\next\dist\server\base-server.js:375:20)
-    at async H:\fee-management-frontend\node_modules\next\dist\server\base-server.js:157:99 {
+    at Object.loadDefaultErrorComponentsImpl [as loadDefaultErrorComponents] (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\load-components.js:23:24)
+    at DevServer.getFallbackErrorComponents (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\dev\next-dev-server.js:1153:43)
+    at async DevServer.renderErrorToResponseImpl (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\base-server.js:1306:40)
+    at async pipe.req.req (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\base-server.js:1190:30)
+    at async DevServer.pipeImpl (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\base-server.js:458:25)
+    at async DevServer.run (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\dev\next-dev-server.js:822:28)
+    at async DevServer.handleRequestImpl (H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\base-server.js:375:20)
+    at async H:\fee-management-frontend-feat-new-data-fee\node_modules\next\dist\server\base-server.js:157:99 {
   code: 'MODULE_NOT_FOUND',
   requireStack: [
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\server\\load-components.js',
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\build\\utils.js',
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\cli\\next-dev.js',
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\lib\\commands.js',
-    'H:\\fee-management-frontend\\node_modules\\next\\dist\\bin\\next'
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\server\\load-components.js',
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\build\\utils.js',
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\cli\\next-dev.js',
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\lib\\commands.js',
+    'H:\\fee-management-frontend-feat-new-data-fee\\node_modules\\next\\dist\\bin\\next'
   ]
 }
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend'
-<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend as file
-<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend'
-<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend as file
-<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend'
-<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend as file
-<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend\next.config.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js' in \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\fee-management-frontend-feat-new-data-fee\next.config.js
