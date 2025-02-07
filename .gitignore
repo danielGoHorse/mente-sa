@@ -1,26 +1,31 @@
 async #getFeesStructuredFromSQL(customerAccount) {
-    // Obter os dados do SQL
     const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
     
-    // Estruturar os dados agrupados
+    console.log("Fees Data Received:", feesData); // <-- Verificar antes da estruturação
+    
+    if (!feesData.length) {
+        console.log("Nenhuma taxa encontrada para o cliente.");
+        return [];
+    }
+    
     const groupedFees = {};
 
     for (const fee of feesData) {
+        console.log("Processing Fee:", fee); // <-- Verificar cada iteração
+
         const { FeeType, FeeDescription, FeeCode, FeeAmount, Frequency } = fee;
 
-        // Criar feeType se ainda não existir
         if (!groupedFees[FeeType]) {
             groupedFees[FeeType] = {
                 feeType: FeeType,
                 feeGroups: [{
                     name: "Standard Fees",
-                    code: 1, // Código fixo para agrupar como "Standard Fees"
+                    code: 1,
                     fields: []
                 }]
             };
         }
 
-        // Adicionar campo ao grupo de fees
         groupedFees[FeeType].feeGroups[0].fields.push({
             code: FeeCode,
             name: FeeDescription,
@@ -29,6 +34,8 @@ async #getFeesStructuredFromSQL(customerAccount) {
             isException: false
         });
     }
+
+    console.log("Structured Fees:", Object.values(groupedFees)); // <-- Verificar estrutura final
     
     return Object.values(groupedFees);
 }
