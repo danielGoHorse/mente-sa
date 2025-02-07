@@ -259,3 +259,25 @@ export default class FeeCaseGetByCifUseCase {
     return Result.ok(result);
   }
 }
+
+
+
+
+
+  throw new Error('Application name must be provided')
+            ^
+
+Error: Application name must be provided
+    at #loadFromConfigServer (file:///H:/workspace/feeManagement/conductor-fee-management/src/core/config/index.js:79:13)
+    at Config.bootstrap (file:///H:/workspace/feeManagement/conductor-fee-management/src/core/config/index.js:29:41)
+    at App.bootstrap (file:///H:/workspace/feeManagement/conductor-fee-management/src/app/app.js:11:38)
+    at file:///H:/workspace/feeManagement/conductor-fee-management/src/app/api/index.js:5:13
+    at file:///H:/workspace/feeManagement/conductor-fee-management/src/app/api/index.js:7:3
+    at ModuleJob.run (node:internal/modules/esm/module_job:217:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:316:24)
+    at async loadESM (node:internal/process/esm_loader:34:7)
+    at async handleMainPromise (node:internal/modules/run_main:66:12)
+
+Node.js v20.9.0
+[nodemon] app crashed - waiting for file changes before starting...
+
