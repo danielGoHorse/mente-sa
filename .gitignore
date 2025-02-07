@@ -1,25 +1,1388 @@
-import BaseHttp from './BaseHttp.js'
-export default class FeeManagement extends BaseHttp {
-  #createUrl = 'v1/fee/case'
-  #getByAccounts = 'http://localhost:3333/v1/fee'
-  #getUsersEmail = 'v1/email/feeCase/'
+import { Fee } from '#src/models/entities/Fees.js'
+import Result from '#features/shared/result.js'
+import CustomerFees from '#src/models/CustomerFees.js'
+import BankAccountFee from '#src/models/BankAccountFee.js'
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure
+} from '#core/data/mssql/index.js';
 
-  constructor({ logger, environment }) {
-    super(logger, environment.feeUrl)
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+   // global.logger.info('FeeGetByCifUseCase()')
+   const feesData1 = await this.#getFeesFromSQL(customerAccount[0].cifno);
+   console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',feesData1)
+   const feesData2 = await this.#getExceptionFeesFromSQL(customerAccount[0].cifno);
+   if (!feesData.length) {
+    return Result.fail({ message: "No data found for this CIF" });
+  }
+    const result = { fees: [] }
+    const fees = await this.#getFeeStandard([
+      {
+        feeType: 'Customer Fees'
+      },
+      {
+        feeType: 'Bank Account Fees'
+      },
+      {
+        feeType: 'Investment Account Fees'
+      }
+    ])
+
+    
+
+
+    const customer = new CustomerFees(fees, customerAccount)
+    if (customer.fee) result.fees.push(customer.fee)
+   // global.logger.info('After Customer Fees')
+    const bank = new BankAccountFee(fees, customerAccount)
+    if (bank.fee) result.fees.push(bank.fee)
+   // global.logger.info('After Bank Account Fees')
+    const equityField = await Field.find({ code: 7 })
+    const investiment = new InvestimentAccountFee(
+      fees,
+      customerAccount,
+      equityField[0]
+    )
+    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee)
+   // global.logger.info('After Investment Account Fees')
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: {
+        $nin: ['DONE', 'REJECTED']
+      },
+      caseNumber: {
+        $exists: true
+      }
+    })
+   // global.logger.info('After Fees Actives')
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }))
+
+    result.documentUrl =
+      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
+
+   // global.logger.info(`documentUrl= ${result.document}`)
+
+    return Result.ok(result)
   }
 
-  async create(feeManagement) {
-    return await this.httpRequest.post(this.#createUrl, feeManagement)
+  async #getFeesFromSQL(cifno) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
   }
 
-  async getFeeByAccount({ customerAccount }) {
-    const url = `${this.#getByAccounts}`
-    console.log( this.httpRequest)
-    return await this.httpRequest.post(url, { customerAccount })
+  async #getExceptionFeesFromSQL(feePackageId) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
   }
 
-  async getUsersToSendEmail(feeCaseId) {
-    const url = `${this.#getUsersEmail}${feeCaseId}`
-    return await this.httpRequest.get(url)
+  async #getFeeStandard(filter) {
+   // global.logger.info('getFeeStandard()')
+
+    const feeResult = []
+
+    for await (const fee of Fee.find({
+      $or: filter
+    }).select({
+      feeType: 1,
+      feeGroups: {
+        name: 1,
+        fields: 1,
+        code: 1
+      }
+    })) {
+      feeResult.push(fee.toObject())
+    }
+
+    return feeResult
   }
 }
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
+import mongoose, { Schema } from 'mongoose'
+
+export const FieldSchema = new Schema(
+  {
+    code: {
+      type: Number,
+      required: true,
+      enum: [1, 2, 3, 4, 5, 6, 7]
+    },
+    isStandard: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    isCurrentClient: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    isException: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    defaultValue: {
+      type: String,
+      required: false
+    },
+    labelValue: {
+      type: String,
+      required: false
+    },
+    hasChanged: {
+      type: Boolean,
+      default: false
+    },
+    approved: {
+      type: Boolean,
+      required: false
+    },
+    reject: {
+      type: Boolean,
+      required: false
+    },
+    rejectComment: {
+      type: String,
+      required: false
+    },
+    tooltip: {
+      type: String,
+      required: false
+    },
+    exceptionOptions: [
+      {
+        value: String,
+        text: String,
+
+        retired: {
+          type: Boolean,
+          required: false,
+          default: false
+        },
+        visible: {
+          type: Boolean,
+          required: false,
+          default: true
+        },
+        approvedByDoubleA: {
+          type: Boolean,
+          required: false,
+          default: null
+        }
+      }
+    ],
+    results: {
+      type: Map,
+      of: String,
+      required: false
+    }
+  },
+  {
+    collection: 'Field',
+    timestamps: true
+  }
+)
+configureSchemaMongoToReturnId('toObject', FieldSchema)
+
+export const Field = mongoose.model('Fields', FieldSchema)
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+_id
+6468f46eff51aa9d77d849ee
+feeType
+"Customer Fees"
+
+feeGroups
+Array (3)
+
+0
+Object
+name
+"Standard Fees"
+code
+1
+
+fields
+Array (2)
+
+0
+Object
+code
+1
+isException
+false
+name
+"Account Maintenance"
+tooltip
+"Charged: Semiannual"
+defaultValue
+"600"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849d7
+createdAt
+2023-05-20T16:25:31.435+00:00
+updatedAt
+2023-05-20T16:25:31.435+00:00
+isCurrentClient
+false
+isStandard
+true
+
+1
+Object
+code
+2
+isException
+false
+name
+"Hold Mail"
+defaultValue
+"600"
+tooltip
+"Charged: Annually"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849d8
+createdAt
+2023-05-20T16:25:31.435+00:00
+updatedAt
+2023-05-20T16:25:31.435+00:00
+isCurrentClient
+false
+isStandard
+true
+visible
+true
+_id
+6468f46eff51aa9d77d849d9
+createdAt
+2023-05-20T16:25:31.435+00:00
+updatedAt
+2023-05-20T16:25:31.435+00:00
+
+1
+Object
+name
+"Client Current Fees"
+code
+1
+
+fields
+Array (2)
+
+0
+Object
+code
+1
+isException
+false
+name
+"Account Maintenance"
+defaultValue
+"600"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849dc
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+isCurrentClient
+true
+isStandard
+false
+
+1
+Object
+visible
+true
+_id
+6468f46eff51aa9d77d849de
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+
+2
+Object
+name
+"Exception Request"
+code
+1
+
+fields
+Array (2)
+
+0
+Object
+code
+1
+isException
+true
+name
+"Account Maintenance"
+defaultValue
+""
+
+exceptionOptions
+Array (2)
+_id
+6468f46eff51aa9d77d849e1
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+isCurrentClient
+false
+isStandard
+false
+
+1
+Object
+code
+2
+isException
+true
+name
+"Hold mail"
+defaultValue
+""
+
+exceptionOptions
+Array (2)
+_id
+6468f46eff51aa9d77d849e4
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+isCurrentClient
+false
+isStandard
+false
+visible
+true
+_id
+6468f46eff51aa9d77d849e7
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+createdAt
+2023-05-20T16:25:31.444+00:00
+updatedAt
+2023-05-20T16:25:31.444+00:00
+__v
+0
+_id
+6468f46eff51aa9d77d84a1b
+feeType
+"Bank Account Fees"
+
+feeGroups
+Array (3)
+
+0
+Object
+name
+"Standard Fees"
+code
+2
+
+fields
+Array (2)
+
+0
+Object
+code
+3
+isException
+false
+name
+"Incoming Wire"
+defaultValue
+"0"
+tooltip
+"Charged: Per Transaction"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849fc
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+isCurrentClient
+false
+isStandard
+true
+
+1
+Object
+code
+4
+isException
+false
+name
+"Outgoing Wire"
+defaultValue
+"75"
+tooltip
+"Charged: Per Transaction"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d849fd
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+isCurrentClient
+false
+isStandard
+true
+visible
+true
+_id
+6468f46eff51aa9d77d849fe
+createdAt
+2023-05-20T16:25:31.436+00:00
+updatedAt
+2023-05-20T16:25:31.436+00:00
+
+1
+Object
+name
+"Client Current Fees"
+code
+2
+
+fields
+Array (2)
+
+0
+Object
+code
+3
+isException
+false
+name
+"Incoming Wire"
+defaultValue
+"10"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a01
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+isCurrentClient
+true
+isStandard
+false
+
+1
+Object
+code
+4
+isException
+false
+name
+"Outgoing Wire"
+defaultValue
+"75"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a02
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+isCurrentClient
+true
+isStandard
+false
+visible
+true
+_id
+6468f46eff51aa9d77d84a03
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+
+2
+Object
+createdAt
+2023-05-20T16:25:31.444+00:00
+updatedAt
+2023-05-20T16:25:31.444+00:00
+__v
+0
+_id
+6468f46eff51aa9d77d84a56
+feeType
+"Investment Account Fees"
+
+feeGroups
+Array (3)
+
+0
+Object
+name
+"Standard Fees"
+code
+3
+
+fields
+Array (3)
+
+0
+Object
+code
+6
+isException
+false
+name
+"Safekeeping-Custody"
+defaultValue
+"A021"
+tooltip
+"Charged: Quarterly"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2d
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+isCurrentClient
+false
+isStandard
+true
+
+1
+Object
+code
+5
+isException
+false
+name
+"SSL Account Maintenance"
+defaultValue
+"375"
+tooltip
+"Charged: Quarterly"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2e
+createdAt
+2023-05-20T16:25:31.437+00:00
+updatedAt
+2023-05-20T16:25:31.437+00:00
+isCurrentClient
+false
+isStandard
+true
+
+2
+Object
+code
+7
+isException
+false
+name
+"Equity and Options Commission"
+tooltip
+"Charged: Per Trade"
+defaultValue
+"E3"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a2f
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+false
+isStandard
+true
+visible
+true
+_id
+6468f46eff51aa9d77d84a30
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+
+1
+Object
+name
+"Client Current Fees"
+code
+3
+
+fields
+Array (3)
+
+0
+Object
+code
+6
+isException
+false
+name
+"Safekeeping-Custody"
+defaultValue
+"A021"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a34
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+
+1
+Object
+code
+5
+isException
+false
+name
+"SSL Account Maintenance"
+defaultValue
+"375"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a35
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+
+2
+Object
+code
+7
+isException
+false
+name
+"Equity and Options Commission"
+defaultValue
+"E3"
+
+exceptionOptions
+Array (empty)
+_id
+6468f46eff51aa9d77d84a36
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+true
+isStandard
+false
+visible
+true
+_id
+6468f46eff51aa9d77d84a37
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+
+2
+Object
+name
+"Exception Request"
+code
+3
+
+fields
+Array (3)
+
+0
+Object
+code
+6
+isException
+true
+name
+"Safekeeping-Custody"
+defaultValue
+""
+
+exceptionOptions
+Array (99)
+_id
+6468f46eff51aa9d77d84a3b
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+false
+isStandard
+false
+
+1
+Object
+code
+5
+isException
+true
+name
+"SSL Account Maintenance"
+defaultValue
+""
+
+exceptionOptions
+Array (2)
+_id
+6468f46eff51aa9d77d84a3d
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2023-05-20T16:25:31.438+00:00
+isCurrentClient
+false
+isStandard
+false
+
+2
+Object
+code
+7
+isException
+true
+name
+"Equity and Options Commission"
+defaultValue
+""
+
+exceptionOptions
+Array (75)
+_id
+6468f46eff51aa9d77d84a40
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2024-11-16T12:30:04.292+00:00
+isCurrentClient
+false
+isStandard
+false
+visible
+true
+_id
+6468f46eff51aa9d77d84a48
+createdAt
+2023-05-20T16:25:31.438+00:00
+updatedAt
+2024-11-16T12:30:04.294+00:00
+createdAt
+2023-05-20T16:25:31.445+00:00
+updatedAt
+2024-11-16T12:30:04.295+00:00
+__v
+1
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ async #getFeeStandard(filter) {
+   // global.logger.info('getFeeStandard()')
+
+    const feeResult = []
+
+    for await (const fee of Fee.find({
+      $or: filter
+    }).select({
+      feeType: 1,
+      feeGroups: {
+        name: 1,
+        fields: 1,
+        code: 1
+      }
+    })) {
+      feeResult.push(fee.toObject())
+    }
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
+import mongoose, { Schema } from 'mongoose'
+import { FeeGroupSchema } from './FeeGroups.js'
+
+export const FeeSchema = new Schema(
+  {
+    feeType: {
+      type: String,
+      required: true,
+      enum: ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees']
+    },
+    feeGroups: { type: [FeeGroupSchema], require: true }
+  },
+  {
+    collection: 'Fees',
+    timestamps: true
+  }
+)
+
+configureSchemaMongoToReturnId('toObject', FeeSchema)
+
+export const Fee = mongoose.model('Fees', FeeSchema)
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+declare module 'mongoose' {
+
+  /** The Mongoose Date [SchemaType](/docs/schematypes.html). */
+  type Date = Schema.Types.Date;
+
+  /**
+   * The Mongoose Decimal128 [SchemaType](/docs/schematypes.html). Used for
+   * declaring paths in your schema that should be
+   * [128-bit decimal floating points](http://thecodebarbarian.com/a-nodejs-perspective-on-mongodb-34-decimal.html).
+   * Do not use this to create a new Decimal128 instance, use `mongoose.Types.Decimal128`
+   * instead.
+   */
+  type Decimal128 = Schema.Types.Decimal128;
+
+  /**
+   * The Mongoose Mixed [SchemaType](/docs/schematypes.html). Used for
+   * declaring paths in your schema that Mongoose's change tracking, casting,
+   * and validation should ignore.
+   */
+  type Mixed = Schema.Types.Mixed;
+
+  /**
+   * The Mongoose Number [SchemaType](/docs/schematypes.html). Used for
+   * declaring paths in your schema that Mongoose should cast to numbers.
+   */
+  type Number = Schema.Types.Number;
+
+  /**
+   * The Mongoose ObjectId [SchemaType](/docs/schematypes.html). Used for
+   * declaring paths in your schema that should be
+   * [MongoDB ObjectIds](https://www.mongodb.com/docs/manual/reference/method/ObjectId/).
+   * Do not use this to create a new ObjectId instance, use `mongoose.Types.ObjectId`
+   * instead.
+   */
+  type ObjectId = Schema.Types.ObjectId;
+
+  /** The various Mongoose SchemaTypes. */
+  const SchemaTypes: typeof Schema.Types;
+
+  type DefaultType<T> = T extends Schema.Types.Mixed ? any : Partial<ExtractMongooseArray<T>>;
+
+  class SchemaTypeOptions<T> {
+    type?:
+    T extends string ? StringSchemaDefinition :
+      T extends number ? NumberSchemaDefinition :
+        T extends boolean ? BooleanSchemaDefinition :
+          T extends NativeDate ? DateSchemaDefinition :
+            T extends Map<any, any> ? SchemaDefinition<typeof Map> :
+              T extends Buffer ? SchemaDefinition<typeof Buffer> :
+                T extends Types.ObjectId ? ObjectIdSchemaDefinition :
+                  T extends Types.ObjectId[] ? AnyArray<ObjectIdSchemaDefinition> | AnyArray<SchemaTypeOptions<ObjectId>> :
+                    T extends object[] ? (AnyArray<Schema<any, any, any>> | AnyArray<SchemaDefinition<Unpacked<T>>> | AnyArray<SchemaTypeOptions<Unpacked<T>>>) :
+                      T extends string[] ? AnyArray<StringSchemaDefinition> | AnyArray<SchemaTypeOptions<string>> :
+                        T extends number[] ? AnyArray<NumberSchemaDefinition> | AnyArray<SchemaTypeOptions<number>> :
+                          T extends boolean[] ? AnyArray<BooleanSchemaDefinition> | AnyArray<SchemaTypeOptions<boolean>> :
+                            T extends Function[] ? AnyArray<Function | string> | AnyArray<SchemaTypeOptions<Unpacked<T>>> :
+                              T | typeof SchemaType | Schema<any, any, any> | SchemaDefinition<T> | Function | AnyArray<Function>;
+
+    /** Defines a virtual with the given name that gets/sets this path. */
+    alias?: string | string[];
+
+    /** Function or object describing how to validate this schematype. See [validation docs](https://mongoosejs.com/docs/validation.html). */
+    validate?: SchemaValidator<T> | AnyArray<SchemaValidator<T>>;
+
+    /** Allows overriding casting logic for this individual path. If a string, the given string overwrites Mongoose's default cast error message. */
+    cast?: string;
+
+    /**
+     * If true, attach a required validator to this path, which ensures this path
+     * path cannot be set to a nullish value. If a function, Mongoose calls the
+     * function and only checks for nullish values if the function returns a truthy value.
+     */
+    required?: boolean | (() => boolean) | [boolean, string] | [() => boolean, string];
+
+    /**
+     * The default value for this path. If a function, Mongoose executes the function
+     * and uses the return value as the default.
+     */
+    default?: DefaultType<T> | ((this: any, doc: any) => DefaultType<T>) | null;
+
+    /**
+     * The model that `populate()` should use if populating this path.
+     */
+    ref?: string | Model<any> | ((this: any, doc: any) => string | Model<any>);
+
+    /**
+     * The path in the document that `populate()` should use to find the model
+     * to use.
+     */
+
+    refPath?: string | ((this: any, doc: any) => string);
+
+    /**
+     * Whether to include or exclude this path by default when loading documents
+     * using `find()`, `findOne()`, etc.
+     */
+    select?: boolean | number;
+
+    /**
+     * If [truthy](https://masteringjs.io/tutorials/fundamentals/truthy), Mongoose will
+     * build an index on this path when the model is compiled.
+     */
+    index?: boolean | IndexDirection | IndexOptions;
+
+    /**
+     * If [truthy](https://masteringjs.io/tutorials/fundamentals/truthy), Mongoose
+     * will build a unique index on this path when the
+     * model is compiled. [The `unique` option is **not** a validator](/docs/validation.html#the-unique-option-is-not-a-validator).
+     */
+    unique?: boolean | number;
+
+    /**
+     * If [truthy](https://masteringjs.io/tutorials/fundamentals/truthy), Mongoose will
+     * disallow changes to this path once the document is saved to the database for the first time. Read more
+     * about [immutability in Mongoose here](http://thecodebarbarian.com/whats-new-in-mongoose-5-6-immutable-properties.html).
+     */
+    immutable?: boolean | ((this: any, doc: any) => boolean);
+
+    /**
+     * If [truthy](https://masteringjs.io/tutorials/fundamentals/truthy), Mongoose will
+     * build a sparse index on this path.
+     */
+    sparse?: boolean | number;
+
+    /**
+     * If [truthy](https://masteringjs.io/tutorials/fundamentals/truthy), Mongoose
+     * will build a text index on this path.
+     */
+    text?: boolean | number | any;
+
+    /**
+     * Define a transform function for this individual schema type.
+     * Only called when calling `toJSON()` or `toObject()`.
+     */
+    transform?: (this: any, val: T) => any;
+
+    /** defines a custom getter for this property using [`Object.defineProperty()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty). */
+    get?: (value: any, doc?: this) => T | undefined;
+
+    /** defines a custom setter for this property using [`Object.defineProperty()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty). */
+    set?: (value: any, priorVal?: T, doc?: this) => any;
+
+    /** array of allowed values for this path. Allowed for strings, numbers, and arrays of strings */
+    enum?: Array<string | number | null> | ReadonlyArray<string | number | null> | { values: Array<string | number | null> | ReadonlyArray<string | number | null>, message?: string } | { [path: string]: string | number | null };
+
+    /** The default [subtype](http://bsonspec.org/spec.html) associated with this buffer when it is stored in MongoDB. Only allowed for buffer paths */
+    subtype?: number;
+
+    /** The minimum value allowed for this path. Only allowed for numbers and dates. */
+    min?: number | NativeDate | [number, string] | [NativeDate, string] | readonly [number, string] | readonly [NativeDate, string];
+
+    /** The maximum value allowed for this path. Only allowed for numbers and dates. */
+    max?: number | NativeDate | [number, string] | [NativeDate, string] | readonly [number, string] | readonly [NativeDate, string];
+
+    /** Defines a TTL index on this path. Only allowed for dates. */
+    expires?: string | number;
+
+    /** If `true`, Mongoose will skip gathering indexes on subpaths. Only allowed for subdocuments and subdocument arrays. */
+    excludeIndexes?: boolean;
+
+    /** If set, overrides the child schema's `_id` option. Only allowed for subdocuments and subdocument arrays. */
+    _id?: boolean;
+
+    /** If set, specifies the type of this map's values. Mongoose will cast this map's values to the given type. */
+    of?: Function | SchemaDefinitionProperty<any>;
+
+    /** If true, uses Mongoose's default `_id` settings. Only allowed for ObjectIds */
+    auto?: boolean;
+
+    /** Attaches a validator that succeeds if the data string matches the given regular expression, and fails otherwise. */
+    match?: RegExp | [RegExp, string] | readonly [RegExp, string];
+
+    /** If truthy, Mongoose will add a custom setter that lowercases this string using JavaScript's built-in `String#toLowerCase()`. */
+    lowercase?: boolean;
+
+    /** If truthy, Mongoose will add a custom setter that removes leading and trailing whitespace using JavaScript's built-in `String#trim()`. */
+    trim?: boolean;
+
+    /** If truthy, Mongoose will add a custom setter that uppercases this string using JavaScript's built-in `String#toUpperCase()`. */
+    uppercase?: boolean;
+
+    /** If set, Mongoose will add a custom validator that ensures the given string's `length` is at least the given number. */
+    minlength?: number | [number, string] | readonly [number, string];
+
+    /** If set, Mongoose will add a custom validator that ensures the given string's `length` is at most the given number. */
+    maxlength?: number | [number, string] | readonly [number, string];
+
+    [other: string]: any;
+  }
+
+  interface Validator {
+    message?: string; type?: string; validator?: Function
+  }
+
+  class SchemaType<T = any, DocType = any> {
+    /** SchemaType constructor */
+    constructor(path: string, options?: AnyObject, instance?: string);
+
+    /** Get/set the function used to cast arbitrary values to this type. */
+    static cast(caster?: Function | boolean): Function;
+
+    static checkRequired(checkRequired?: (v: any) => boolean): (v: any) => boolean;
+
+    /** Sets a default option for this schema type. */
+    static set(option: string, value: any): void;
+
+    /** Attaches a getter for all instances of this schema type. */
+    static get(getter: (value: any) => any): void;
+
+    /** The class that Mongoose uses internally to instantiate this SchemaType's `options` property. */
+    OptionsConstructor: SchemaTypeOptions<T>;
+
+    /** Cast `val` to this schema type. Each class that inherits from schema type should implement this function. */
+    cast(val: any, doc: Document<any>, init: boolean, prev?: any, options?: any): any;
+
+    /** Sets a default value for this SchemaType. */
+    default(val: any): any;
+
+    /** Adds a getter to this schematype. */
+    get(fn: Function): this;
+
+    /**
+     * Defines this path as immutable. Mongoose prevents you from changing
+     * immutable paths unless the parent document has [`isNew: true`](/docs/api/document.html#document_Document-isNew).
+     */
+    immutable(bool: boolean): this;
+
+    /** Declares the index options for this schematype. */
+    index(options: any): this;
+
+    /** String representation of what type this is, like 'ObjectID' or 'Number' */
+    instance: string;
+
+    /** True if this SchemaType has a required validator. False otherwise. */
+    isRequired?: boolean;
+
+    /** The options this SchemaType was instantiated with */
+    options: AnyObject;
+
+    /** The path to this SchemaType in a Schema. */
+    path: string;
+
+    /**
+     * Set the model that this path refers to. This is the option that [populate](https://mongoosejs.com/docs/populate.html)
+     * looks at to determine the foreign collection it should query.
+     */
+    ref(ref: string | boolean | Model<any>): this;
+
+    /**
+     * Adds a required validator to this SchemaType. The validator gets added
+     * to the front of this SchemaType's validators array using unshift().
+     */
+    required(required: boolean, message?: string): this;
+
+    /** The schema this SchemaType instance is part of */
+    schema: Schema<any>;
+
+    /** Sets default select() behavior for this path. */
+    select(val: boolean): this;
+
+    /** Adds a setter to this schematype. */
+    set(fn: Function): this;
+
+    /** Declares a sparse index. */
+    sparse(bool: boolean): this;
+
+    /** Declares a full text index. */
+    text(bool: boolean): this;
+
+    /** Defines a custom function for transforming this path when converting a document to JSON. */
+    transform(fn: (value: any) => any): this;
+
+    /** Declares an unique index. */
+    unique(bool: boolean): this;
+
+    /** The validators that Mongoose should run to validate properties at this SchemaType's path. */
+    validators: Validator[];
+
+    /** Adds validator(s) for this document path. */
+    validate(obj: RegExp | ((this: DocType, value: any, validatorProperties?: Validator) => any), errorMsg?: string, type?: string): this;
+
+    /** Default options for this SchemaType */
+    defaultOptions?: Record<string, any>;
+  }
+
+  namespace Schema {
+    namespace Types {
+      class Array extends SchemaType implements AcceptsDiscriminator {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'Array';
+
+        static options: { castNonArrays: boolean; };
+
+        discriminator<T, U>(name: string | number, schema: Schema<T, U>, value?: string): U;
+        discriminator<D>(name: string | number, schema: Schema, value?: string): Model<D>;
+
+        /** The schematype embedded in this array */
+        caster?: SchemaType;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+
+        /**
+         * Adds an enum validator if this is an array of strings or numbers. Equivalent to
+         * `SchemaString.prototype.enum()` or `SchemaNumber.prototype.enum()`
+         */
+        enum(vals: string[] | number[]): this;
+      }
+
+      class Boolean extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'Boolean';
+
+        /** Configure which values get casted to `true`. */
+        static convertToTrue: Set<any>;
+
+        /** Configure which values get casted to `false`. */
+        static convertToFalse: Set<any>;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class Buffer extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'Buffer';
+
+        /**
+         * Sets the default [subtype](https://studio3t.com/whats-new/best-practices-uuid-mongodb/)
+         * for this buffer. You can find a [list of allowed subtypes here](http://api.mongodb.com/python/current/api/bson/binary.html).
+         */
+        subtype(subtype: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 128): this;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class Date extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'Date';
+
+        /** Declares a TTL index (rounded to the nearest second) for _Date_ types only. */
+        expires(when: number | string): this;
+
+        /** Sets a maximum date validator. */
+        max(value: NativeDate, message: string): this;
+
+        /** Sets a minimum date validator. */
+        min(value: NativeDate, message: string): this;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class Decimal128 extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'Decimal128';
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class DocumentArray extends SchemaType implements AcceptsDiscriminator {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'DocumentArray';
+
+        static options: { castNonArrays: boolean; };
+
+        discriminator<D>(name: string | number, schema: Schema, value?: string): Model<D>;
+        discriminator<T, U>(name: string | number, schema: Schema<T, U>, value?: string): U;
+
+        /** The schema used for documents in this array */
+        schema: Schema;
+
+        /** The constructor used for subdocuments in this array */
+        caster?: typeof Types.Subdocument;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class Map extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'Map';
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class Mixed extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'Mixed';
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class Number extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'Number';
+
+        /** Sets a enum validator */
+        enum(vals: number[]): this;
+
+        /** Sets a maximum number validator. */
+        max(value: number, message: string): this;
+
+        /** Sets a minimum number validator. */
+        min(value: number, message: string): this;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class ObjectId extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'ObjectId';
+
+        /** Adds an auto-generated ObjectId default if turnOn is true. */
+        auto(turnOn: boolean): this;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class Subdocument extends SchemaType implements AcceptsDiscriminator {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: string;
+
+        /** The document's schema */
+        schema: Schema;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+
+        discriminator<T, U>(name: string | number, schema: Schema<T, U>, value?: string): U;
+        discriminator<D>(name: string | number, schema: Schema, value?: string): Model<D>;
+      }
+
+      class String extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'String';
+
+        /** Adds an enum validator */
+        enum(vals: string[] | any): this;
+
+        /** Adds a lowercase [setter](http://mongoosejs.com/docs/api/schematype.html#schematype_SchemaType-set). */
+        lowercase(shouldApply?: boolean): this;
+
+        /** Sets a regexp validator. */
+        match(value: RegExp, message: string): this;
+
+        /** Sets a maximum length validator. */
+        maxlength(value: number, message: string): this;
+
+        /** Sets a minimum length validator. */
+        minlength(value: number, message: string): this;
+
+        /** Adds a trim [setter](http://mongoosejs.com/docs/api/schematype.html#schematype_SchemaType-set). */
+        trim(shouldTrim?: boolean): this;
+
+        /** Adds an uppercase [setter](http://mongoosejs.com/docs/api/schematype.html#schematype_SchemaType-set). */
+        uppercase(shouldApply?: boolean): this;
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+
+      class UUID extends SchemaType {
+        /** This schema type's name, to defend against minifiers that mangle function names. */
+        static schemaName: 'UUID';
+
+        /** Default options for this SchemaType */
+        defaultOptions: Record<string, any>;
+      }
+    }
+  }
+}
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+export const configureSchemaMongoToReturnId = (
+  typeConvert,
+  SchemaModel,
+  enableVirtuals = true
+) => {
+  SchemaModel.set(typeConvert, {
+    transform: (document, returnObject) => {
+      delete returnObject._id
+      return returnObject
+    },
+    virtuals: enableVirtuals
+  })
+}
+
+
