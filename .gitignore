@@ -1,224 +1,116 @@
-import Result from '#features/shared/result.js';
+DanielG@NYDEVVDI0027 MINGW64 /h/workspace/fee-management-frontend (develop)
+$ npm rum dev
 
-export default class FeeCaseGetByCifUseCase {
-  async execute({ cif }, feeManagementModel, customerModel) {
-    const [errCustomer, responseCustomer] = await customerModel.getCustomerDetailsByCif(cif);
-    if (errCustomer) {
-      return Result.fail({ message: "It's not possible to get address cif" });
-    }
+> snb-conductor@0.1.0 dev
+> next dev
 
-    const customerData = responseCustomer?.data?.customer || {};
-    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(customerData);
-    if (errFee) {
-      return Result.fail({ message: "It's not possible to get fee values" });
-    }
+ready - started server on 0.0.0.0:3000, url: http://localhost:3000
+warn  - Invalid next.config.js options detected: 
+warn  -     The value at .compiler.styledComponents must be a boolean but it was a number.
+warn  -     The value at .compiler.styledComponents must be an object but it was a number.
+warn  -     The value at .compiler.styledComponents must match exactly one schema in oneOf.
+warn  - See more info here: https://nextjs.org/docs/messages/invalid-next-config
+'yarn' is not recognized as an internal or external command,
+operable program or batch file.
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG\workspace'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG\workspace'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG\workspace'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG\workspace'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS'
+error - Module not found: Error: Can't resolve './H:/workspace/fee-management-frontend/node_modules/next/dist/client/dev/amp-dev' in '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend'
+wait  - compiling...
+error - Module not found: Error: Can't resolve './H:/workspace/fee-management-frontend/node_modules/next/dist/client/dev/amp-dev' in '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend'
+wait  - compiling...
+event - compiled successfully in 147 ms (28 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js
+wait  - compiling /login (client and server)...
+error - ./H:/workspace/fee-management-frontend
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\src\pages\login\index.tsx'
 
-    /**
-     * Garante que cada field terá sempre as mesmas propriedades
-     * (com valores padrão se estiverem ausentes).
-     */
-    function unifyFieldShape(field) {
-      return {
-        code: field.code ?? "",
-        name: field.name ?? "",
-        defaultValue: field.defaultValue ?? "",
-        labelValue: field.labelValue ?? "",
-        isException: field.isException ?? false,
-        exceptionOptions: field.exceptionOptions ?? [],
-        hasChanged: field.hasChanged ?? false,
-        createdAt: field.createdAt ?? "",
-        updatedAt: field.updatedAt ?? "",
-        id: field.id ?? "",
-        isStandard: field.isStandard ?? false,
-        isCurrentClient: field.isCurrentClient ?? false,
-        tooltip: field.tooltip ?? ""
-      };
-    }
+https://nextjs.org/docs/messages/module-not-found
+wait  - compiling...
+error - ./H:/workspace/fee-management-frontend
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\src\pages\login\index.tsx'
 
-    /**
-     * Garante que cada feeGroup tenha `name`, `accountNumber`, `cif`,
-     * `kycMailingStatus` e `fields` (sempre array).
-     */
-    function unifyFeeGroupShape(group) {
-      return {
-        name: group.name ?? "",
-        accountNumber: group.accountNumber ?? "",
-        cif: group.cif ?? "",
-        kycMailingStatus: group.kycMailingStatus ?? "",
-        fields: Array.isArray(group.fields)
-          ? group.fields.map(unifyFieldShape)
-          : []
-      };
-    }
+https://nextjs.org/docs/messages/module-not-found
+wait  - compiling /_error (client and server)...
+error - ./H:/workspace/fee-management-frontend
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\src\pages\login\index.tsx'
 
-    /**
-     * Apenas se precisar normalizar nomes (ex.: "AccountMaintenanceFee" -> "Account Maintenance Fee").
-     */
-    function normalizeFeeName(text = "") {
-      return text
-        .replace(/([a-z])([A-Z])/g, '$1 $2')
-        .replace(/[_-]/g, ' ')
-        .trim();
-    }
-
-    const feesData = responseFee?.data || {};
-    const timestamp = new Date().toISOString();
-
-    const packageName = feesData.feePackage || "N/A";
-    const packageType = feesData.defaultPackageType || "N/A";
-    const branchType = feesData.branchType || "N/A";
-
-    const currentFees = [
-      ...(customerData?.customerCurrentFees?.map(x => ({
-        feeDescription: x.feeDescription || '',
-        feeCode: x.feeCode || ''
-      })) || []),
-      ...(feesData?.currentFees || [])
-    ];
-
-    // Mapa do FeeType
-    const feeTypeMap = {
-      1: "Customer Fees",
-      2: "Bank Account Fees",
-      3: "Investment Account Fees"
-    };
-
-    // Filtra apenas os FeeTypes relevantes do lado do "customer"
-    const rawCustomerAccounts = customerData?.customerAccount || [];
-    const filteredCustomerAccounts = rawCustomerAccounts.filter(acc => {
-      const feeTypeString = feeTypeMap[acc.feeType] || "";
-      return ["Customer Fees", "Bank Account Fees", "Investment Account Fees"].includes(feeTypeString);
-    });
-
-    // Construir array a partir do "customerData"
-    const formattedFeesFromCustomer = filteredCustomerAccounts.map(acc => {
-      const normalizedName = normalizeFeeName(acc.feeDescription);
-
-      const field = {
-        code: acc.feeCode || "",
-        name: normalizedName,
-        defaultValue: acc.feeAmount?.toString() || "",
-        labelValue: acc.feeAmount > 0 ? `$${acc.feeAmount.toFixed(2)}` : "",
-        isException: acc.isFeesStandard === "No",
-        exceptionOptions: [],
-        hasChanged: false,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        id: acc.ddaNumber?.toString() || "",
-        isStandard: acc.isFeesStandard === "Yes",
-        isCurrentClient: false,
-        tooltip: acc.source ? `Source: ${acc.source}` : ""
-      };
-
-      return {
-        feeType: feeTypeMap[acc.feeType] || "",
-        feeGroups: [
-          unifyFeeGroupShape({
-            name: acc.feeGroup === 1 ? "Client Current Fees" : "Standard Fees",
-            accountNumber: acc.ddaNumber?.toString() ?? "",
-            cif: acc.cifno?.toString() ?? "",
-            kycMailingStatus: acc.kycMailingStatus ?? "",
-            fields: [field]
-          })
-        ]
-      };
-    });
-
-    // Construir array a partir do "feesData"
-    const formattedFeeGroupsFromData =
-      feesData?.fees?.map(fg => ({
-        feeType: fg.feeType || "",
-        feeGroups: fg.feeGroups?.map(g => unifyFeeGroupShape(g)) || []
-      })) || [];
-
-    // Unir ambos
-    const allFees = [...formattedFeesFromCustomer, ...formattedFeeGroupsFromData];
-
-    // Quais FeeTypes aparecerão
-    const feeTypesToReturn = ["Customer Fees", "Bank Account Fees", "Investment Account Fees"];
-
-    // ### AGRUPAMENTO e ORDENACAO FINAL ###
-    const groupedFees = feeTypesToReturn.map(type => {
-      // 1) Filtra todos que tenham feeType === type
-      const itemsOfThisType = allFees.filter(item => item.feeType === type);
-
-      // 2) Concatena TODOS os feeGroups num só array
-      const combinedGroups = itemsOfThisType.flatMap(item => item.feeGroups || []);
-
-      // 3) Fazemos um "merge" de grupos com mesma (name, accountNumber, cif, kycMailingStatus)
-      //    para não duplicar "Standard Fees", etc.
-      const mapOfGroups = {};
-
-      for (const group of combinedGroups) {
-        // Monta uma chave única para cada grupo
-        const key = [
-          group.name,
-          group.accountNumber,
-          group.cif,
-          group.kycMailingStatus
-        ].join("||");
-
-        if (!mapOfGroups[key]) {
-          mapOfGroups[key] = {
-            name: group.name,
-            accountNumber: group.accountNumber,
-            cif: group.cif,
-            kycMailingStatus: group.kycMailingStatus,
-            fields: []
-          };
-        }
-        // Concatena os fields
-        mapOfGroups[key].fields.push(...group.fields);
-      }
-
-      // 4) Agora convertendo esse mapa em array
-      const mergedGroupsArray = Object.values(mapOfGroups);
-
-      // 5) Ordenamos pela prioridade:
-      //    "Standard Fees" (1), "Client Current Fees" (2), "Exception Request" (3)
-      const nameOrder = {
-        "Standard Fees": 1,
-        "Client Current Fees": 2,
-        "Exception Request": 3
-      };
-      mergedGroupsArray.sort((a, b) => {
-        const priorityA = nameOrder[a.name] ?? 9999;
-        const priorityB = nameOrder[b.name] ?? 9999;
-        return priorityA - priorityB;
-      });
-
-      return {
-        feeType: type,
-        feeGroups: mergedGroupsArray
-      };
-    });
-
-    // Monta o objeto final
-    const result = {
-      customerName: customerData?.customerAddress?.name || feesData?.customerName || '',
-      customerShortName: feesData?.customerShortName || '',
-      customerAddress: customerData?.customerAddress?.address || '',
-      customerAccountOfficer: customerData?.customerAddress?.officer || '',
-      cif: customerData?.customerAddress?.cif || cif,
-      officerId: feesData?.officerId || '',
-      branchCity: feesData?.branchCity || '',
-      branchState: feesData?.branchState || '',
-      branchType,
-      feePackage: feesData?.feePackage || '',
-      defaultFeePackageId: feesData?.defaultFeePackageId || '',
-      defaultPackageType: feesData?.defaultPackageType || '',
-      packageName,
-      packageType,
-      fees: groupedFees,
-      feesActives: feesData?.feesActives || [],
-      documentUrl: feesData?.documentUrl || '',
-      currentFees
-    };
-
-    global.logger.info('End process');
-    return {
-      code: 200,
-      data: result
-    };
-  }
+https://nextjs.org/docs/messages/module-not-found
+error - Error: Cannot find module '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\.next\fallback-build-manifest.json'
+Require stack:
+- H:\workspace\fee-management-frontend\node_modules\next\dist\server\load-components.js
+- H:\workspace\fee-management-frontend\node_modules\next\dist\build\utils.js
+- H:\workspace\fee-management-frontend\node_modules\next\dist\cli\next-dev.js
+- H:\workspace\fee-management-frontend\node_modules\next\dist\lib\commands.js
+- H:\workspace\fee-management-frontend\node_modules\next\dist\bin\next
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1048:15)
+    at mod._resolveFilename (H:\workspace\fee-management-frontend\node_modules\next\dist\build\webpack\require-hook.js:23:32)
+    at Module._load (node:internal/modules/cjs/loader:901:27)
+    at Module.require (node:internal/modules/cjs/loader:1115:19)
+    at require (node:internal/modules/helpers:130:18)
+    at Object.loadDefaultErrorComponentsImpl [as loadDefaultErrorComponents] (H:\workspace\fee-management-frontend\node_modules\next\dist\server\load-components.js:23:24)
+    at DevServer.getFallbackErrorComponents (H:\workspace\fee-management-frontend\node_modules\next\dist\server\dev\next-dev-server.js:1153:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async DevServer.renderErrorToResponseImpl (H:\workspace\fee-management-frontend\node_modules\next\dist\server\base-server.js:1306:40) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\server\\load-components.js',
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\build\\utils.js',
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\cli\\next-dev.js',
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\lib\\commands.js',
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\bin\\next'
+  ]
 }
+Error: Cannot find module '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\.next\fallback-build-manifest.json'
+Require stack:
+- H:\workspace\fee-management-frontend\node_modules\next\dist\server\load-components.js
+- H:\workspace\fee-management-frontend\node_modules\next\dist\build\utils.js
+- H:\workspace\fee-management-frontend\node_modules\next\dist\cli\next-dev.js
+- H:\workspace\fee-management-frontend\node_modules\next\dist\lib\commands.js
+- H:\workspace\fee-management-frontend\node_modules\next\dist\bin\next
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1048:15)
+    at mod._resolveFilename (H:\workspace\fee-management-frontend\node_modules\next\dist\build\webpack\require-hook.js:23:32)
+    at Module._load (node:internal/modules/cjs/loader:901:27)
+    at Module.require (node:internal/modules/cjs/loader:1115:19)
+    at require (node:internal/modules/helpers:130:18)
+    at Object.loadDefaultErrorComponentsImpl [as loadDefaultErrorComponents] (H:\workspace\fee-management-frontend\node_modules\next\dist\server\load-components.js:23:24)
+    at DevServer.getFallbackErrorComponents (H:\workspace\fee-management-frontend\node_modules\next\dist\server\dev\next-dev-server.js:1153:43)
+    at async DevServer.renderErrorToResponseImpl (H:\workspace\fee-management-frontend\node_modules\next\dist\server\base-server.js:1306:40)
+    at async pipe.req.req (H:\workspace\fee-management-frontend\node_modules\next\dist\server\base-server.js:1190:30)
+    at async DevServer.pipeImpl (H:\workspace\fee-management-frontend\node_modules\next\dist\server\base-server.js:458:25)
+    at async DevServer.run (H:\workspace\fee-management-frontend\node_modules\next\dist\server\dev\next-dev-server.js:822:28)
+    at async DevServer.handleRequestImpl (H:\workspace\fee-management-frontend\node_modules\next\dist\server\base-server.js:375:20)
+    at async H:\workspace\fee-management-frontend\node_modules\next\dist\server\base-server.js:157:99 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\server\\load-components.js',
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\build\\utils.js',
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\cli\\next-dev.js',
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\lib\\commands.js',
+    'H:\\workspace\\fee-management-frontend\\node_modules\\next\\dist\\bin\\next'
+  ]
+}
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js' in \\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\workspace\fee-management-frontend\next.config.js
