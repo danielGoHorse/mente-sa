@@ -1,84 +1,99 @@
-[
-  {
-    feeType: "Bank Account Fees",
-    feeGroups: [
-      {
-        name: "Standard Fees",
-        code: 1,
-        fields: [
+import numberToCurrency from '../core/helpers/currency.js'
+
+export default class CustomerFees {
+  #feeName = 'Customer Fees'
+  #customer = {}
+  #accounts = []
+  #clientCurrent = []
+  constructor(fees, accounts) {
+    // global.logger.info('CustomerFees()')
+
+    const feeTypes = accounts.reduce((acc, item) => {
+      if (item.feeType > 2) return acc
+      acc = item.feeType
+      return acc
+    }, 0)
+
+    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0]
+
+    this.#customer.feeGroups.forEach((feeGroup) => {
+      feeGroup.fields = feeGroup.fields.filter((x) => x.code <= feeTypes)
+      feeGroup.fields?.forEach((item) => {
+        item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired)
+      })
+    })
+
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#customer.feeGroups[0].code
+    )
+
+    this.#customer.feeGroups[0].kycMailingStatus =
+      accounts.find((account) => account.feeType === 2)?.kycMailingStatus ||
+      null
+    this.#customer.feeGroups[0].fields.forEach((field) => {
+      field.labelValue = numberToCurrency(field.defaultValue)
+    })
+
+    this.#clientCurrent = this.#customer.feeGroups[1].fields
+    this.#configureCustomer()
+
+    this.#customer.feeGroups[2].fields.forEach((field, fieldIndex) => {
+      field.labelValue =
+        this.#customer.feeGroups[1].fields[fieldIndex].labelValue
+      if (
+        field.code === 2 &&
+        this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+      ) {
+        field.defaultValue = field.labelValue
+        field.exceptionOptions = [
           {
-            code: 4,
-            name: "FX Outgoing Wire Fee",
-            defaultValue: "25",
-            tooltip: "",
-            isException: false,
-          },
-          {
-            code: 8,
-            name: "FX Outgoing Wire (SafraLink) Fee",
-            defaultValue: "10",
-            tooltip: "",
-            isException: false,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    feeType: "Investment Account Fees",
-    feeGroups: [
-      {
-        name: "Standard Fees",
-        code: 1,
-        fields: [
-          {
-            code: 6,
-            name: "Safekeeping of Securities",
-            defaultValue: "",
-            tooltip: "Charged: 0.35% /YR min $375.00/QTR",
-            isException: false,
-          },
-          {
-            code: 5,
-            name: "SSL Account Maintanance Fee",
-            defaultValue: "375",
-            tooltip: "Charged: Quarterly on Day 1",
-            isException: false,
-          },
-          {
-            code: 7,
-            name: "US Equities Commission",
-            defaultValue: "",
-            tooltip: "Charged: $0.10 per share, min charge of $150 per trade",
-            isException: false,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    feeType: "Customer Fees",
-    feeGroups: [
-      {
-        name: "Standard Fees",
-        code: 1,
-        fields: [
-          {
-            code: 1,
-            name: "Account Maintenance Fee",
-            defaultValue: "25",
-            tooltip: "Charged: Monthly - Charged Quarterly",
-            isException: false,
-          },
-          {
-            code: 2,
-            name: "Hold Mail Fee",
-            defaultValue: "",
-            tooltip: "Charged: Annual - Charged Annual",
-            isException: false,
-          },
-        ],
-      },
-    ],
-  },
-]
+            value: field.defaultValue,
+            text: field.defaultValue
+          }
+        ]
+      }
+    })
+  }
+
+  get fee() {
+    return this.#customer
+  }
+
+  #configureCustomer() {
+    // global.logger.info('configureCustomer()')
+
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#customer = {}
+      return
+    }
+
+    for (const field of this.#clientCurrent) {
+      for (const account of this.#accounts) {
+        if (field.isCurrentClient && field.code === account.feeType) {
+          if (
+            field.code === 2 &&
+            this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+          ) {
+            field.defaultValue = 'NOT APPLICABLE'
+            field.labelValue = field.defaultValue
+          } else {
+            field.defaultValue = account.feeAmount.toString()
+            field.labelValue = numberToCurrency(field.defaultValue)
+          }
+        }
+      }
+    }
+
+    for (const feeGroup of this.#customer.feeGroups) {
+      feeGroup.cif = this.#accounts[0].cifno
+      feeGroup.accountNumber = this.#accounts[0].ddaNumber
+    }
+
+    this.#clearMemory()
+  }
+
+  #clearMemory() {
+    this.#accounts = []
+    this.#clientCurrent = []
+  }
+}
