@@ -1,28 +1,1143 @@
-CustomerName                            |CustomerShortName   |CustomerAddress                                                                  |CIFNO  |ACCTNO |FeeDescription                  |FeeCode|Istransactional|FeeType                |FeeAmount|Frequency                                    |Branch City|Branch State|Branch Type|OfficerId|Officer                       |StandardException|Default Fee Package Id|Default Fee Package|Default Package Type|Default Fee Amount|Default Frequency                            |
-----------------------------------------+--------------------+---------------------------------------------------------------------------------+-------+-------+--------------------------------+-------+---------------+-----------------------+---------+---------------------------------------------+-----------+------------+-----------+---------+------------------------------+-----------------+----------------------+-------------------+--------------------+------------------+---------------------------------------------+
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |    25.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|Account Maintenance Fee         |JH001  |              0|Customer Fees          |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|Monthly - Charged Quarterly                  |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|Hold Mail Fee                   |JH002  |              0|Customer Fees          |     0.00|Annual - Charged Annual                      |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |              0.00|Annual - Charged Annual                      |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |    25.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+[
+  {
+    $__: {
+      activePaths: {
+        paths: {
+          name: "init",
+          isException: "init",
+          isCurrentClient: "default",
+          isStandard: "default",
+          code: "init",
+          hasChanged: "default",
+          _id: "init",
+          defaultValue: "init",
+          exceptionOptions: "init",
+        },
+        states: {
+          require: {
+          },
+          default: {
+            isStandard: true,
+            isCurrentClient: true,
+            hasChanged: true,
+          },
+          init: {
+            _id: true,
+            code: true,
+            isException: true,
+            name: true,
+            defaultValue: true,
+            exceptionOptions: true,
+          },
+        },
+      },
+      skipId: true,
+    },
+    $isNew: false,
+    _doc: {
+      isStandard: false,
+      isCurrentClient: false,
+      hasChanged: false,
+      _id: {
+      },
+      code: 7,
+      isException: true,
+      name: "Equity and Options Commission",
+      defaultValue: "",
+      exceptionOptions: [
+        {
+          __parentArray: [Circular],
+          __index: 0,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "I3",
+            text: "I3 - Equity:100 basis points, with a minimum charge of $150 per trade; Option:100 basis points, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 1,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "H7",
+            text: "H7 - Equity:$0.004 per share, with NO minimum charge; Option: $0.01 per share, with NO minimum charge",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 2,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "H9",
+            text: "H9 - Equity:$0.005 per share, with a minimum charge of $30 per trade; Option: $0.01 per share, with a minimum charge of $30 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 3,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "A4",
+            text: "A4 - Equity:$0.01 per share, with a minimum charge of $150 per trade; Option:$0.01 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 4,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "H2",
+            text: "H2 - Equity:$0.01 per share, with NO minimum charge; Option: $0.01 per share, with NO minimum charge",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 5,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "J1",
+            text: "J1 - Equity:$0.01 per share, with a minimum charge of $75 per trade; Option: $0.01 per share, with a minimum charge of $75 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 6,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "A6",
+            text: "A6 - Equity:$0.02 per share, with a minimum charge of $50 per trade; Option:$0.02 per share, with a minimum charge of $ 50 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 7,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "A7",
+            text: "A7 - Equity:$0.02 per share, with a minimum charge of $75 per trade; Option:$0.02 per share, with a minimum charge of $75 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 8,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "E4",
+            text: "E4 - Equity:$0.02 per share, with a minimum charge of $80 per trade; Option:$0.02 per share, with a minimum charge of $80 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 9,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "A8",
+            text: "A8 - Equity:$0.02 per share, with a minimum charge of $80 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 10,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "B1",
+            text: "B1 - Equity:$0.02 per share, with a minimum charge of $150 per trade; Option:$0.02 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 11,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "I9",
+            text: "I9 - Equity:$0.02 per share, with a minimum charge of $30 per trade; Option: $0.02 per share, with a minimum charge of $ 30 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 12,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "J3",
+            text: "J3 - Equity:$0.02 per share, with a minimum charge of $100 per trade; Option:$0.02 per share, with a minimum charge of $100 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 13,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "B3",
+            text: "B3 - Equity:$0.03 per share, with a minimum charge of $75 per trade; Option:$0.03 per share, with a minimum charge of $75 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 14,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "I8",
+            text: "I8 - Equity:$0.03 per share, with a minimum charge of $100 per trade; Option:$0.03 per share, with a minimum charge of $100 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 15,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "B6",
+            text: "B6 - Equity:$0.03 per share, with a minimum charge of $150 per trade; Option:$0.03 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 16,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "C2",
+            text: "C2 - Equity:$0.04 per share, with a minimum charge of $75 per trade; Option:$0.04 per share, with a minimum charge of $75 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 17,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "C4",
+            text: "C4 - Equity:$0.04 per share, with a minimum charge of $150 per trade; Option:$0.04 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 18,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "C5",
+            text: "C5 - Equity:$0.04 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 19,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "I7",
+            text: "I7 - Equity:$0.05 per share, with a minimum charge of $50 per trade; Option: $0.05 per share, with a minimum charge of $50 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 20,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "H1",
+            text: "H1 - Equity:$0.05 per share, with a minimum charge of $75 per trade; Option: $0.05 per share, with a minimum charge of $75 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 21,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "C8",
+            text: "C8 - Equity:$0.05 per share, with a minimum charge of $100 per trade; Option:$0.05 per share, with a minimum charge of $100 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 22,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "D2",
+            text: "D2 - Equity:$0.05 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 23,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "D7",
+            text: "D7 - Equity:$0.07 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 24,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "E3",
+            text: "E3 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 25,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "J5",
+            text: "J5 - Equity:$15 flat charge per trade; Option: $15 flat charge per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 26,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "J4",
+            text: "J4 - Equity:$25 flat charge per trade; Option: $25 flat charge per trade",
+          },
+          $isNew: false,
+        },
+        {
+          __parentArray: [Circular],
+          __index: 27,
+          $__parent: [Circular],
+          $__: {
+            activePaths: {
+              paths: {
+                retired: "default",
+                visible: "default",
+                approvedByDoubleA: "default",
+                _id: "default",
+                value: "init",
+                text: "init",
+              },
+              states: {
+                default: {
+                  retired: true,
+                  visible: true,
+                  approvedByDoubleA: true,
+                  _id: true,
+                },
+                init: {
+                  value: true,
+                  text: true,
+                },
+              },
+            },
+          },
+          _doc: {
+            retired: false,
+            visible: true,
+            approvedByDoubleA: null,
+            _id: {
+            },
+            value: "A2",
+            text: "A2 - Equity:$50 flat charge per trade; Option:$50 flat charge per trade",
+          },
+          $isNew: false,
+        },
+      ],
+    },
+  },
+]
