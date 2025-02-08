@@ -1,5 +1,73 @@
-FeeCode|FeeDescription                  |FeeParameterOptionId|Amount|FreqDescription|
--------+--------------------------------+--------------------+------+---------------+
-JH001  |Account Maintenance Fee         |                  94|  0.00|               |
-JH006  |FX Outgoing Wire Fee            |                  93|  0.00|               |
-JH007  |FX Outgoing Wire (SafraLink) Fee|                  95|  0.00|               |
+async execute({ customerAccount }) {
+  const result = { fees: [] };
+
+  // Buscar e estruturar os dados do SQL
+  const fees = await this.#getFeesStructuredFromSQL(customerAccount);
+
+  // Buscar exceções via SQL
+  const exceptions = await this.#getExceptionFeesFromSQL(2); // Exemplo de FeePackageId
+  console.log('Exceptions from SQL:', exceptions);
+
+  const customer = new CustomerFees(fees, customerAccount);
+  if (customer.fee) result.fees.push(customer.fee);
+
+  const bank = new BankAccountFee(fees, customerAccount);
+  if (bank.fee) result.fees.push(bank.fee);
+
+  const investiment = new InvestimentAccountFee(fees, customerAccount, exceptions);
+  if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
+
+  result.feesActives = [];
+  result.documentUrl =
+    'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
+
+  return Result.ok(result);
+}
+
+
+
+
+async #getExceptionFeesFromSQL(feePackageId) {
+  const connection = await connectToFeeMgmtDb();
+  const data = await executeStoreProcedure(
+    connection,
+    'sp_get_exception_fees_bypackage',
+    { feePackageId }
+  );
+
+  // Mapear os dados em um formato consistente
+  return data.map((exception) => ({
+    code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
+    name: exception.FeeDescription,
+    defaultValue: exception.Amount?.toString() || '0',
+    tooltip: exception.FreqDescription || '',
+    isException: true
+  }));
+}
+
+
+
+export default class InvestimentAccountFee {
+  #feeName = 'Investment Account Fees';
+  #investment = {};
+  constructor(fees, accounts, exceptions) {
+    this.#investment = fees.filter((x) => x.feeType === this.#feeName)[0];
+
+    if (!this.#investment || !Array.isArray(this.#investment.feeGroups)) {
+      throw new Error('Investment Account Fees or feeGroups are undefined');
+    }
+
+    // Adicionar exceções ao grupo de fees
+    const exceptionGroup = {
+      name: 'Exceptions',
+      code: 3,
+      fields: exceptions || []
+    };
+
+    this.#investment.feeGroups.push(exceptionGroup);
+  }
+
+  get fee() {
+    return this.#investment;
+  }
+}
