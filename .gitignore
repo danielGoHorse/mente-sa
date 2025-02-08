@@ -1,99 +1,28 @@
-import numberToCurrency from '../core/helpers/currency.js'
-
-export default class CustomerFees {
-  #feeName = 'Customer Fees'
-  #customer = {}
-  #accounts = []
-  #clientCurrent = []
-  constructor(fees, accounts) {
-    // global.logger.info('CustomerFees()')
-
-    const feeTypes = accounts.reduce((acc, item) => {
-      if (item.feeType > 2) return acc
-      acc = item.feeType
-      return acc
-    }, 0)
-
-    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0]
-
-    this.#customer.feeGroups.forEach((feeGroup) => {
-      feeGroup.fields = feeGroup.fields.filter((x) => x.code <= feeTypes)
-      feeGroup.fields?.forEach((item) => {
-        item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired)
-      })
-    })
-
-    this.#accounts = accounts.filter(
-      (x) => x.feeGroup === this.#customer.feeGroups[0].code
-    )
-
-    this.#customer.feeGroups[0].kycMailingStatus =
-      accounts.find((account) => account.feeType === 2)?.kycMailingStatus ||
-      null
-    this.#customer.feeGroups[0].fields.forEach((field) => {
-      field.labelValue = numberToCurrency(field.defaultValue)
-    })
-
-    this.#clientCurrent = this.#customer.feeGroups[1].fields
-    this.#configureCustomer()
-
-    this.#customer.feeGroups[2].fields.forEach((field, fieldIndex) => {
-      field.labelValue =
-        this.#customer.feeGroups[1].fields[fieldIndex].labelValue
-      if (
-        field.code === 2 &&
-        this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
-      ) {
-        field.defaultValue = field.labelValue
-        field.exceptionOptions = [
-          {
-            value: field.defaultValue,
-            text: field.defaultValue
-          }
-        ]
-      }
-    })
-  }
-
-  get fee() {
-    return this.#customer
-  }
-
-  #configureCustomer() {
-    // global.logger.info('configureCustomer()')
-
-    if (this.#accounts && this.#accounts.length < 1) {
-      this.#customer = {}
-      return
-    }
-
-    for (const field of this.#clientCurrent) {
-      for (const account of this.#accounts) {
-        if (field.isCurrentClient && field.code === account.feeType) {
-          if (
-            field.code === 2 &&
-            this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
-          ) {
-            field.defaultValue = 'NOT APPLICABLE'
-            field.labelValue = field.defaultValue
-          } else {
-            field.defaultValue = account.feeAmount.toString()
-            field.labelValue = numberToCurrency(field.defaultValue)
-          }
-        }
-      }
-    }
-
-    for (const feeGroup of this.#customer.feeGroups) {
-      feeGroup.cif = this.#accounts[0].cifno
-      feeGroup.accountNumber = this.#accounts[0].ddaNumber
-    }
-
-    this.#clearMemory()
-  }
-
-  #clearMemory() {
-    this.#accounts = []
-    this.#clientCurrent = []
-  }
-}
+CustomerName                            |CustomerShortName   |CustomerAddress                                                                  |CIFNO  |ACCTNO |FeeDescription                  |FeeCode|Istransactional|FeeType                |FeeAmount|Frequency                                    |Branch City|Branch State|Branch Type|OfficerId|Officer                       |StandardException|Default Fee Package Id|Default Fee Package|Default Package Type|Default Fee Amount|Default Frequency                            |
+----------------------------------------+--------------------+---------------------------------------------------------------------------------+-------+-------+--------------------------------+-------+---------------+-----------------------+---------+---------------------------------------------+-----------+------------+-----------+---------+------------------------------+-----------------+----------------------+-------------------+--------------------+------------------+---------------------------------------------+
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115342|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |    25.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|                                             |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115342|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115342|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115342|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115342|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115342|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115822|Account Maintenance Fee         |JH001  |              0|Customer Fees          |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|Monthly - Charged Quarterly                  |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115822|Hold Mail Fee                   |JH002  |              0|Customer Fees          |     0.00|Annual - Charged Annual                      |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |              0.00|Annual - Charged Annual                      |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115822|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|                                             |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115822|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115822|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115822|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115822|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115342|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7113617|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|                                             |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7113617|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7113617|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7113617|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7113617|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7113617|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115431|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |    25.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|                                             |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115431|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115431|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115431|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115431|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+VVVV VVVVVV                             |VVVVVV VVVV         |2417 Tongass Ave #111                    VVV VVVV VV 22222                       |F016583|7115431|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
