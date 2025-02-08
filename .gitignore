@@ -1,13 +1,74 @@
-#buildCustomerAccounts(feesData) {
+async #getFeesStructuredFromSQL(customerAccount) {
+  // Obter os dados do SQL
+  const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
+
+  // Construir o formato esperado para customerAccount
   const accounts = feesData.map(fee => ({
     cifno: fee.CIFNO,
     ddaNumber: fee.ACCTNO,
     feeType: this.#mapFeeType(fee.FeeType),
-    feeGroup: fee.FeeGroup || 1, // Ajuste isso caso FeeGroup esteja em outro lugar
+    feeGroup: 1, // Pode ajustar se tiver lógica para isso
     kycMailingStatus: fee.StandardException === "Standard" ? "Standard" : "Hold Mail"
   }));
 
-  return accounts;
+  // Estruturar os dados agrupados
+  const groupedFees = {};
+
+  for (const fee of feesData) {
+    const { FeeType, FeeDescription, FeeCode, FeeAmount, Frequency, DefaultFeeAmount, DefaultFrequency, ACCTNO } = fee;
+
+    // Converter FeeCode via de/para
+    const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+
+    // Criar feeType se ainda não existir
+    if (!groupedFees[FeeType]) {
+      groupedFees[FeeType] = {
+        feeType: FeeType,
+        feeGroups: []
+      };
+    }
+
+    // Adicionar Standard Fees
+    let standardGroup = groupedFees[FeeType].feeGroups.find(group => group.name === "Standard Fees");
+    if (!standardGroup) {
+      standardGroup = {
+        name: "Standard Fees",
+        code: 1,
+        fields: []
+      };
+      groupedFees[FeeType].feeGroups.push(standardGroup);
+    }
+
+    standardGroup.fields.push({
+      code: mappedCode,
+      name: FeeDescription,
+      defaultValue: FeeAmount ? FeeAmount.toString() : "",
+      tooltip: Frequency ? Frequency : "",
+      isException: false
+    });
+
+    // Adicionar Client Current Fees
+    let clientCurrentGroup = groupedFees[FeeType].feeGroups.find(group => group.name === "Client Current Fees");
+    if (!clientCurrentGroup) {
+      clientCurrentGroup = {
+        name: "Client Current Fees",
+        code: 2,
+        fields: []
+      };
+      groupedFees[FeeType].feeGroups.push(clientCurrentGroup);
+    }
+
+    clientCurrentGroup.fields.push({
+      code: mappedCode,
+      name: FeeDescription,
+      defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : "",
+      tooltip: DefaultFrequency ? DefaultFrequency : "",
+      isException: false
+    });
+  }
+
+  // Retornar groupedFees e accounts para o uso correto
+  return { groupedFees: Object.values(groupedFees), accounts };
 }
 
 // Função auxiliar para mapear o FeeType
@@ -23,15 +84,3 @@
       return 0;
   }
 }
-
-
-
-const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
-
-// Construir o formato correto de customerAccount
-const accounts = this.#buildCustomerAccounts(feesData);
-
-// Passar `accounts` no lugar de `customerAccount`
-const customer = new CustomerFees(fees, accounts);
-if (customer.fee) result.fees.push(customer.fee);
-
