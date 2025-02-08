@@ -1,110 +1,112 @@
-import { FeeGroup } from './entities/FeeGroups.js'
-import numberToCurrency from '../core/helpers/currency.js'
-
-export default class BankAccountFee {
-  #feeName = 'Bank Account Fees'
-  #bank = {}
-  #accounts = []
-  #accountsDDA = []
-  constructor(fees, accounts) {
-    // global.logger.info('BankAccountFee()')
-
-    this.#bank = fees.filter((x) => x.feeType === this.#feeName)[0]
-    const feeGroupCode = this.#bank.feeGroups[0].code
-
-    this.#accounts = accounts.filter(
-      (x) => x.feeGroup === this.#bank.feeGroups[0].code
-    )
-
-    this.#accountsDDA = new Set(
-      accounts
-        .filter((x) => x.feeGroup === feeGroupCode)
-        .map((x) => x.ddaNumber)
-    )
-
-    this.#addMultiplesAccount(this.#accounts[0].cifno)
-    this.#addCurrentClientValue()
+constructor(fees, accounts) {
+  // Validar fees
+  if (!fees || !Array.isArray(fees) || fees.length === 0) {
+    throw new Error('Fees is empty or undefined');
   }
 
-  get fee() {
-    return this.#bank
+  // Encontrar Bank Account Fees
+  this.#bank = fees.filter((x) => x.feeType === this.#feeName)[0];
+  if (!this.#bank || !Array.isArray(this.#bank.feeGroups)) {
+    throw new Error('Bank Account Fees or feeGroups are undefined');
   }
 
-  #addMultiplesAccount(cif) {
-    // global.logger.info('addMultiplesAccount()')
+  // Validar accounts
+  if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
+    throw new Error('Accounts is empty or undefined');
+  }
 
-    if (this.#accounts && this.#accounts.length < 1) {
-      this.#bank = {}
+  // Filtrar contas e DDA
+  const feeGroupCode = this.#bank.feeGroups[0].code;
+  this.#accounts = accounts.filter((x) => x.feeGroup === feeGroupCode);
+  this.#accountsDDA = new Set(
+    accounts
+      .filter((x) => x.feeGroup === feeGroupCode)
+      .map((x) => x.ddaNumber)
+  );
+
+  if (this.#accounts.length === 0) {
+    throw new Error('No accounts matched with Bank Account Fees feeGroup');
+  }
+
+  // Adicionar múltiplas contas e valores atuais
+  this.#addMultiplesAccount(this.#accounts[0].cifno);
+  this.#addCurrentClientValue();
+}
+
+#addMultiplesAccount(cif) {
+  if (!this.#accounts || this.#accounts.length < 1) {
+    this.#bank = {};
+    return;
+  }
+
+  const result = {};
+  for (const feeGroup of this.#bank.feeGroups) {
+    if (!feeGroup.fields || !Array.isArray(feeGroup.fields)) {
+      console.warn(`FeeGroup ${feeGroup.name} has no fields`);
+      continue;
     }
-    const result = {}
-    for (const feeGroup of this.#bank.feeGroups) {
-      for (const numberAccount of this.#accountsDDA) {
-        if (!result[numberAccount]) result[numberAccount] = []
 
-        feeGroup.fields?.forEach((item) => {
-          item.exceptionOptions = item.exceptionOptions.filter(
-            (x) => !x.retired
-          )
-        })
+    for (const numberAccount of this.#accountsDDA) {
+      if (!result[numberAccount]) result[numberAccount] = [];
 
-        const newFeeGroup = new FeeGroup({
-          name: feeGroup.name,
-          fields: feeGroup.fields,
-          cif,
-          accountNumber: numberAccount,
-          visible: feeGroup.visible,
-          code: feeGroup.code
-        })
+      feeGroup.fields.forEach((item) => {
+        item.exceptionOptions = item.exceptionOptions?.filter(
+          (x) => !x.retired
+        ) || [];
+      });
 
-        result[numberAccount].push(newFeeGroup)
-      }
-    }
-    const feeGroupsByAccount = Object.keys(result).map((item) => result[item])
-    this.#bank.feeGroups = []
-    for (const feeGroups of feeGroupsByAccount) {
-      for (const feeGroup of feeGroups) {
-        this.#bank.feeGroups.push(feeGroup)
-      }
+      const newFeeGroup = new FeeGroup({
+        name: feeGroup.name,
+        fields: feeGroup.fields,
+        cif,
+        accountNumber: numberAccount,
+        visible: feeGroup.visible,
+        code: feeGroup.code
+      });
+
+      result[numberAccount].push(newFeeGroup);
     }
   }
 
-  #addCurrentClientValue() {
-    // global.logger.info('addCurrentClientValue()')
+  const feeGroupsByAccount = Object.keys(result).map((item) => result[item]);
+  this.#bank.feeGroups = [];
+  for (const feeGroups of feeGroupsByAccount) {
+    this.#bank.feeGroups.push(...feeGroups);
+  }
+}
 
-    if (this.#accounts && this.#accounts.length < 1) {
-      this.#bank = {}
-      return
-    }
 
-    for (const [feeGroupIndex, feeGroup] of this.#bank.feeGroups.entries()) {
-      feeGroup.cif = this.#accounts[0].cifno
-      for (const [fieldIndex, field] of feeGroup.fields.entries()) {
-        if (field.isException) {
+#addCurrentClientValue() {
+  if (!this.#accounts || this.#accounts.length < 1) {
+    this.#bank = {};
+    return;
+  }
+
+  for (const [feeGroupIndex, feeGroup] of this.#bank.feeGroups.entries()) {
+    feeGroup.cif = this.#accounts[0]?.cifno || null;
+    for (const [fieldIndex, field] of feeGroup.fields.entries()) {
+      if (field.isException) {
+        const previousGroup = this.#bank.feeGroups[feeGroupIndex - 1];
+        if (previousGroup) {
           field.labelValue =
-            this.#bank.feeGroups[feeGroupIndex - 1].fields[
-              fieldIndex
-            ].labelValue
-        } else {
-          for (const account of this.#accounts) {
-            if (
-              field.code === account.feeType &&
-              feeGroup.accountNumber === account.ddaNumber.toString()
-            ) {
-              if (field.isCurrentClient) {
-                field.defaultValue = account.feeAmount.toString()
-              }
-              field.labelValue = numberToCurrency(field.defaultValue)
+            previousGroup.fields[fieldIndex]?.labelValue || '';
+        }
+      } else {
+        for (const account of this.#accounts) {
+          if (
+            field.code === account.feeType &&
+            feeGroup.accountNumber === account.ddaNumber.toString()
+          ) {
+            if (field.isCurrentClient) {
+              field.defaultValue = account.feeAmount?.toString() || '';
             }
+            field.labelValue = numberToCurrency(field.defaultValue);
           }
         }
       }
     }
-
-    this.#clearMemory()
   }
 
-  #clearMemory() {
-    this.#accounts = []
-    this.#accountsDDA = []
-  }
+  this.#clearMemory();
 }
+
