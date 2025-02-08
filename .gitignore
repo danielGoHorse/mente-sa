@@ -1,28 +1,188 @@
-CustomerName                            |CustomerShortName   |CustomerAddress                                                                  |CIFNO  |ACCTNO |FeeDescription                  |FeeCode|Istransactional|FeeType                |FeeAmount|Frequency                                    |Branch City|Branch State|Branch Type|OfficerId|Officer                       |StandardException|Default Fee Package Id|Default Fee Package|Default Package Type|Default Fee Amount|Default Frequency                            |
-----------------------------------------+--------------------+---------------------------------------------------------------------------------+-------+-------+--------------------------------+-------+---------------+-----------------------+---------+---------------------------------------------+-----------+------------+-----------+---------+------------------------------+-----------------+----------------------+-------------------+--------------------+------------------+---------------------------------------------+
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |    25.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|Account Maintenance Fee         |JH001  |              0|Customer Fees          |    25.00|Monthly - Charged Quarterly                  |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|Monthly - Charged Quarterly                  |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|Hold Mail Fee                   |JH002  |              0|Customer Fees          |     0.00|Annual - Charged Annual                      |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |              0.00|Annual - Charged Annual                      |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115822|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115342|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |     0.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Exception        |                     2|Domestic Individual|Individual          |             25.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7113617|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees      |    25.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             25.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|FX Outgoing Wire (SafraLink) Fee|JH007  |              1|Bank Account Fees      |    10.00|                                             |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |             10.00|                                             |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|Safekeeping of Securities       |BPS002 |              0|Investment Account Fees|         |0.35% /YR min $375.00/QTR                    |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |0.35% /YR min $375.00/QTR                    |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|SSL Account Maintanance Fee     |BPS003 |              0|Investment Account Fees|   375.00|Quarterly on Day 1                           |New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |            375.00|Quarterly on Day 1                           |
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|US Equities Commission          |BPS004 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
-WWWW WWWEWW                             |WWWEWW WWWW         |2417 Tongass Ave #111                    EWW WWWW EW 44444                       |F016583|7115431|Options Commission              |BPS005 |              1|Investment Account Fees|         |$0.10 per share, min charge of $150 per trade|New York   |NY          |Domestic   |369      |Mordekhai Aghai           BR 7|Standard         |                     2|Domestic Individual|Individual          |                  |$0.10 per share, min charge of $150 per trade|
+import { Fee } from '#src/models/entities/Fees.js'
+import Result from '#features/shared/result.js'
+import CustomerFees from '#src/models/CustomerFees.js'
+import BankAccountFee from '#src/models/BankAccountFee.js'
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure
+} from '#core/data/mssql/index.js';
+
+const deParaFeeCodes = {
+    "JH001": 1,
+    "JH002": 2,
+    "JH006": 4,
+    "JH007": 8,
+    "BPS002": 6,
+    "BPS003": 5,
+    "BPS004": 7,
+    "BPS005": 7,
+    "JH010": 3
+};
+
+export default class FeeGetByCifUseCase {
+
+  async execute({ customerAccount }) {
+    const result = { fees: [] };
+  
+    // Buscar e estruturar os dados do SQL
+  const fees = await this.#getFeesStructuredFromSQL(customerAccount);
+  console.log('fees from SQL:', fees);
+
+  
+    // Passar `accounts` no lugar de `customerAccount`
+    const customer = new CustomerFees(groupedFees, accounts);
+    if (customer.fee) result.fees.push(customer.fee);
+  
+    const bank = new BankAccountFee(groupedFees, accounts);
+    if (bank.fee) result.fees.push(bank.fee);
+  
+    const equityField = await Field.find({ code: 7 });
+    const investiment = new InvestimentAccountFee(
+      groupedFees,
+      accounts,
+      equityField[0]
+    );
+    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
+  
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: {
+        $nin: ['DONE', 'REJECTED']
+      },
+      caseNumber: {
+        $exists: true
+      }
+    });
+  
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }));
+  
+    result.documentUrl =
+      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
+  
+    return Result.ok(result);
+  }
+
+  async #getFeesStructuredFromSQL(customerAccount) {
+    // Obter os dados do SQL
+    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
+
+    const feePackageId = feesData[0]?.['Default Fee Package Id']
+    if (!feePackageId) {
+      throw new Error ('Default Fee Package Id not found in feesData');
+    }
+  
+    // Construir o formato esperado para customerAccount
+    const accounts = feesData.map(fee => ({
+      cifno: fee.CIFNO,
+      ddaNumber: fee.ACCTNO,
+      feeType: this.#mapFeeType(fee.FeeType),
+      feeGroup: 1, // Pode ajustar se tiver lógica para isso
+      kycMailingStatus: fee.StandardException === "Standard" ? "Standard" : "Hold Mail"
+    }));
+  
+    // Estruturar os dados agrupados
+    const groupedFees = {};
+  
+    for (const fee of feesData) {
+      const { FeeType, FeeDescription, FeeCode, FeeAmount, Frequency, DefaultFeeAmount, DefaultFrequency, ACCTNO } = fee;
+  
+      // Converter FeeCode via de/para
+      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+  
+      // Criar feeType se ainda não existir
+      if (!groupedFees[FeeType]) {
+        groupedFees[FeeType] = {
+          feeType: FeeType,
+          feeGroups: []
+        };
+      }
+  
+      // Adicionar Standard Fees
+      let standardGroup = groupedFees[FeeType].feeGroups.find(group => group.name === "Standard Fees");
+      if (!standardGroup) {
+        standardGroup = {
+          name: "Standard Fees",
+          code: 1,
+          fields: []
+        };
+        groupedFees[FeeType].feeGroups.push(standardGroup);
+      }
+  
+      standardGroup.fields.push({
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: FeeAmount ? FeeAmount.toString() : "",
+        tooltip: Frequency ? Frequency : "",
+        isException: false
+      });
+  
+      // Adicionar Client Current Fees
+      let clientCurrentGroup = groupedFees[FeeType].feeGroups.find(group => group.name === "Client Current Fees");
+      if (!clientCurrentGroup) {
+        clientCurrentGroup = {
+          name: "Client Current Fees",
+          code: 2,
+          fields: []
+        };
+        groupedFees[FeeType].feeGroups.push(clientCurrentGroup);
+      }
+  
+      clientCurrentGroup.fields.push({
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : "",
+        tooltip: DefaultFrequency ? DefaultFrequency : "",
+        isException: false
+      });
+    }
+
+    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId); // Exemplo de FeePackageId
+    console.log('Exceptions from SQL:', exceptions);
+  
+    // Retornar groupedFees e accounts para o uso correto
+    return { groupedFees: Object.values(groupedFees), accounts };
+  }
+  
+  // Função auxiliar para mapear o FeeType
+  #mapFeeType(feeType) {
+    switch (feeType) {
+      case "Customer Fees":
+        return 1;
+      case "Bank Account Fees":
+        return 2;
+      case "Investment Account Fees":
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  async #getFeesFromSQL(cifno) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+  }
+
+  async #getExceptionFeesFromSQL(feePackageId) {
+    const connection = await connectToFeeMgmtDb();
+    const data = await executeStoreProcedure(
+      connection,
+      'sp_get_exception_fees_bypackage',
+      { feePackageId }
+    );
+  
+    // Mapear os dados em um formato consistente
+    return data.map((exception) => ({
+      code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
+      name: exception.FeeDescription,
+      defaultValue: exception.Amount?.toString() || '0',
+      tooltip: exception.FreqDescription || '',
+      isException: true
+    }));
+  }
+}
