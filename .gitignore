@@ -1,155 +1,190 @@
+[
+  {
+    code: 1,
+    name: "Account Maintenance Fee",
+    defaultValue: "0",
+    tooltip: "",
+    isException: true,
+  },
+  {
+    code: 4,
+    name: "FX Outgoing Wire Fee",
+    defaultValue: "0",
+    tooltip: "",
+    isException: true,
+  },
+  {
+    code: 8,
+    name: "FX Outgoing Wire (SafraLink) Fee",
+    defaultValue: "0",
+    tooltip: "",
+    isException: true,
+  },
+]
+
 {
-    "code": 200,
-    "data": {
-        "fees": [
-            {
-                "feeType": "Customer Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false,
-                                "exceptionOptions": [],
-                                "labelValue": "$0.00"
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "tooltip": "Annual - Charged Annual",
-                                "isException": false,
-                                "exceptionOptions": [],
-                                "labelValue": "$0.00"
-                            }
-                        ],
-                        "kycMailingStatus": "Hold Mail",
-                        "cif": "K016665",
-                        "accountNumber": 99010118
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false,
-                                "exceptionOptions": []
-                            }
-                        ],
-                        "cif": "K016665",
-                        "accountNumber": 99010118
-                    }
-                ]
-            },
-            {
-                "feeType": "Bank Account Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67a78e052ca1a53686fb0303"
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67a78e052ca1a53686fb0304"
-                            }
-                        ],
-                        "cif": "K016665",
-                        "accountNumber": "99010118",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67a78e052ca1a53686fb0302"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67a78e052ca1a53686fb0306"
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67a78e052ca1a53686fb0307"
-                            }
-                        ],
-                        "cif": "K016665",
-                        "accountNumber": "99010118",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67a78e052ca1a53686fb0305"
-                    }
-                ]
-            },
-            {
-                "feeType": "Investment Account Fees",
-                "feeGroups": []
-            }
+  "Customer Fees": {
+    feeType: "Customer Fees",
+    feeGroups: [
+      {
+        name: "Standard Fees",
+        code: 1,
+        fields: [
+          {
+            code: 1,
+            name: "Account Maintenance Fee",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+          {
+            code: 2,
+            name: "Hold Mail Fee",
+            defaultValue: "",
+            tooltip: "Annual - Charged Annual",
+            isException: false,
+          },
         ],
-        "feesActives": [],
-        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm"
-    }
+      },
+      {
+        name: "Client Current Fees",
+        code: 2,
+        fields: [
+          {
+            code: 1,
+            name: "Account Maintenance Fee",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+          {
+            code: 2,
+            name: "Hold Mail Fee",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+        ],
+      },
+    ],
+  },
+  "Bank Account Fees": {
+    feeType: "Bank Account Fees",
+    feeGroups: [
+      {
+        name: "Standard Fees",
+        code: 1,
+        fields: [
+          {
+            code: 4,
+            name: "FX Outgoing Wire Fee",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+          {
+            code: 8,
+            name: "FX Outgoing Wire (SafraLink) Fee",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+        ],
+      },
+      {
+        name: "Client Current Fees",
+        code: 2,
+        fields: [
+          {
+            code: 4,
+            name: "FX Outgoing Wire Fee",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+          {
+            code: 8,
+            name: "FX Outgoing Wire (SafraLink) Fee",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+        ],
+      },
+    ],
+  },
+  "Investment Account Fees": {
+    feeType: "Investment Account Fees",
+    feeGroups: [
+      {
+        name: "Standard Fees",
+        code: 1,
+        fields: [
+          {
+            code: 6,
+            name: "Safekeeping of Securities",
+            defaultValue: "",
+            tooltip: "0.35% /YR min $375.00/QTR",
+            isException: false,
+          },
+          {
+            code: 5,
+            name: "SSL Account Maintanance Fee",
+            defaultValue: "375",
+            tooltip: "Quarterly on Day 1",
+            isException: false,
+          },
+          {
+            code: 7,
+            name: "US Equities Commission",
+            defaultValue: "",
+            tooltip: "$0.10 per share, min charge of $150 per trade",
+            isException: false,
+          },
+          {
+            code: 7,
+            name: "Options Commission",
+            defaultValue: "",
+            tooltip: "$0.10 per share, min charge of $150 per trade",
+            isException: false,
+          },
+        ],
+      },
+      {
+        name: "Client Current Fees",
+        code: 2,
+        fields: [
+          {
+            code: 6,
+            name: "Safekeeping of Securities",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+          {
+            code: 5,
+            name: "SSL Account Maintanance Fee",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+          {
+            code: 7,
+            name: "US Equities Commission",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+          {
+            code: 7,
+            name: "Options Commission",
+            defaultValue: "",
+            tooltip: "",
+            isException: false,
+          },
+        ],
+      },
+    ],
+  },
 }
 
-Say.js:49
-Exceptions from SQL: (3) [{…}, {…}, {…}]
-feeGetByCifUseCase.js:169
-Grouped Fees: (3) [{…}, {…}, {…}]
-feeGetByCifUseCase.js:33
-Accounts: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
-feeGetByCifUseCase.js:34
-Exception group is missing
-CustomerFees.js:72
-equityField: (1) [model]
