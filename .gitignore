@@ -10,3 +10,6 @@ feeGetByCifUseCase.js:33
 Accounts: (26) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
 feeGetByCifUseCase.js:34
 Exception group is missing
+
+
+dash.dev.k8s.safra.int:27017
