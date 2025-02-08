@@ -1,112 +1,127 @@
-constructor(fees, accounts) {
-  // Validar fees
-  if (!fees || !Array.isArray(fees) || fees.length === 0) {
-    throw new Error('Fees is empty or undefined');
-  }
+import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
+import mongoose, { Schema } from 'mongoose'
 
-  // Encontrar Bank Account Fees
-  this.#bank = fees.filter((x) => x.feeType === this.#feeName)[0];
-  if (!this.#bank || !Array.isArray(this.#bank.feeGroups)) {
-    throw new Error('Bank Account Fees or feeGroups are undefined');
-  }
+export const FieldSchema = new Schema(
+  {
+    code: {
+      type: Number,
+      required: true,
+      enum: [1, 2, 3, 4, 5, 6, 7]
+    },
+    isStandard: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    isCurrentClient: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    isException: {
+      type: Boolean,
+      required: true,
+      default: false
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    defaultValue: {
+      type: String,
+      required: false
+    },
+    labelValue: {
+      type: String,
+      required: false
+    },
+    hasChanged: {
+      type: Boolean,
+      default: false
+    },
+    approved: {
+      type: Boolean,
+      required: false
+    },
+    reject: {
+      type: Boolean,
+      required: false
+    },
+    rejectComment: {
+      type: String,
+      required: false
+    },
+    tooltip: {
+      type: String,
+      required: false
+    },
+    exceptionOptions: [
+      {
+        value: String,
+        text: String,
 
-  // Validar accounts
-  if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
-    throw new Error('Accounts is empty or undefined');
-  }
-
-  // Filtrar contas e DDA
-  const feeGroupCode = this.#bank.feeGroups[0].code;
-  this.#accounts = accounts.filter((x) => x.feeGroup === feeGroupCode);
-  this.#accountsDDA = new Set(
-    accounts
-      .filter((x) => x.feeGroup === feeGroupCode)
-      .map((x) => x.ddaNumber)
-  );
-
-  if (this.#accounts.length === 0) {
-    throw new Error('No accounts matched with Bank Account Fees feeGroup');
-  }
-
-  // Adicionar múltiplas contas e valores atuais
-  this.#addMultiplesAccount(this.#accounts[0].cifno);
-  this.#addCurrentClientValue();
-}
-
-#addMultiplesAccount(cif) {
-  if (!this.#accounts || this.#accounts.length < 1) {
-    this.#bank = {};
-    return;
-  }
-
-  const result = {};
-  for (const feeGroup of this.#bank.feeGroups) {
-    if (!feeGroup.fields || !Array.isArray(feeGroup.fields)) {
-      console.warn(`FeeGroup ${feeGroup.name} has no fields`);
-      continue;
-    }
-
-    for (const numberAccount of this.#accountsDDA) {
-      if (!result[numberAccount]) result[numberAccount] = [];
-
-      feeGroup.fields.forEach((item) => {
-        item.exceptionOptions = item.exceptionOptions?.filter(
-          (x) => !x.retired
-        ) || [];
-      });
-
-      const newFeeGroup = new FeeGroup({
-        name: feeGroup.name,
-        fields: feeGroup.fields,
-        cif,
-        accountNumber: numberAccount,
-        visible: feeGroup.visible,
-        code: feeGroup.code
-      });
-
-      result[numberAccount].push(newFeeGroup);
-    }
-  }
-
-  const feeGroupsByAccount = Object.keys(result).map((item) => result[item]);
-  this.#bank.feeGroups = [];
-  for (const feeGroups of feeGroupsByAccount) {
-    this.#bank.feeGroups.push(...feeGroups);
-  }
-}
-
-
-#addCurrentClientValue() {
-  if (!this.#accounts || this.#accounts.length < 1) {
-    this.#bank = {};
-    return;
-  }
-
-  for (const [feeGroupIndex, feeGroup] of this.#bank.feeGroups.entries()) {
-    feeGroup.cif = this.#accounts[0]?.cifno || null;
-    for (const [fieldIndex, field] of feeGroup.fields.entries()) {
-      if (field.isException) {
-        const previousGroup = this.#bank.feeGroups[feeGroupIndex - 1];
-        if (previousGroup) {
-          field.labelValue =
-            previousGroup.fields[fieldIndex]?.labelValue || '';
-        }
-      } else {
-        for (const account of this.#accounts) {
-          if (
-            field.code === account.feeType &&
-            feeGroup.accountNumber === account.ddaNumber.toString()
-          ) {
-            if (field.isCurrentClient) {
-              field.defaultValue = account.feeAmount?.toString() || '';
-            }
-            field.labelValue = numberToCurrency(field.defaultValue);
-          }
+        retired: {
+          type: Boolean,
+          required: false,
+          default: false
+        },
+        visible: {
+          type: Boolean,
+          required: false,
+          default: true
+        },
+        approvedByDoubleA: {
+          type: Boolean,
+          required: false,
+          default: null
         }
       }
+    ],
+    results: {
+      type: Map,
+      of: String,
+      required: false
     }
+  },
+  {
+    collection: 'Field',
+    timestamps: true
   }
+)
+configureSchemaMongoToReturnId('toObject', FieldSchema)
 
-  this.#clearMemory();
+export const Field = mongoose.model('Fields', FieldSchema)
+
+
+
+
+export const configureSchemaMongoToReturnId = (
+  typeConvert,
+  SchemaModel,
+  enableVirtuals = true
+) => {
+  SchemaModel.set(typeConvert, {
+    transform: (document, returnObject) => {
+      delete returnObject._id
+      return returnObject
+    },
+    virtuals: enableVirtuals
+  })
 }
 
+
+
+Exception group is missing
+MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
+    at _handleConnectionErrors (h:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)
+    at NativeConnection.openUri (h:\Documents\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11)
+    at processTicksAndRejections (h:\Documents\fee-management-backend\lib\internal\process\task_queues.js:95:5)
+    at runNextTicks (h:\Documents\fee-management-backend\lib\internal\process\task_queues.js:64:3)
+    at listOnTimeout (h:\Documents\fee-management-backend\lib\internal\timers.js:540:9)
+    at process.processTimers (node:internal/timers:514:7) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…ss.processTimers (node:internal/timers:514:7)'}
+Unhandled Promise Rejection: err:  Operation `Field.find()` buffering timed out after 10000ms
+apiServer.js:148
+MongooseError: Operation `Field.find()` buffering timed out after 10000ms
+    at Timeout.<anonymous> (H:\Documents\fee-management-backend\node_modules\mongoose\lib\drivers\node-mongodb-native\collection.js:185:23)
+    at listOnTimeout (node:internal/timers:573:17)
+    at process.processTimers (node:internal/timers:514:7)
