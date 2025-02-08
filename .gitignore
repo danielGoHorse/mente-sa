@@ -1,233 +1,1095 @@
-import { Fee } from '#src/models/entities/Fees.js';
-import Result from '#features/shared/result.js';
-import CustomerFees from '#src/models/CustomerFees.js';
-import BankAccountFee from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import { Field } from '#src/models/entities/Fields.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure,
-} from '#core/data/mssql/index.js';
-
-const deParaFeeCodes = {
-  JH001: 1,
-  JH002: 2,
-  JH006: 4,
-  JH007: 8,
-  BPS002: 6,
-  BPS003: 5,
-  BPS004: 7,
-  BPS005: 7,
-  JH010: 3,
-};
-
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    const result = { fees: [] };
-
-    // Buscar e estruturar os dados do SQL
-    const { groupedFees, accounts } = await this.#getFeesStructuredFromSQL(
-      customerAccount
-    );
-
-    // Processar Customer Fees
-    const customer = new CustomerFees(groupedFees, accounts);
-    if (customer.fee) result.fees.push(customer.fee);
-
-    // Processar Bank Account Fees
-    const bank = new BankAccountFee(groupedFees, accounts);
-    if (bank.fee) result.fees.push(bank.fee);
-
-    // Processar Investiment Account Fees
-    const equityField = await Field.find({ code: 7 });
-    const investiment = new InvestimentAccountFee(
-      groupedFees,
-      accounts,
-      equityField[0]
-    );
-    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
-
-    // Buscar casos ativos de Fees
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED'],
-      },
-      caseNumber: {
-        $exists: true,
-      },
-    });
-
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id,
-    }));
-
-    // Documento de exemplo
-    result.documentUrl =
-      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
-
-    return Result.ok(result);
-  }
-
-  async #getFeesStructuredFromSQL(customerAccount) {
-    // Obter os dados do SQL
-    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
-
-    const feePackageId = feesData[0]?.['Default Fee Package Id'];
-    if (!feePackageId) {
-      throw new Error('Default Fee Package Id not found in feesData');
+{
+    "code": 200,
+    "data": {
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "25",
+                                "tooltip": "Monthly - Charged Quarterly",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "code": 2,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "tooltip": "Annual - Charged Annual",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "kycMailingStatus": "Standard",
+                        "cif": "F016583",
+                        "accountNumber": 7115342
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "",
+                                "tooltip": "",
+                                "isException": false,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": 2,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "tooltip": "",
+                                "isException": false,
+                                "exceptionOptions": []
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": 7115342
+                    },
+                    {
+                        "name": "Exceptions",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "0",
+                                "tooltip": "",
+                                "isException": true,
+                                "exceptionOptions": [],
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": 7115342
+                    }
+                ]
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034af"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b0"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b1"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b2"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b3"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b4"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b5"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b6"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034ae"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d3"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d4"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d5"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d6"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d7"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d8"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d9"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034da"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034d2"
+                    },
+                    {
+                        "name": "Exceptions",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034eb",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ec",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034ea"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d0349d"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d0349e"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d0349f"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a0"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a1"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a2"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a3"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a4"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d0349c"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034c1"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034c2"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034c3"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034c4"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034c5"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034c6"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034c7"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034c8"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034c0"
+                    },
+                    {
+                        "name": "Exceptions",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034e5",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034e6",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034e4"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b8"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034b9"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ba"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034bb"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034bc"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034bd"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034be"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034bf"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034b7"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034dc"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034dd"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034de"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034df"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034e0"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034e1"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034e2"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034e3"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034db"
+                    },
+                    {
+                        "name": "Exceptions",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ee",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ef",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034ed"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a6"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a7"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a8"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034a9"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034aa"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ab"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ac"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ad"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034a5"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ca"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034cb"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034cc"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034cd"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034ce"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034cf"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d0"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034d1"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034c9"
+                    },
+                    {
+                        "name": "Exceptions",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034e8",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67a7b385ce7a00ec43d034e9",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a7b385ce7a00ec43d034e7"
+                    }
+                ]
+            },
+            {
+                "feeType": "Investment Account Fees",
+                "feeGroups": []
+            }
+        ],
+        "feesActives": [],
+        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm"
     }
-
-    // Construir o formato esperado para customerAccount
-    const accounts = feesData.map((fee) => ({
-      cifno: fee.CIFNO,
-      ddaNumber: fee.ACCTNO,
-      feeType: this.#mapFeeType(fee.FeeType),
-      feeGroup: 1, // Pode ajustar se tiver lógica para isso
-      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
-    }));
-
-    // Estruturar os dados agrupados
-    const groupedFees = {};
-
-    for (const fee of feesData) {
-      const { FeeType, FeeDescription, FeeCode, FeeAmount, Frequency, DefaultFeeAmount, DefaultFrequency } = fee;
-
-      // Converter FeeCode via de/para
-      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-
-      // Criar feeType se ainda não existir
-      if (!groupedFees[FeeType]) {
-        groupedFees[FeeType] = {
-          feeType: FeeType,
-          feeGroups: [],
-        };
-      }
-
-      // Adicionar Standard Fees
-      let standardGroup = groupedFees[FeeType].feeGroups.find((group) => group.name === 'Standard Fees');
-      if (!standardGroup) {
-        standardGroup = {
-          name: 'Standard Fees',
-          code: 1,
-          fields: [],
-        };
-        groupedFees[FeeType].feeGroups.push(standardGroup);
-      }
-
-      standardGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: FeeAmount ? FeeAmount.toString() : '',
-        tooltip: Frequency ? Frequency : '',
-        isException: false,
-      });
-
-      // Adicionar Client Current Fees
-      let clientCurrentGroup = groupedFees[FeeType].feeGroups.find((group) => group.name === 'Client Current Fees');
-      if (!clientCurrentGroup) {
-        clientCurrentGroup = {
-          name: 'Client Current Fees',
-          code: 2,
-          fields: [],
-        };
-        groupedFees[FeeType].feeGroups.push(clientCurrentGroup);
-      }
-
-      clientCurrentGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : '',
-        tooltip: DefaultFrequency ? DefaultFrequency : '',
-        isException: false,
-      });
-    }
-
-    // Buscar exceções do SQL
-    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
-    console.log('Exceptions from SQL:', exceptions);
-
-    // Adicionar Exceptions Group
-    for (const exception of exceptions) {
-      const { code, name, defaultValue, tooltip, isException } = exception;
-
-      // Encontrar FeeType pelo FeeCode (deParaFeeCodes inverso)
-      const feeType = Object.keys(groupedFees).find((type) =>
-        groupedFees[type].feeGroups.some((group) =>
-          group.fields.some((field) => field.code === code)
-        )
-      );
-
-      if (!feeType) {
-        console.warn(`FeeType not found for exception code: ${code}`);
-        continue;
-      }
-
-      // Encontrar ou criar o grupo de exceções
-      let exceptionGroup = groupedFees[feeType]?.feeGroups.find(
-        (group) => group.name === 'Exceptions'
-      );
-      if (!exceptionGroup) {
-        exceptionGroup = {
-          name: 'Exceptions',
-          code: 3,
-          fields: [],
-        };
-        groupedFees[feeType]?.feeGroups.push(exceptionGroup);
-      }
-
-      // Adicionar exceção ao grupo
-      exceptionGroup.fields.push({
-        code,
-        name,
-        defaultValue,
-        tooltip,
-        isException,
-      });
-    }
-
-    console.log('Grouped Fees with Exceptions:', groupedFees);
-
-    // Retornar groupedFees e accounts
-    return { groupedFees: Object.values(groupedFees), accounts };
-  }
-
-  // Função auxiliar para mapear o FeeType
-  #mapFeeType(feeType) {
-    switch (feeType) {
-      case 'Customer Fees':
-        return 1;
-      case 'Bank Account Fees':
-        return 2;
-      case 'Investment Account Fees':
-        return 3;
-      default:
-        return 0;
-    }
-  }
-
-  async #getFeesFromSQL(cifno) {
-    const connection = await connectToFeeMgmtDb();
-    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
-  }
-
-  async #getExceptionFeesFromSQL(feePackageId) {
-    const connection = await connectToFeeMgmtDb();
-    const data = await executeStoreProcedure(
-      connection,
-      'sp_get_exception_fees_bypackage',
-      { feePackageId }
-    );
-
-    // Mapear os dados em um formato consistente
-    return data.map((exception) => ({
-      code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
-      name: exception.FeeDescription,
-      defaultValue: exception.Amount?.toString() || '0',
-      tooltip: exception.FreqDescription || '',
-      isException: true,
-    }));
-  }
 }
