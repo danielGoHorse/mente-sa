@@ -1,44 +1,110 @@
-constructor(fees, accounts) {
-  // Validar fees
-  if (!fees || !Array.isArray(fees) || fees.length === 0) {
-    throw new Error('Fees is empty or undefined');
+import { FeeGroup } from './entities/FeeGroups.js'
+import numberToCurrency from '../core/helpers/currency.js'
+
+export default class BankAccountFee {
+  #feeName = 'Bank Account Fees'
+  #bank = {}
+  #accounts = []
+  #accountsDDA = []
+  constructor(fees, accounts) {
+    // global.logger.info('BankAccountFee()')
+
+    this.#bank = fees.filter((x) => x.feeType === this.#feeName)[0]
+    const feeGroupCode = this.#bank.feeGroups[0].code
+
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#bank.feeGroups[0].code
+    )
+
+    this.#accountsDDA = new Set(
+      accounts
+        .filter((x) => x.feeGroup === feeGroupCode)
+        .map((x) => x.ddaNumber)
+    )
+
+    this.#addMultiplesAccount(this.#accounts[0].cifno)
+    this.#addCurrentClientValue()
   }
 
-  // Encontrar Bank Account Fees
-  this.#bank = fees.filter((x) => x.feeType === 'Bank Account Fees')[0];
-
-  if (!this.#bank || !Array.isArray(this.#bank.feeGroups)) {
-    throw new Error('Bank Account Fees or feeGroups are undefined');
+  get fee() {
+    return this.#bank
   }
 
-  // Processar feeGroups
-  this.#bank.feeGroups.forEach((feeGroup) => {
-    feeGroup.fields = feeGroup.fields.filter((x) => x.code <= accounts.reduce((acc, item) => {
-      if (item.feeType > 2) return acc;
-      acc = item.feeType;
-      return acc;
-    }, 0));
+  #addMultiplesAccount(cif) {
+    // global.logger.info('addMultiplesAccount()')
 
-    feeGroup.fields?.forEach((item) => {
-      item.exceptionOptions = item.exceptionOptions?.filter((x) => !x.retired) || [];
-    });
-  });
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#bank = {}
+    }
+    const result = {}
+    for (const feeGroup of this.#bank.feeGroups) {
+      for (const numberAccount of this.#accountsDDA) {
+        if (!result[numberAccount]) result[numberAccount] = []
 
-  this.#accounts = accounts.filter(
-    (x) => x.feeGroup === this.#bank.feeGroups[0].code
-  );
+        feeGroup.fields?.forEach((item) => {
+          item.exceptionOptions = item.exceptionOptions.filter(
+            (x) => !x.retired
+          )
+        })
 
-  this.#bank.feeGroups[0].kycMailingStatus =
-    accounts.find((account) => account.feeType === 2)?.kycMailingStatus || null;
+        const newFeeGroup = new FeeGroup({
+          name: feeGroup.name,
+          fields: feeGroup.fields,
+          cif,
+          accountNumber: numberAccount,
+          visible: feeGroup.visible,
+          code: feeGroup.code
+        })
 
-  this.#bank.feeGroups[0].fields.forEach((field) => {
-    field.labelValue = numberToCurrency(field.defaultValue);
-  });
+        result[numberAccount].push(newFeeGroup)
+      }
+    }
+    const feeGroupsByAccount = Object.keys(result).map((item) => result[item])
+    this.#bank.feeGroups = []
+    for (const feeGroups of feeGroupsByAccount) {
+      for (const feeGroup of feeGroups) {
+        this.#bank.feeGroups.push(feeGroup)
+      }
+    }
+  }
 
-  // Verificar grupos adicionais, se necessário
+  #addCurrentClientValue() {
+    // global.logger.info('addCurrentClientValue()')
+
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#bank = {}
+      return
+    }
+
+    for (const [feeGroupIndex, feeGroup] of this.#bank.feeGroups.entries()) {
+      feeGroup.cif = this.#accounts[0].cifno
+      for (const [fieldIndex, field] of feeGroup.fields.entries()) {
+        if (field.isException) {
+          field.labelValue =
+            this.#bank.feeGroups[feeGroupIndex - 1].fields[
+              fieldIndex
+            ].labelValue
+        } else {
+          for (const account of this.#accounts) {
+            if (
+              field.code === account.feeType &&
+              feeGroup.accountNumber === account.ddaNumber.toString()
+            ) {
+              if (field.isCurrentClient) {
+                field.defaultValue = account.feeAmount.toString()
+              }
+              field.labelValue = numberToCurrency(field.defaultValue)
+            }
+          }
+        }
+      }
+    }
+
+    this.#clearMemory()
+  }
+
+  #clearMemory() {
+    this.#accounts = []
+    this.#accountsDDA = []
+  }
 }
-
-
-
-console.log('Fees:', fees);
-console.log('Customer Account:', customerAccount);
