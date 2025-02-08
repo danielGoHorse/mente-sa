@@ -1,148 +1,226 @@
-{
-    "code": 200,
-    "data": {
-        "fees": [
-            {
-                "feeType": "Customer Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false,
-                                "exceptionOptions": [],
-                                "labelValue": "$0.00"
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "tooltip": "Annual - Charged Annual",
-                                "isException": false,
-                                "exceptionOptions": [],
-                                "labelValue": "$0.00"
-                            }
-                        ],
-                        "kycMailingStatus": "Hold Mail",
-                        "cif": "K016665",
-                        "accountNumber": 99010118
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false,
-                                "exceptionOptions": []
-                            }
-                        ],
-                        "cif": "K016665",
-                        "accountNumber": 99010118
-                    }
-                ]
-            },
-            {
-                "feeType": "Bank Account Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67a7b03e68a2d06cb9eef1df"
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67a7b03e68a2d06cb9eef1e0"
-                            }
-                        ],
-                        "cif": "K016665",
-                        "accountNumber": "99010118",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67a7b03e68a2d06cb9eef1de"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67a7b03e68a2d06cb9eef1e2"
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67a7b03e68a2d06cb9eef1e3"
-                            }
-                        ],
-                        "cif": "K016665",
-                        "accountNumber": "99010118",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67a7b03e68a2d06cb9eef1e1"
-                    }
-                ]
-            },
-            {
-                "feeType": "Investment Account Fees",
-                "feeGroups": []
-            }
-        ],
-        "feesActives": [],
-        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm"
-    }
-}
+import { Fee } from '#src/models/entities/Fees.js';
+import Result from '#features/shared/result.js';
+import CustomerFees from '#src/models/CustomerFees.js';
+import BankAccountFee from '#src/models/BankAccountFee.js';
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
+import { FeeCase } from '#src/models/entities/FeeCase.js';
+import { Field } from '#src/models/entities/Fields.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure,
+} from '#core/data/mssql/index.js';
 
+const deParaFeeCodes = {
+  JH001: 1,
+  JH002: 2,
+  JH006: 4,
+  JH007: 8,
+  BPS002: 6,
+  BPS003: 5,
+  BPS004: 7,
+  BPS005: 7,
+  JH010: 3,
+};
+
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    const result = { fees: [] };
+
+    // Buscar e estruturar os dados do SQL
+    const { groupedFees, accounts } = await this.#getFeesStructuredFromSQL(
+      customerAccount
+    );
+
+    // Processar Customer Fees
+    const customer = new CustomerFees(groupedFees, accounts);
+    if (customer.fee) result.fees.push(customer.fee);
+
+    // Processar Bank Account Fees
+    const bank = new BankAccountFee(groupedFees, accounts);
+    if (bank.fee) result.fees.push(bank.fee);
+
+    // Processar Investiment Account Fees
+    const equityField = await Field.find({ code: 7 });
+
+
+    const investiment = new InvestimentAccountFee(
+      groupedFees,
+      accounts,
+      equityField[0]
+    );
+    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
+
+    // Buscar casos ativos de Fees
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: {
+        $nin: ['DONE', 'REJECTED'],
+      },
+      caseNumber: {
+        $exists: true,
+      },
+    });
+
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id,
+    }));
+
+    // Documento de exemplo
+    result.documentUrl =
+      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
+
+    return Result.ok(result);
+  }
+
+  async #getFeesStructuredFromSQL(customerAccount) {
+    // Obter os dados do SQL
+    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
+  
+    const feePackageId = feesData[0]?.['Default Fee Package Id'];
+    if (!feePackageId) {
+      throw new Error('Default Fee Package Id not found in feesData');
+    }
+  
+    // Construir o formato esperado para customerAccount
+    const accounts = feesData.map((fee) => ({
+      cifno: fee.CIFNO,
+      ddaNumber: fee.ACCTNO,
+      feeType: this.#mapFeeType(fee.FeeType),
+      feeGroup: 1, // Pode ajustar se tiver lógica para isso
+      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
+    }));
+  
+    // Estruturar os dados agrupados
+    const groupedFees = {};
+  
+    for (const fee of feesData) {
+      const { FeeType, FeeDescription, FeeCode, FeeAmount, Frequency, DefaultFeeAmount, DefaultFrequency } = fee;
+  
+      // Converter FeeCode via de/para
+      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+  
+      // Criar feeType se ainda não existir
+      if (!groupedFees[FeeType]) {
+        groupedFees[FeeType] = {
+          feeType: FeeType,
+          feeGroups: [],
+        };
+      }
+  
+      // Adicionar Standard Fees
+      let standardGroup = groupedFees[FeeType].feeGroups.find((group) => group.name === 'Standard Fees');
+      if (!standardGroup) {
+        standardGroup = {
+          name: 'Standard Fees',
+          code: 1,
+          fields: [],
+        };
+        groupedFees[FeeType].feeGroups.push(standardGroup);
+      }
+  
+      standardGroup.fields.push({
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: FeeAmount ? FeeAmount.toString() : '',
+        tooltip: Frequency ? Frequency : '',
+        isException: false,
+      });
+  
+      // Adicionar Client Current Fees
+      let clientCurrentGroup = groupedFees[FeeType].feeGroups.find((group) => group.name === 'Client Current Fees');
+      if (!clientCurrentGroup) {
+        clientCurrentGroup = {
+          name: 'Client Current Fees',
+          code: 2,
+          fields: [],
+        };
+        groupedFees[FeeType].feeGroups.push(clientCurrentGroup);
+      }
+  
+      clientCurrentGroup.fields.push({
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : '',
+        tooltip: DefaultFrequency ? DefaultFrequency : '',
+        isException: false,
+      });
+    }
+  
+    // Buscar exceções do SQL
+    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
+    console.log('Exceptions from SQL:', exceptions);
+  
+    // Adicionar Exceptions Group
+    for (const exception of exceptions) {
+      const { code, name, defaultValue, tooltip, isException } = exception;
+  
+      // Encontrar ou criar o grupo de exceções
+      let exceptionGroup = groupedFees[exception.feeType]?.feeGroups.find(
+        (group) => group.name === 'Exceptions'
+      );
+      if (!exceptionGroup) {
+        exceptionGroup = {
+          name: 'Exceptions',
+          code: 3,
+          fields: [],
+        };
+        groupedFees[exception.feeType]?.feeGroups.push(exceptionGroup);
+      }
+  
+      // Adicionar exceção ao grupo
+      exceptionGroup.fields.push({
+        code,
+        name,
+        defaultValue,
+        tooltip,
+        isException,
+      });
+    }
+  
+    console.log('Grouped Fees with Exceptions:', groupedFees);
+  
+    // Retornar groupedFees e accounts
+    return { groupedFees: Object.values(groupedFees), accounts };
+  }
+
+  // Função auxiliar para mapear o FeeType
+  #mapFeeType(feeType) {
+    switch (feeType) {
+      case 'Customer Fees':
+        return 1;
+      case 'Bank Account Fees':
+        return 2;
+      case 'Investment Account Fees':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  async #getFeesFromSQL(cifno) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+  }
+
+  async #getExceptionFeesFromSQL(feePackageId) {
+    const connection = await connectToFeeMgmtDb();
+    const data = await executeStoreProcedure(
+      connection,
+      'sp_get_exception_fees_bypackage',
+      { feePackageId }
+    );
+
+    // Mapear os dados em um formato consistente
+    return data.map((exception) => ({
+      code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
+      name: exception.FeeDescription,
+      defaultValue: exception.Amount?.toString() || '0',
+      tooltip: exception.FreqDescription || '',
+      isException: true,
+    }));
+  }
+}
 
 
 
