@@ -1,10 +1,20 @@
-const exceptionGroup = groupedFees[FeeType].feeGroups.find(group => group.name === "Exceptions");
-if (!exceptionGroup) {
-  groupedFees[FeeType].feeGroups.push({
-    name: "Exceptions",
-    code: 3,
-    fields: exceptions
-  });
-} else {
-  exceptionGroup.fields.push(...exceptions);
-}
+  // Buscar exceções do SQL
+  const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
+  console.log('Exceptions from SQL:', exceptions);
+
+  // Adicionar Exceptions Group
+  for (const exception of exceptions) {
+    const { code, name, defaultValue, tooltip, isException } = exception;
+
+    // Encontrar ou criar o grupo de exceções
+    let exceptionGroup = groupedFees[exception.feeType]?.feeGroups.find(
+      (group) => group.name === 'Exceptions'
+    );
+    if (!exceptionGroup) {
+      exceptionGroup = {
+        name: 'Exceptions',
+        code: 3,
+        fields: [],
+      };
+      groupedFees[exception.feeType]?.feeGroups.push(exceptionGroup);
+    }
