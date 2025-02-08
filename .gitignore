@@ -1,134 +1,37 @@
-import { Fee } from '#src/models/entities/Fees.js'
-import Result from '#features/shared/result.js'
-import CustomerFees from '#src/models/CustomerFees.js'
-import BankAccountFee from '#src/models/BankAccountFee.js'
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
-import { FeeCase } from '#src/models/entities/FeeCase.js'
-import { Field } from '#src/models/entities/Fields.js'
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js';
+#buildCustomerAccounts(feesData) {
+  const accounts = feesData.map(fee => ({
+    cifno: fee.CIFNO,
+    ddaNumber: fee.ACCTNO,
+    feeType: this.#mapFeeType(fee.FeeType),
+    feeGroup: fee.FeeGroup || 1, // Ajuste isso caso FeeGroup esteja em outro lugar
+    kycMailingStatus: fee.StandardException === "Standard" ? "Standard" : "Hold Mail"
+  }));
 
-const deParaFeeCodes = {
-    "JH001": 1,
-    "JH002": 2,
-    "JH006": 4,
-    "JH007": 8,
-    "BPS002": 6,
-    "BPS003": 5,
-    "BPS004": 7,
-    "BPS005": 7,
-    "JH010": 3
-};
+  return accounts;
+}
 
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    const result = { fees: [] };
-
-    // Buscar e estruturar os dados do SQL
-    const fees = await this.#getFeesStructuredFromSQL(customerAccount);
-
-    const customer = new CustomerFees(fees, customerAccount);
-    if (customer.fee) result.fees.push(customer.fee);
-
-    const bank = new BankAccountFee(fees, customerAccount);
-    if (bank.fee) result.fees.push(bank.fee);
-
-    const equityField = await Field.find({ code: 7 });
-    const investiment = new InvestimentAccountFee(
-      fees,
-      customerAccount,
-      equityField[0]
-    );
-    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee);
-
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED']
-      },
-      caseNumber: {
-        $exists: true
-      }
-    });
-
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id
-    }));
-
-    result.documentUrl =
-      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm';
-
-    return Result.ok(result);
-  }
-
-  async #getFeesStructuredFromSQL(customerAccount) {
-    // Obter os dados do SQL
-    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
-
-    // Estruturar os dados agrupados
-    const groupedFees = {};
-
-    for (const fee of feesData) {
-      const { FeeType, FeeDescription, FeeCode, FeeAmount, Frequency, DefaultFeeAmount, DefaultFrequency, ACCTNO } = fee;
-
-      // Converter FeeCode via de/para
-      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-
-      // Criar feeType se ainda não existir
-      if (!groupedFees[FeeType]) {
-        groupedFees[FeeType] = {
-          feeType: FeeType,
-          feeGroups: []
-        };
-      }
-
-      // Adicionar Standard Fees
-      let standardGroup = groupedFees[FeeType].feeGroups.find(group => group.name === "Standard Fees");
-      if (!standardGroup) {
-        standardGroup = {
-          name: "Standard Fees",
-          code: 1,
-          fields: []
-        };
-        groupedFees[FeeType].feeGroups.push(standardGroup);
-      }
-
-      standardGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: FeeAmount ? FeeAmount.toString() : "",
-        tooltip: Frequency ? Frequency : "",
-        isException: false
-      });
-
-      // Adicionar Client Current Fees
-      let clientCurrentGroup = groupedFees[FeeType].feeGroups.find(group => group.name === "Client Current Fees");
-      if (!clientCurrentGroup) {
-        clientCurrentGroup = {
-          name: "Client Current Fees",
-          code: 2,
-          fields: []
-        };
-        groupedFees[FeeType].feeGroups.push(clientCurrentGroup);
-      }
-
-      clientCurrentGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : "",
-        tooltip: DefaultFrequency ? DefaultFrequency : "",
-        isException: false
-      });
-    }
-
-    return Object.values(groupedFees);
-  }
-
-  async #getFeesFromSQL(cifno) {
-    const connection = await connectToFeeMgmtDb();
-    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+// Função auxiliar para mapear o FeeType
+#mapFeeType(feeType) {
+  switch (feeType) {
+    case "Customer Fees":
+      return 1;
+    case "Bank Account Fees":
+      return 2;
+    case "Investment Account Fees":
+      return 3;
+    default:
+      return 0;
   }
 }
+
+
+
+const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
+
+// Construir o formato correto de customerAccount
+const accounts = this.#buildCustomerAccounts(feesData);
+
+// Passar `accounts` no lugar de `customerAccount`
+const customer = new CustomerFees(fees, accounts);
+if (customer.fee) result.fees.push(customer.fee);
+
