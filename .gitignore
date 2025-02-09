@@ -1,52 +1,25 @@
-/** @type {import('next').NextConfig} */
-const Dotenv = require("dotenv-webpack");
-const path = require("path");
-
-const nextConfig = {
-  reactStrictMode: true,
-  pageExtensions: ["tsx"],
-  compiler: {
-    styledComponents: {
-      ssr: true, // Habilita suporte para Server-Side Rendering
-      displayName: true, // Adiciona nomes aos componentes para facilitar o debug
-      preprocess: false, // Desabilita o pré-processamento (opcional)
-    },
-  },
-  typescript: {
-    ignoreBuildErrors: false,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/login",
-        permanent: true,
-      },
-    ];
-  },
-  webpack: (config) => {
-    // Adiciona o plugin Dotenv para carregar variáveis de ambiente
-    config.plugins.push(new Dotenv({ silent: true }));
-
-    // Corrige monitoramento em drives de rede
-    config.watchOptions = {
-      poll: 1000, // Intervalo em milissegundos para verificar alterações
-      aggregateTimeout: 300, // Tempo de espera antes de recompilar
-      ignored: /node_modules/, // Ignora alterações em node_modules
-    };
-
-    // Corrige caminhos absolutos para evitar conflitos
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "@": path.resolve(__dirname), // Define o diretório raiz como alias "@"
-    };
-
-    return config;
-  },
-  output: "standalone", // Permite exportar como aplicação independente
-};
-
-module.exports = nextConfig;
+mui/material @mui/styled-engine-sc styled-components
+npm error code ERESOLVE
+npm error ERESOLVE unable to resolve dependency tree
+npm error
+npm error While resolving: snb-conductor@0.1.0
+npm error Found: styled-components@5.3.8
+npm error node_modules/styled-components
+npm error   styled-components@"^5.3.8" from the root project
+npm error
+npm error Could not resolve dependency:
+npm error peer styled-components@"^6.0.0" from @mui/styled-engine-sc@6.0.0
+npm error node_modules/@mui/styled-engine-sc
+npm error   @mui/styled-engine-sc@"6.0.0" from the root project
+npm error   peer @mui/styled-engine-sc@"^6.0.0-alpha.2" from @conductor/global-activity-user@1.0.5
+npm error   node_modules/@conductor/global-activity-user
+npm error     @conductor/global-activity-user@"^1.0.5" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T15_29_53_698Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T15_29_53_698Z-debug-0.log
