@@ -1,28 +1,33 @@
-{
-  app: {
-    name: "snb conductor fee management",
-  },
-  server: {
-    port: "3334",
-    maxRequestBodySize: "100mb",
-  },
-  logging: {
-    level: "debug",
-    file: "",
-  },
-  kafka: {
-    brokers: [
-      "localhost:9093",
-    ],
-  },
-  rabbitmq: {
-    url: "amqp://admin:admin@localhost:5672",
-  },
-  caseUrl: undefined,
-  customerUrl: "http://localhost:5000",
-  userUrl: "http://localhost:5000",
-  feeUrl: undefined,
-  conductorUrl: undefined,
-  notifyUrl: undefined,
-  jackUrl: undefined,
-}
+PS H:\fee-management-frontend> npm install
+npm ERR! code ERESOLVE
+npm ERR! ERESOLVE could not resolve
+npm ERR! 
+npm ERR! While resolving: @conductor/global-activity-user@1.0.5
+npm ERR! Found: @mui/material@5.11.11
+npm ERR! node_modules/@mui/material
+npm ERR!   @mui/material@"5.11.11" from the root project
+npm ERR!   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
+npm ERR!   node_modules/@mui/icons-material
+npm ERR!     @mui/icons-material@"5.11.11" from the root project
+npm ERR!
+npm ERR! Could not resolve dependency:
+npm ERR! peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm ERR! node_modules/@conductor/global-activity-user
+npm ERR!   @conductor/global-activity-user@"^1.0.5" from the root project
+npm ERR!
+npm ERR! Conflicting peer dependency: @mui/material@5.16.14
+npm ERR! node_modules/@mui/material
+npm ERR!   peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm ERR!   node_modules/@conductor/global-activity-user
+npm ERR!     @conductor/global-activity-user@"^1.0.5" from the root project
+npm ERR!
+npm ERR! Fix the upstream dependency conflict, or retry
+npm ERR! this command with --force or --legacy-peer-deps
+npm ERR! to accept an incorrect (and potentially broken) dependency resolution.
+npm ERR!
+npm ERR!
+npm ERR! For a full report see:
+npm ERR! C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T05_16_53_905Z-eresolve-report.txt
+
+npm ERR! A complete log of this run can be found in: C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T05_16_53_905Z-debug-0.log
+PS H:\fee-management-frontend> 
