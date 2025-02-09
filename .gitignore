@@ -1,12 +1,16 @@
 /** @type {import('next').NextConfig} */
 const Dotenv = require("dotenv-webpack");
+const path = require("path");
 
 const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ["tsx"],
   compiler: {
-    styledComponents:
-      true | { ssr: true, displayName: true, preprocess: false },
+    styledComponents: {
+      ssr: true, // Habilita suporte para Server-Side Rendering
+      displayName: true, // Adiciona nomes aos componentes para facilitar o debug
+      preprocess: false, // Desabilita o pré-processamento (opcional)
+    },
   },
   typescript: {
     ignoreBuildErrors: false,
@@ -24,10 +28,25 @@ const nextConfig = {
     ];
   },
   webpack: (config) => {
+    // Adiciona o plugin Dotenv para carregar variáveis de ambiente
     config.plugins.push(new Dotenv({ silent: true }));
+
+    // Corrige monitoramento em drives de rede
+    config.watchOptions = {
+      poll: 1000, // Intervalo em milissegundos para verificar alterações
+      aggregateTimeout: 300, // Tempo de espera antes de recompilar
+      ignored: /node_modules/, // Ignora alterações em node_modules
+    };
+
+    // Corrige caminhos absolutos para evitar conflitos
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@": path.resolve(__dirname), // Define o diretório raiz como alias "@"
+    };
+
     return config;
   },
-  output: "standalone",
+  output: "standalone", // Permite exportar como aplicação independente
 };
 
 module.exports = nextConfig;
