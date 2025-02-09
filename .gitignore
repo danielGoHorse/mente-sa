@@ -1,82 +1,143 @@
-npm install @mui/material@latest
-npm WARN ERESOLVE overriding peer dependency
-npm WARN While resolving: snb-conductor@0.1.0
-npm WARN Found: @mui/material@5.11.11
-npm WARN node_modules/@mui/material
-npm WARN   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
-npm WARN   node_modules/@mui/icons-material
-npm WARN     @mui/icons-material@"5.11.11" from the root project
-npm WARN   1 more (the root project)
-npm WARN
-npm WARN Could not resolve dependency:
-npm WARN peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
-npm WARN node_modules/@conductor/global-activity-user
-npm WARN   @conductor/global-activity-user@"^1.0.5" from the root project
-npm WARN ERESOLVE overriding peer dependency
-npm WARN While resolving: snb-conductor@0.1.0
-npm WARN Found: @mui/material@5.11.11
-npm WARN node_modules/@mui/material
-npm WARN   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
-npm WARN   node_modules/@mui/icons-material
-npm WARN     @mui/icons-material@"5.11.11" from the root project
-npm WARN   1 more (the root project)
-npm WARN
-npm WARN Could not resolve dependency:
-npm WARN peer @mui/material@"^5.14.14" from @conductor/global-header@0.8.1
-npm WARN node_modules/@conductor/global-header
-npm WARN   @conductor/global-header@"^0.8.1" from the root project
-npm WARN ERESOLVE overriding peer dependency
-npm WARN While resolving: snb-conductor@0.1.0
-npm WARN Found: @mui/material@5.11.11
-npm WARN node_modules/@mui/material
-npm WARN   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
-npm WARN   node_modules/@mui/icons-material
-npm WARN     @mui/icons-material@"5.11.11" from the root project
-npm WARN   1 more (the root project)
-npm WARN
-npm WARN Could not resolve dependency:
-npm WARN peer @mui/material@"^5.14.14" from @conductor/global-login@1.1.6
-npm WARN node_modules/@conductor/global-login
-npm WARN   @conductor/global-login@"^1.1.6" from the root project
-npm WARN ERESOLVE overriding peer dependency
-npm WARN While resolving: snb-conductor@0.1.0
-npm WARN Found: @mui/material@5.11.11
-npm WARN node_modules/@mui/material
-npm WARN   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
-npm WARN   node_modules/@mui/icons-material
-npm WARN     @mui/icons-material@"5.11.11" from the root project
-npm WARN   1 more (the root project)
-npm WARN
-npm WARN Could not resolve dependency:
-npm WARN peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
-npm WARN node_modules/@mui/icons-material
-npm WARN   @mui/icons-material@"5.11.11" from the root project
-npm ERR! code ERESOLVE
-npm ERR! ERESOLVE could not resolve
-npm ERR!
-npm ERR! While resolving: @conductor/global-activity-user@1.0.5
-npm ERR! Found: @mui/styled-engine-sc@5.11.11
-npm ERR! node_modules/@mui/styled-engine-sc
-npm ERR!   @mui/styled-engine-sc@"5.11.11" from the root project
-npm ERR!
-npm ERR! Could not resolve dependency:
-npm ERR! peer @mui/styled-engine-sc@"^6.0.0-alpha.2" from @conductor/global-activity-user@1.0.5
-npm ERR! node_modules/@conductor/global-activity-user
-npm ERR!   @conductor/global-activity-user@"^1.0.5" from the root project
-npm ERR!
-npm ERR! Conflicting peer dependency: @mui/styled-engine-sc@6.4.3
-npm ERR! node_modules/@mui/styled-engine-sc
-npm ERR!   peer @mui/styled-engine-sc@"^6.0.0-alpha.2" from @conductor/global-activity-user@1.0.5
-npm ERR!   node_modules/@conductor/global-activity-user
-npm ERR!     @conductor/global-activity-user@"^1.0.5" from the root project
-npm ERR!
-npm ERR! Fix the upstream dependency conflict, or retry
-npm ERR! this command with --force or --legacy-peer-deps
-npm ERR! to accept an incorrect (and potentially broken) dependency resolution.
-npm ERR!
-npm ERR!
-npm ERR! For a full report see:
-npm ERR! C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T05_20_59_342Z-eresolve-report.txt
+DanielG@NYDEVVDI0027 MINGW64 /h/Documents/fee-management-frontend (develop)
+$ npm rum dev
 
-npm ERR! A complete log of this run can be found in: C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T05_20_59_342Z-debug-0.log
-PS H:\fee-management-frontend> 
+> snb-conductor@0.1.0 dev
+> next dev
+
+ready - started server on 0.0.0.0:3000, url: http://localhost:3000
+warn  - Invalid next.config.js options detected:
+warn  -     The value at .compiler.styledComponents must be a boolean but it was a number.
+warn  -     The value at .compiler.styledComponents must be an object but it was a number.
+warn  -     The value at .compiler.styledComponents must match exactly one schema in oneOf.
+warn  - See more info here: https://nextjs.org/docs/messages/invalid-next-config
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG\Documents'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG\Documen
+ts'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS'
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\
+Documents\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\next.config.js' in \\safra-pdc\sys
+\USERS\DanielG\Documents\fee-management-frontend as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\next.config.js
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG\Documents'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS\DanielG'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys\USERS'
+Watchpack Error (watcher): Error: UNKNOWN: unknown error, watch '\\safra-pdc/\\safra-pdc\sys'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG\Documen
+ts'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS\DanielG'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys'
+Watchpack Error (initial scan): Error: UNKNOWN: unknown error, scandir '\\safra-pdc\safra-pdc\sys\USERS'
+error - Module not found: Error: Can't resolve './H:/Documents/fee-management-frontend/node_modules/next/dist/client/de
+v/amp-dev' in '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend'
+wait  - compiling...
+error - Module not found: Error: Can't resolve './H:/Documents/fee-management-frontend/node_modules/next/dist/client/de
+v/amp-dev' in '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend'
+wait  - compiling...
+event - compiled successfully in 245 ms (28 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\
+Documents\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\next.config.js' in \\safra-pdc\sys
+\USERS\DanielG\Documents\fee-management-frontend as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\next.config.js
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\
+Documents\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\next.config.js' in \\safra-pdc\sys
+\USERS\DanielG\Documents\fee-management-frontend as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\next.config.js
+wait  - compiling /login (client and server)...
+error - ./H:/Documents/fee-management-frontend
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\src\pages\login\index.
+tsx'
+
+https://nextjs.org/docs/messages/module-not-found
+wait  - compiling...
+error - ./H:/Documents/fee-management-frontend
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\src\pages\login\index.
+tsx'
+
+https://nextjs.org/docs/messages/module-not-found
+wait  - compiling /_error (client and server)...
+error - ./H:/Documents/fee-management-frontend
+Module not found: Can't resolve '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\src\pages\login\index.
+tsx'
+
+https://nextjs.org/docs/messages/module-not-found
+error - Error: Cannot find module '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\.next\fallback-build
+-manifest.json'
+Require stack:
+- H:\Documents\fee-management-frontend\node_modules\next\dist\server\load-components.js
+- H:\Documents\fee-management-frontend\node_modules\next\dist\build\utils.js
+- H:\Documents\fee-management-frontend\node_modules\next\dist\cli\next-dev.js
+- H:\Documents\fee-management-frontend\node_modules\next\dist\lib\commands.js
+- H:\Documents\fee-management-frontend\node_modules\next\dist\bin\next
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1048:15)
+    at mod._resolveFilename (H:\Documents\fee-management-frontend\node_modules\next\dist\build\webpack\require-hook.js:
+23:32)
+    at Module._load (node:internal/modules/cjs/loader:901:27)
+    at Module.require (node:internal/modules/cjs/loader:1115:19)
+    at require (node:internal/modules/helpers:130:18)
+    at Object.loadDefaultErrorComponentsImpl [as loadDefaultErrorComponents] (H:\Documents\fee-management-frontend\node
+_modules\next\dist\server\load-components.js:23:24)
+    at DevServer.getFallbackErrorComponents (H:\Documents\fee-management-frontend\node_modules\next\dist\server\dev\nex
+t-dev-server.js:1153:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async DevServer.renderErrorToResponseImpl (H:\Documents\fee-management-frontend\node_modules\next\dist\server\ba
+se-server.js:1306:40) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\server\\load-components.js',
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\build\\utils.js',
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\cli\\next-dev.js',
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\lib\\commands.js',
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\bin\\next'
+  ]
+}
+Error: Cannot find module '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\.next\fallback-build-manifes
+t.json'
+Require stack:
+- H:\Documents\fee-management-frontend\node_modules\next\dist\server\load-components.js
+- H:\Documents\fee-management-frontend\node_modules\next\dist\build\utils.js
+- H:\Documents\fee-management-frontend\node_modules\next\dist\cli\next-dev.js
+- H:\Documents\fee-management-frontend\node_modules\next\dist\lib\commands.js
+- H:\Documents\fee-management-frontend\node_modules\next\dist\bin\next
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1048:15)
+    at mod._resolveFilename (H:\Documents\fee-management-frontend\node_modules\next\dist\build\webpack\require-hook.js:
+23:32)
+    at Module._load (node:internal/modules/cjs/loader:901:27)
+    at Module.require (node:internal/modules/cjs/loader:1115:19)
+    at require (node:internal/modules/helpers:130:18)
+    at Object.loadDefaultErrorComponentsImpl [as loadDefaultErrorComponents] (H:\Documents\fee-management-frontend\node
+_modules\next\dist\server\load-components.js:23:24)
+    at DevServer.getFallbackErrorComponents (H:\Documents\fee-management-frontend\node_modules\next\dist\server\dev\nex
+t-dev-server.js:1153:43)
+    at async DevServer.renderErrorToResponseImpl (H:\Documents\fee-management-frontend\node_modules\next\dist\server\ba
+se-server.js:1306:40)
+    at async pipe.req.req (H:\Documents\fee-management-frontend\node_modules\next\dist\server\base-server.js:1190:30)
+    at async DevServer.pipeImpl (H:\Documents\fee-management-frontend\node_modules\next\dist\server\base-server.js:458:
+25)
+    at async DevServer.run (H:\Documents\fee-management-frontend\node_modules\next\dist\server\dev\next-dev-server.js:8
+22:28)
+    at async DevServer.handleRequestImpl (H:\Documents\fee-management-frontend\node_modules\next\dist\server\base-serve
+r.js:375:20)
+    at async H:\Documents\fee-management-frontend\node_modules\next\dist\server\base-server.js:157:99 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\server\\load-components.js',
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\build\\utils.js',
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\cli\\next-dev.js',
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\lib\\commands.js',
+    'H:\\Documents\\fee-management-frontend\\node_modules\\next\\dist\\bin\\next'
+  ]
+}
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: Can't resolve '\\safra-pdc\sys\USERS\DanielG\
+Documents\fee-management-frontend\next.config.js' in '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend'
+<w> while resolving '\\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\next.config.js' in \\safra-pdc\sys
+\USERS\DanielG\Documents\fee-management-frontend as file
+<w>  at resolve commonjs \\safra-pdc\sys\USERS\DanielG\Documents\fee-management-frontend\next.config.js
+
