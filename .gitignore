@@ -1,23 +1,72 @@
-PS H:\fee-management-frontend> npm install
+npm install @mui/material@latest
+npm WARN ERESOLVE overriding peer dependency
+npm WARN While resolving: snb-conductor@0.1.0
+npm WARN Found: @mui/material@5.11.11
+npm WARN node_modules/@mui/material
+npm WARN   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
+npm WARN   node_modules/@mui/icons-material
+npm WARN     @mui/icons-material@"5.11.11" from the root project
+npm WARN   1 more (the root project)
+npm WARN
+npm WARN Could not resolve dependency:
+npm WARN peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm WARN node_modules/@conductor/global-activity-user
+npm WARN   @conductor/global-activity-user@"^1.0.5" from the root project
+npm WARN ERESOLVE overriding peer dependency
+npm WARN While resolving: snb-conductor@0.1.0
+npm WARN Found: @mui/material@5.11.11
+npm WARN node_modules/@mui/material
+npm WARN   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
+npm WARN   node_modules/@mui/icons-material
+npm WARN     @mui/icons-material@"5.11.11" from the root project
+npm WARN   1 more (the root project)
+npm WARN
+npm WARN Could not resolve dependency:
+npm WARN peer @mui/material@"^5.14.14" from @conductor/global-header@0.8.1
+npm WARN node_modules/@conductor/global-header
+npm WARN   @conductor/global-header@"^0.8.1" from the root project
+npm WARN ERESOLVE overriding peer dependency
+npm WARN While resolving: snb-conductor@0.1.0
+npm WARN Found: @mui/material@5.11.11
+npm WARN node_modules/@mui/material
+npm WARN   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
+npm WARN   node_modules/@mui/icons-material
+npm WARN     @mui/icons-material@"5.11.11" from the root project
+npm WARN   1 more (the root project)
+npm WARN
+npm WARN Could not resolve dependency:
+npm WARN peer @mui/material@"^5.14.14" from @conductor/global-login@1.1.6
+npm WARN node_modules/@conductor/global-login
+npm WARN   @conductor/global-login@"^1.1.6" from the root project
+npm WARN ERESOLVE overriding peer dependency
+npm WARN While resolving: snb-conductor@0.1.0
+npm WARN Found: @mui/material@5.11.11
+npm WARN node_modules/@mui/material
+npm WARN   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
+npm WARN   node_modules/@mui/icons-material
+npm WARN     @mui/icons-material@"5.11.11" from the root project
+npm WARN   1 more (the root project)
+npm WARN
+npm WARN Could not resolve dependency:
+npm WARN peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
+npm WARN node_modules/@mui/icons-material
+npm WARN   @mui/icons-material@"5.11.11" from the root project
 npm ERR! code ERESOLVE
 npm ERR! ERESOLVE could not resolve
-npm ERR! 
+npm ERR!
 npm ERR! While resolving: @conductor/global-activity-user@1.0.5
-npm ERR! Found: @mui/material@5.11.11
-npm ERR! node_modules/@mui/material
-npm ERR!   @mui/material@"5.11.11" from the root project
-npm ERR!   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
-npm ERR!   node_modules/@mui/icons-material
-npm ERR!     @mui/icons-material@"5.11.11" from the root project
+npm ERR! Found: @mui/styled-engine-sc@5.11.11
+npm ERR! node_modules/@mui/styled-engine-sc
+npm ERR!   @mui/styled-engine-sc@"5.11.11" from the root project
 npm ERR!
 npm ERR! Could not resolve dependency:
-npm ERR! peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm ERR! peer @mui/styled-engine-sc@"^6.0.0-alpha.2" from @conductor/global-activity-user@1.0.5
 npm ERR! node_modules/@conductor/global-activity-user
 npm ERR!   @conductor/global-activity-user@"^1.0.5" from the root project
 npm ERR!
-npm ERR! Conflicting peer dependency: @mui/material@5.16.14
-npm ERR! node_modules/@mui/material
-npm ERR!   peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm ERR! Conflicting peer dependency: @mui/styled-engine-sc@6.4.3
+npm ERR! node_modules/@mui/styled-engine-sc
+npm ERR!   peer @mui/styled-engine-sc@"^6.0.0-alpha.2" from @conductor/global-activity-user@1.0.5
 npm ERR!   node_modules/@conductor/global-activity-user
 npm ERR!     @conductor/global-activity-user@"^1.0.5" from the root project
 npm ERR!
@@ -27,7 +76,7 @@ npm ERR! to accept an incorrect (and potentially broken) dependency resolution.
 npm ERR!
 npm ERR!
 npm ERR! For a full report see:
-npm ERR! C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T05_16_53_905Z-eresolve-report.txt
+npm ERR! C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T05_20_59_342Z-eresolve-report.txt
 
-npm ERR! A complete log of this run can be found in: C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T05_16_53_905Z-debug-0.log
+npm ERR! A complete log of this run can be found in: C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-02-09T05_20_59_342Z-debug-0.log
 PS H:\fee-management-frontend> 
