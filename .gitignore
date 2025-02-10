@@ -1,5 +1,93 @@
-this.#customer.feeGroups[2].fields.forEach((field) => {
-  field.exceptionOptions = field.exceptionOptions?.filter(
-    (option) => !option.retired
-  ) || [];
-});
+import numberToCurrency from '../core/helpers/currency.js';
+
+export default class CustomerFees {
+  #feeName = 'Customer Fees';
+  #customer = {};
+  #accounts = [];
+  #clientCurrent = [];
+
+  constructor(fees, accounts) {
+    // Validar fees
+    if (!fees || !Array.isArray(fees) || fees.length === 0) {
+      throw new Error('Fees is empty or undefined');
+    }
+
+    // Encontrar Customer Fees
+    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
+    if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
+      throw new Error('Customer Fees or feeGroups are undefined');
+    }
+
+    // Processar feeGroups
+    this.#customer.feeGroups.forEach((feeGroup) => {
+      feeGroup.fields?.forEach((item) => {
+        // Filtrar apenas opções válidas nos exceptionsOptions
+        item.exceptionOptions = item.exceptionOptions?.filter((x) => !x.retired) || [];
+      });
+    });
+
+    // Filtrar accounts relacionadas ao Customer Fees
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#customer.feeGroups[0].code
+    );
+
+    // Adicionar informações de mailing status no primeiro fee group
+    this.#customer.feeGroups[0].kycMailingStatus =
+      accounts.find((account) => account.feeType === 2)?.kycMailingStatus || null;
+
+    // Adicionar valores de label no primeiro grupo
+    this.#customer.feeGroups[0].fields.forEach((field) => {
+      field.labelValue = numberToCurrency(field.defaultValue);
+    });
+
+    // Verificar Client Current (segundo grupo)
+    if (this.#customer.feeGroups.length > 1) {
+      this.#clientCurrent = this.#customer.feeGroups[1].fields;
+      this.#configureCustomer();
+    } else {
+      console.warn('Client Current group is missing');
+    }
+
+    // Verificar Exceptions (terceiro grupo)
+    if (this.#customer.feeGroups.length > 2) {
+      this.#customer.feeGroups[2].fields.forEach((field) => {
+        field.labelValue =
+          this.#customer.feeGroups[1]?.fields.find((f) => f.code === field.code)?.labelValue || '';
+      });
+    } else {
+      console.warn('Exception group is missing');
+    }
+  }
+
+  get fee() {
+    return this.#customer;
+  }
+
+  #configureCustomer() {
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#customer = {};
+      return;
+    }
+
+    for (const field of this.#clientCurrent) {
+      for (const account of this.#accounts) {
+        if (field.isCurrentClient && field.code === account.feeType) {
+          field.defaultValue = account.feeAmount?.toString() || '';
+          field.labelValue = numberToCurrency(field.defaultValue);
+        }
+      }
+    }
+
+    for (const feeGroup of this.#customer.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+      feeGroup.accountNumber = this.#accounts[0]?.ddaNumber || null;
+    }
+
+    this.#clearMemory();
+  }
+
+  #clearMemory() {
+    this.#accounts = [];
+    this.#clientCurrent = [];
+  }
+}
