@@ -1,4 +1,16 @@
-FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription
-JH001	Account Maintenance Fee	94	0.00	NULL
-JH006	FX Outgoing Wire Fee	93	0.00	NULL
-JH007	FX Outgoing Wire (SafraLink) Fee	95	0.00	NULL
+  scheduleUrls: {
+    intlPB3: '',
+    uSPBCorporation3: '',
+    uSPBIndividual3: '',
+    eraPB3: '',
+    efraPB3: '',
+  }
+
+Os tipos 
+
+FeePackageId	FeePackageDescription	FeePackageType	FeePackageCoverage
+1	PB International	I	I
+2	Domestic Individual	I	D
+3	Domestic Corporation	C	D
+4	EFRA	I	D
+5	ERA	I	D
