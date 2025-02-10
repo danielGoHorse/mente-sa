@@ -42,6 +42,7 @@ export default class FeeGetByCifUseCase {
       branchType: account.branchType,
       defaultPackageType: account.defaultPackageType,
       feePackage: account.feePackage,
+      documentUrl: global.environment.scheduleUrls[deParaFeePackageId[feePackageId]] || null,
     }));
 
     const customer = new CustomerFees(groupedFees, accounts);
@@ -90,10 +91,6 @@ export default class FeeGetByCifUseCase {
       caseNumber: x.caseNumber,
       id: x.id,
     }));
-
-    // Ajustando o documentUrl
-    const packageKey = deParaFeePackageId[feePackageId];
-    result.documentUrl = global.environment.scheduleUrls[packageKey] || null;
 
     return Result.ok(result);
   }
