@@ -1,9 +1,4 @@
-"exceptionOptions": [
-                                    {
-                                        "value": "10",
-                                        "text": "$10.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "6468f46eff51aa9d77d84a07"
-                                    },
+FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription
+JH001	Account Maintenance Fee	94	0.00	NULL
+JH006	FX Outgoing Wire Fee	93	0.00	NULL
+JH007	FX Outgoing Wire (SafraLink) Fee	95	0.00	NULL
