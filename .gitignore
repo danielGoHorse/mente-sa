@@ -1,9 +1,1279 @@
- result.accounts = accounts.map((account) => ({
-      cifno: account.cifno,
-      ddaNumber: account.ddaNumber,
-      branchCity: account.branchCity, // Campo novo
-      branchState: account.branchState, // Campo novo
-      branchType: account.branchType, // Campo novo
-      defaultPackageType: account.defaultPackageType, // Campo novo
-      feePackage: account.feePackage, // Campo novo
-    }));
+import Result from '#features/shared/result.js'
+
+export default class FeeCaseGetByCifUseCase {
+  async execute({ cif }, feeManagementModel, customerModel) {
+    // global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`)
+    const [errCustomer, responseCustomer] =
+      await customerModel.getCustomerDetailsByCif(cif)
+
+    if (errCustomer) {
+      return Result.fail({ message: "It's not possible to get address cif" })
+    }
+    // global.logger.info('feeManagementModel.getFeeByAccount')
+    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(
+      responseCustomer.data.customer
+    )
+
+    if (errFee) {
+      return Result.fail({ message: "Its's not possible get fee values" })
+    }
+
+    const currentFees =
+      responseCustomer?.data?.customer?.customerCurrentFees?.map((x) => ({
+        feeDescription: x.feeDescription,
+        feeCode: x.feeCode
+      }))
+
+    const result = {
+      customerName: responseCustomer.data.customer.customerAddress.name,
+      customerAddress: responseCustomer.data.customer.customerAddress.address,
+      customerAccountOfficer:
+        responseCustomer.data.customer.customerAddress.officer,
+      cif: responseCustomer.data.customer.customerAddress.cif,
+      branchCity: responseCustomer.data.customer.branchCity,
+      branchState: responseCustomer.data.customer.branchState,
+      branchType: responseCustomer.data.customer.branchType,
+      defaultPackageType: responseCustomer.data.customer.defaultPackageType,
+      feePackage: responseCustomer.data.customer.feePackage,
+      defaultFeePackageId: responseCustomer.data.customer.defaultFeePackageId,
+      fees: responseFee.data.fees,
+      feesActives: responseFee.data.feesActives,
+      documentUrl: responseFee.data.documentUrl,
+      currentFees
+    }
+    // global.logger.info('End process')
+    console.log('RESULT >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',result)
+    return Result.ok(result)
+  }
+}
+
+
+
+{
+    "code": 200,
+    "data": {
+        "customerName": "FRANCO JACK",
+        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
+        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
+        "cif": "F016583",
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "25",
+                                "tooltip": "Monthly - Charged Quarterly",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "code": 2,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "tooltip": "Annual - Charged Annual",
+                                "isException": false,
+                                "exceptionOptions": [],
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "kycMailingStatus": "Standard",
+                        "cif": "F016583",
+                        "accountNumber": 7115342
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "",
+                                "tooltip": "",
+                                "isException": false,
+                                "exceptionOptions": []
+                            },
+                            {
+                                "code": 2,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "tooltip": "",
+                                "isException": false,
+                                "exceptionOptions": []
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": 7115342
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "0",
+                                "tooltip": "",
+                                "isException": true,
+                                "exceptionOptions": [],
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": 7115342
+                    }
+                ]
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb9"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bba"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bbb"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bbc"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bbd"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bbe"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bbf"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc0"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497bb8"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bd5"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bd6"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bd7"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bd8"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497bd4"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497be3",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497be2"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497ba7"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497ba8"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497ba9"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497baa"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bab"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bac"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bad"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bae"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497ba6"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bcb"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bcc"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bcd"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bce"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497bca"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bdf",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497bde"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc2"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc3"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc4"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc5"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc6"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc7"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc8"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bc9"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497bc1"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bda"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bdb"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bdc"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bdd"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497bd9"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497be5",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497be4"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb0"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb1"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb2"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb3"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb4"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb5"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb6"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bb7"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497baf"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bd0"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bd1"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bd2"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497bd3"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497bcf"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67aa02ab79c25cd7fa497be1",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67aa02ab79c25cd7fa497be0"
+                    }
+                ]
+            }
+        ],
+        "feesActives": [],
+        "currentFees": [
+            {
+                "feeDescription": "Hold Mail Fee (per annum) -  $0.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7115342"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Savings 7115822"
+            }
+        ]
+    }
+}
+
+[10:44:02.127] INFO (23672): request completed
+    req: {
+      "id": "aca495219c9a27ec7abf6b36",
+      "method": "POST",
+      "url": "/v1/fee",
+      "query": {},
+      "params": {},
+      "headers": {
+        "accept": "application/json, text/plain, */*",
+        "content-type": "application/json",
+        "user-agent": "axios/1.1.3",
+        "content-length": "525",
+        "accept-encoding": "gzip, deflate, br",
+        "host": "localhost:3333",
+        "connection": "close"
+      },
+      "remoteAddress": "::ffff:127.0.0.1",
+      "remotePort": 53237
+    }
+    res: {
+      "statusCode": 404,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "aca495219c9a27ec7abf6b36",
+        "x-correlation-id": "aca495219c9a27ec7abf6b36",
+        "content-security-policy": "default-src 'none'",
+        "content-type": "text/html; charset=utf-8",
+        "content-length": 146
+      }
+    }
+    responseTime: 5
+FEES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> [
+  {
+    feeType: 'Bank Account Fees',
+    feeGroups: [ [Object], [Object], [Object] ]
+  },
+  {
+    feeType: 'Investment Account Fees',
+    feeGroups: [ [Object], [Object] ]
+  },
+  {
+    feeType: 'Customer Fees',
+    feeGroups: [ [Object], [Object], [Object] ]
+  }
+]
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> {
+  fees: [
+    { feeType: 'Customer Fees', feeGroups: [Array] },
+    { feeType: 'Bank Account Fees', feeGroups: [Array] }
+  ],
+  accounts: [
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115342,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115342,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115342,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115342,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115342,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115342,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115822,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115822,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115822,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115822,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115822,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115822,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115822,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115342,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7113617,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7113617,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7113617,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7113617,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7113617,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7113617,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115431,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115431,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115431,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115431,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115431,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    },
+    {
+      cifno: 'F016583',
+      ddaNumber: 7115431,
+      branchCity: 'New York',
+      branchState: 'NY',
+      branchType: 'Domestic',
+      defaultPackageType: 'Individual',
+      feePackage: 'Domestic Individual'
+    }
+  ],
+  feesActives: []
+}
+[10:44:11.199] INFO (23672): Result=true
+[10:44:11.204] INFO (23672): request completed
+    req: {
+      "id": "9ae4a628e13883ef30a984c5",
+      "method": "POST",
+      "url": "/v1/fee",
+      "query": {},
+      "params": {},
+      "headers": {
+        "accept": "application/json, text/plain, */*",
+        "content-type": "application/json",
+        "user-agent": "axios/1.1.3",
+        "content-length": "525",
+        "accept-encoding": "gzip, deflate, br",
+        "host": "localhost:3333",
+        "connection": "close"
+      },
+      "remoteAddress": "::ffff:127.0.0.1",
+      "remotePort": 53253
+    }
+    res: {
+      "statusCode": 200,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "9ae4a628e13883ef30a984c5",
+        "x-correlation-id": "9ae4a628e13883ef30a984c5",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "18820",
+        "etag": "W/\"4984-+Xrt5gYvYMc7iHTf0A5IC4fCAi0\""
+      }
+    }
+    responseTime: 163
+
+
+
+console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>',result)
+    return Result.ok(result);
+  }
+
