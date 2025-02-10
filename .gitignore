@@ -1,4 +1,195 @@
-FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription	FeeType
-JH001	Account Maintenance Fee	113	0.00	NULL	Client Fees
-JH006	FX Outgoing Wire Fee	111	0.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	112	0.00	NULL	Bank Account Fees
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    const result = { fees: [] };
+
+    const { groupedFees, accounts, feePackageId } = await this.#getFeesStructuredFromSQL(customerAccount);
+
+    result.accounts = accounts.map((account) => ({
+      cifno: account.cifno,
+      ddaNumber: account.ddaNumber,
+      branchCity: account.branchCity,
+      branchState: account.branchState,
+      branchType: account.branchType,
+      defaultPackageType: account.defaultPackageType,
+      feePackage: account.feePackage,
+      documentUrl: global.environment.scheduleUrls[deParaFeePackageId[feePackageId]] || null,
+    }));
+
+    const customer = new CustomerFees(groupedFees, accounts);
+    if (customer.fee) result.fees.push(customer.fee);
+
+    const bank = new BankAccountFee(groupedFees, accounts);
+    if (bank.fee) result.fees.push(bank.fee);
+
+    const investmentGroup = groupedFees['Investment Account Fees'];
+    if (investmentGroup) {
+      result.fees.push(investmentGroup);
+    }
+
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
+    });
+
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id,
+    }));
+
+    return Result.ok(result);
+  }
+
+  async #getFeesStructuredFromSQL(customerAccount) {
+    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
+
+    const feePackageId = feesData[0]?.['Default Fee Package Id'];
+    if (!feePackageId) {
+      throw new Error('Default Fee Package Id not found in feesData');
+    }
+
+    const accounts = feesData.map((fee) => ({
+      cifno: fee.CIFNO,
+      ddaNumber: fee.ACCTNO,
+      branchCity: fee['Branch City'],
+      branchState: fee['Branch State'],
+      branchType: fee['Branch Type'],
+      defaultPackageType: fee['Default Package Type'],
+      feePackage: fee['Default Fee Package']?.trim() || '',
+      defaultFeePackageId: fee['Default Fee Package Id'] || '',
+      feeType: this.#mapFeeType(fee.FeeType),
+      feeGroup: 1,
+      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
+    }));
+
+    const groupedFees = {};
+
+    for (const fee of feesData) {
+      const {
+        FeeType,
+        FeeDescription,
+        FeeCode,
+        FeeAmount,
+        Frequency,
+        DefaultFeeAmount,
+        DefaultFrequency,
+      } = fee;
+
+      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+
+      if (
+        (FeeType === 'Customer Fees' && ![1, 2].includes(mappedCode)) ||
+        (FeeType === 'Bank Account Fees' && ![3, 4].includes(mappedCode)) ||
+        (FeeType === 'Investment Account Fees' && ![5, 6, 7].includes(mappedCode)) ||
+        excludedCodes.has(mappedCode)
+      ) {
+        continue;
+      }
+
+      if (!groupedFees[FeeType]) {
+        groupedFees[FeeType] = { feeType: FeeType, feeGroups: [] };
+      }
+
+      let standardGroup = groupedFees[FeeType].feeGroups.find((group) => group.name === 'Standard Fees');
+      if (!standardGroup) {
+        standardGroup = { name: 'Standard Fees', code: 1, fields: [] };
+        groupedFees[FeeType].feeGroups.push(standardGroup);
+      }
+
+      standardGroup.fields.push({
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: FeeAmount ? FeeAmount.toString() : '',
+        tooltip: Frequency ? Frequency : '',
+        isException: false,
+      });
+    }
+
+    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
+
+    for (const exception of exceptions) {
+      const {
+        FeeCode,
+        FeeDescription,
+        FeeParameterOptionId,
+        Amount,
+        FeeType,
+      } = exception;
+
+      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+
+      if (!groupedFees[FeeType]) {
+        groupedFees[FeeType] = { feeType: FeeType, feeGroups: [] };
+      }
+
+      let exceptionGroup = groupedFees[FeeType].feeGroups.find(
+        (group) => group.name === 'Exceptions Request'
+      );
+
+      if (!exceptionGroup) {
+        exceptionGroup = { name: 'Exceptions Request', code: 3, fields: [] };
+        groupedFees[FeeType].feeGroups.push(exceptionGroup);
+      }
+
+      let existingField = exceptionGroup.fields.find((field) => field.code === mappedCode);
+
+      if (!existingField) {
+        existingField = {
+          code: mappedCode,
+          name: FeeDescription,
+          defaultValue: '',
+          tooltip: '',
+          isException: true,
+          exceptionOptions: [],
+        };
+        exceptionGroup.fields.push(existingField);
+      }
+
+      existingField.exceptionOptions.push({
+        value: Amount, // Valor do Amount como está na tabela.
+        text: `$${parseFloat(Amount).toFixed(2)}`, // Texto formatado como "$0.00".
+        retired: false,
+        visible: true,
+        approvedByDoubleA: null,
+        _id: FeeParameterOptionId,
+      });
+    }
+
+    return { groupedFees: Object.values(groupedFees), accounts, feePackageId };
+  }
+
+  async #getFeesFromSQL(cifno) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+  }
+
+  async #getExceptionFeesFromSQL(feePackageId) {
+    const connection = await connectToFeeMgmtDb();
+    const data = await executeStoreProcedure(
+      connection,
+      'sp_get_exception_fees_bypackage',
+      { feePackageId }
+    );
+
+    return data.map((exception) => ({
+      FeeCode: exception.FeeCode,
+      FeeDescription: exception.FeeDescription,
+      FeeParameterOptionId: exception.FeeParameterOptionId,
+      Amount: exception.Amount,
+      FeeType: exception.FeeType,
+    }));
+  }
+
+  #mapFeeType(feeType) {
+    switch (feeType) {
+      case 'Customer Fees':
+        return 1;
+      case 'Bank Account Fees':
+        return 2;
+      case 'Investment Account Fees':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+}
