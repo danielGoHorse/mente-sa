@@ -1,248 +1,416 @@
-import { Fee } from '#src/models/entities/Fees.js';
-import Result from '#features/shared/result.js';
-import CustomerFees from '#src/models/CustomerFees.js';
-import BankAccountFee from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-// import { Field } from '#src/models/entities/Fields.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure,
-} from '#core/data/mssql/index.js';
-
-const deParaFeeCodes = {
-  JH001: 1,
-  JH002: 2,
-  JH006: 4,
-  JH007: 8,
-  BPS002: 6,
-  BPS003: 5,
-  BPS004: 7,
-  BPS005: 7,
-  JH010: 3,
-};
-
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    const result = { fees: [] };
-
-    const { groupedFees, accounts } = await this.#getFeesStructuredFromSQL(
-      customerAccount
-    );
-
-    const customer = new CustomerFees(groupedFees, accounts);
-    if (customer.fee) result.fees.push(customer.fee);
-
-    const bank = new BankAccountFee(groupedFees, accounts);
-    if (bank.fee) result.fees.push(bank.fee);
-
- 
-let investmentGroup = groupedFees['Investment Account Fees'];
-if (investmentGroup) {
-  const equityFields = accounts.filter((account) => account.feeType === 3); 
-  equityFields.forEach((field) => {
-    let investmentGroupFields = investmentGroup.feeGroups.find((group) => group.name === 'Standard Fees');
-    if (!investmentGroupFields) {
-      investmentGroupFields = {
-        name: 'Standard Fees',
-        code: 1,
-        fields: [],
-      };
-      investmentGroup.feeGroups.push(investmentGroupFields);
+{
+    "code": 200,
+    "data": {
+        "customerName": "MYHOBBY GLOBAL STRAT",
+        "customerAddress": "MYHOBBY GLOBAL STRATEGY FUND LTD. LYFORD FINANCIAL CENTRE BLDG 2 WESTERN ROAD CB 10988 LYFORD CAY NEW PROVIDENCE BAHAMAS",
+        "customerAccountOfficer": "364 Raquel Rugero            BR 13",
+        "cif": "MAA0475",
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "visible": true,
+                        "kycMailingStatus": "Paperless",
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": false,
+                                "name": "Account Maintenance",
+                                "tooltip": "Charged: Semiannual",
+                                "defaultValue": "600",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.435Z",
+                                "updatedAt": "2023-05-20T16:25:31.435Z",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "6468f46eff51aa9d77d849d7",
+                                "labelValue": "$600.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": false,
+                                "name": "Hold Mail",
+                                "defaultValue": "600",
+                                "tooltip": "Charged: Annually",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.435Z",
+                                "updatedAt": "2023-05-20T16:25:31.435Z",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "6468f46eff51aa9d77d849d8",
+                                "labelValue": "$600.00"
+                            }
+                        ],
+                        "id": "67a9f07c79dd9bb94aae4539",
+                        "cif": "MAA0475",
+                        "accountNumber": 6244203
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Client Current Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": false,
+                                "name": "Account Maintenance",
+                                "defaultValue": "0",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": true,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849dc",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": false,
+                                "name": "Hold mail",
+                                "defaultValue": "NOT APPLICABLE",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": true,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849dd",
+                                "labelValue": "NOT APPLICABLE"
+                            }
+                        ],
+                        "id": "67a9f07c79dd9bb94aae453c",
+                        "cif": "MAA0475",
+                        "accountNumber": 6244203
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Exception Request",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": true,
+                                "name": "Account Maintenance",
+                                "defaultValue": "",
+                                "exceptionOptions": [
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "600",
+                                        "text": "$600.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e2",
+                                        "parameterOptionId": 11
+                                    },
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e3",
+                                        "parameterOptionId": 12
+                                    }
+                                ],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849e1",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": true,
+                                "name": "Hold mail",
+                                "defaultValue": "NOT APPLICABLE",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "NOT APPLICABLE",
+                                        "text": "NOT APPLICABLE"
+                                    }
+                                ],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849e4",
+                                "labelValue": "NOT APPLICABLE"
+                            }
+                        ],
+                        "id": "67a9f07c79dd9bb94aae453f",
+                        "cif": "MAA0475",
+                        "accountNumber": 6244203
+                    }
+                ],
+                "id": "6468f46eff51aa9d77d849ee"
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Incoming Wire",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Transaction",
+                                "exceptionOptions": [],
+                                "_id": "67a9f07c79dd9bb94aae4633",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "75",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Transaction",
+                                "exceptionOptions": [],
+                                "_id": "67a9f07c79dd9bb94aae4634",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "labelValue": "$75.00"
+                            }
+                        ],
+                        "cif": "MAA0475",
+                        "accountNumber": "6244203",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a9f07c79dd9bb94aae4632"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Incoming Wire",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "67a9f07c79dd9bb94aae4636",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "67a9f07c79dd9bb94aae4637",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "MAA0475",
+                        "accountNumber": "6244203",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a9f07c79dd9bb94aae4635"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Incoming Wire",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "10",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a07"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a08"
+                                    }
+                                ],
+                                "_id": "67a9f07c79dd9bb94aae4639",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0a"
+                                    },
+                                    {
+                                        "value": "60",
+                                        "text": "$60.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0b"
+                                    },
+                                    {
+                                        "value": "50",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0c"
+                                    },
+                                    {
+                                        "value": "40",
+                                        "text": "$40.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "9468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "35",
+                                        "text": "$35.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "8468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "30",
+                                        "text": "$30.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "25",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "7468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "20",
+                                        "text": "$20.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0e"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "Waived",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67a9f07c79dd9bb94aae455a"
+                                    }
+                                ],
+                                "_id": "67a9f07c79dd9bb94aae463c",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "MAA0475",
+                        "accountNumber": "6244203",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67a9f07c79dd9bb94aae4638"
+                    }
+                ],
+                "id": "6468f46eff51aa9d77d84a1b"
+            }
+        ],
+        "feesActives": [],
+        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm",
+        "currentFees": [
+            {
+                "feeDescription": "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
+                "feeCode": " Affiliates Foreign 6244203"
+            },
+            {
+                "feeDescription": "Hold Mail Fee (per annum) -  $0.00",
+                "feeCode": " Affiliates Foreign 6244203"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $0.00",
+                "feeCode": " Affiliates Foreign 6244203"
+            },
+            {
+                "feeDescription": "JSAM IM Fee/YR 0.00% (**)",
+                "feeCode": "SNBNY  20300005"
+            },
+            {
+                "feeDescription": "Equity Comm/E3 $0.10 per share, min charge of $150 per trade",
+                "feeCode": "SNBNY custody 20003188"
+            },
+            {
+                "feeDescription": "Option Comm/E3 $0.05 per share, min charge of $150 per trade",
+                "feeCode": "SNBNY custody 20003188"
+            },
+            {
+                "feeDescription": "JSAM IM Fee/YR 0.00% (**)",
+                "feeCode": "SNBNY custody 20501023"
+            },
+            {
+                "feeDescription": "JSAM IM Fee/YR 0.00% (**)",
+                "feeCode": "SNBNY custody 20502281"
+            },
+            {
+                "feeDescription": "JSAM IM Fee/YR 0.00% (**)",
+                "feeCode": "SNBNY custody 20600016"
+            },
+            {
+                "feeDescription": "JSAM IM Fee/YR 0.00% (**)",
+                "feeCode": "SSL retail 20900026"
+            }
+        ]
     }
-
-    investmentGroupFields.fields.push({
-      code: field.code,
-      name: field.name || 'Equity and Options Commission',
-      defaultValue: field.defaultValue || '',
-      tooltip: field.tooltip || '',
-      isException: field.isException || false,
-    });
-  });
-
-  result.fees.push(investmentGroup);
 }
-console.log('>>>>>>>>>>>>investmentGroup>>>>>>>>>>>>>>',investmentGroup)
-
-
-    // Buscar casos ativos de Fees
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED'],
-      },
-      caseNumber: {
-        $exists: true,
-      },
-    });
-
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id,
-    }));
-
-    // result.documentUrl = this.#getDocumentUrl(feePackageId);
-
-   
-    return Result.ok(result);
-  }
-
-  async #getFeesStructuredFromSQL(customerAccount) {
-    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
-
-    const feePackageId = feesData[0]?.['Default Fee Package Id'];
-    if (!feePackageId) {
-      throw new Error('Default Fee Package Id not found in feesData');
-    }
-
-    const accounts = feesData.map((fee) => ({
-      cifno: fee.CIFNO,
-      ddaNumber: fee.ACCTNO,
-      branchCity: fee['Branch City'],
-      branchState: fee['Branch State'],
-      branchType: fee['Branch Type'],
-      defaultPackageType: fee['Default Package Type'],
-      feeType: this.#mapFeeType(fee.FeeType),
-      feeGroup: 1, 
-      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
-    }));
-
-    const groupedFees = {};
-
-    for (const fee of feesData) {
-      const { FeeType, FeeDescription, FeeCode, FeeAmount, Frequency, DefaultFeeAmount, DefaultFrequency } = fee;
-
-      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-
-      if (!groupedFees[FeeType]) {
-        groupedFees[FeeType] = {
-          feeType: FeeType,
-          feeGroups: [],
-        };
-      }
-
-      let standardGroup = groupedFees[FeeType].feeGroups.find((group) => group.name === 'Standard Fees');
-      if (!standardGroup) {
-        standardGroup = {
-          name: 'Standard Fees',
-          code: 1,
-          fields: [],
-        };
-        groupedFees[FeeType].feeGroups.push(standardGroup);
-      }
-
-      standardGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: FeeAmount ? FeeAmount.toString() : '',
-        tooltip: Frequency ? Frequency : '',
-        isException: false,
-      });
-
-      let clientCurrentGroup = groupedFees[FeeType].feeGroups.find((group) => group.name === 'Client Current Fees');
-      if (!clientCurrentGroup) {
-        clientCurrentGroup = {
-          name: 'Client Current Fees',
-          code: 2,
-          fields: [],
-        };
-        groupedFees[FeeType].feeGroups.push(clientCurrentGroup);
-      }
-
-      clientCurrentGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : '',
-        tooltip: DefaultFrequency ? DefaultFrequency : '',
-        isException: false,
-      });
-    }
-
-    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
-    console.log('Exceptions from SQL:', exceptions);
-
-    for (const exception of exceptions) {
-      const { code, name, defaultValue, tooltip, isException } = exception;
-
-console.log( ' Object.keys(groupedFees)',Object.keys(groupedFees))
-
-      const feeType = Object.keys(groupedFees).find((type) =>
-        groupedFees[type].feeGroups.some((group) =>
-          group.fields.some((field) => field.code === code)
-        )
-      );
-
-      if (!feeType) {
-        console.warn(`FeeType not found for exception code: ${code}`);
-        continue;
-      }
-
-      let exceptionGroup = groupedFees[feeType]?.feeGroups.find(
-        (group) => group.name === 'Exceptions'
-      );
-      if (!exceptionGroup) {
-        exceptionGroup = {
-          name: 'Exceptions Request',
-          code: 3,
-          fields: [],
-        };
-        groupedFees[feeType]?.feeGroups.push(exceptionGroup);
-      }
-
-      exceptionGroup.fields.push({
-        code,
-        name,
-        defaultValue,
-        tooltip,
-        isException,
-      });
-    }
-
-    console.log('Grouped Fees with Exceptions:', groupedFees);
-
-    return { groupedFees: Object.values(groupedFees), accounts };
-  }
-
-  #getDocumentUrl(feePackageId) {
-    return global.environment.scheduleUrls?.[feePackageId] || '';
-  }
-
-  #mapFeeType(feeType) {
-    switch (feeType) {
-      case 'Customer Fees':
-        return 1;
-      case 'Bank Account Fees':
-        return 2;
-      case 'Investment Account Fees':
-        return 3;
-      default:
-        return 0;
-    }
-  }
-
-  async #getFeesFromSQL(cifno) {
-    const connection = await connectToFeeMgmtDb();
-    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
-  }
-
-  async #getExceptionFeesFromSQL(feePackageId) {
-    const connection = await connectToFeeMgmtDb();
-    const data = await executeStoreProcedure(
-      connection,
-      'sp_get_exception_fees_bypackage',
-      { feePackageId }
-    );
-
-    return data.map((exception) => ({
-      code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
-      name: exception.FeeDescription,
-      defaultValue: exception.Amount?.toString() || '0',
-      tooltip: exception.FreqDescription || '',
-      isException: true,
-    }));
-  }
-}
-
-
-
-FX Outgoing Wire (SafraLink) Fee
