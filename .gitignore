@@ -3,8 +3,7 @@ for (const [codeStr, listExc] of Object.entries(codeMap)) {
   const code = Number(codeStr);
   let field = exceptionGroup.fields.find((f) => f.code === code);
   if (!field) {
-    // Tenta obter o nome da exception a partir do objeto retornado; se estiver vazio,
-    // procura no grupo "Standard Fees" pelo mesmo código.
+    // Se o field ainda não existe, crie-o usando o nome da exception ou do grupo padrão.
     let fieldName = listExc[0].name;
     if (!fieldName) {
       const standardGroup = groupedFeesMap[ft]?.feeGroups.find((g) => g.name === 'Standard Fees');
@@ -20,28 +19,28 @@ for (const [codeStr, listExc] of Object.entries(codeMap)) {
       exceptionOptions: [],
     };
     exceptionGroup.fields.push(field);
+  } else {
+    // Se o field já existe mas o name está vazio, atualize-o
+    if (!field.name || field.name.trim() === '') {
+      let fieldName = listExc[0].name;
+      if (!fieldName) {
+        const standardGroup = groupedFeesMap[ft]?.feeGroups.find((g) => g.name === 'Standard Fees');
+        const stdField = standardGroup?.fields.find((f) => f.code === code);
+        fieldName = stdField?.name || '';
+      }
+      field.name = fieldName;
+    }
   }
+  // Adiciona as opções de exception para este field
   for (const exc of listExc) {
     const amountNumber = parseFloat(exc.defaultValue || '0');
     field.exceptionOptions.push({
       approvedByDoubleA: null,
-      value: exc.defaultValue,            
-      text: `$${amountNumber.toFixed(2)}`, 
+      value: exc.defaultValue,
+      text: `$${amountNumber.toFixed(2)}`,
       visible: true,
       retired: false,
       parameterOptionId: exc.parameterOptionId,
     });
   }
-}
-
-
-if (field.code === 2 && this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail') {
-  field.defaultValue = 'NOT APPLICABLE';
-  field.labelValue = field.defaultValue;
-  field.exceptionOptions = [
-    {
-      value: field.defaultValue,
-      text: field.defaultValue
-    }
-  ];
 }
