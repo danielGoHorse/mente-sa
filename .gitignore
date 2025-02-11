@@ -1,10 +1,762 @@
-: Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'H:\Documents\fee-management-backend\src\models\InvestmentAccountFee.js' imported from H:\Documents\fee-management-backend\src\features\feeGetByCif\feeGetByCifUseCase.js
-    at new NodeError (node:internal/errors:387:5)
-    at finalizeResolution (node:internal/modules/esm/resolve:330:11)
-    at moduleResolve (node:internal/modules/esm/resolve:907:10)
-    at defaultResolve (node:internal/modules/esm/resolve:1115:11)
-    at nextResolve (node:internal/modules/esm/loader:163:28)
-    at ESMLoader.resolve (node:internal/modules/esm/loader:837:30)
-    at ESMLoader.getModuleJob (node:internal/modules/esm/loader:424:18)
-    at ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:76:40)
-    at link (node:internal/modules/esm/module_job:75:36)
+Process exited with code 1
+C:\Program Files\nodejs\node.exe .\src\app\api\index.js
+
+
+ ███████╗ ███████╗ ███████╗     ███╗   ███╗  █████╗  ███╗   ██╗  █████╗ 
+ ██╔════╝ ██╔════╝ ██╔════╝     ████╗ ████║ ██╔══██╗ ████╗  ██║ ██╔══██╗
+ █████╗   █████╗   █████╗       ██╔████╔██║ ███████║ ██╔██╗ ██║ ███████║
+ ██╔══╝   ██╔══╝   ██╔══╝       ██║╚██╔╝██║ ██╔══██║ ██║╚██╗██║ ██╔══██║
+ ██║      ███████╗ ███████╗     ██║ ╚═╝ ██║ ██║  ██║ ██║ ╚████║ ██║  ██║
+ ╚═╝      ╚══════╝ ╚══════╝     ╚═╝     ╚═╝ ╚═╝  ╚═╝ ╚═╝  ╚═══╝ ╚═╝  ╚═╝
+
+  ██████╗  ███████╗ ███╗   ███╗ ███████╗ ███╗   ██╗ ████████╗      █████╗ 
+ ██╔════╝  ██╔════╝ ████╗ ████║ ██╔════╝ ████╗  ██║ ╚══██╔══╝     ██╔══██╗
+ ██║  ███╗ █████╗   ██╔████╔██║ █████╗   ██╔██╗ ██║    ██║        ███████║
+ ██║   ██║ ██╔══╝   ██║╚██╔╝██║ ██╔══╝   ██║╚██╗██║    ██║        ██╔══██║
+ ╚██████╔╝ ███████╗ ██║ ╚═╝ ██║ ███████╗ ██║ ╚████║    ██║        ██║  ██║
+  ╚═════╝  ╚══════╝ ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝        ╚═╝  ╚═╝
+
+ ██████╗  ██╗     ███████╗ ███████╗ ██████╗  ██╗   ██╗ ███████╗ ██████╗ 
+ ██╔══██╗ ██║     ██╔════╝ ██╔════╝ ██╔══██╗ ██║   ██║ ██╔════╝ ██╔══██╗
+ ██████╔╝ ██║     ███████╗ █████╗   ██████╔╝ ██║   ██║ █████╗   ██████╔╝
+ ██╔═══╝  ██║     ╚════██║ ██╔══╝   ██╔══██╗ ╚██╗ ██╔╝ ██╔══╝   ██╔══██╗
+ ██║      ██║     ███████║ ███████╗ ██║  ██║  ╚████╔╝  ███████╗ ██║  ██║
+ ╚═╝      ╚═╝     ╚══════╝ ╚══════╝ ╚═╝  ╚═╝   ╚═══╝   ╚══════╝ ╚═╝  ╚═╝
+debug groupedFees [
+  {
+    "feeType": "Customer Fees",
+    "feeGroups": [
+      {
+        "name": "Standard Fees",
+        "code": 1,
+        "fields": [
+          {
+            "code": 1,
+            "name": "Account Maintenance Fee",
+            "defaultValue": "25",
+            "tooltip": "Monthly - Charged Quarterly",
+            "isException": false,
+            "exceptionOptions": [],
+            "labelValue": "$25.00"
+          },
+          {
+            "code": 2,
+            "name": "Hold Mail Fee",
+            "defaultValue": "",
+            "tooltip": "Annual - Charged Annual",
+            "isException": false,
+            "exceptionOptions": [],
+            "labelValue": "$0.00"
+          }
+        ],
+        "kycMailingStatus": "Standard",
+        "cif": "F016583",
+        "accountNumber": 7115342
+      },
+      {
+        "name": "Client Current Fees",
+        "code": 2,
+        "fields": [
+          {
+            "code": 1,
+            "name": "Account Maintenance Fee",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false,
+            "exceptionOptions": []
+          },
+          {
+            "code": 2,
+            "name": "Hold Mail Fee",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false,
+            "exceptionOptions": []
+          }
+        ],
+        "cif": "F016583",
+        "accountNumber": 7115342
+      },
+      {
+        "name": "Exceptions Request",
+        "code": 3,
+        "fields": [
+          {
+            "code": 1,
+            "name": "",
+            "defaultValue": "0",
+            "tooltip": "",
+            "isException": true,
+            "exceptionOptions": [
+              {
+                "approvedByDoubleA": null,
+                "value": "0",
+                "text": "$0.00",
+                "visible": true,
+                "retired": false,
+                "parameterOptionId": 94
+              }
+            ],
+            "labelValue": ""
+          },
+          {
+            "code": 2,
+            "name": "",
+            "defaultValue": "0",
+            "tooltip": "",
+            "isException": true,
+            "exceptionOptions": [],
+            "labelValue": ""
+          }
+        ],
+        "cif": "F016583",
+        "accountNumber": 7115342
+      }
+    ]
+  },
+  {
+    "feeType": "Bank Account Fees",
+    "feeGroups": [
+      {
+        "name": "Standard Fees",
+        "code": 1,
+        "fields": [
+          {
+            "code": 4,
+            "isStandard": false,
+            "isCurrentClient": false,
+            "isException": false,
+            "name": "FX Outgoing Wire Fee",
+            "defaultValue": "25",
+            "hasChanged": false,
+            "tooltip": "",
+            "exceptionOptions": [],
+            "_id": "67ab7c83332b66146c238ab2"
+          },
+          {
+            "code": 4,
+            "isStandard": false,
+            "isCurrentClient": false,
+            "isException": false,
+            "name": "FX Outgoing Wire Fee",
+            "defaultValue": "",
+            "hasChanged": false,
+            "tooltip": "",
+            "exceptionOptions": [],
+            "_id": "67ab7c83332b66146c238ab3"
+          },
+          {
+            "code": 4,
+            "isStandard": false,
+            "isCurrentClient": false,
+            "isException": false,
+            "name": "FX Outgoing Wire Fee",
+            "defaultValue": "",
+            "hasChanged": false,
+            "tooltip": "",
+            "exceptionOptions": [],
+            "_id": "67ab7c83332b66146c238ab4"
+          },
+          {
+            "code": 4,
+            "isStandard": false,
+            "isCurrentClient": false,
+            "isException": false,
+            "name": "FX Outgoing Wire Fee",
+            "defaultValue": "25",
+            "hasChanged": false,
+            "tooltip": "",
+            "exceptionOptions": [],
+            "_id": "67ab7c83332b66146c238ab5"
+          }
+        ],
+        "cif": "F016583",
+        "accountNumber": "7113617",
+        "visible": true,
+        "kycMailingStatus": null,
+        "_id": "67ab7c83332b66146c238ab1"
+      },
+      {
+        "name": "Client Current Fees",
+        "code": 2,
+        "fields": [
+          {
+            "code": 4,
+            "isStandard": false,
+            "isCurrentClient": false,
+            "isException": false,
+            "name": "FX Outgoing Wire Fee",
+            "defaultValue": "",
+            "hasChanged": false,
+            "tooltip": "",
+            "exceptionOptions": [],
+            "_id": "67ab7c83332b66146c238ac6"
+          },
+          {
+            "code": 4,
+            "isStandard": false,
+            "isCurrentClient": false,
+            "isException": false,
+            "name": "FX Outgoing Wire Fee",
+            "defaultValue": "",
+            "hasChanged": false,
+            "tooltip": "",
+            "exceptionOptions": [],
+            "_id": "67ab7c83332b66146c238ac7"
+          },
+          {
+            "code": 4,
+            "…            "_id": "67ab7c83332b66146c238ad5",
+            "labelValue": ""
+          },
+          {
+            "code": 8,
+            "isStandard": false,
+            "isCurrentClient": false,
+            "isException": true,
+            "name": "FX Outgoing Wire (SafraLink) Fee",
+            "defaultValue": "0",
+            "hasChanged": false,
+            "tooltip": "",
+            "exceptionOptions": [
+              {
+                "value": "0",
+                "text": "$0.00",
+                "retired": false,
+                "visible": true,
+                "approvedByDoubleA": null,
+                "_id": "67ab7c83332b66146c238ad8"
+              }
+            ],
+            "_id": "67ab7c83332b66146c238ad7",
+            "labelValue": ""
+          }
+        ],
+        "cif": "F016583",
+        "accountNumber": "7115822",
+        "visible": true,
+        "kycMailingStatus": null,
+        "_id": "67ab7c83332b66146c238ad4"
+      }
+    ]
+  },
+  {
+    "feeType": "Investment Account Fees",
+    "feeGroups": [
+      {
+        "name": "Standard Fees",
+        "code": 1,
+        "fields": [
+          {
+            "code": 5,
+            "name": "SSL Account Maintanance Fee",
+            "defaultValue": "375",
+            "tooltip": "Quarterly on Day 1",
+            "isException": false
+          },
+          {
+            "code": 7,
+            "name": "Options Commission",
+            "defaultValue": "",
+            "tooltip": "$0.10 per share, min charge of $150 per trade",
+            "isException": false
+          },
+          {
+            "code": 5,
+            "name": "SSL Account Maintanance Fee",
+            "defaultValue": "375",
+            "tooltip": "Quarterly on Day 1",
+            "isException": false
+          },
+          {
+            "code": 7,
+            "name": "Options Commission",
+            "defaultValue": "",
+            "tooltip": "$0.10 per share, min charge of $150 per trade",
+            "isException": false
+          },
+          {
+            "code": 5,
+            "name": "SSL Account Maintanance Fee",
+            "defaultValue": "375",
+            "tooltip": "Quarterly on Day 1",
+            "isException": false
+          },
+          {
+            "code": 7,
+            "name": "Options Commission",
+            "defaultValue": "",
+            "tooltip": "$0.10 per share, min charge of $150 per trade",
+            "isException": false
+          },
+          {
+            "code": 5,
+            "name": "SSL Account Maintanance Fee",
+            "defaultValue": "375",
+            "tooltip": "Quarterly on Day 1",
+            "isException": false
+          },
+          {
+            "code": 7,
+            "name": "Options Commission",
+            "defaultValue": "",
+            "tooltip": "$0.10 per share, min charge of $150 per trade",
+            "isException": false
+          }
+        ]
+      },
+      {
+        "name": "Client Current Fees",
+        "code": 2,
+        "fields": [
+          {
+            "code": 5,
+            "name": "SSL Account Maintanance Fee",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false
+          },
+          {
+            "code": 7,
+            "name": "Options Commission",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false
+          },
+          {
+            "code": 5,
+            "name": "SSL Account Maintanance Fee",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false
+          },
+          {
+            "code": 7,
+            "name": "Options Commission",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false
+          },
+          {
+            "code": 5,
+            "name": "SSL Account Maintanance Fee",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false
+          },
+          {
+            "code": 7,
+            "name": "Options Commission",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false
+          },
+          {
+            "code": 5,
+            "name": "SSL Account Maintanance Fee",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false
+          },
+          {
+            "code": 7,
+            "name": "Options Commission",
+            "defaultValue": "",
+            "tooltip": "",
+            "isException": false
+          }
+        ]
+      },
+      {
+        "name": "Exceptions Request",
+        "code": 3,
+        "fields": [
+          {
+            "code": 5,
+            "name": "",
+            "defaultValue": "0",
+            "tooltip": "",
+            "isException": true,
+            "exceptionOptions": []
+          },
+          {
+            "code": 7,
+            "name": "",
+            "defaultValue": "0",
+            "tooltip": "",
+            "isException": true,
+            "exceptionOptions": []
+          }
+        ]
+      }
+    ]
+  }
+]…
+debug accounts [
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115342,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 2,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115342,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 2,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115342,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115342,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115342,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115342,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115822,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 1,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115822,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 1,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115822,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 2,
+    "feeGroup": 1,
+    "kycMailingStatus": "Hold Mail",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115822,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 2,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115822,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115822,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115822,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115342,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7113617,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 2,
+    "feeGroup": 1,
+    "kycMailingStatus": "Hold Mail",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7113617,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 2,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7113617,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7113617,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7113617,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7113617,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115431,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 2,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115431,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 2,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115431,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115431,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115431,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  },
+  {
+    "cifno": "F016583",
+    "ddaNumber": 7115431,
+    "branchCity": "New York",
+    "branchState": "NY",
+    "branchType": "Domestic",
+    "defaultPackageType": "Individual",
+    "feePackage": "Domestic Individual",
+    "defaultFeePackageId": 2,
+    "feeType": 3,
+    "feeGroup": 1,
+    "kycMailingStatus": "Standard",
+    "documentUrl": ""
+  }
+]
+debug investment {}
+ 
