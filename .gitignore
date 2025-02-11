@@ -1,1102 +1,193 @@
-{
-    "code": 200,
-    "data": {
-        "customerName": "FRANCO JACK",
-        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
-        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
-        "cif": "F016583",
-        "branchCity": "New York",
-        "branchState": "NY",
-        "branchType": "Domestic",
-        "defaultPackageType": "Individual",
-        "feePackage": "Domestic Individual",
-        "fees": [
-            {
-                "feeType": "Customer Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "25",
-                                "tooltip": "Monthly - Charged Quarterly",
-                                "isException": false,
-                                "exceptionOptions": [],
-                                "labelValue": "$25.00"
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "tooltip": "Annual - Charged Annual",
-                                "isException": false,
-                                "exceptionOptions": [],
-                                "labelValue": "$0.00"
-                            }
-                        ],
-                        "kycMailingStatus": "Standard",
-                        "cif": "F016583",
-                        "accountNumber": 7115342
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false,
-                                "exceptionOptions": []
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": 7115342
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "",
-                                "defaultValue": "0",
-                                "tooltip": "",
-                                "isException": true,
-                                "exceptionOptions": [
-                                    {
-                                        "approvedByDoubleA": null,
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "visible": true,
-                                        "retired": false,
-                                        "parameterOptionId": 94
-                                    }
-                                ],
-                                "labelValue": ""
-                            },
-                            {
-                                "code": 2,
-                                "name": "",
-                                "defaultValue": "0",
-                                "tooltip": "",
-                                "isException": true,
-                                "exceptionOptions": [],
-                                "labelValue": ""
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": 7115342
-                    }
-                ]
-            },
-            {
-                "feeType": "Bank Account Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7941"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7942"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7943"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7944"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7113617",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a7940"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7955"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7956"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7957"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7958"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7113617",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a7954"
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67aa6793f7561572fb4a796a"
-                                    }
-                                ],
-                                "_id": "67aa6793f7561572fb4a7969",
-                                "labelValue": ""
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67aa6793f7561572fb4a796c"
-                                    }
-                                ],
-                                "_id": "67aa6793f7561572fb4a796b",
-                                "labelValue": ""
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7113617",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a7968"
-                    },
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7937"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7938"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7939"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a793a"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115342",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a7936"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a794b"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a794c"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a794d"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a794e"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115342",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a794a"
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67aa6793f7561572fb4a7960"
-                                    }
-                                ],
-                                "_id": "67aa6793f7561572fb4a795f",
-                                "labelValue": ""
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67aa6793f7561572fb4a7962"
-                                    }
-                                ],
-                                "_id": "67aa6793f7561572fb4a7961",
-                                "labelValue": ""
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115342",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a795e"
-                    },
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7946"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7947"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7948"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7949"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115431",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a7945"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a795a"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a795b"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a795c"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a795d"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115431",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a7959"
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67aa6793f7561572fb4a796f"
-                                    }
-                                ],
-                                "_id": "67aa6793f7561572fb4a796e",
-                                "labelValue": ""
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67aa6793f7561572fb4a7971"
-                                    }
-                                ],
-                                "_id": "67aa6793f7561572fb4a7970",
-                                "labelValue": ""
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115431",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a796d"
-                    },
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a793c"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a793d"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a793e"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a793f"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115822",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a793b"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7950"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7951"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7952"
-                            },
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aa6793f7561572fb4a7953"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115822",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a794f"
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67aa6793f7561572fb4a7965"
-                                    }
-                                ],
-                                "_id": "67aa6793f7561572fb4a7964",
-                                "labelValue": ""
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67aa6793f7561572fb4a7967"
-                                    }
-                                ],
-                                "_id": "67aa6793f7561572fb4a7966",
-                                "labelValue": ""
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115822",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67aa6793f7561572fb4a7963"
-                    }
-                ]
-            },
-            {
-                "feeType": "Investment Account Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 6,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "tooltip": "0.35% /YR min $375.00/QTR",
-                                "isException": false
-                            },
-                            {
-                                "code": 5,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "tooltip": "Quarterly on Day 1",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "isException": false
-                            },
-                            {
-                                "code": 6,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "tooltip": "0.35% /YR min $375.00/QTR",
-                                "isException": false
-                            },
-                            {
-                                "code": 5,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "tooltip": "Quarterly on Day 1",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "isException": false
-                            },
-                            {
-                                "code": 6,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "tooltip": "0.35% /YR min $375.00/QTR",
-                                "isException": false
-                            },
-                            {
-                                "code": 5,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "tooltip": "Quarterly on Day 1",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "isException": false
-                            },
-                            {
-                                "code": 6,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "tooltip": "0.35% /YR min $375.00/QTR",
-                                "isException": false
-                            },
-                            {
-                                "code": 5,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "tooltip": "Quarterly on Day 1",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "isException": false
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 6,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 5,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 6,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 5,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 6,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 5,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 6,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 5,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "US Equities Commission",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            },
-                            {
-                                "code": 7,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "tooltip": "",
-                                "isException": false
-                            }
-                        ]
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 6,
-                                "name": "",
-                                "defaultValue": "0",
-                                "tooltip": "",
-                                "isException": true,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": 5,
-                                "name": "",
-                                "defaultValue": "0",
-                                "tooltip": "",
-                                "isException": true,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": 7,
-                                "name": "",
-                                "defaultValue": "0",
-                                "tooltip": "",
-                                "isException": true,
-                                "exceptionOptions": []
-                            }
-                        ]
-                    }
-                ]
-            }
-        ],
-        "feesActives": [],
-        "currentFees": [
-            {
-                "feeDescription": "Hold Mail Fee (per annum) -  $0.00",
-                "feeCode": " Personal Checking -D 7113617"
-            },
-            {
-                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
-                "feeCode": " Personal Checking -D 7113617"
-            },
-            {
-                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
-                "feeCode": " Personal Checking -D 7115342"
-            },
-            {
-                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
-                "feeCode": " Personal Promise   D 7115431"
-            },
-            {
-                "feeDescription": "Account Maintenance Fee $1,200 (S/A $600) -  $0.00",
-                "feeCode": " Personal Savings 7115822"
-            },
-            {
-                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
-                "feeCode": " Personal Savings 7115822"
-            }
-        ]
+import numberToCurrency from '../core/helpers/currency.js';
+
+export default class CustomerFees {
+  #feeName = 'Customer Fees';
+  #customer = {};
+  #accounts = [];
+  #clientCurrent = [];
+
+  constructor(fees, accounts) {
+    // Validar fees
+    if (!fees || !Array.isArray(fees) || fees.length === 0) {
+      throw new Error('Fees is empty or undefined');
     }
+
+    // Encontrar Customer Fees
+    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
+    if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
+      throw new Error('Customer Fees or feeGroups are undefined');
+    }
+
+    // Processar feeGroups
+    this.#customer.feeGroups.forEach((feeGroup) => {
+      feeGroup.fields?.forEach((item) => {
+        // Filtrar apenas opções válidas nos exceptionsOptions
+        item.exceptionOptions = item.exceptionOptions?.filter((x) => !x.retired) || [];
+      });
+    });
+
+    // Filtrar accounts relacionadas ao Customer Fees
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#customer.feeGroups[0].code
+    );
+
+    // Adicionar informações de mailing status no primeiro fee group
+    this.#customer.feeGroups[0].kycMailingStatus =
+      accounts.find((account) => account.feeType === 2)?.kycMailingStatus || null;
+
+    // Adicionar valores de label no primeiro grupo
+    this.#customer.feeGroups[0].fields.forEach((field) => {
+      field.labelValue = numberToCurrency(field.defaultValue);
+    });
+
+    // Verificar Client Current (segundo grupo)
+    if (this.#customer.feeGroups.length > 1) {
+      this.#clientCurrent = this.#customer.feeGroups[1].fields;
+      this.#configureCustomer();
+    } else {
+      console.warn('Client Current group is missing');
+    }
+
+    // Verificar Exceptions (terceiro grupo)
+    if (this.#customer.feeGroups.length > 2) {
+      this.#customer.feeGroups[2].fields.forEach((field) => {
+        field.labelValue =
+          this.#customer.feeGroups[1]?.fields.find((f) => f.code === field.code)?.labelValue || '';
+      });
+    } else {
+      console.warn('Exception group is missing');
+    }
+  }
+
+  get fee() {
+    return this.#customer;
+  }
+
+  #configureCustomer() {
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#customer = {};
+      return;
+    }
+
+    for (const field of this.#clientCurrent) {
+      for (const account of this.#accounts) {
+        if (field.isCurrentClient && field.code === account.feeType) {
+          field.defaultValue = account.feeAmount?.toString() || '';
+          field.labelValue = numberToCurrency(field.defaultValue);
+        }
+      }
+    }
+
+    for (const feeGroup of this.#customer.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+      feeGroup.accountNumber = this.#accounts[0]?.ddaNumber || null;
+    }
+
+    this.#clearMemory();
+  }
+
+  #clearMemory() {
+    this.#accounts = [];
+    this.#clientCurrent = [];
+  }
+}
+
+import numberToCurrency from '../core/helpers/currency.js'
+
+export default class CustomerFees {
+  #feeName = 'Customer Fees'
+  #customer = {}
+  #accounts = []
+  #clientCurrent = []
+  constructor(fees, accounts) {
+    global.logger.info('CustomerFees()')
+
+    const feeTypes = accounts.reduce((acc, item) => {
+      if (item.feeType > 2) return acc
+      acc = item.feeType
+      return acc
+    }, 0)
+
+    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0]
+
+    this.#customer.feeGroups.forEach((feeGroup) => {
+      feeGroup.fields = feeGroup.fields.filter((x) => x.code <= feeTypes)
+      feeGroup.fields?.forEach((item) => {
+        item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired)
+      })
+    })
+
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#customer.feeGroups[0].code
+    )
+
+    this.#customer.feeGroups[0].kycMailingStatus =
+      accounts.find((account) => account.feeType === 2)?.kycMailingStatus ||
+      null
+    this.#customer.feeGroups[0].fields.forEach((field) => {
+      field.labelValue = numberToCurrency(field.defaultValue)
+    })
+
+    this.#clientCurrent = this.#customer.feeGroups[1].fields
+    this.#configureCustomer()
+
+    this.#customer.feeGroups[2].fields.forEach((field, fieldIndex) => {
+      field.labelValue =
+        this.#customer.feeGroups[1].fields[fieldIndex].labelValue
+      if (
+        field.code === 2 &&
+        this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+      ) {
+        field.defaultValue = field.labelValue
+        field.exceptionOptions = [
+          {
+            value: field.defaultValue,
+            text: field.defaultValue
+          }
+        ]
+      }
+    })
+  }
+
+  get fee() {
+    return this.#customer
+  }
+
+  #configureCustomer() {
+    global.logger.info('configureCustomer()')
+
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#customer = {}
+      return
+    }
+
+    for (const field of this.#clientCurrent) {
+      for (const account of this.#accounts) {
+        if (field.isCurrentClient && field.code === account.feeType) {
+          if (
+            field.code === 2 &&
+            this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+          ) {
+            field.defaultValue = 'NOT APPLICABLE'
+            field.labelValue = field.defaultValue
+          } else {
+            field.defaultValue = account.feeAmount.toString()
+            field.labelValue = numberToCurrency(field.defaultValue)
+          }
+        }
+      }
+    }
+
+    for (const feeGroup of this.#customer.feeGroups) {
+      feeGroup.cif = this.#accounts[0].cifno
+      feeGroup.accountNumber = this.#accounts[0].ddaNumber
+    }
+
+    this.#clearMemory()
+  }
+
+  #clearMemory() {
+    this.#accounts = []
+    this.#clientCurrent = []
+  }
 }
