@@ -61,6 +61,7 @@ export default class FeeGetByCifUseCase {
       branchCity: account.branchCity,
       branchState: account.branchState,
       branchType: account.branchType,
+      documentUrl:  account.documentUrl,
       defaultPackageType: account.defaultPackageType,
       feePackage: account.feePackage,
     }));
@@ -103,6 +104,8 @@ export default class FeeGetByCifUseCase {
       throw new Error('Default Fee Package Id not found in feesData');
     }
 
+    const documentUrl = this.#getDocumentUrl(feePackageId);
+
     const accounts = feesData.map((fee) => ({
       cifno: fee.CIFNO,
       ddaNumber: fee.ACCTNO,
@@ -115,7 +118,7 @@ export default class FeeGetByCifUseCase {
       feeType: mapFeeTypeToNumber(mapDbFeeTypeToApp(fee.FeeType)),
       feeGroup: 1,
       kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
-      documentUrl: this.#getDocumentUrl(feePackageId),
+      documentUrl
     }));
 
     const groupedFeesMap = {};
