@@ -1,7 +1,19 @@
-CIFNO	ACCTNO	FeeDescription	FeeCode	Istransactional	FeeType	FeeAmount
-F016583	7115342	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	25.00
-F016583	7115342	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00
-F016583	7115342	Safekeeping of Securities	BPS002	0	Investment Account Fees	NULL
-F016583	7115342	SSL Account Maintanance Fee	BPS003	0	Investment Account Fees	375.00
-F016583	7115342	US Equities Commission	BPS004	1	Investment Account Fees	NULL
-F016583	7115342	Options Commission	BPS005	1	Investment Account Fees	NULL
+// Cria uma chave única para cada fee usando a combinação de CIFNO, ACCTNO, FeeCode e FeeType
+const uniqueFeesData = Array.from(
+  new Map(feesData.map(row => [
+    `${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}`, row
+  ])).values()
+);
+
+
+
+
+// Substitua:
+const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
+// Por:
+const feesDataRaw = await this.#getFeesFromSQL(customerAccount[0].cifno);
+const feesData = Array.from(
+  new Map(feesDataRaw.map(row => [
+    `${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}`, row
+  ])).values()
+);
