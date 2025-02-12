@@ -1,410 +1,3 @@
-// Importa módulos e classes necessários
-import Result from '#features/shared/result.js';
-import CustomerFees from '#src/models/CustomerFees.js';
-import BankAccountFee from '#src/models/BankAccountFee.js';
-import InvestmentAccountFee from '#src/models/InvestimentAccountFee.js';
-
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure,
-} from '#core/data/mssql/index.js';
-
-// Mapeamento de FeeCode (do banco) para código interno
-const deParaFeeCodes = {
-  JH001: 1,
-  JH002: 2,
-  JH006: 4,
-  JH007: 8,
-  BPS002: 6,
-  BPS003: 5,
-  BPS004: 9,
-  BPS005: 7,
-  JH010: 3,
-};// Importa módulos e classes necessários
-import Result from '#features/shared/result.js';
-import CustomerFees from '#src/models/CustomerFees.js';
-import BankAccountFee from '#src/models/BankAccountFee.js';
-import InvestmentAccountFee from '#src/models/InvestimentAccountFee.js';
-
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure,
-} from '#core/data/mssql/index.js';
-
-// Mapeamento de FeeCode (do banco) para código interno
-const deParaFeeCodes = {
-  JH001: 1,
-  JH002: 2,
-  JH006: 4,
-  JH007: 8,
-  BPS002: 6,
-  BPS003: 5,
-  BPS004: 9,
-  BPS005: 7,
-  JH010: 3,
-};
-
-// Conjunto de códigos a serem excluídos
-const excludedCodes = new Set([8]);
-
-/**
- * Converte o FeeType vindo do banco para o formato utilizado na aplicação.
- * Exemplo: "Client Fees" é mapeado para "Customer Fees".
- * 
- * @param {string} feeTypeFromDb - O feeType retornado do banco.
- * @returns {string} - O feeType mapeado para a aplicação.
- */
-function mapDbFeeTypeToApp(feeTypeFromDb) {
-  switch (feeTypeFromDb) {
-    case 'Client Fees':
-      return 'Customer Fees';
-    case 'Bank Account Fees':
-      return 'Bank Account Fees';
-    case 'Investment Account Fees':
-      return 'Investment Account Fees';
-    default:
-      return feeTypeFromDb;
-  }
-}
-
-/**
- * Converte o feeType (em string) para um valor numérico interno.
- * 
- * @param {string} feeType - O feeType da aplicação.
- * @returns {number} - Valor numérico correspondente.
- */
-function mapFeeTypeToNumber(feeType) {
-  switch (feeType) {
-    case 'Customer Fees':
-      return 1;
-    case 'Bank Account Fees':
-      return 2;
-    case 'Investment Account Fees':
-      return 3;
-    default:
-      return 0;
-  }
-}
-
-/**
- * Classe principal que processa a obtenção das fees com base no CIF do cliente.
- * Essa classe realiza as seguintes tarefas:
- *  - Executa stored procedures para recuperar os dados de fees e exceptions.
- *  - Estrutura os dados em grupos (Standard Fees, Client Current Fees e Exceptions Request).
- *  - Instancia classes específicas para cada tipo de fee (CustomerFees, BankAccountFee e InvestmentAccountFee).
- *  - Monta o objeto final de resposta com informações dos fees e das contas.
- */
-export default class FeeGetByCifUseCase {
-  /**
-   * Método principal de execução.
-   * Recebe o customerAccount, processa os dados e retorna o resultado final.
-   * 
-   * @param {Object} customerAccount - Array com as informações da conta do cliente.
-   * @returns {Promise<Object>} - Resultado com fees, contas e feesActives.
-   */
-  async execute({ customerAccount }) {
-    const result = { fees: [] };
-
-    // Recupera os dados estruturados (groupedFees e accounts) a partir do CIF
-    const { groupedFees, accounts } = await this.#getFeesStructuredFromSQL(customerAccount);
-
-    // Prepara os dados das contas para o retorno
-    result.accounts = accounts.map((account) => ({
-      cifno: account.cifno,
-      ddaNumber: account.ddaNumber,
-      branchCity: account.branchCity,
-      branchState: account.branchState,
-      branchType: account.branchType,
-      documentUrl: account.documentUrl,
-      defaultPackageType: account.defaultPackageType,
-      feePackage: account.feePackage,
-    }));
-
-    // Instancia e processa as Customer Fees
-    const customer = new CustomerFees(groupedFees, accounts);
-    if (customer.fee) result.fees.push(customer.fee);
-
-    // Instancia e processa as Bank Account Fees
-    const bank = new BankAccountFee(groupedFees, accounts);
-    if (bank.fee) result.fees.push(bank.fee);
-
-    // Prepara um objeto equityField para ser passado à InvestmentAccountFee
-    const equityField = { exceptionOptions: [] };
-
-    // Instancia e processa as Investment Account Fees
-    const investment = new InvestmentAccountFee(groupedFees, accounts, equityField);
-    // Debug: imprime o objeto de investment para verificação
-    console.log("debug investment", JSON.stringify(investment, null, 2));
-    if (investment.fee) {
-      result.fees.push(investment.fee);
-    }
-
-    // Recupera os fees ativos (provavelmente de um banco NoSQL)
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true },
-    });
-
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id,
-    }));
-
-    return Result.ok(result);
-  }
-
-  /**
-   * Recupera e estrutura os dados de fees a partir do banco.
-   * Executa o sp_get_fees_byCIF e organiza os dados em grupos por feeType.
-   * 
-   * @param {Array} customerAccount - Array com informações da conta do cliente.
-   * @returns {Promise<Object>} - Objeto contendo groupedFees e accounts.
-   */
-  async #getFeesStructuredFromSQL(customerAccount) {
-    // Executa o stored procedure para obter os fees
-    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
-    if (!feesData || feesData.length === 0) {
-      return { groupedFees: [], accounts: [] };
-    }
-
-    // Extrai o feePackageId da primeira linha dos dados
-    const feePackageId = feesData[0]['Default Fee Package Id'];
-    if (!feePackageId) {
-      throw new Error('Default Fee Package Id not found in feesData');
-    }
-
-    // Obtém a URL do documento associada ao feePackageId
-    const documentUrl = this.#getDocumentUrl(feePackageId);
-
-    // Mapeia os dados de fees para um array de contas com os atributos necessários
-    const accounts = feesData.map((fee) => ({
-      cifno: fee.CIFNO,
-      ddaNumber: fee.ACCTNO,
-      branchCity: fee['Branch City'],
-      branchState: fee['Branch State'],
-      branchType: fee['Branch Type'],
-      defaultPackageType: fee['Default Package Type'],
-      feePackage: fee['Default Fee Package']?.trim() || '',
-      defaultFeePackageId: fee['Default Fee Package Id'] || '',
-      feeType: mapFeeTypeToNumber(mapDbFeeTypeToApp(fee.FeeType)),
-      feeGroup: 1,
-      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
-      documentUrl
-    }));
-
-    // Inicializa o objeto de agrupamento dos fees por feeType
-    const groupedFeesMap = {};
-    const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
-    for (const ft of possibleFeeTypes) {
-      groupedFeesMap[ft] = {
-        feeType: ft,
-        feeGroups: [
-          { name: 'Standard Fees', code: 1, fields: [] },
-          { name: 'Client Current Fees', code: 2, fields: [] },
-          { name: 'Exceptions Request', code: 3, fields: [] },
-        ],
-      };
-    }
-
-    // Processa cada linha dos dados de fees
-    for (const row of feesData) {
-      const feeTypeDb = row.FeeType;
-      const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
-      if (!groupedFeesMap[feeTypeApp]) continue;
-
-      const { FeeDescription, FeeCode, FeeAmount, Frequency, DefaultFeeAmount, DefaultFrequency } = row;
-      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-      if (excludedCodes.has(mappedCode)) continue;
-      if (
-        feeTypeApp === 'Customer Fees' && ![1, 2].includes(mappedCode) ||
-        feeTypeApp === 'Bank Account Fees' && ![3, 4].includes(mappedCode) ||
-        feeTypeApp === 'Investment Account Fees' && ![5, 7].includes(mappedCode)
-      ) {
-        continue;
-      }
-
-      const groupObj = groupedFeesMap[feeTypeApp];
-      const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
-      const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
-
-      // Adiciona o field ao grupo Standard Fees usando FeeDescription (que vem da coluna FeeDescription do banco)
-      standardGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription, 
-        defaultValue: FeeAmount ? FeeAmount.toString() : '',
-        tooltip: Frequency || '',
-        isException: false,
-      });
-
-      // Adiciona o field ao grupo Client Current Fees
-      clientCurrentGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : '',
-        tooltip: DefaultFrequency || '',
-        isException: false,
-      });
-    }
-
-    // Recupera as exceptions usando um stored procedure específico
-    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
-
-    // Organiza as exceptions por feeType e código
-    const exceptionsByFeeTypeAndCode = {};
-    for (const exc of exceptions) {
-      const feeTypeApp = exc.feeType;
-      if (!exceptionsByFeeTypeAndCode[feeTypeApp]) {
-        exceptionsByFeeTypeAndCode[feeTypeApp] = {};
-      }
-      const code = exc.code;
-      if (!exceptionsByFeeTypeAndCode[feeTypeApp][code]) {
-        exceptionsByFeeTypeAndCode[feeTypeApp][code] = [];
-      }
-      exceptionsByFeeTypeAndCode[feeTypeApp][code].push(exc);
-    }
-
-    // Processa as exceptions para cada feeType
-    for (const ft of possibleFeeTypes) {
-      const groupObj = groupedFeesMap[ft];
-      if (!groupObj) continue;
-
-      const exceptionGroup = groupObj.feeGroups.find((g) => g.name === 'Exceptions Request');
-      if (!exceptionGroup) continue;
-
-      const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
-      const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
-      // Cria um conjunto de todos os códigos presentes nos grupos Standard e Client Current
-      const standardCodes = standardGroup?.fields.map((f) => f.code) || [];
-      const clientCodes = clientCurrentGroup?.fields.map((f) => f.code) || [];
-      const allCodes = new Set([...standardCodes, ...clientCodes]);
-
-      // Para cada código, garante que exista um field no grupo Exceptions Request,
-      // usando o nome do Standard Fees se necessário.
-      for (const code of allCodes) {
-        let field = exceptionGroup.fields.find((f) => f.code === code);
-        if (!field) {
-          const stdField = standardGroup?.fields.find((f) => f.code === code);
-          field = {
-            code,
-            name: stdField?.name || '',
-            defaultValue: '0',
-            tooltip: '',
-            isException: true,
-            exceptionOptions: []
-          };
-          exceptionGroup.fields.push(field);
-        } else {
-          if (!field.name || field.name.trim() === '') {
-            const stdField = standardGroup?.fields.find((f) => f.code === code);
-            field.name = stdField?.name || '';
-          }
-        }
-      }
-
-      // Atualiza os fields de Exceptions Request com as opções vindas das exceptions
-      const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
-      for (const [codeStr, listExc] of Object.entries(codeMap)) {
-        const code = Number(codeStr);
-        let field = exceptionGroup.fields.find((f) => f.code === code);
-        if (!field) {
-          const stdField = standardGroup?.fields.find((f) => f.code === code);
-          field = {
-            code,
-            name: stdField?.name || listExc[0].name || '',
-            defaultValue: listExc[0].defaultValue || '0',
-            tooltip: listExc[0].tooltip || '',
-            isException: true,
-            exceptionOptions: []
-          };
-          exceptionGroup.fields.push(field);
-        } else {
-          if (!field.name || field.name.trim() === '') {
-            const stdField = standardGroup?.fields.find((f) => f.code === code);
-            field.name = stdField?.name || listExc[0].name || '';
-          }
-        }
-        // Adiciona as opções de exception ao field
-        for (const exc of listExc) {
-          const amountNumber = parseFloat(exc.defaultValue || '0');
-          field.exceptionOptions.push({
-            approvedByDoubleA: null,
-            value: exc.defaultValue,
-            text: `$${amountNumber.toFixed(2)}`,
-            visible: true,
-            retired: false,
-            parameterOptionId: exc.parameterOptionId,
-          });
-        }
-      }
-    }
-
-    // Converte o objeto de groupedFeesMap em um array para retornar
-    const groupedFees = Object.values(groupedFeesMap);
-    return { groupedFees, accounts };
-  }
-
-  /**
-   * Retorna a URL do documento associada ao feePackageId, usando um mapeamento e uma variável global.
-   *
-   * @param {number} feePackageId - O ID do pacote de fee.
-   * @returns {string} - A URL do documento, ou string vazia se não encontrar.
-   */
-  #getDocumentUrl(feePackageId) {
-    const scheduleUrls = global.environment.scheduleUrls;
-    const packageMap = {
-      1: 'intlPB3',
-      2: 'uSPBIndividual3',
-      3: 'uSPBCorporation3',
-      4: 'efraPB3',
-      5: 'eraPB3'
-    };
-
-    const scheduleType = packageMap[feePackageId] || '';
-    return scheduleUrls[scheduleType] || '';
-  }
-
-  /**
-   * Executa o stored procedure 'sp_get_fees_byCIF' para obter os dados de fees do banco.
-   *
-   * @param {string} cifno - O número CIF do cliente.
-   * @returns {Promise<Array>} - Os dados retornados do banco.
-   */
-  async #getFeesFromSQL(cifno) {
-    const connection = await connectToFeeMgmtDb();
-    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
-  }
-
-  /**
-   * Executa o stored procedure 'sp_get_exception_fees_bypackage' para obter os dados de exceptions do banco,
-   * e os mapeia para o formato interno.
-   *
-   * @param {number} feePackageId - O ID do pacote de fee.
-   * @returns {Promise<Array>} - Os dados de exceptions mapeados.
-   */
-  async #getExceptionFeesFromSQL(feePackageId) {
-    const connection = await connectToFeeMgmtDb();
-    const data = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
-    return data.map((exception) => {
-      const feeTypeApp = mapDbFeeTypeToApp(exception.FeeType);
-      return {
-        feeType: feeTypeApp,
-        code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
-        name: exception.FeeDescription, 
-        defaultValue: exception.Amount?.toString() || '0',
-        tooltip: exception.FreqDescription || '',
-        isException: true,
-        parameterOptionId: exception.FeeParameterOptionId,
-      };
-    });
-  }
-}
-
-
-
-
 import numberToCurrency from '../core/helpers/currency.js';
 
 export default class CustomerFees {
@@ -418,28 +11,34 @@ export default class CustomerFees {
       throw new Error('Fees is empty or undefined');
     }
 
+    // Seleciona o objeto correspondente a Customer Fees
     this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
     if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
       throw new Error('Customer Fees or feeGroups are undefined');
     }
 
+    // Processa cada grupo, filtrando as exceptionOptions para remover as que estão retiradas
     this.#customer.feeGroups.forEach((feeGroup) => {
       feeGroup.fields?.forEach((item) => {
         item.exceptionOptions = item.exceptionOptions?.filter((x) => !x.retired) || [];
       });
     });
 
+    // Filtra as contas relacionadas aos Customer Fees (usando o código do primeiro feeGroup)
     this.#accounts = accounts.filter(
       (x) => x.feeGroup === this.#customer.feeGroups[0].code
     );
 
+    // Define o kycMailingStatus do primeiro grupo (Standard Fees) com base na conta do Bank (feeType === 2)
     this.#customer.feeGroups[0].kycMailingStatus =
       accounts.find((account) => account.feeType === 2)?.kycMailingStatus || null;
 
+    // Atualiza os valores de label do grupo Standard Fees
     this.#customer.feeGroups[0].fields.forEach((field) => {
       field.labelValue = numberToCurrency(field.defaultValue);
     });
 
+    // Processa o grupo Client Current Fees (o segundo grupo)
     if (this.#customer.feeGroups.length > 1) {
       this.#clientCurrent = this.#customer.feeGroups[1].fields;
       this.#configureCustomer();
@@ -447,6 +46,7 @@ export default class CustomerFees {
       console.warn('Client Current group is missing');
     }
 
+    // Para o grupo Exceptions Request (terceiro grupo), copia os labelValues do grupo Client Current
     if (this.#customer.feeGroups.length > 2) {
       this.#customer.feeGroups[2].fields.forEach((field) => {
         field.labelValue =
@@ -461,6 +61,11 @@ export default class CustomerFees {
     return this.#customer;
   }
 
+  /**
+   * Configura os valores dos fields do grupo Client Current Fees, aplicando a regra "NOT APPLICABLE":
+   * Se o campo (por exemplo, com código 2) vier vazio ou 0 e o kycMailingStatus do grupo Standard for diferente de "Hold Mail",
+   * define o valor e label como "NOT APPLICABLE" e atualiza as exceptionOptions.
+   */
   #configureCustomer() {
     if (this.#accounts.length < 1) {
       this.#customer = {};
@@ -470,33 +75,31 @@ export default class CustomerFees {
     for (const field of this.#clientCurrent) {
       for (const account of this.#accounts) {
         if (field.isCurrentClient && field.code === account.feeType) {
-
-          // -----------------------------
-          // INÍCIO DA REGRA "NOT APPLICABLE"
-          // -----------------------------
+          // Regra NOT APPLICABLE: Para o campo com código 2 (Hold Mail Fee)
+          // Se o valor estiver vazio ou for "0" e o kycMailingStatus do grupo Standard for diferente de "Hold Mail",
+          // o valor será "NOT APPLICABLE"
           if (
-            field.code === 2 &&  
+            field.code === 2 &&
+            (!account.feeAmount || account.feeAmount.toString() === '0') &&
             this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
           ) {
             field.defaultValue = 'NOT APPLICABLE';
             field.labelValue = field.defaultValue;
-
             field.exceptionOptions = [
               {
                 value: field.defaultValue,
                 text: field.defaultValue
               }
             ];
-          }
-          else {
+          } else {
             field.defaultValue = account.feeAmount?.toString() || '';
             field.labelValue = numberToCurrency(field.defaultValue);
           }
-
         }
       }
     }
 
+    // Atualiza informações comuns em todos os grupos com os dados da primeira conta
     for (const feeGroup of this.#customer.feeGroups) {
       feeGroup.cif = this.#accounts[0]?.cifno || null;
       feeGroup.accountNumber = this.#accounts[0]?.ddaNumber || null;
@@ -508,362 +111,5 @@ export default class CustomerFees {
   #clearMemory() {
     this.#accounts = [];
     this.#clientCurrent = [];
-  }
-}
-
-
-// Conjunto de códigos a serem excluídos
-const excludedCodes = new Set([8]);
-
-/**
- * Converte o FeeType vindo do banco para o formato utilizado na aplicação.
- * Exemplo: "Client Fees" é mapeado para "Customer Fees".
- * 
- * @param {string} feeTypeFromDb - O feeType retornado do banco.
- * @returns {string} - O feeType mapeado para a aplicação.
- */
-function mapDbFeeTypeToApp(feeTypeFromDb) {
-  switch (feeTypeFromDb) {
-    case 'Client Fees':
-      return 'Customer Fees';
-    case 'Bank Account Fees':
-      return 'Bank Account Fees';
-    case 'Investment Account Fees':
-      return 'Investment Account Fees';
-    default:
-      return feeTypeFromDb;
-  }
-}
-
-/**
- * Converte o feeType (em string) para um valor numérico interno.
- * 
- * @param {string} feeType - O feeType da aplicação.
- * @returns {number} - Valor numérico correspondente.
- */
-function mapFeeTypeToNumber(feeType) {
-  switch (feeType) {
-    case 'Customer Fees':
-      return 1;
-    case 'Bank Account Fees':
-      return 2;
-    case 'Investment Account Fees':
-      return 3;
-    default:
-      return 0;
-  }
-}
-
-/**
- * Classe principal que processa a obtenção das fees com base no CIF do cliente.
- * Essa classe realiza as seguintes tarefas:
- *  - Executa stored procedures para recuperar os dados de fees e exceptions.
- *  - Estrutura os dados em grupos (Standard Fees, Client Current Fees e Exceptions Request).
- *  - Instancia classes específicas para cada tipo de fee (CustomerFees, BankAccountFee e InvestmentAccountFee).
- *  - Monta o objeto final de resposta com informações dos fees e das contas.
- */
-export default class FeeGetByCifUseCase {
-  /**
-   * Método principal de execução.
-   * Recebe o customerAccount, processa os dados e retorna o resultado final.
-   * 
-   * @param {Object} customerAccount - Array com as informações da conta do cliente.
-   * @returns {Promise<Object>} - Resultado com fees, contas e feesActives.
-   */
-  async execute({ customerAccount }) {
-    const result = { fees: [] };
-
-    // Recupera os dados estruturados (groupedFees e accounts) a partir do CIF
-    const { groupedFees, accounts } = await this.#getFeesStructuredFromSQL(customerAccount);
-
-    // Prepara os dados das contas para o retorno
-    result.accounts = accounts.map((account) => ({
-      cifno: account.cifno,
-      ddaNumber: account.ddaNumber,
-      branchCity: account.branchCity,
-      branchState: account.branchState,
-      branchType: account.branchType,
-      documentUrl: account.documentUrl,
-      defaultPackageType: account.defaultPackageType,
-      feePackage: account.feePackage,
-    }));
-
-    // Instancia e processa as Customer Fees
-    const customer = new CustomerFees(groupedFees, accounts);
-    if (customer.fee) result.fees.push(customer.fee);
-
-    // Instancia e processa as Bank Account Fees
-    const bank = new BankAccountFee(groupedFees, accounts);
-    if (bank.fee) result.fees.push(bank.fee);
-
-    // Prepara um objeto equityField para ser passado à InvestmentAccountFee
-    const equityField = { exceptionOptions: [] };
-
-    // Instancia e processa as Investment Account Fees
-    const investment = new InvestmentAccountFee(groupedFees, accounts, equityField);
-    // Debug: imprime o objeto de investment para verificação
-    console.log("debug investment", JSON.stringify(investment, null, 2));
-    if (investment.fee) {
-      result.fees.push(investment.fee);
-    }
-
-    // Recupera os fees ativos (provavelmente de um banco NoSQL)
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true },
-    });
-
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id,
-    }));
-
-    return Result.ok(result);
-  }
-
-  /**
-   * Recupera e estrutura os dados de fees a partir do banco.
-   * Executa o sp_get_fees_byCIF e organiza os dados em grupos por feeType.
-   * 
-   * @param {Array} customerAccount - Array com informações da conta do cliente.
-   * @returns {Promise<Object>} - Objeto contendo groupedFees e accounts.
-   */
-  async #getFeesStructuredFromSQL(customerAccount) {
-    // Executa o stored procedure para obter os fees
-    const feesData = await this.#getFeesFromSQL(customerAccount[0].cifno);
-    if (!feesData || feesData.length === 0) {
-      return { groupedFees: [], accounts: [] };
-    }
-
-    // Extrai o feePackageId da primeira linha dos dados
-    const feePackageId = feesData[0]['Default Fee Package Id'];
-    if (!feePackageId) {
-      throw new Error('Default Fee Package Id not found in feesData');
-    }
-
-    // Obtém a URL do documento associada ao feePackageId
-    const documentUrl = this.#getDocumentUrl(feePackageId);
-
-    // Mapeia os dados de fees para um array de contas com os atributos necessários
-    const accounts = feesData.map((fee) => ({
-      cifno: fee.CIFNO,
-      ddaNumber: fee.ACCTNO,
-      branchCity: fee['Branch City'],
-      branchState: fee['Branch State'],
-      branchType: fee['Branch Type'],
-      defaultPackageType: fee['Default Package Type'],
-      feePackage: fee['Default Fee Package']?.trim() || '',
-      defaultFeePackageId: fee['Default Fee Package Id'] || '',
-      feeType: mapFeeTypeToNumber(mapDbFeeTypeToApp(fee.FeeType)),
-      feeGroup: 1,
-      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
-      documentUrl
-    }));
-
-    // Inicializa o objeto de agrupamento dos fees por feeType
-    const groupedFeesMap = {};
-    const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
-    for (const ft of possibleFeeTypes) {
-      groupedFeesMap[ft] = {
-        feeType: ft,
-        feeGroups: [
-          { name: 'Standard Fees', code: 1, fields: [] },
-          { name: 'Client Current Fees', code: 2, fields: [] },
-          { name: 'Exceptions Request', code: 3, fields: [] },
-        ],
-      };
-    }
-
-    // Processa cada linha dos dados de fees
-    for (const row of feesData) {
-      const feeTypeDb = row.FeeType;
-      const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
-      if (!groupedFeesMap[feeTypeApp]) continue;
-
-      const { FeeDescription, FeeCode, FeeAmount, Frequency, DefaultFeeAmount, DefaultFrequency } = row;
-      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-      if (excludedCodes.has(mappedCode)) continue;
-      if (
-        feeTypeApp === 'Customer Fees' && ![1, 2].includes(mappedCode) ||
-        feeTypeApp === 'Bank Account Fees' && ![3, 4].includes(mappedCode) ||
-        feeTypeApp === 'Investment Account Fees' && ![5, 7].includes(mappedCode)
-      ) {
-        continue;
-      }
-
-      const groupObj = groupedFeesMap[feeTypeApp];
-      const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
-      const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
-
-      // Adiciona o field ao grupo Standard Fees usando FeeDescription (que vem da coluna FeeDescription do banco)
-      standardGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription, 
-        defaultValue: FeeAmount ? FeeAmount.toString() : '',
-        tooltip: Frequency || '',
-        isException: false,
-      });
-
-      // Adiciona o field ao grupo Client Current Fees
-      clientCurrentGroup.fields.push({
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : '',
-        tooltip: DefaultFrequency || '',
-        isException: false,
-      });
-    }
-
-    // Recupera as exceptions usando um stored procedure específico
-    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
-
-    // Organiza as exceptions por feeType e código
-    const exceptionsByFeeTypeAndCode = {};
-    for (const exc of exceptions) {
-      const feeTypeApp = exc.feeType;
-      if (!exceptionsByFeeTypeAndCode[feeTypeApp]) {
-        exceptionsByFeeTypeAndCode[feeTypeApp] = {};
-      }
-      const code = exc.code;
-      if (!exceptionsByFeeTypeAndCode[feeTypeApp][code]) {
-        exceptionsByFeeTypeAndCode[feeTypeApp][code] = [];
-      }
-      exceptionsByFeeTypeAndCode[feeTypeApp][code].push(exc);
-    }
-
-    // Processa as exceptions para cada feeType
-    for (const ft of possibleFeeTypes) {
-      const groupObj = groupedFeesMap[ft];
-      if (!groupObj) continue;
-
-      const exceptionGroup = groupObj.feeGroups.find((g) => g.name === 'Exceptions Request');
-      if (!exceptionGroup) continue;
-
-      const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
-      const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
-      // Cria um conjunto de todos os códigos presentes nos grupos Standard e Client Current
-      const standardCodes = standardGroup?.fields.map((f) => f.code) || [];
-      const clientCodes = clientCurrentGroup?.fields.map((f) => f.code) || [];
-      const allCodes = new Set([...standardCodes, ...clientCodes]);
-
-      // Para cada código, garante que exista um field no grupo Exceptions Request,
-      // usando o nome do Standard Fees se necessário.
-      for (const code of allCodes) {
-        let field = exceptionGroup.fields.find((f) => f.code === code);
-        if (!field) {
-          const stdField = standardGroup?.fields.find((f) => f.code === code);
-          field = {
-            code,
-            name: stdField?.name || '',
-            defaultValue: '0',
-            tooltip: '',
-            isException: true,
-            exceptionOptions: []
-          };
-          exceptionGroup.fields.push(field);
-        } else {
-          if (!field.name || field.name.trim() === '') {
-            const stdField = standardGroup?.fields.find((f) => f.code === code);
-            field.name = stdField?.name || '';
-          }
-        }
-      }
-
-      // Atualiza os fields de Exceptions Request com as opções vindas das exceptions
-      const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
-      for (const [codeStr, listExc] of Object.entries(codeMap)) {
-        const code = Number(codeStr);
-        let field = exceptionGroup.fields.find((f) => f.code === code);
-        if (!field) {
-          const stdField = standardGroup?.fields.find((f) => f.code === code);
-          field = {
-            code,
-            name: stdField?.name || listExc[0].name || '',
-            defaultValue: listExc[0].defaultValue || '0',
-            tooltip: listExc[0].tooltip || '',
-            isException: true,
-            exceptionOptions: []
-          };
-          exceptionGroup.fields.push(field);
-        } else {
-          if (!field.name || field.name.trim() === '') {
-            const stdField = standardGroup?.fields.find((f) => f.code === code);
-            field.name = stdField?.name || listExc[0].name || '';
-          }
-        }
-        // Adiciona as opções de exception ao field
-        for (const exc of listExc) {
-          const amountNumber = parseFloat(exc.defaultValue || '0');
-          field.exceptionOptions.push({
-            approvedByDoubleA: null,
-            value: exc.defaultValue,
-            text: `$${amountNumber.toFixed(2)}`,
-            visible: true,
-            retired: false,
-            parameterOptionId: exc.parameterOptionId,
-          });
-        }
-      }
-    }
-
-    // Converte o objeto de groupedFeesMap em um array para retornar
-    const groupedFees = Object.values(groupedFeesMap);
-    return { groupedFees, accounts };
-  }
-
-  /**
-   * Retorna a URL do documento associada ao feePackageId, usando um mapeamento e uma variável global.
-   *
-   * @param {number} feePackageId - O ID do pacote de fee.
-   * @returns {string} - A URL do documento, ou string vazia se não encontrar.
-   */
-  #getDocumentUrl(feePackageId) {
-    const scheduleUrls = global.environment.scheduleUrls;
-    const packageMap = {
-      1: 'intlPB3',
-      2: 'uSPBIndividual3',
-      3: 'uSPBCorporation3',
-      4: 'efraPB3',
-      5: 'eraPB3'
-    };
-
-    const scheduleType = packageMap[feePackageId] || '';
-    return scheduleUrls[scheduleType] || '';
-  }
-
-  /**
-   * Executa o stored procedure 'sp_get_fees_byCIF' para obter os dados de fees do banco.
-   *
-   * @param {string} cifno - O número CIF do cliente.
-   * @returns {Promise<Array>} - Os dados retornados do banco.
-   */
-  async #getFeesFromSQL(cifno) {
-    const connection = await connectToFeeMgmtDb();
-    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
-  }
-
-  /**
-   * Executa o stored procedure 'sp_get_exception_fees_bypackage' para obter os dados de exceptions do banco,
-   * e os mapeia para o formato interno.
-   *
-   * @param {number} feePackageId - O ID do pacote de fee.
-   * @returns {Promise<Array>} - Os dados de exceptions mapeados.
-   */
-  async #getExceptionFeesFromSQL(feePackageId) {
-    const connection = await connectToFeeMgmtDb();
-    const data = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
-    return data.map((exception) => {
-      const feeTypeApp = mapDbFeeTypeToApp(exception.FeeType);
-      return {
-        feeType: feeTypeApp,
-        code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
-        name: exception.FeeDescription, // Esse valor vem da coluna FeeDescription do banco
-        defaultValue: exception.Amount?.toString() || '0',
-        tooltip: exception.FreqDescription || '',
-        isException: true,
-        parameterOptionId: exception.FeeParameterOptionId,
-      };
-    });
   }
 }
