@@ -1,3 +1,6 @@
+|F016583|7115342|FX Outgoing Wire Fee            |JH006  |              1|Bank Account Fees|25.00 
+
+
 // Importa módulos e classes necessários
 import Result from '#features/shared/result.js';
 import CustomerFees from '#src/models/CustomerFees.js';
