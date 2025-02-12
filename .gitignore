@@ -1,402 +1,46 @@
-{
-    "code": 200,
-    "data": {
-        "fees": [
+// Dentro da classe CustomerFees
+
+#configureCustomer() {
+  if (this.#accounts.length < 1) {
+    this.#customer = {};
+    return;
+  }
+
+  // Itera sobre cada field do grupo Client Current Fees
+  for (const field of this.#clientCurrent) {
+    // Para cada conta associada (não é necessário verificar field.isCurrentClient)
+    for (const account of this.#accounts) {
+      // Verifica se o field deve ser associado à conta (comparando o código)
+      if (field.code === account.feeType) {
+        // Regra "NOT APPLICABLE": Se for o campo de Hold Mail Fee (code 2)
+        // e se o valor da conta estiver vazio ou "0" e o kycMailingStatus do grupo Standard não for "Hold Mail"
+        if (
+          field.code === 2 &&
+          (!account.feeAmount || account.feeAmount.toString() === '0') &&
+          this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+        ) {
+          field.defaultValue = 'NOT APPLICABLE';
+          field.labelValue = field.defaultValue;
+          field.exceptionOptions = [
             {
-                "feeType": "Customer Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "50",
-                                "tooltip": "Monthly - Charged Quarterly",
-                                "isException": false,
-                                "exceptionOptions": [],
-                                "labelValue": "$50.00"
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "tooltip": "Annual - Charged Annual",
-                                "isException": false,
-                                "exceptionOptions": [],
-                                "labelValue": "$0.00"
-                            }
-                        ],
-                        "kycMailingStatus": "Standard",
-                        "cif": "MAA0475",
-                        "accountNumber": 6244203
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "50",
-                                "tooltip": "Monthly - Charged Quarterly",
-                                "isException": false,
-                                "exceptionOptions": []
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "",
-                                "tooltip": "Annual - Charged Annual",
-                                "isException": false,
-                                "exceptionOptions": []
-                            }
-                        ],
-                        "cif": "MAA0475",
-                        "accountNumber": 6244203
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 1,
-                                "name": "Account Maintenance Fee",
-                                "defaultValue": "0",
-                                "tooltip": "",
-                                "isException": true,
-                                "exceptionOptions": [
-                                    {
-                                        "approvedByDoubleA": null,
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "visible": true,
-                                        "retired": false,
-                                        "parameterOptionId": 113
-                                    }
-                                ],
-                                "labelValue": ""
-                            },
-                            {
-                                "code": 2,
-                                "name": "Hold Mail Fee",
-                                "defaultValue": "0",
-                                "tooltip": "",
-                                "isException": true,
-                                "exceptionOptions": [],
-                                "labelValue": ""
-                            }
-                        ],
-                        "cif": "MAA0475",
-                        "accountNumber": 6244203
-                    }
-                ]
-            },
-            {
-                "feeType": "Bank Account Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67acf39dff43319b65a41295"
-                            }
-                        ],
-                        "cif": "MAA0475",
-                        "accountNumber": "6244203",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67acf39dff43319b65a41294"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "25",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67acf39dff43319b65a41297"
-                            }
-                        ],
-                        "cif": "MAA0475",
-                        "accountNumber": "6244203",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67acf39dff43319b65a41296"
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 4,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "FX Outgoing Wire Fee",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67acf39dff43319b65a4129a"
-                                    }
-                                ],
-                                "_id": "67acf39dff43319b65a41299",
-                                "labelValue": ""
-                            },
-                            {
-                                "code": 8,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "FX Outgoing Wire (SafraLink) Fee",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67acf39dff43319b65a4129c"
-                                    }
-                                ],
-                                "_id": "67acf39dff43319b65a4129b",
-                                "labelValue": ""
-                            }
-                        ],
-                        "cif": "MAA0475",
-                        "accountNumber": "6244203",
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67acf39dff43319b65a41298"
-                    }
-                ]
-            },
-            {
-                "feeType": "Investment Account Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 5,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "hasChanged": false,
-                                "tooltip": "Quarterly on Day 1",
-                                "exceptionOptions": [],
-                                "_id": "67acf39dff43319b65a4129e"
-                            },
-                            {
-                                "code": 7,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "exceptionOptions": [],
-                                "_id": "67acf39dff43319b65a4129f"
-                            }
-                        ],
-                        "cif": "MAA0475",
-                        "accountNumber": "6244203",
-                        "entityCode": null,
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67acf39dff43319b65a4129d"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 5,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "hasChanged": false,
-                                "tooltip": "Quarterly on Day 1",
-                                "exceptionOptions": [],
-                                "_id": "67acf39dff43319b65a412a1"
-                            },
-                            {
-                                "code": 7,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Options Commission",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "$0.10 per share, min charge of $150 per trade",
-                                "exceptionOptions": [],
-                                "_id": "67acf39dff43319b65a412a2"
-                            }
-                        ],
-                        "cif": "MAA0475",
-                        "accountNumber": "6244203",
-                        "entityCode": null,
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67acf39dff43319b65a412a0"
-                    },
-                    {
-                        "name": "Exceptions Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 5,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67acf39dff43319b65a412a4",
-                                "labelValue": ""
-                            },
-                            {
-                                "code": 7,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "Options Commission",
-                                "defaultValue": "0",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67acf39dff43319b65a412a5",
-                                "labelValue": ""
-                            }
-                        ],
-                        "cif": "MAA0475",
-                        "accountNumber": "6244203",
-                        "entityCode": null,
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "_id": "67acf39dff43319b65a412a3"
-                    }
-                ]
+              value: field.defaultValue,
+              text: field.defaultValue
             }
-        ],
-        "accounts": [
-            {
-                "cifno": "MAA0475",
-                "ddaNumber": 6244203,
-                "branchCity": "New York",
-                "branchState": "NY",
-                "branchType": "Domestic",
-                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null",
-                "defaultPackageType": "Corporate",
-                "feePackage": "Domestic Corporation"
-            },
-            {
-                "cifno": "MAA0475",
-                "ddaNumber": 6244203,
-                "branchCity": "New York",
-                "branchState": "NY",
-                "branchType": "Domestic",
-                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null",
-                "defaultPackageType": "Corporate",
-                "feePackage": "Domestic Corporation"
-            },
-            {
-                "cifno": "MAA0475",
-                "ddaNumber": 6244203,
-                "branchCity": "New York",
-                "branchState": "NY",
-                "branchType": "Domestic",
-                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null",
-                "defaultPackageType": "Corporate",
-                "feePackage": "Domestic Corporation"
-            },
-            {
-                "cifno": "MAA0475",
-                "ddaNumber": 6244203,
-                "branchCity": "New York",
-                "branchState": "NY",
-                "branchType": "Domestic",
-                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null",
-                "defaultPackageType": "Corporate",
-                "feePackage": "Domestic Corporation"
-            },
-            {
-                "cifno": "MAA0475",
-                "ddaNumber": 6244203,
-                "branchCity": "New York",
-                "branchState": "NY",
-                "branchType": "Domestic",
-                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null",
-                "defaultPackageType": "Corporate",
-                "feePackage": "Domestic Corporation"
-            },
-            {
-                "cifno": "MAA0475",
-                "ddaNumber": 6244203,
-                "branchCity": "New York",
-                "branchState": "NY",
-                "branchType": "Domestic",
-                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null",
-                "defaultPackageType": "Corporate",
-                "feePackage": "Domestic Corporation"
-            },
-            {
-                "cifno": "MAA0475",
-                "ddaNumber": 6244203,
-                "branchCity": "New York",
-                "branchState": "NY",
-                "branchType": "Domestic",
-                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null",
-                "defaultPackageType": "Corporate",
-                "feePackage": "Domestic Corporation"
-            },
-            {
-                "cifno": "MAA0475",
-                "ddaNumber": 6244203,
-                "branchCity": "New York",
-                "branchState": "NY",
-                "branchType": "Domestic",
-                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCQ29ycG9yYXRpb24zLnBkZg==&version_id=null",
-                "defaultPackageType": "Corporate",
-                "feePackage": "Domestic Corporation"
-            }
-        ],
-        "feesActives": []
+          ];
+        } else {
+          // Caso contrário, utiliza o valor vindo da conta
+          field.defaultValue = account.feeAmount?.toString() || '';
+          field.labelValue = numberToCurrency(field.defaultValue);
+        }
+      }
     }
+  }
+
+  // Atualiza as propriedades comuns (ex: cif e accountNumber) para cada feeGroup
+  for (const feeGroup of this.#customer.feeGroups) {
+    feeGroup.cif = this.#accounts[0]?.cifno || null;
+    feeGroup.accountNumber = this.#accounts[0]?.ddaNumber || null;
+  }
+
+  this.#clearMemory();
 }
