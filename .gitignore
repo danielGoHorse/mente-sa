@@ -1,46 +1,27 @@
-// Dentro da classe CustomerFees
-
-#configureCustomer() {
-  if (this.#accounts.length < 1) {
-    this.#customer = {};
-    return;
-  }
-
-  // Itera sobre cada field do grupo Client Current Fees
-  for (const field of this.#clientCurrent) {
-    // Para cada conta associada (não é necessário verificar field.isCurrentClient)
-    for (const account of this.#accounts) {
-      // Verifica se o field deve ser associado à conta (comparando o código)
-      if (field.code === account.feeType) {
-        // Regra "NOT APPLICABLE": Se for o campo de Hold Mail Fee (code 2)
-        // e se o valor da conta estiver vazio ou "0" e o kycMailingStatus do grupo Standard não for "Hold Mail"
-        if (
-          field.code === 2 &&
-          (!account.feeAmount || account.feeAmount.toString() === '0') &&
-          this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
-        ) {
-          field.defaultValue = 'NOT APPLICABLE';
-          field.labelValue = field.defaultValue;
-          field.exceptionOptions = [
-            {
-              value: field.defaultValue,
-              text: field.defaultValue
-            }
-          ];
-        } else {
-          // Caso contrário, utiliza o valor vindo da conta
-          field.defaultValue = account.feeAmount?.toString() || '';
-          field.labelValue = numberToCurrency(field.defaultValue);
-        }
-      }
-    }
-  }
-
-  // Atualiza as propriedades comuns (ex: cif e accountNumber) para cada feeGroup
-  for (const feeGroup of this.#customer.feeGroups) {
-    feeGroup.cif = this.#accounts[0]?.cifno || null;
-    feeGroup.accountNumber = this.#accounts[0]?.ddaNumber || null;
-  }
-
-  this.#clearMemory();
-}
+CustomerName	CustomerShortName	CustomerAddress	CIFNO	ACCTNO	FeeDescription	FeeCode	Istransactional	FeeType	FeeAmount	Frequency	Branch City	Branch State	Branch Type	OfficerId	Officer	StandardException	Default Fee Package Id	Default Fee Package	Default Package Type	Default Fee Amount	Default Frequency
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115342	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	25.00	NULL	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	25.00	NULL
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115342	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00	NULL	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	10.00	NULL
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115342	Safekeeping of Securities	BPS002	0	Investment Account Fees	NULL	0.35% /YR min $375.00/QTR	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	0.35% /YR min $375.00/QTR
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115342	SSL Account Maintanance Fee	BPS003	0	Investment Account Fees	375.00	Quarterly on Day 1	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	375.00	Quarterly on Day 1
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115342	US Equities Commission	BPS004	1	Investment Account Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	$0.10 per share, min charge of $150 per trade
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115342	Options Commission	BPS005	1	Investment Account Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	$0.10 per share, min charge of $150 per trade
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115822	Account Maintenance Fee	JH001	0	Customer Fees	25.00	Monthly - Charged Quarterly	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	25.00	Monthly - Charged Quarterly
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115822	Hold Mail Fee	JH002	0	Customer Fees	0.00	Annual - Charged Annual	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	0.00	Annual - Charged Annual
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115822	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	0.00	NULL	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Exception	2	Domestic Individual	Individual	25.00	NULL
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115822	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00	NULL	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	10.00	NULL
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115822	Safekeeping of Securities	BPS002	0	Investment Account Fees	NULL	0.35% /YR min $375.00/QTR	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	0.35% /YR min $375.00/QTR
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115822	SSL Account Maintanance Fee	BPS003	0	Investment Account Fees	375.00	Quarterly on Day 1	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	375.00	Quarterly on Day 1
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115822	US Equities Commission	BPS004	1	Investment Account Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	$0.10 per share, min charge of $150 per trade
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115342	Options Commission	BPS005	1	Investment Account Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	$0.10 per share, min charge of $150 per trade
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7113617	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	0.00	NULL	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Exception	2	Domestic Individual	Individual	25.00	NULL
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7113617	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00	NULL	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	10.00	NULL
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7113617	Safekeeping of Securities	BPS002	0	Investment Account Fees	NULL	0.35% /YR min $375.00/QTR	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	0.35% /YR min $375.00/QTR
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7113617	SSL Account Maintanance Fee	BPS003	0	Investment Account Fees	375.00	Quarterly on Day 1	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	375.00	Quarterly on Day 1
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7113617	US Equities Commission	BPS004	1	Investment Account Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	$0.10 per share, min charge of $150 per trade
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7113617	Options Commission	BPS005	1	Investment Account Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	$0.10 per share, min charge of $150 per trade
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115431	FX Outgoing Wire Fee	JH006	1	Bank Account Fees	25.00	NULL	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	25.00	NULL
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115431	FX Outgoing Wire (SafraLink) Fee	JH007	1	Bank Account Fees	10.00	NULL	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	10.00	NULL
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115431	Safekeeping of Securities	BPS002	0	Investment Account Fees	NULL	0.35% /YR min $375.00/QTR	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	0.35% /YR min $375.00/QTR
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115431	SSL Account Maintanance Fee	BPS003	0	Investment Account Fees	375.00	Quarterly on Day 1	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	375.00	Quarterly on Day 1
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115431	US Equities Commission	BPS004	1	Investment Account Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	$0.10 per share, min charge of $150 per trade
+YYYY YYYYYY                             	YYYYYY YYYY         	2417 Tongass Ave #111                    YYY YYYY YY 44444                       	F016583	7115431	Options Commission	BPS005	1	Investment Account Fees	NULL	$0.10 per share, min charge of $150 per trade	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	NULL	$0.10 per share, min charge of $150 per trade
