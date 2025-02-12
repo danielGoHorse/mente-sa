@@ -71,18 +71,11 @@ export default class FeeGetByCifUseCase {
     const bank = new BankAccountFee(groupedFees, accounts);
     if (bank.fee) result.fees.push(bank.fee);
 
-    const equityField = {
-      exceptionOptions: [
-        // Se precisar, defina valores padrão aqui.
-      ],
-    };
+    const equityField = {exceptionOptions: []};
 
     const investment = new InvestmentAccountFee(groupedFees, accounts, equityField);
-    console.log("debug investment", JSON.stringify(investment, null, 2));
     if (investment.fee) {
       result.fees.push(investment.fee);
-    } else {
-      console.log("debug investment is empty");
     }
 
     const feesActives = await FeeCase.find({
@@ -155,14 +148,12 @@ export default class FeeGetByCifUseCase {
       }
 
       const groupObj = groupedFeesMap[feeTypeApp];
-      // Use o grupo do próprio feeType (groupObj) e não groupedFeesMap[ft] para não haver confusão.
       const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
       const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
 
-      // Para Standard Fees, usamos o FeeDescription se disponível
       standardGroup.fields.push({
         code: mappedCode,
-        name: FeeDescription, // para Customer Fees, essa coluna deve vir do banco
+        name: FeeDescription, 
         defaultValue: FeeAmount ? FeeAmount.toString() : '',
         tooltip: Frequency || '',
         isException: false,
@@ -191,7 +182,6 @@ export default class FeeGetByCifUseCase {
       exceptionsByFeeTypeAndCode[feeTypeApp][code].push(exc);
     }
 
-    // Processa as exceptions para cada feeType
     for (const ft of possibleFeeTypes) {
       const groupObj = groupedFeesMap[ft];
       if (!groupObj) continue;
@@ -199,7 +189,6 @@ export default class FeeGetByCifUseCase {
       const exceptionGroup = groupObj.feeGroups.find((g) => g.name === 'Exceptions Request');
       if (!exceptionGroup) continue;
 
-      // Cria os fields para todas as códigos presentes nos grupos Standard e Client Current
       const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
       const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
       const standardCodes = standardGroup?.fields.map((f) => f.code) || [];
@@ -227,7 +216,6 @@ export default class FeeGetByCifUseCase {
         }
       }
 
-      // Agora, atualiza os fields com as exception options
       const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
       for (const [codeStr, listExc] of Object.entries(codeMap)) {
         const code = Number(codeStr);
