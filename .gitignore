@@ -76,3 +76,23 @@ length: 12
 [[Prototype]]: Array(0)
 [[Prototype]]: Object
 debug investment {}
+
+
+
+
+
+
+
+ {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf5f35abe626fe9cc2437",
+                                "labelValue": ""
+                            },
