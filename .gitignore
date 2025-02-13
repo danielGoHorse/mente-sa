@@ -1,4 +1,8 @@
+import { FeeGroup } from './entities/FeeGroups.js';
+import numberToCurrency from '../core/helpers/currency.js';
+
 export default class CustomerFees {
+  #feeName = 'Customer Fees';
   #customer = {};
   #accounts = [];
 
@@ -6,53 +10,91 @@ export default class CustomerFees {
     if (!fees || !Array.isArray(fees) || fees.length === 0) {
       throw new Error('Fees is empty or undefined');
     }
-
-    // Seleciona o fee cujo feeType seja "Customer Fees"
-    this.#customer = fees.filter((x) => x.feeType === "Customer Fees")[0];
+    // Seleciona os dados do fee do tipo Customer Fees
+    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
     if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
       throw new Error('Customer Fees or feeGroups are undefined');
     }
-
     if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
       throw new Error('Accounts is empty or undefined');
     }
+    // Para Customer Fees, geralmente há apenas uma conta
+    this.#accounts = [accounts[0]];
 
-    this.#accounts = accounts;
+    
 
-    // Atualiza os valores dos fees atuais com base no kycMailingStatus
-    this.#updateCurrentClientFees();
+    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    this.#addCurrentClientValue();
   }
 
-  #updateCurrentClientFees() {
-    // Usamos a primeira conta como referência para o kycMailingStatus
-    const account = this.#accounts[0];
-
-    for (const feeGroup of this.#customer.feeGroups) {
-      if (feeGroup.name === "Client Current Fees") {
-        for (const field of feeGroup.fields) {
-          // Se o kycMailingStatus for "Standard", forçamos o valor para "NOT APPLICABLE"
-          if (account.kycMailingStatus === "Standard") {
-            field.defaultValue = "NOT APPLICABLE";
-            field.labelValue = "NOT APPLICABLE";
-            console.log(
-              `Debug CustomerFees - Campo ${field.code} no grupo "${feeGroup.name}" definido como NOT APPLICABLE por kycMailingStatus "${account.kycMailingStatus}"`
-            );
-          } else {
-            // Caso contrário, se houver um valor numérico, formata como moeda
-            const numValue = parseFloat(field.defaultValue);
-            field.labelValue =
-              !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
-          }
-        }
-      } else if (feeGroup.name === "Standard Fees") {
-        // Apenas formata os valores numéricos para os Standard Fees
-        for (const field of feeGroup.fields) {
-          const numValue = parseFloat(field.defaultValue);
-          field.labelValue =
-            !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
-        }
+  /**
+   * Função auxiliar para deduplicar os campos (fields) com base no fee code.
+   *
+   * @param {Array} fields - Array de fields a serem deduplicados.
+   * @returns {Array} - Array de fields sem duplicação.
+   */
+  #deduplicateFields(fields) {
+    const map = new Map();
+    for (const field of fields) {
+      if (!map.has(field.code)) {
+        map.set(field.code, field);
       }
-      // O grupo "Exceptions Request" pode manter seus valores originais
+    }
+    return Array.from(map.values());
+  }
+
+  /**
+   * Gera os feeGroups para a conta, clonando os grupos originais
+   * e atribuindo o número da conta (accountNumber) e o kycMailingStatus.
+   * Como para Customer Fees normalmente há apenas uma conta, não há replicação.
+   *
+   * @param {string} cif - O CIF do cliente.
+   */
+  #addMultiplesAccount(cif) {
+    const feeGroupTemplates = this.#customer.feeGroups;
+    const newFeeGroups = [];
+
+    for (const template of feeGroupTemplates) {
+      // Clona os fields para evitar referências compartilhadas
+      let clonedFields = template.fields.map((field) => ({
+        ...field,
+        exceptionOptions: field.exceptionOptions
+          ? field.exceptionOptions.map((opt) => ({ ...opt }))
+          : []
+      }));
+
+      // Deduplica os fields com base no fee code
+      clonedFields = this.#deduplicateFields(clonedFields);
+
+      // Define o kycMailingStatus: utiliza o valor da conta, se existir, ou "Standard" como padrão.
+      const kycMailingStatus =
+        this.#accounts[0].kycMailingStatus || 'Print';
+
+      const newFeeGroup = new FeeGroup({
+        name: template.name,
+        fields: clonedFields,
+        cif,
+        accountNumber: this.#accounts[0].ddaNumber.toString(),
+        visible: template.visible,
+        code: template.code,
+        kycMailingStatus // Adicionado para garantir que não venha null
+      });
+      newFeeGroups.push(newFeeGroup);
+    }
+
+    this.#customer.feeGroups = newFeeGroups;
+  }
+
+  /**
+   * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
+   * Para Customer Fees, se o campo defaultValue já estiver definido (vindo do banco),
+   * ele não é sobrescrito.
+   */
+  #addCurrentClientValue() {
+    for (const feeGroup of this.#customer.feeGroups) {
+      for (const field of feeGroup.fields) {
+        field.labelValue = numberToCurrency(field.defaultValue);
+      }
     }
   }
 
