@@ -1,83 +1,17 @@
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    const result = { fees: [] };
-
-    // 1) Busca as fees estruturadas do SQL
-    const { groupedFees, accounts } = await this.#getFeesStructuredFromSQL(customerAccount);
-
-    // 2) Monta accounts
-    result.accounts = accounts.map((account) => ({
-      cifno: account.cifno,
-      ddaNumber: account.ddaNumber,
-      branchCity: account.branchCity,
-      branchState: account.branchState,
-      branchType: account.branchType,
-      documentUrl: account.documentUrl,
-      defaultPackageType: account.defaultPackageType,
-      feePackage: account.feePackage,
-    }));
-
-    // 3) Monta as fees de acordo com as classes CustomerFees, BankAccountFee, InvestmentAccountFee
-    const customer = new CustomerFees(groupedFees, accounts);
-    if (customer.fee) result.fees.push(customer.fee);
-
-    const bank = new BankAccountFee(groupedFees, accounts);
-    if (bank.fee) result.fees.push(bank.fee);
-
-    const equityField = { exceptionOptions: [] };
-    const investment = new InvestmentAccountFee(groupedFees, accounts, equityField);
-    if (investment.fee) {
-      result.fees.push(investment.fee);
-    }
-
-    // 4) Busca FeeCases ativas no Mongo
     const feesActives = await FeeCase.find({
       cif: customerAccount[0].cifno,
-      status: { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true },
-    });
-
-    // 5) Mapeia as fees ativas para exibir ao front
+      status: {
+        $nin: ['DONE', 'REJECTED']
+      },
+      caseNumber: {
+        $exists: true
+      }
+    })
+    // global.logger.info('After Fees Actives')
     result.feesActives = feesActives?.map((x) => ({
       caseNumber: x.caseNumber,
-      id: x.id,
-      // se tiver status armazenado no FeeCase, você pode retornar aqui também
-      // status: x.status,
-    }));
+      id: x.id
+    }))
 
-+   // ============================
-+   // 6) ENRIQUECER COM OS CAMPOS QUE O FRONT PRECISA
-+   // Se você tiver mais de um FeeCase ativo, aqui pegamos o primeiro como "principal".
-+   // Ajuste conforme a sua lógica de negócio.
-+   if (feesActives && feesActives.length > 0) {
-+     const activeCase = feesActives[0];  // ou encontre via status, etc.
-+
-+     result.caseId = activeCase.caseNumber || ''; 
-+     // Se no Mongo tiver "status", pode usar:
-+     result.status = activeCase.status || 'IN_PROGRESS'; 
-+     
-+     // Se houver campos no FeeCase definindo reason:
-+     // result.reason = activeCase.reason || '';
-+     // caso não exista, deixe vazio ou busque em outro lugar
-+     result.reason = '';
-+
-+     // Defina as permissões conforme sua lógica/negócio:
-+     result.canApprove = false;    // ou true, se quiser
-+     result.canEditEquity = false; // ou true, se quiser
-+     result.canEditSecops = false; // ou true, se quiser
-+   } else {
-+     // Se não houver nenhum FeeCase ativo, setamos defaults
-+     result.caseId = '';
-+     result.status = 'NEW';
-+     result.reason = '';
-+     result.canApprove = false;
-+     result.canEditEquity = false;
-+     result.canEditSecops = false;
-+   }
-+   // ============================
-
-    return Result.ok(result);
-  }
-
-  // ... restante do código permanece
-}
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
