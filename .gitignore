@@ -2,7 +2,7 @@ import { FeeGroup } from './entities/FeeGroups.js';
 import numberToCurrency from '../core/helpers/currency.js';
 
 export default class InvestmentAccountFee {
-  // Ajustado para capturar os dados que vêm com feeType "Investment Fees"
+  // Usamos o feeType conforme os dados do banco ("Investment Fees")
   #feeName = 'Investment Fees';
   #investiment = {};
   #accounts = [];
@@ -12,17 +12,14 @@ export default class InvestmentAccountFee {
   constructor(fees, accounts, equityField) {
     // Seleciona os dados do fee do tipo Investment Fees
     this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
-    // Se não houver feeGroups, define como array vazio para evitar erros
+    // Se não existir ou não houver feeGroups, definimos feeGroups como array vazio para evitar erros.
     if (!this.#investiment || !Array.isArray(this.#investiment.feeGroups)) {
       this.#investiment = { feeGroups: [] };
-      return;
     }
-    if (!this.#investiment.feeGroups.length) {
-      // Se o array de feeGroups estiver vazio, evita prosseguir
-      return;
-    }
-    const feeGroupCode = this.#investiment.feeGroups[0].code;
+    // Removida a verificação de length para permitir que o objeto de investimento seja retornado mesmo sem grupos.
 
+    const feeGroupCode = this.#investiment.feeGroups[0]?.code;
+    
     // Filtra as contas de investimento (feeType === 3, conforme regra)
     this.#accounts = accounts.filter((x) => x.feeType === 3);
     if (this.#accounts.length < 1) {
@@ -51,8 +48,11 @@ export default class InvestmentAccountFee {
       new Map(this.#accountsDDA.map((item) => [`${item.number}-${item.code}`, item])).values()
     );
 
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue(equityField);
+    // Se houver feeGroups, executa o agrupamento; caso contrário, mantemos feeGroups como [].
+    if (this.#investiment.feeGroups.length) {
+      this.#addMultiplesAccount(this.#accounts[0].cifno);
+      this.#addCurrentClientValue(equityField);
+    }
   }
 
   get fee() {
