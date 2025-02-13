@@ -1,4 +1,3 @@
-
 import { FeeGroup } from './entities/FeeGroups.js';
 import numberToCurrency from '../core/helpers/currency.js';
 
@@ -31,7 +30,7 @@ export default class InvestmentAccountFee {
       return;
     }
 
-    // Para cada conta, cria itens para os códigos 5 e 7 (para Investment)
+    // Para cada conta, cria itens para os códigos 5, 7, 6 e 9 (para Investment)
     this.#accounts.forEach((acc) => {
       if (acc.ddaNumber) {
         this.#accountsDDA.push({
@@ -107,7 +106,7 @@ export default class InvestmentAccountFee {
         if (!result[account.number]) {
           result[account.number] = {};
         }
-        // Filtra os fields do grupo que correspondem ao código (5 ou 7)
+        // Filtra os fields do grupo que correspondem ao código (5, 7, 6 ou 9)
         let fieldsForAccount = feeGroup.fields.filter((x) => x.code === account.code);
         // Se não houver fields para esta conta, insere um fallback para evitar erro no front
         if (fieldsForAccount.length === 0) {
@@ -147,7 +146,7 @@ export default class InvestmentAccountFee {
     // Agrupa os feeGroups por conta
     const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
       Object.keys(result[accountNumber]).forEach((groupName) => {
-        acc.push(result[accountNumber][groupName]);
+        acc.push(result[account.number][groupName]);
       });
       return acc;
     }, []);
@@ -162,12 +161,12 @@ export default class InvestmentAccountFee {
 
   /**
    * Atualiza os valores dos fields para cada FeeGroup de investimento.
-   * Para o field com código 5 (que traz um valor textual completo, como "$0.10 per share, min charge of $150 per trade"),
+   * Para o field com código 5 (que traz um valor textual completo, como "$0.05 per share, min charge of $150 per trade"),
    * define labelValue igual a defaultValue; para os demais, tenta converter defaultValue para número e formata como moeda.
    * A correspondência é feita usando a lista deduplicada accountsDDA.
    */
   #addCurrentClientValue(equityField) {
-    // Converte as exceptionOptions para array
+    // Converte as exceptionOptions para array (caso necessário)
     const exceptionsOptions = Array.from(this.#allExceptions);
     for (const feeGroup of this.#investiment.feeGroups) {
       feeGroup.cif = this.#accounts[0]?.cifno || null;
@@ -182,7 +181,7 @@ export default class InvestmentAccountFee {
               acc.code === field.code
           );
           if (corresponding) {
-            if (field.code === 9 && field.code === 7) {
+            if (field.code === 5) {
               // Para o código 5, deixa o valor textual intacto
               field.labelValue = field.defaultValue;
             } else {
