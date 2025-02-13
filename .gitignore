@@ -1,25 +1,42 @@
-// Agora também verifica se é Standard Fees OU Client Current Fees:
-if (
-  (feeGroup.name === "Client Current Fees" ||
-   feeGroup.name === "Standard Fees") &&
-  (field.code === 7 || field.code === 9 || field.code === 6) &&
-  (!field.defaultValue || field.defaultValue.trim() === "")
-) {
-  field.defaultValue = field.tooltip || '';
-  field.labelValue = field.defaultValue;
-} else {
-  const corresponding = this.#accountsDDA.find(
-    (acc) =>
-      acc.number.toString() === feeGroup.accountNumber.toString() &&
-      acc.code === field.code
-  );
-  if (corresponding) {
-    if (field.code === 5) {
-      field.labelValue = field.defaultValue;
-    } else {
-      const numValue = parseFloat(field.defaultValue);
-      field.labelValue =
-        !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+#addCurrentClientValue(equityField) {
+  console.log("Debug Investment - Iniciando #addCurrentClientValue");
+  for (const feeGroup of this.#investiment.feeGroups) {
+    feeGroup.cif = this.#accounts[0]?.cifno || null;
+    console.log("Debug Investment - Processando feeGroup para accountNumber:", feeGroup.accountNumber, "group:", feeGroup.name);
+    for (const field of feeGroup.fields) {
+      console.log("Debug Investment - Processando field:", {
+        code: field.code,
+        name: field.name,
+        defaultValue: field.defaultValue,
+        tooltip: field.tooltip,
+        isException: field.isException
+      });
+      if (field.isException) {
+        field.labelValue = field.labelValue || '';
+      } else {
+        if (
+          feeGroup.name === "Client Current Fees" &&
+          (field.code === 7 || field.code === 9 || field.code === 6) &&
+          (!field.defaultValue || field.defaultValue.trim() === "")
+        ) {
+          field.defaultValue = field.tooltip || '';
+          field.labelValue = field.defaultValue;
+          console.log("Debug Investment - Forçando Client Current Fees para campo código", field.code, "com defaultValue:", field.defaultValue);
+        } else {
+          const corresponding = this.#accountsDDA.find(
+            (acc) =>
+              acc.number.toString() === feeGroup.accountNumber.toString() &&
+              acc.code === field.code
+          );
+          if (corresponding) {
+            // Para qualquer campo (incluindo código 5), formatamos o valor numérico com "$" e duas casas decimais
+            const numValue = parseFloat(field.defaultValue);
+            field.labelValue = !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+            console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
+          }
+        }
+      }
     }
   }
+  this.#clearMemory();
 }
