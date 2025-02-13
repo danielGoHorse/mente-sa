@@ -9,7 +9,6 @@ export default class InvestmentAccountFee {
   #allExceptions = new Set();
 
   constructor(fees, accounts, equityField) {
-    // Seleciona os dados do fee do tipo Investment Account Fees
     this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
     if (
       !this.#investiment ||
@@ -21,15 +20,13 @@ export default class InvestmentAccountFee {
     }
     const feeGroupCode = this.#investiment.feeGroups[0].code;
 
-    // Alteração importante: para investimentos, as contas estão marcadas com feeType === 0.
-    this.#accounts = accounts.filter((x) => x.feeType === 0);
+    this.#accounts = accounts.filter((x) => x.feeType === 3);
 
     if (this.#accounts.length < 1) {
       this.#investiment = {};
       return;
     }
 
-    // Para cada conta, adiciona dois itens (para os códigos 5 e 7)
     this.#accounts.forEach((acc) => {
       if (acc.ddaNumber) {
         this.#accountsDDA.push({
@@ -49,7 +46,7 @@ export default class InvestmentAccountFee {
       new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
     );
 
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    this.#addMultiplesAccount(this.#accounts[0].cifno, equityField);
     this.#addCurrentClientValue(equityField);
   }
 
@@ -60,7 +57,7 @@ export default class InvestmentAccountFee {
     return this.#investiment;
   }
 
-  #addMultiplesAccount(cif) {
+  #addMultiplesAccount(cif, equityField) {
     const result = {};
 
     for (const feeGroup of this.#investiment.feeGroups) {
@@ -69,7 +66,19 @@ export default class InvestmentAccountFee {
           result[account.number] = {};
         }
 
-        const fields = feeGroup.fields.filter((x) => x.code === account.code);
+        // Se feeGroup.fields estiver vazio, tenta criar um fallback com equityField.value
+        let fields = feeGroup.fields.filter((x) => x.code === account.code);
+        if (fields.length === 0 && equityField && equityField.value) {
+          fields = [{
+            code: account.code,
+            defaultValue: equityField.value,
+            isStandard: true,
+            isCurrentClient: false,
+            isException: false,
+            labelValue: equityField.value,
+            exceptionOptions: []
+          }];
+        }
         if (fields.length === 0) continue;
 
         if (!result[account.number][feeGroup.name]) {
@@ -122,7 +131,10 @@ export default class InvestmentAccountFee {
       feeGroup.cif = this.#accounts[0]?.cifno || null;
       for (const [fieldIndex, field] of feeGroup.fields.entries()) {
         if (field.isException) {
-          if (feeGroupIndex > 0 && this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex]) {
+          if (
+            feeGroupIndex > 0 &&
+            this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex]
+          ) {
             field.labelValue =
               this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex].labelValue || '';
           }
@@ -133,7 +145,7 @@ export default class InvestmentAccountFee {
               feeGroup.accountNumber.toString() === account.ddaNumber.toString()
             ) {
               if (field.code === 5) {
-                // Para fields com código 5, o valor vem do banco já como texto (por exemplo, "$0.10 per share, min charge of $150 per trade")
+                // Para fields com código 5, usamos o valor que vem do banco (texto)
                 field.labelValue = field.defaultValue;
               } else {
                 if (field.labelValue !== 'Other') {
