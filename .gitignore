@@ -1,226 +1,2868 @@
-import { FeeGroup } from './entities/FeeGroups.js';
-import numberToCurrency from '../core/helpers/currency.js';
-
-export default class InvestmentAccountFee {
-  // Alterado para corresponder ao mapeamento (agora o DB e a classe principal usam "Investment Fees")
-  #feeName = 'Investment Fees';
-  #investiment = {};
-  #accounts = [];
-  #accountsDDA = [];
-  #allExceptions = new Set();
-
-  constructor(fees, accounts, equityField) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
-    }
-    // Seleciona o objeto cujo feeType seja "Investment Fees"
-    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (
-      !this.#investiment ||
-      !Array.isArray(this.#investiment.feeGroups) ||
-      !this.#investiment.feeGroups.length
-    ) {
-      this.#investiment = {};
-      return;
-    }
-
-    // Filtra as contas de investimento (feeType === 3)
-    this.#accounts = accounts.filter((x) => x.feeType === 3);
-    if (this.#accounts.length < 1) {
-      this.#investiment = {};
-      return;
-    }
-
-    // Para cada conta, cria itens para os códigos 5, 7, 6 e 9 (para Investment)
-    this.#accounts.forEach((acc) => {
-      if (acc.ddaNumber) {
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 5,
-          entity: acc.entity || null,
-        });
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 7,
-          entity: acc.entity || null,
-        });
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 6,
-          entity: acc.entity || null,
-        });
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 9,
-          entity: acc.entity || null,
-        });
-      }
-    });
-
-    // Deduplica os itens de accountsDDA com base na chave composta "number-code"
-    this.#accountsDDA = Array.from(
-      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
-    );
-
-    console.log("Debug Investment - accountsDDA:", this.#accountsDDA);
-
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue(equityField);
-  }
-
-  get fee() {
-    if (!this.#investiment || !this.#investiment.feeGroups) {
-      return null;
-    }
-    return this.#investiment;
-  }
-
-  // Deduplica os fields com base no fee code
-  #deduplicateFields(fields) {
-    const map = new Map();
-    for (const field of fields) {
-      if (!map.has(field.code)) {
-        map.set(field.code, field);
-      }
-    }
-    return Array.from(map.values());
-  }
-
-  /**
-   * Para cada feeGroup de investimento e para cada conta única (accountsDDA),
-   * clona o feeGroup atribuindo o número da conta (accountNumber) e o entityCode.
-   * Se o grupo vier com fields vazio, insere um field default para evitar erros no front.
-   */
-  #addMultiplesAccount(cif) {
-    const result = {};
-
-    for (const feeGroup of this.#investiment.feeGroups) {
-      // Garante que fields esteja definido
-      feeGroup.fields = feeGroup.fields || [];
-      // Clona os fields para evitar referências compartilhadas
-      feeGroup.fields = feeGroup.fields.map((field) => ({
-        ...field,
-        exceptionOptions: field.exceptionOptions
-          ? field.exceptionOptions.map((opt) => ({ ...opt }))
-          : []
-      }));
-
-      for (const account of this.#accountsDDA) {
-        if (!result[account.number]) {
-          result[account.number] = {};
-        }
-        // Filtra os fields do grupo que correspondem ao código (5, 7, 6 ou 9)
-        let fieldsForAccount = feeGroup.fields.filter((x) => x.code === account.code);
-        // Se não houver fields para esta conta, insere um fallback para evitar erro no front
-        if (fieldsForAccount.length === 0) {
-          fieldsForAccount.push({
-            code: account.code,
-            name: '',
-            defaultValue: '',
-            tooltip: '',
-            isException: true,
-            exceptionOptions: []
-          });
-        }
-        if (!result[account.number][feeGroup.name]) {
-          result[account.number][feeGroup.name] = [];
-          // Processa as exceptionOptions para agregar em allExceptions
-          feeGroup.fields.forEach((item) => {
-            item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
-            item.exceptionOptions.forEach(this.#allExceptions.add, this.#allExceptions);
-          });
-          const newFeeGroup = new FeeGroup({
-            name: feeGroup.name,
-            fields: fieldsForAccount,
-            cif,
-            accountNumber: account.number,
-            visible: feeGroup.visible,
-            code: feeGroup.code,
-            entityCode: account.entity,
-          });
-          result[account.number][feeGroup.name].push(newFeeGroup);
-        } else {
-          const feeGroupToAddFields = result[account.number][feeGroup.name][0];
-          feeGroupToAddFields.fields = [...feeGroupToAddFields.fields, ...fieldsForAccount];
-        }
-      }
-    }
-
-    // Agrupa os feeGroups por conta (corrigindo o uso da variável accountNumber)
-    console.log("Debug Investment - Agrupando feeGroups, result:", result);
-    const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
-      console.log("Debug Investment - Processando accountNumber:", accountNumber);
-      const groupNames = Object.keys(result[accountNumber]);
-      console.log("Debug Investment - Grupos para accountNumber", accountNumber, ":", groupNames);
-      groupNames.forEach((groupName) => {
-        console.log("Debug Investment - Adicionando grupo", groupName, "para accountNumber", accountNumber);
-        acc.push(result[accountNumber][groupName]);
-      });
-      return acc;
-    }, []);
-
-    console.log("Debug Investment - feeGroupsByAccount concluído:", feeGroupsByAccount);
-
-    this.#investiment.feeGroups = [];
-    for (const feeGroups of feeGroupsByAccount) {
-      for (const feeGroup of feeGroups) {
-        this.#investiment.feeGroups.push(feeGroup);
-      }
-    }
-  }
-
-  /**
-   * Atualiza os valores dos fields para cada FeeGroup de investimento.
-   * Para o field com código 5 (que traz um valor textual completo, oriundo da coluna Frequency/Default Frequency),
-   * define labelValue igual ao defaultValue (mantendo o dado extenso exatamente como vem do banco);
-   * para os demais, tenta converter defaultValue para número e formata como moeda.
-   * Logs foram adicionados para facilitar a depuração.
-   */
-  #addCurrentClientValue(equityField) {
-    console.log("Debug Investment - Iniciando #addCurrentClientValue");
-    // Converte as exceptionOptions para array (caso necessário)
-    const exceptionsOptions = Array.from(this.#allExceptions);
-    for (const feeGroup of this.#investiment.feeGroups) {
-      feeGroup.cif = this.#accounts[0]?.cifno || null;
-      console.log("Debug Investment - Processando feeGroup para accountNumber:", feeGroup.accountNumber);
-      for (const field of feeGroup.fields) {
-        console.log("Debug Investment - Processando field:", {
-          code: field.code,
-          name: field.name,
-          defaultValue: field.defaultValue,
-          tooltip: field.tooltip,
-          isException: field.isException
-        });
-        if (field.isException) {
-          field.labelValue = field.labelValue || '';
-        } else {
-          // Procura a conta correspondente (baseada no número e no código)
-          const corresponding = this.#accountsDDA.find(
-            (acc) =>
-              acc.number.toString() === feeGroup.accountNumber.toString() &&
-              acc.code === field.code
-          );
-          if (corresponding) {
-            if (field.code === 5) {
-              // Para o código 5, usamos o valor textual exatamente como vem do banco (defaultValue)
-              field.labelValue = field.defaultValue;
-              console.log("Debug Investment - Campo código 5, definindo labelValue igual a defaultValue:", field.defaultValue);
-            } else {
-              const numValue = parseFloat(field.defaultValue);
-              field.labelValue =
-                !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
-              console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
+{
+    "code": 200,
+    "data": {
+        "customerName": "FRANCO JACK",
+        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
+        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
+        "cif": "F016583",
+        "branchCity": "New York",
+        "branchState": "NY",
+        "branchType": "Domestic",
+        "packageType": "Individual",
+        "packageName": "Domestic Individual",
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "Monthly - Charged Quarterly",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc743",
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "Annual - Charged Annual",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc744",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "67adf8ab650011943b6dc742"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "Monthly - Charged Quarterly",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc746",
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "Annual - Charged Annual",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc747",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "67adf8ab650011943b6dc745"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc74a"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc74b"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc749",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc74d"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc74c",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "67adf8ab650011943b6dc748"
+                    }
+                ]
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc74f",
+                                "labelValue": "$25.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc74e"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc751",
+                                "labelValue": "$25.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc750"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc754"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc755"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc756"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc757"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc753"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "50.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc759"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc75a"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc75b"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc75c"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc758"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc752"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc75e",
+                                "labelValue": "$25.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc75d"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc760",
+                                "labelValue": "$25.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc75f"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc763"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc764"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc765"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc766"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc762"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "50.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc768"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc769"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc76a"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc76b"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc767"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc761"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc76d",
+                                "labelValue": "$25.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc76c"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc76f",
+                                "labelValue": "$25.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc76e"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc772"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc773"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc774"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc775"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc771"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "50.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc777"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc778"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc779"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc77a"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc776"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc770"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc77c",
+                                "labelValue": "$25.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc77b"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc77e",
+                                "labelValue": "$25.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc77d"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc781"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc782"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc783"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc784"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc780"
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "50.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc786"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc787"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc788"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc789"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc785"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc77f"
+                    }
+                ]
+            },
+            {
+                "feeType": "Investment Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ab",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ac",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ad",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ae",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7af",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b0",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b1",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b2",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b3",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b4",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b5",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b6",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b7",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b8",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7b9",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc7aa"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7eb",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ec",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ed",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ee",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ef",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f0",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f1",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f2",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f3",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f4",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f5",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f6",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f7",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f8",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7f9",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc7ea"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375.00",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc81e"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc81d",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Options Commission",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.05 per share, min charge of $150 per trade",
+                                        "text": "$NaN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc820"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc81f",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.35% /YR min $375.00/QTR",
+                                        "text": "$0.35",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc822"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc821",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "US Equities Commission",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.10 per share, min charge of $150 per trade",
+                                        "text": "$NaN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc824"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc823",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc81c"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc78b",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc78c",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc78d",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc78e",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc78f",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc790",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc791",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc792",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc793",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc794",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc795",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc796",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc797",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc798",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc799",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc78a"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7cb",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7cc",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7cd",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ce",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7cf",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d0",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d1",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d2",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d3",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d4",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d5",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d6",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d7",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d8",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7d9",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc7ca"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375.00",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc80c"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc80b",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Options Commission",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.05 per share, min charge of $150 per trade",
+                                        "text": "$NaN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc80e"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc80d",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.35% /YR min $375.00/QTR",
+                                        "text": "$0.35",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc810"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc80f",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "US Equities Commission",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.10 per share, min charge of $150 per trade",
+                                        "text": "$NaN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc812"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc811",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc80a"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7bb",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7bc",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7bd",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7be",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7bf",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c0",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c1",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c2",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c3",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c4",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c5",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c6",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c7",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c8",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7c9",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc7ba"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7fb",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7fc",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7fd",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7fe",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7ff",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc800",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc801",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc802",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc803",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc804",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc805",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc806",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc807",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc808",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc809",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc7fa"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375.00",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc827"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc826",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Options Commission",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.05 per share, min charge of $150 per trade",
+                                        "text": "$NaN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc829"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc828",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.35% /YR min $375.00/QTR",
+                                        "text": "$0.35",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc82b"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc82a",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "US Equities Commission",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.10 per share, min charge of $150 per trade",
+                                        "text": "$NaN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc82d"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc82c",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc825"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc79b",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc79c",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc79d",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc79e",
+                                "labelValue": "375.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc79f",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a0",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a1",
+                                "labelValue": "$0.05 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a2",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a3",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a4",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a5",
+                                "labelValue": "$0.35"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a6",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a7",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a8",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7a9",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc79a"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7db",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7dc",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7dd",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7de",
+                                "labelValue": "375"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7df",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e0",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.05 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e1",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e2",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e3",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e4",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e5",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e6",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e7",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e8",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "67adf8ab650011943b6dc7e9",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc7da"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375.00",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc815"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc814",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Options Commission",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.05 per share, min charge of $150 per trade",
+                                        "text": "$NaN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc817"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc816",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.35% /YR min $375.00/QTR",
+                                        "text": "$0.35",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc819"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc818",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 9,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "US Equities Commission",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.10 per share, min charge of $150 per trade",
+                                        "text": "$NaN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67adf8ab650011943b6dc81b"
+                                    }
+                                ],
+                                "_id": "67adf8ab650011943b6dc81a",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67adf8ab650011943b6dc813"
+                    }
+                ]
             }
-          }
-        }
-      }
+        ],
+        "feesActives": [],
+        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+        "currentFees": [
+            {
+                "feeDescription": "$0.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "Hold Mail Fee $0.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee $375.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "$0.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee $375.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "$0.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee $0.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee $375.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "USD/FX Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Savings 7115822"
+            }
+        ]
     }
-    this.#clearMemory();
-  }
-
-  #clearMemory() {
-    this.#accounts = [];
-    this.#accountsDDA = [];
-    this.#allExceptions = new Set();
-  }
 }
