@@ -1,180 +1,42 @@
-import { FeeGroup } from './entities/FeeGroups.js';
-import numberToCurrency from '../core/helpers/currency.js';
-
-export default class InvestmentAccountFee {
-  #feeName = 'Investment Fees';
-  #investiment = {};
-  #accounts = [];
-  #accountsDDA = [];
-  #allExceptions = new Set();
-
-  constructor(fees, accounts, equityField) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
-    }
-    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (
-      !this.#investiment ||
-      !Array.isArray(this.#investiment.feeGroups) ||
-      !this.#investiment.feeGroups.length
-    ) {
-      this.#investiment = {};
-      return;
-    }
-
-    this.#accounts = accounts.filter((x) => x.feeType === 3);
-    if (this.#accounts.length < 1) {
-      this.#investiment = {};
-      return;
-    }
-
-    this.#accounts.forEach((acc) => {
-      if (acc.ddaNumber) {
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 5,
-          entity: acc.entity || null,
-        });
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 7,
-          entity: acc.entity || null,
-        });
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 6,
-          entity: acc.entity || null,
-        });
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 9,
-          entity: acc.entity || null,
-        });
-      }
-    });
-
-    this.#accountsDDA = Array.from(
-      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
-    );
-
-
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue(equityField);
-  }
-
-  get fee() {
-    if (!this.#investiment || !this.#investiment.feeGroups) {
-      return null;
-    }
-    return this.#investiment;
-  }
-
-  #deduplicateFields(fields) {
-    const map = new Map();
-    for (const field of fields) {
-      if (!map.has(field.code)) {
-        map.set(field.code, field);
-      }
-    }
-    return Array.from(map.values());
-  }
-
-  #addMultiplesAccount(cif) {
-    const result = {};
-
-    for (const feeGroup of this.#investiment.feeGroups) {
-      const clonedFields = (feeGroup.fields || []).map((field) => ({
-        ...field,
-        exceptionOptions: field.exceptionOptions
-          ? field.exceptionOptions.map((opt) => ({ ...opt }))
-          : []
-      }));
-
-      for (const account of this.#accountsDDA) {
-        if (!result[account.number]) {
-          result[account.number] = {};
-        }
-        let fieldsForAccount = clonedFields.filter((x) => x.code === account.code);
-        if (fieldsForAccount.length === 0) {
-          fieldsForAccount.push({
-            code: account.code,
-            name: '',
-            defaultValue: '',
-            tooltip: '',
-            isException: true,
-            exceptionOptions: []
-          });
-        }
-        if (!result[account.number][feeGroup.name]) {
-          const dedupedFields = this.#deduplicateFields(fieldsForAccount);
-          const newFeeGroup = new FeeGroup({
-            name: feeGroup.name,
-            fields: dedupedFields,
-            cif,
-            accountNumber: account.number,
-            visible: feeGroup.visible,
-            code: feeGroup.code,
-            entityCode: account.entity,
-          });
-          result[account.number][feeGroup.name] = newFeeGroup;
+#addCurrentClientValue(equityField) {
+  console.log("Debug Investment - Iniciando #addCurrentClientValue");
+  for (const feeGroup of this.#investiment.feeGroups) {
+    feeGroup.cif = this.#accounts[0]?.cifno || null;
+    console.log("Debug Investment - Processando feeGroup para accountNumber:", feeGroup.accountNumber, "group:", feeGroup.name);
+    for (const field of feeGroup.fields) {
+      console.log("Debug Investment - Processando field:", {
+        code: field.code,
+        name: field.name,
+        defaultValue: field.defaultValue,
+        tooltip: field.tooltip,
+        isException: field.isException
+      });
+      if (field.isException) {
+        field.labelValue = field.labelValue || '';
+      } else {
+        if (
+          feeGroup.name === "Client Current Fees" &&
+          (field.code === 7 || field.code === 9 || field.code === 6) &&
+          (!field.defaultValue || field.defaultValue.trim() === "")
+        ) {
+          field.defaultValue = field.tooltip || '';
+          field.labelValue = field.defaultValue;
+          console.log("Debug Investment - Forçando Client Current Fees para campo código", field.code, "com defaultValue:", field.defaultValue);
         } else {
-          const existingFeeGroup = result[account.number][feeGroup.name];
-          existingFeeGroup.fields = this.#deduplicateFields([
-            ...existingFeeGroup.fields,
-            ...fieldsForAccount,
-          ]);
-        }
-      }
-    }
-
-    const feeGroupsArray = [];
-    for (const accountNumber in result) {
-      for (const groupName in result[accountNumber]) {
-        feeGroupsArray.push(result[accountNumber][groupName]);
-      }
-    }
-    this.#investiment.feeGroups = feeGroupsArray;
-  }
-
-  #addCurrentClientValue(equityField) {
-    for (const feeGroup of this.#investiment.feeGroups) {
-      feeGroup.cif = this.#accounts[0]?.cifno || null;
-      for (const field of feeGroup.fields) {
-        if (field.isException) {
-          field.labelValue = field.labelValue || '';
-        } else {
-          if (
-            feeGroup.name === "Client Current Fees" &&
-            (field.code === 7 || field.code === 9 || field.code === 6) &&
-            (!field.defaultValue || field.defaultValue.trim() === "")
-          ) {
-            field.defaultValue = field.tooltip || '';
-            field.labelValue = field.defaultValue;
-          } else {
-            const corresponding = this.#accountsDDA.find(
-              (acc) =>
-                acc.number.toString() === feeGroup.accountNumber.toString() &&
-                acc.code === field.code
-            );
-            if (corresponding) {
-              if (field.code === 5) {
-                field.labelValue = field.defaultValue;
-              } else {
-                const numValue = parseFloat(field.defaultValue);
-                field.labelValue =
-                  !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
-              }
-            }
+          const corresponding = this.#accountsDDA.find(
+            (acc) =>
+              acc.number.toString() === feeGroup.accountNumber.toString() &&
+              acc.code === field.code
+          );
+          if (corresponding) {
+            // Para qualquer campo (incluindo código 5), formatamos o valor numérico com "$" e duas casas decimais
+            const numValue = parseFloat(field.defaultValue);
+            field.labelValue = !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+            console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
           }
         }
       }
     }
-    this.#clearMemory();
   }
-
-  #clearMemory() {
-    this.#accounts = [];
-    this.#accountsDDA = [];
-    this.#allExceptions = new Set();
-  }
+  this.#clearMemory();
 }
