@@ -1,17 +1,126 @@
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED']
-      },
-      caseNumber: {
-        $exists: true
-      }
-    })
-    // global.logger.info('After Fees Actives')
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id
-    }))
+import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
+import mongoose, { Schema } from 'mongoose'
+import { FeeSchema } from './Fees.js'
+import { FeeCaseUserApproverSchema } from './FeeCaseUserApprover.js'
 
-import { FeeCase } from '#src/models/entities/FeeCase.js'
-import { Field } from '#src/models/entities/Fields.js'
+export const FeeCaseSchema = new Schema(
+  {
+    caseId: {
+      type: String,
+      required: false
+    },
+    caseNumber: {
+      type: String,
+      required: false
+    },
+    cif: {
+      type: String,
+      required: true
+    },
+    customerName: {
+      type: String,
+      required: true
+    },
+    customerAddress: {
+      type: String,
+      required: true
+    },
+    customerAccountOfficer: {
+      type: String,
+      required: true
+    },
+    fees: {
+      type: [FeeSchema],
+      required: true
+    },
+    usersApprovers: {
+      type: [FeeCaseUserApproverSchema],
+      required: false
+    },
+    equityTeam: {
+      type: [FeeCaseUserApproverSchema],
+      required: false
+    },
+    secopsTeam: {
+      type: [FeeCaseUserApproverSchema],
+      required: false
+    },
+    visibleToUsers: {
+      type: [Object],
+      required: false
+    },
+    reason: {
+      type: String,
+      required: false,
+      maxLength: 501
+    },
+    levelApprover: {
+      type: Number,
+      required: false
+    },
+    documents: { type: [String], required: false },
+    status: {
+      type: String,
+      required: false,
+      enum: [
+        'INITIAL',
+        'PENDING_APPROVAL',
+        'PENDING_EQUITY',
+        'PENDING_SECOPS',
+        'REJECTED',
+        'DONE'
+      ],
+      default: 'INITIAL'
+    },
+    userOwner: {
+      type: String,
+      required: true
+    },
+    userOwnerName: {
+      type: String,
+      required: false
+    },
+    userOwnerEmail: {
+      type: String,
+      required: false
+    }
+  },
+  {
+    collection: 'FeeCase',
+    timestamps: true
+  }
+)
+configureSchemaMongoToReturnId('toObject', FeeCaseSchema)
+
+FeeCaseSchema.virtual('signatureApprover').get(function () {
+  if (!this.usersApprovers || this.usersApprovers.length === 0) return ''
+
+  const order = ['PB AA', 'PB AAS', 'PB AAA', 'ExCom AA']
+
+  const signatures = new Set(
+    this.usersApprovers
+      .filter((item) => !!item.signature)
+      .map((item) => item.signature)
+  )
+
+  let finalSignature = ''
+  order.forEach((signature) => {
+    if (signatures.has(signature) && finalSignature === '') {
+      finalSignature = signature
+    }
+  })
+
+  return finalSignature
+})
+
+FeeCaseSchema.virtual('levelApproverType', FeeCaseSchema).get(function () {
+  return this.fees.length >= 3
+    ? 'Fee Exception Investiment'
+    : 'Bank Fee Exception'
+})
+
+export const FeeCase = mongoose.model('FeeCase', FeeCaseSchema)
+
+
+
+
