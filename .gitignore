@@ -1,3 +1,10 @@
+CustomerName	CustomerShortName	CustomerAddress	CIFNO	ACCTNO	FeeDescription	FeeCode	Istransactional	FeeType	FeeAmount	Frequency	Branch City	Branch State	Branch Type	OfficerId	Officer	StandardException	Default Fee Package Id	Default Fee Package	Default Package Type	Default Fee Amount	Default Frequency
+HHHH HHHHHH                             	HHHHHH HHHH         	2417 Tongass Ave #111                    HHH HHHH HH 33333                       	F016583	7115822	Account Maintenance Fee	JH001	0	Client Fees	25.00	Monthly - Charged Quarterly	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	25.00	Monthly - Charged Quarterly
+HHHH HHHHHH                             	HHHHHH HHHH         	2417 Tongass Ave #111                    HHH HHHH HH 33333                       	F016583	7115822	Hold Mail Fee	JH002	0	Client Fees	0.00	Annual - Charged Annual	New York	NY	Domestic	369   	Mordekhai Aghai           BR 7	Standard	2	Domestic Individual	Individual	0.00	Annual - Charged Annual
+
+
+
+
 // Importa módulos e classes necessários
 import Result from '#features/shared/result.js';
 import CustomerFees from '#src/models/CustomerFees.js';
