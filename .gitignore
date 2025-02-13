@@ -2,30 +2,27 @@ import { FeeGroup } from './entities/FeeGroups.js';
 import numberToCurrency from '../core/helpers/currency.js';
 
 export default class InvestmentAccountFee {
-  // Usamos o feeType conforme os dados do banco ("Investment Fees")
-  #feeName = 'Investment Fees';
+  #feeName = 'Investment Account Fees';
   #investiment = {};
   #accounts = [];
   #accountsDDA = [];
   #allExceptions = new Set();
 
   constructor(fees, accounts, equityField) {
-    // Seleciona os dados do fee do tipo Investment Fees
     this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (!this.#investiment || !Array.isArray(this.#investiment.feeGroups)) {
-      this.#investiment = { feeGroups: [] };
+    if (!this.#investiment || !Array.isArray(this.#investiment.feeGroups) || !this.#investiment.feeGroups.length) {
+      this.#investiment = {};
+      return;
     }
-    // Não interrompe mesmo que o array esteja vazio (a tela pode tratar isso)
-    const feeGroupCode = this.#investiment.feeGroups[0]?.code;
+    const feeGroupCode = this.#investiment.feeGroups[0].code;
 
-    // Filtra as contas de investimento (feeType === 3, conforme seus dados)
     this.#accounts = accounts.filter((x) => x.feeType === 3);
+
     if (this.#accounts.length < 1) {
       this.#investiment = {};
       return;
     }
 
-    // Para cada conta, adiciona dois itens (para os códigos 5 e 7)
     this.#accounts.forEach((acc) => {
       if (acc.ddaNumber) {
         this.#accountsDDA.push({
@@ -40,10 +37,9 @@ export default class InvestmentAccountFee {
         });
       }
     });
-
-    // Deduplica os itens de accountsDDA com base na chave composta (number-code)
+    
     this.#accountsDDA = Array.from(
-      new Map(this.#accountsDDA.map((item) => [`${item.number}-${item.code}`, item])).values()
+      new Map(this.#accountsDDA.map(item => [${item.number}-${item.code}, item])).values()
     );
 
     this.#addMultiplesAccount(this.#accounts[0].cifno);
@@ -57,10 +53,8 @@ export default class InvestmentAccountFee {
     return this.#investiment;
   }
 
-  /**
-   * Agrupa os feeGroups por conta, sem duplicar os dados para a mesma conta.
-   */
   #addMultiplesAccount(cif) {
+   
     const result = {};
 
     for (const feeGroup of this.#investiment.feeGroups) {
@@ -69,18 +63,17 @@ export default class InvestmentAccountFee {
           result[account.number] = {};
         }
 
-        // Filtra os fields do grupo que correspondem ao código esperado para a conta
         const fields = feeGroup.fields.filter((x) => x.code === account.code);
         if (fields.length === 0) continue;
 
         if (!result[account.number][feeGroup.name]) {
           result[account.number][feeGroup.name] = [];
 
-          // Processa os exceptionOptions dos fields
           feeGroup.fields?.forEach((item) => {
-            if (!item.exceptionOptions) {
-              item.exceptionOptions = [];
+            if(!item.exceptionOptions){
+              item.exceptionOptions = []
             }
+
             item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
             item.exceptionOptions.forEach(this.#allExceptions.add, this.#allExceptions);
           });
@@ -103,7 +96,6 @@ export default class InvestmentAccountFee {
       }
     }
 
-    // Reorganiza os feeGroups em um array simples
     const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
       Object.keys(result[accountNumber]).forEach((groupName) => {
         acc.push(result[accountNumber][groupName]);
@@ -119,33 +111,27 @@ export default class InvestmentAccountFee {
     }
   }
 
-  /**
-   * Atualiza os valores dos fees para cada grupo.
-   * Para fields com código 5, que trazem o FeeAmount como string (ex: "$0.10 per share, min charge of $150 per trade"),
-   * o labelValue é definido diretamente como o defaultValue.
-   */
   #addCurrentClientValue(equityField) {
     const exceptionsOptions = Array.from(this.#allExceptions);
     for (const [feeGroupIndex, feeGroup] of this.#investiment.feeGroups.entries()) {
       feeGroup.cif = this.#accounts[0]?.cifno || null;
       for (const [fieldIndex, field] of feeGroup.fields.entries()) {
         if (field.isException) {
-          if (
-            feeGroupIndex > 0 &&
-            this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex]
-          ) {
+          if (feeGroupIndex > 0 && this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex]) {
             field.labelValue =
               this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex].labelValue || '';
           }
         } else {
           for (const account of this.#accounts) {
             if (
-              field.code === account.ddaNumber &&
-              feeGroup.accountNumber.toString() === account.ddaNumber.toString()
+              field.code === feeGroup.accountNumber &&  
+              feeGroup.accountNumber === account.ddaNumber
             ) {
               if (field.code === 5) {
-                // Para fields com código 5, usamos o valor que vem do banco sem conversão.
-                field.labelValue = field.defaultValue;
+                field.defaultValue = field.isStandard
+                  ? field.defaultValue
+                  : account.feeAmount?.toString() || '';
+                field.labelValue = numberToCurrency(field.defaultValue);
               } else {
                 if (field.labelValue !== 'Other') {
                   if (field.isCurrentClient) {
@@ -177,3 +163,13 @@ export default class InvestmentAccountFee {
     this.#allExceptions = new Set();
   }
 }
+
+Preciso da mesma tratativa do Banc Account, com relação a não duplicar informações....
+
+Só mais uma coisa.....on vem o valor Fee Amount agora vem uma string, com um dado assim:
+
+FeeAmount
+$0.10 per share, min charge of $150 per trade
+
+Eu preciso apresentar este valor desta forma....
+
