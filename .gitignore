@@ -1,187 +1,1140 @@
-import { FeeGroup } from './entities/FeeGroups.js';
-import numberToCurrency from '../core/helpers/currency.js';
-
-export default class InvestmentAccountFee {
-  #feeName = 'Investment Account Fees';
-  #investiment = {};
-  #accounts = [];
-  #accountsDDA = [];
-  #allExceptions = new Set();
-
-  constructor(fees, accounts, equityField) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
-    }
-    // Seleciona o objeto cujo FeeType seja "Investment Account Fees"
-    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (
-      !this.#investiment ||
-      !Array.isArray(this.#investiment.feeGroups) ||
-      !this.#investiment.feeGroups.length
-    ) {
-      this.#investiment = {};
-      return;
-    }
-
-    // Filtra as contas de investimento (conforme mapeamento: Investment Fees = feeType 3)
-    this.#accounts = accounts.filter((x) => x.feeType === 3);
-    if (this.#accounts.length < 1) {
-      this.#investiment = {};
-      return;
-    }
-
-    // Para cada conta, cria itens para os códigos 5 e 7 (do Investment)
-    this.#accounts.forEach((acc) => {
-      if (acc.ddaNumber) {
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 5,
-          entity: acc.entity || null,
-        });
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 7,
-          entity: acc.entity || null,
-        });
-      }
-    });
-
-    // Deduplica os itens de accountsDDA com base na chave composta "number-code"
-    this.#accountsDDA = Array.from(
-      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
-    );
-
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue(equityField);
-  }
-
-  get fee() {
-    if (!this.#investiment || !this.#investiment.feeGroups) {
-      return null;
-    }
-    return this.#investiment;
-  }
-
-  // Auxiliar: deduplica os fields com base no fee code
-  #deduplicateFields(fields) {
-    const map = new Map();
-    for (const field of fields) {
-      if (!map.has(field.code)) {
-        map.set(field.code, field);
-      }
-    }
-    return Array.from(map.values());
-  }
-
-  /**
-   * Para cada feeGroup do objeto de investimento e para cada conta (em accountsDDA),
-   * clona o feeGroup atribuindo o número da conta. Mesmo que o array de fields esteja vazio,
-   * o grupo será criado.
-   */
-  #addMultiplesAccount(cif) {
-    const result = {};
-
-    for (const feeGroup of this.#investiment.feeGroups) {
-      // Se o array de fields for undefined, seta como array vazio (mas não pula o grupo)
-      feeGroup.fields = feeGroup.fields || [];
-
-      // Clona os fields para garantir que cada field tenha exceptionOptions definida
-      feeGroup.fields = feeGroup.fields.map((field) => ({
-        ...field,
-        exceptionOptions: field.exceptionOptions
-          ? field.exceptionOptions.map(opt => ({ ...opt }))
-          : []
-      }));
-
-      for (const account of this.#accountsDDA) {
-        if (!result[account.number]) {
-          result[account.number] = {};
-        }
-
-        // Filtra os fields do grupo que correspondem ao código da conta (5 ou 7)
-        const fieldsForAccount = feeGroup.fields.filter((x) => x.code === account.code);
-        // Removi o "if (fieldsForAccount.length === 0) continue;" para que grupos sem fields sejam mantidos.
-        if (!result[account.number][feeGroup.name]) {
-          result[account.number][feeGroup.name] = [];
-
-          // Processa as exceptionOptions dos fields para agregar em allExceptions
-          feeGroup.fields.forEach((item) => {
-            item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
-            item.exceptionOptions.forEach(this.#allExceptions.add, this.#allExceptions);
-          });
-
-          const newFeeGroup = new FeeGroup({
-            name: feeGroup.name,
-            fields: fieldsForAccount, // pode ser vazio
-            cif,
-            accountNumber: account.number,
-            visible: feeGroup.visible,
-            code: feeGroup.code,
-            entityCode: account.entity,
-          });
-          result[account.number][feeGroup.name].push(newFeeGroup);
-        } else {
-          const feeGroupToAddFields = result[account.number][feeGroup.name][0];
-          feeGroupToAddFields.fields = [...feeGroupToAddFields.fields, ...fieldsForAccount];
-        }
-      }
-    }
-
-    const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
-      Object.keys(result[accountNumber]).forEach((groupName) => {
-        acc.push(result[accountNumber][groupName]);
-      });
-      return acc;
-    }, []);
-
-    this.#investiment.feeGroups = [];
-    for (const feeGroups of feeGroupsByAccount) {
-      for (const feeGroup of feeGroups) {
-        this.#investiment.feeGroups.push(feeGroup);
-      }
-    }
-  }
-
-  /**
-   * Atualiza os valores dos fields de cada FeeGroup:
-   * - Para fields com código 5, utiliza o defaultValue recebido (texto completo, ex: "$0.10 per share, min charge of $150 per trade")
-   * - Para os demais, tenta converter o defaultValue para número e formata como moeda.
-   */
-  #addCurrentClientValue(equityField) {
-    const exceptionsOptions = Array.from(this.#allExceptions);
-    for (const feeGroup of this.#investiment.feeGroups) {
-      feeGroup.cif = this.#accounts[0]?.cifno || null;
-      for (const field of feeGroup.fields) {
-        if (field.isException) {
-          field.labelValue = field.labelValue || '';
-        } else {
-          for (const account of this.#accounts) {
-            if (
-              field.code === account.ddaNumber &&
-              feeGroup.accountNumber.toString() === account.ddaNumber.toString()
-            ) {
-              if (field.code === 5) {
-                // Para fields com código 5, utiliza o defaultValue (texto completo)
-                field.labelValue = field.defaultValue;
-              } else {
-                if (field.isCurrentClient) {
-                  field.defaultValue = account.feeCode?.toString() || '';
-                }
-                const numValue = parseFloat(field.defaultValue);
-                field.labelValue =
-                  !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
-              }
+{
+    "code": 200,
+    "data": {
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "Monthly - Charged Quarterly",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb822062ed",
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "Annual - Charged Annual",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb822062ee",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "67ad88bf0d0192bb822062ec"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "Monthly - Charged Quarterly",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb822062f0",
+                                "labelValue": "$25.00"
+                            },
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "Annual - Charged Annual",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb822062f1",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "67ad88bf0d0192bb822062ef"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb822062f4"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb822062f5"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb822062f3",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb822062f7"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb822062f6",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "67ad88bf0d0192bb822062f2"
+                    }
+                ]
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb822062f9"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb822062f8"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb822062fb"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb822062fa"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb822062fe"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb822062ff"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206300"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206301"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb822062fd",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "50.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206303"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206304"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206305"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206306"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb82206302",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb822062fc"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb82206308"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb82206307"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb8220630a"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb82206309"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220630d"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220630e"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220630f"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206310"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb8220630c",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "50.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206312"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206313"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206314"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206315"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb82206311",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb8220630b"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb82206317"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb82206316"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb82206319"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb82206318"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220631c"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220631d"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220631e"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220631f"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb8220631b",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "50.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206321"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206322"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206323"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206324"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb82206320",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb8220631a"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb82206326"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb82206325"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "25",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "67ad88bf0d0192bb82206328"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb82206327"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220632b"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220632c"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220632d"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb8220632e"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb8220632a",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 8,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire (SafraLink) Fee",
+                                "defaultValue": "50.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206330"
+                                    },
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206331"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206332"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "67ad88bf0d0192bb82206333"
+                                    }
+                                ],
+                                "_id": "67ad88bf0d0192bb8220632f",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88bf0d0192bb82206329"
+                    }
+                ]
+            },
+            {
+                "feeType": "Investment Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb82206336"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb8220633a"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb8220633e"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb82206334"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb82206338"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115342",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb8220633c"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb82206337"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb8220633b"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb8220633f"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb82206335"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb82206339"
+                    },
+                    {
+                        "name": "Exceptions Request",
+                        "code": 3,
+                        "fields": [],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "67ad88dc0d0192bb8220633d"
+                    }
+                ]
             }
-          }
-        }
-      }
+        ],
+        "accounts": [
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115342,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115342,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115342,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115342,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115342,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115342,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115822,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115822,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115822,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115822,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115822,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115822,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115822,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7113617,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7113617,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7113617,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7113617,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7113617,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7113617,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115431,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115431,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115431,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115431,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115431,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            },
+            {
+                "cifno": "F016583",
+                "ddaNumber": 7115431,
+                "branchCity": "New York",
+                "branchState": "NY",
+                "branchType": "Domestic",
+                "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null",
+                "defaultPackageType": "Individual",
+                "feePackage": "Domestic Individual"
+            }
+        ],
+        "feesActives": []
     }
-    this.#clearMemory();
-  }
-
-  #clearMemory() {
-    this.#accounts = [];
-    this.#accountsDDA = [];
-    this.#allExceptions = new Set();
-  }
 }
