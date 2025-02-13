@@ -18,7 +18,7 @@ export default class CustomerFees {
     if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
       throw new Error('Accounts is empty or undefined');
     }
-    // Para fees de cliente, geralmente há apenas uma conta
+    // Para Customer Fees, geralmente há apenas uma conta
     this.#accounts = [accounts[0]];
 
     this.#addMultiplesAccount(this.#accounts[0].cifno);
@@ -43,8 +43,8 @@ export default class CustomerFees {
 
   /**
    * Gera os feeGroups para a conta, clonando os grupos originais
-   * e atribuindo o número da conta (accountNumber). Como para Customer Fees
-   * normalmente há apenas uma conta, não há replicação.
+   * e atribuindo o número da conta (accountNumber) e o kycMailingStatus.
+   * Como para Customer Fees normalmente há apenas uma conta, não há replicação.
    *
    * @param {string} cif - O CIF do cliente.
    */
@@ -64,13 +64,18 @@ export default class CustomerFees {
       // Deduplica os fields com base no fee code
       clonedFields = this.#deduplicateFields(clonedFields);
 
+      // Define o kycMailingStatus: utiliza o valor da conta, se existir, ou "Standard" como padrão.
+      const kycMailingStatus =
+        this.#accounts[0].kycMailingStatus || 'Standard';
+
       const newFeeGroup = new FeeGroup({
         name: template.name,
         fields: clonedFields,
         cif,
         accountNumber: this.#accounts[0].ddaNumber.toString(),
         visible: template.visible,
-        code: template.code
+        code: template.code,
+        kycMailingStatus // Adicionado para garantir que não venha null
       });
       newFeeGroups.push(newFeeGroup);
     }
@@ -81,14 +86,11 @@ export default class CustomerFees {
   /**
    * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
    * Para Customer Fees, se o campo defaultValue já estiver definido (vindo do banco),
-   * ele não é sobrescrito, garantindo que o valor "25.00" seja mantido.
+   * ele não é sobrescrito.
    */
   #addCurrentClientValue() {
-    // Para cada feeGroup, atualiza o labelValue usando o defaultValue já definido
     for (const feeGroup of this.#customer.feeGroups) {
       for (const field of feeGroup.fields) {
-        // Se o field não for de exception, usamos o defaultValue que já vem do banco.
-        // Caso o field seja de exception, podemos atualizar o labelValue também.
         field.labelValue = numberToCurrency(field.defaultValue);
       }
     }
