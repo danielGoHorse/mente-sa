@@ -1,36 +1,81 @@
 import { FeeGroup } from './entities/FeeGroups.js';
 import numberToCurrency from '../core/helpers/currency.js';
 
-export default class CustomerFees {
-  #feeName = 'Customer Fees';
-  #customer = {};
+export default class InvestmentAccountFee {
+  // Altere para "Investment Fees" para que corresponda ao mapeamento na classe principal
+  #feeName = 'Investment Fees';
+  #investiment = {};
   #accounts = [];
+  #accountsDDA = [];
+  #allExceptions = new Set();
 
-  constructor(fees, accounts) {
+  constructor(fees, accounts, equityField) {
     if (!fees || !Array.isArray(fees) || fees.length === 0) {
       throw new Error('Fees is empty or undefined');
     }
-    // Seleciona os dados do fee do tipo Customer Fees
-    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
-      throw new Error('Customer Fees or feeGroups are undefined');
+    // Seleciona o objeto cujo feeType seja "Investment Fees"
+    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
+    if (
+      !this.#investiment ||
+      !Array.isArray(this.#investiment.feeGroups) ||
+      !this.#investiment.feeGroups.length
+    ) {
+      this.#investiment = {};
+      return;
     }
-    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
-      throw new Error('Accounts is empty or undefined');
+
+    // Filtra as contas de investimento (feeType === 3)
+    this.#accounts = accounts.filter((x) => x.feeType === 3);
+    if (this.#accounts.length < 1) {
+      this.#investiment = {};
+      return;
     }
-    // Para Customer Fees, geralmente há apenas uma conta
-    this.#accounts = [accounts[0]];
+
+    // Para cada conta, cria itens para os códigos 5, 7, 6 e 9 (para Investment)
+    this.#accounts.forEach((acc) => {
+      if (acc.ddaNumber) {
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 5,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 7,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 6,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 9,
+          entity: acc.entity || null,
+        });
+      }
+    });
+
+    // Deduplica os itens de accountsDDA com base na chave composta "number-code"
+    this.#accountsDDA = Array.from(
+      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
+    );
+
+    console.log("Debug Investment - accountsDDA:", this.#accountsDDA);
 
     this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue();
+    this.#addCurrentClientValue(equityField);
   }
 
-  /**
-   * Função auxiliar para deduplicar os campos (fields) com base no fee code.
-   *
-   * @param {Array} fields - Array de fields a serem deduplicados.
-   * @returns {Array} - Array de fields sem duplicação.
-   */
+  get fee() {
+    if (!this.#investiment || !this.#investiment.feeGroups) {
+      return null;
+    }
+    return this.#investiment;
+  }
+
+  // Deduplica os fields com base no fee code
   #deduplicateFields(fields) {
     const map = new Map();
     for (const field of fields) {
@@ -42,74 +87,115 @@ export default class CustomerFees {
   }
 
   /**
-   * Gera os feeGroups para a conta, clonando os grupos originais
-   * e atribuindo o número da conta (accountNumber) e o kycMailingStatus.
-   * Como para Customer Fees normalmente há apenas uma conta, não há replicação.
-   *
-   * @param {string} cif - O CIF do cliente.
+   * Para cada feeGroup de investimento e para cada conta única (accountsDDA),
+   * clona o feeGroup atribuindo o número da conta (accountNumber) e o entityCode.
+   * Garante que para cada conta e para cada grupo (por nome) seja criado apenas um FeeGroup,
+   * mesclando e deduplicando os campos conforme necessário.
    */
   #addMultiplesAccount(cif) {
-    const feeGroupTemplates = this.#customer.feeGroups;
-    const newFeeGroups = [];
+    const result = {};
 
-    for (const template of feeGroupTemplates) {
-      // Clona os fields para evitar referências compartilhadas
-      let clonedFields = template.fields.map((field) => ({
+    for (const feeGroup of this.#investiment.feeGroups) {
+      // Garante que fields esteja definido e clona os fields para evitar referências compartilhadas
+      const clonedFields = (feeGroup.fields || []).map((field) => ({
         ...field,
         exceptionOptions: field.exceptionOptions
           ? field.exceptionOptions.map((opt) => ({ ...opt }))
           : []
       }));
 
-      // Deduplica os fields com base no fee code
-      clonedFields = this.#deduplicateFields(clonedFields);
-
-      // Define o kycMailingStatus: utiliza o valor da conta, se existir, ou "Standard" como padrão.
-      const kycMailingStatus = this.#accounts[0].kycMailingStatus || 'Standard';
-
-      const newFeeGroup = new FeeGroup({
-        name: template.name,
-        fields: clonedFields,
-        cif,
-        accountNumber: this.#accounts[0].ddaNumber.toString(),
-        visible: template.visible,
-        code: template.code,
-        kycMailingStatus // Garante que o valor não venha null
-      });
-      newFeeGroups.push(newFeeGroup);
-    }
-
-    this.#customer.feeGroups = newFeeGroups;
-  }
-
-  /**
-   * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
-   * Para Customer Fees, se o campo defaultValue já estiver definido (vindo do banco),
-   * ele não é sobrescrito, exceto para o grupo "Client Current Fees" e somente para o campo com fee code JH002 (field.code === 2).
-   * Nesse caso, se o kycMailingStatus for "Standard", o valor é forçado para "NOT APPLICABLE".
-   */
-  #addCurrentClientValue() {
-    const kycStatus = this.#accounts[0].kycMailingStatus || 'Standard';
-    for (const feeGroup of this.#customer.feeGroups) {
-      for (const field of feeGroup.fields) {
-        if (
-          feeGroup.name === "Client Current Fees" &&
-          kycStatus === "Standard" &&
-          field.code === 2
-        ) {
-          field.defaultValue = "NOT APPLICABLE";
-          field.labelValue = "NOT APPLICABLE";
-          console.log(
-            `CustomerFees - Forçando campo ${field.code} em Client Current Fees para NOT APPLICABLE por kycMailingStatus "${kycStatus}"`
-          );
+      for (const account of this.#accountsDDA) {
+        if (!result[account.number]) {
+          result[account.number] = {};
+        }
+        // Filtra os fields do grupo que correspondem ao código (5, 7, 6 ou 9)
+        let fieldsForAccount = clonedFields.filter((x) => x.code === account.code);
+        // Se não houver fields para este código, insere um fallback para evitar erro no front
+        if (fieldsForAccount.length === 0) {
+          fieldsForAccount.push({
+            code: account.code,
+            name: '',
+            defaultValue: '',
+            tooltip: '',
+            isException: true,
+            exceptionOptions: []
+          });
+        }
+        if (!result[account.number][feeGroup.name]) {
+          // Cria um novo FeeGroup para essa conta e grupo, deduplicando os campos
+          const dedupedFields = this.#deduplicateFields(fieldsForAccount);
+          const newFeeGroup = new FeeGroup({
+            name: feeGroup.name,
+            fields: dedupedFields,
+            cif,
+            accountNumber: account.number,
+            visible: feeGroup.visible,
+            code: feeGroup.code,
+            entityCode: account.entity,
+          });
+          result[account.number][feeGroup.name] = newFeeGroup;
         } else {
-          field.labelValue = numberToCurrency(field.defaultValue);
+          // Se já existir, mescla os campos e deduplica
+          const existingFeeGroup = result[account.number][feeGroup.name];
+          existingFeeGroup.fields = this.#deduplicateFields([
+            ...existingFeeGroup.fields,
+            ...fieldsForAccount,
+          ]);
         }
       }
     }
+
+    console.log("Debug Investment - Agrupando feeGroups, result:", result);
+    // Converte o objeto result em um array de FeeGroups
+    const feeGroupsArray = [];
+    for (const accountNumber in result) {
+      for (const groupName in result[accountNumber]) {
+        feeGroupsArray.push(result[accountNumber][groupName]);
+      }
+    }
+    console.log("Debug Investment - feeGroupsArray:", feeGroupsArray);
+    this.#investiment.feeGroups = feeGroupsArray;
   }
 
-  get fee() {
-    return this.#customer;
+  /**
+   * Atualiza os valores dos fields para cada FeeGroup de investimento.
+   * Se o field tiver código 5, usamos o defaultValue (valor textual extenso) sem formatação.
+   * Para os demais, tentamos converter o defaultValue para número e formatamos como moeda;
+   * caso não seja numérico, mantemos o valor original.
+   *
+   * Essa lógica é aplicada para todos os campos, inclusive aqueles que estão em "Exceptions Request".
+   */
+  #addCurrentClientValue(equityField) {
+    console.log("Debug Investment - Iniciando #addCurrentClientValue");
+    for (const feeGroup of this.#investiment.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+      console.log("Debug Investment - Processando feeGroup para accountNumber:", feeGroup.accountNumber, "group:", feeGroup.name);
+      for (const field of feeGroup.fields) {
+        console.log("Debug Investment - Processando field:", {
+          code: field.code,
+          name: field.name,
+          defaultValue: field.defaultValue,
+          tooltip: field.tooltip,
+          isException: field.isException
+        });
+        if (field.code === 5) {
+          // Para o código 5, usamos o valor textual exatamente como vem do banco
+          field.labelValue = field.defaultValue;
+          console.log("Debug Investment - Campo código 5, definindo labelValue igual a defaultValue:", field.defaultValue);
+        } else {
+          // Para os demais, tentamos converter o defaultValue para número; se não for numérico, usamos o valor original.
+          const numValue = parseFloat(field.defaultValue);
+          field.labelValue = !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+          console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
+        }
+      }
+    }
+    this.#clearMemory();
+  }
+
+  #clearMemory() {
+    this.#accounts = [];
+    this.#accountsDDA = [];
+    this.#allExceptions = new Set();
   }
 }
