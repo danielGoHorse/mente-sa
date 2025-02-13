@@ -1,133 +1,173 @@
 import { FeeGroup } from './entities/FeeGroups.js';
 import numberToCurrency from '../core/helpers/currency.js';
 
-export default class BankAccountFee {
-  #feeName = 'Bank Account Fees';
-  #bank = {};
+export default class InvestmentAccountFee {
+  // Ajustado para capturar os dados que vêm com feeType "Investment Fees"
+  #feeName = 'Investment Fees';
+  #investiment = {};
   #accounts = [];
   #accountsDDA = [];
+  #allExceptions = new Set();
 
-  constructor(fees, accounts) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
+  constructor(fees, accounts, equityField) {
+    // Seleciona os dados do fee do tipo Investment Fees
+    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
+    // Se não houver feeGroups, define como array vazio para evitar erros
+    if (!this.#investiment || !Array.isArray(this.#investiment.feeGroups)) {
+      this.#investiment = { feeGroups: [] };
+      return;
     }
-
-    // Seleciona os dados do fee do tipo Bank Account Fees
-    this.#bank = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (!this.#bank || !Array.isArray(this.#bank.feeGroups)) {
-      throw new Error('Bank Account Fees or feeGroups are undefined');
+    if (!this.#investiment.feeGroups.length) {
+      // Se o array de feeGroups estiver vazio, evita prosseguir
+      return;
     }
+    const feeGroupCode = this.#investiment.feeGroups[0].code;
 
-    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
-      throw new Error('Accounts is empty or undefined');
-    }
-
-    const feeGroupCode = this.#bank.feeGroups[0].code;
-    // Filtra as contas que pertencem ao grupo e deduplica com base no número de conta (ddaNumber)
-    const accountsFiltered = accounts.filter((x) => x.feeGroup === feeGroupCode);
-    this.#accounts = Array.from(
-      new Map(accountsFiltered.map((a) => [a.ddaNumber, a])).values()
-    );
-    // Obtém os números de conta de forma única (já em string)
-    this.#accountsDDA = this.#accounts.map((a) => a.ddaNumber.toString());
-
-    if (this.#accounts.length === 0) {
-      throw new Error('No accounts matched with Bank Account Fees feeGroup');
-    }
-
-    // Cria os feeGroups para cada conta única
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    // Atualiza os valores de cada fee com os dados do cliente
-    this.#addCurrentClientValue();
-  }
-
-  /**
-   * Função auxiliar para deduplicar os campos (fields) com base no fee code.
-   *
-   * @param {Array} fields - Array de fields a serem deduplicados.
-   * @returns {Array} - Array de fields sem duplicação.
-   */
-  #deduplicateFields(fields) {
-    const map = new Map();
-    for (const field of fields) {
-      if (!map.has(field.code)) {
-        map.set(field.code, field);
-      }
-    }
-    return Array.from(map.values());
-  }
-
-  /**
-   * Para cada conta única, gera um novo conjunto de feeGroups a partir dos templates
-   * existentes, atribuindo o número da conta (accountNumber) adequadamente.
-   *
-   * @param {string} cif - O CIF da conta.
-   */
-  #addMultiplesAccount(cif) {
-    if (!this.#accounts || this.#accounts.length < 1) {
-      this.#bank = {};
+    // Filtra as contas de investimento (feeType === 3, conforme regra)
+    this.#accounts = accounts.filter((x) => x.feeType === 3);
+    if (this.#accounts.length < 1) {
+      this.#investiment = {};
       return;
     }
 
-    const feeGroupTemplates = this.#bank.feeGroups;
-    const newFeeGroups = [];
-
-    for (const account of this.#accounts) {
-      const accountNumber = account.ddaNumber.toString();
-      for (const template of feeGroupTemplates) {
-        // Clona os fields para evitar referências compartilhadas
-        let clonedFields = template.fields.map((field) => ({
-          ...field,
-          exceptionOptions: field.exceptionOptions
-            ? field.exceptionOptions.map((opt) => ({ ...opt }))
-            : []
-        }));
-
-        // Deduplica os fields com base no fee code
-        clonedFields = this.#deduplicateFields(clonedFields);
-
-        const newFeeGroup = new FeeGroup({
-          name: template.name,
-          fields: clonedFields,
-          cif,
-          accountNumber,
-          visible: template.visible,
-          code: template.code
+    // Para cada conta, adiciona dois itens (para os códigos 5 e 7)
+    this.#accounts.forEach((acc) => {
+      if (acc.ddaNumber) {
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 5,
+          entity: acc.entity || null,
         });
-        newFeeGroups.push(newFeeGroup);
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 7,
+          entity: acc.entity || null,
+        });
       }
-    }
+    });
 
-    this.#bank.feeGroups = newFeeGroups;
+    // Deduplica os itens de accountsDDA com base na chave composta (number-code)
+    this.#accountsDDA = Array.from(
+      new Map(this.#accountsDDA.map((item) => [`${item.number}-${item.code}`, item])).values()
+    );
+
+    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    this.#addCurrentClientValue(equityField);
+  }
+
+  get fee() {
+    if (!this.#investiment || !this.#investiment.feeGroups) {
+      return null;
+    }
+    return this.#investiment;
   }
 
   /**
-   * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
-   * Para os fees não-exception, converte o defaultValue para número e formata como moeda (com "$" e 2 casas decimais).
+   * Agrupa os feeGroups por conta, sem duplicar os dados para a mesma conta.
    */
-  #addCurrentClientValue() {
-    for (const [feeGroupIndex, feeGroup] of this.#bank.feeGroups.entries()) {
+  #addMultiplesAccount(cif) {
+    const result = {};
+
+    for (const feeGroup of this.#investiment.feeGroups) {
+      for (const account of this.#accountsDDA) {
+        if (!result[account.number]) {
+          result[account.number] = {};
+        }
+
+        // Filtra os fields do grupo que correspondem ao código esperado para a conta
+        const fields = feeGroup.fields.filter((x) => x.code === account.code);
+        if (fields.length === 0) continue;
+
+        if (!result[account.number][feeGroup.name]) {
+          result[account.number][feeGroup.name] = [];
+
+          // Processa os exceptionOptions dos fields
+          feeGroup.fields?.forEach((item) => {
+            if (!item.exceptionOptions) {
+              item.exceptionOptions = [];
+            }
+            item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
+            item.exceptionOptions.forEach(this.#allExceptions.add, this.#allExceptions);
+          });
+
+          const newFeeGroup = new FeeGroup({
+            name: feeGroup.name,
+            fields,
+            cif,
+            accountNumber: account.number,
+            visible: feeGroup.visible,
+            code: feeGroup.code,
+            entityCode: account.entity,
+          });
+          result[account.number][feeGroup.name].push(newFeeGroup);
+          continue;
+        }
+
+        const feeGroupToAddFields = result[account.number][feeGroup.name][0];
+        feeGroupToAddFields.fields = [...feeGroupToAddFields.fields, ...fields];
+      }
+    }
+
+    // Reorganiza os feeGroups em um array simples
+    const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
+      Object.keys(result[accountNumber]).forEach((groupName) => {
+        acc.push(result[accountNumber][groupName]);
+      });
+      return acc;
+    }, []);
+
+    this.#investiment.feeGroups = [];
+    for (const feeGroups of feeGroupsByAccount) {
+      for (const feeGroup of feeGroups) {
+        this.#investiment.feeGroups.push(feeGroup);
+      }
+    }
+  }
+
+  /**
+   * Atualiza os valores dos fees para cada grupo.
+   * Para fields com código 5, que trazem o FeeAmount como string (ex: "$0.10 per share, min charge of $150 per trade"),
+   * o labelValue é definido diretamente como o defaultValue.
+   */
+  #addCurrentClientValue(equityField) {
+    const exceptionsOptions = Array.from(this.#allExceptions);
+    for (const [feeGroupIndex, feeGroup] of this.#investiment.feeGroups.entries()) {
       feeGroup.cif = this.#accounts[0]?.cifno || null;
       for (const [fieldIndex, field] of feeGroup.fields.entries()) {
         if (field.isException) {
-          const previousGroup = this.#bank.feeGroups[feeGroupIndex - 1];
-          if (previousGroup) {
+          if (
+            feeGroupIndex > 0 &&
+            this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex]
+          ) {
             field.labelValue =
-              previousGroup.fields[fieldIndex]?.labelValue || '';
+              this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex].labelValue || '';
           }
         } else {
           for (const account of this.#accounts) {
             if (
-              field.code === account.feeType &&
-              feeGroup.accountNumber === account.ddaNumber.toString()
+              field.code === account.ddaNumber &&
+              feeGroup.accountNumber.toString() === account.ddaNumber.toString()
             ) {
-              if (field.isCurrentClient) {
-                field.defaultValue = account.feeAmount?.toString() || '';
+              if (field.code === 5) {
+                // Para fields com código 5, usamos o valor que vem do banco sem conversão.
+                field.labelValue = field.defaultValue;
+              } else {
+                if (field.labelValue !== 'Other') {
+                  if (field.isCurrentClient) {
+                    field.defaultValue = account.feeCode?.toString() || '';
+                  }
+                  let exception = exceptionsOptions.find((x) => x.value === field.defaultValue);
+                  if (!exception && equityField?.exceptionOptions) {
+                    exception = equityField.exceptionOptions.find(
+                      (e) => e.value === field.defaultValue
+                    );
+                  }
+                  if (!exception) {
+                    exception = { text: '' };
+                  }
+                  field.labelValue = exception.text;
+                }
               }
-              // Converte o defaultValue para número e formata como moeda com "$" e duas casas decimais
-              const numValue = parseFloat(field.defaultValue);
-              field.labelValue =
-                !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
             }
           }
         }
@@ -136,12 +176,9 @@ export default class BankAccountFee {
     this.#clearMemory();
   }
 
-  get fee() {
-    return this.#bank;
-  }
-
   #clearMemory() {
     this.#accounts = [];
     this.#accountsDDA = [];
+    this.#allExceptions = new Set();
   }
 }
