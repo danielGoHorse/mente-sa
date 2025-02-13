@@ -1,126 +1,34 @@
-import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
-import mongoose, { Schema } from 'mongoose'
-import { FeeSchema } from './Fees.js'
-import { FeeCaseUserApproverSchema } from './FeeCaseUserApprover.js'
-
-export const FeeCaseSchema = new Schema(
-  {
-    caseId: {
-      type: String,
-      required: false
-    },
-    caseNumber: {
-      type: String,
-      required: false
-    },
-    cif: {
-      type: String,
-      required: true
-    },
-    customerName: {
-      type: String,
-      required: true
-    },
-    customerAddress: {
-      type: String,
-      required: true
-    },
-    customerAccountOfficer: {
-      type: String,
-      required: true
-    },
-    fees: {
-      type: [FeeSchema],
-      required: true
-    },
-    usersApprovers: {
-      type: [FeeCaseUserApproverSchema],
-      required: false
-    },
-    equityTeam: {
-      type: [FeeCaseUserApproverSchema],
-      required: false
-    },
-    secopsTeam: {
-      type: [FeeCaseUserApproverSchema],
-      required: false
-    },
-    visibleToUsers: {
-      type: [Object],
-      required: false
-    },
-    reason: {
-      type: String,
-      required: false,
-      maxLength: 501
-    },
-    levelApprover: {
-      type: Number,
-      required: false
-    },
-    documents: { type: [String], required: false },
-    status: {
-      type: String,
-      required: false,
-      enum: [
-        'INITIAL',
-        'PENDING_APPROVAL',
-        'PENDING_EQUITY',
-        'PENDING_SECOPS',
-        'REJECTED',
-        'DONE'
-      ],
-      default: 'INITIAL'
-    },
-    userOwner: {
-      type: String,
-      required: true
-    },
-    userOwnerName: {
-      type: String,
-      required: false
-    },
-    userOwnerEmail: {
-      type: String,
-      required: false
-    }
+// Onde você já tem algo como:
+const feesActives = await FeeCase.find({
+  cif: customerAccount[0].cifno,
+  status: {
+    $nin: ['DONE', 'REJECTED']
   },
-  {
-    collection: 'FeeCase',
-    timestamps: true
+  caseNumber: {
+    $exists: true
   }
-)
-configureSchemaMongoToReturnId('toObject', FeeCaseSchema)
+});
 
-FeeCaseSchema.virtual('signatureApprover').get(function () {
-  if (!this.usersApprovers || this.usersApprovers.length === 0) return ''
+// Aqui você mapeia apenas caseNumber e id:
+// result.feesActives = feesActives?.map((x) => ({
+//   caseNumber: x.caseNumber,
+//   id: x.id
+// }));
 
-  const order = ['PB AA', 'PB AAS', 'PB AAA', 'ExCom AA']
+// Para não quebrar o que já funciona, mantenha os campos originais e
+// simplesmente acrescente os outros campos necessários (status, reason, etc.):
+result.feesActives = feesActives?.map((x) => ({
+  // Mantém o que já existe:
+  caseNumber: x.caseNumber,
+  id: x.id,
 
-  const signatures = new Set(
-    this.usersApprovers
-      .filter((item) => !!item.signature)
-      .map((item) => item.signature)
-  )
+  // Acrescenta novos campos:
+  status: x.status,    // e.g. "INITIAL", "PENDING_APPROVAL", etc.
+  reason: x.reason,    // texto de justificativa
+  caseId: x.caseId,    // se precisar da identificação do caso
+  // Adicione outros campos do FeeCaseSchema conforme necessário
+}));
 
-  let finalSignature = ''
-  order.forEach((signature) => {
-    if (signatures.has(signature) && finalSignature === '') {
-      finalSignature = signature
-    }
-  })
-
-  return finalSignature
-})
-
-FeeCaseSchema.virtual('levelApproverType', FeeCaseSchema).get(function () {
-  return this.fees.length >= 3
-    ? 'Fee Exception Investiment'
-    : 'Bank Fee Exception'
-})
-
-export const FeeCase = mongoose.model('FeeCase', FeeCaseSchema)
-
-
-
-
+// Pronto, sem mudar nada no fluxo principal, 
+// você agora retorna também os dados extras que o front precisa.
+return Result.ok(result);
