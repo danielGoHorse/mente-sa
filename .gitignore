@@ -122,7 +122,7 @@ export default class InvestmentAccountFee {
           });
         }
         if (!result[account.number][feeGroup.name]) {
-          // Cria um novo FeeGroup para essa conta e grupo
+          // Cria um novo FeeGroup para essa conta e grupo, deduplicando os campos
           const dedupedFields = this.#deduplicateFields(fieldsForAccount);
           const newFeeGroup = new FeeGroup({
             name: feeGroup.name,
@@ -162,13 +162,15 @@ export default class InvestmentAccountFee {
    * Para o field com código 5 (que traz um valor textual completo, oriundo da coluna Frequency/Default Frequency),
    * define labelValue igual ao defaultValue (mantendo o dado extenso exatamente como vem do banco);
    * para os demais, tenta converter defaultValue para número e formata como moeda.
+   * **Além disso, para os grupos "Client Current Fees" e para campos com código 7 ou 9 que venham vazios,
+   * força o valor a ser o mesmo do tooltip (ex: "$0.05 per share, min charge of $150 per trade").**
    * Logs foram adicionados para facilitar a depuração.
    */
   #addCurrentClientValue(equityField) {
     console.log("Debug Investment - Iniciando #addCurrentClientValue");
     for (const feeGroup of this.#investiment.feeGroups) {
       feeGroup.cif = this.#accounts[0]?.cifno || null;
-      console.log("Debug Investment - Processando feeGroup para accountNumber:", feeGroup.accountNumber);
+      console.log("Debug Investment - Processando feeGroup para accountNumber:", feeGroup.accountNumber, "group name:", feeGroup.name);
       for (const field of feeGroup.fields) {
         console.log("Debug Investment - Processando field:", {
           code: field.code,
@@ -180,22 +182,33 @@ export default class InvestmentAccountFee {
         if (field.isException) {
           field.labelValue = field.labelValue || '';
         } else {
-          // Procura a conta correspondente (baseada no número e no código)
-          const corresponding = this.#accountsDDA.find(
-            (acc) =>
-              acc.number.toString() === feeGroup.accountNumber.toString() &&
-              acc.code === field.code
-          );
-          if (corresponding) {
-            if (field.code === 5) {
-              // Para o código 5, usamos o valor textual exatamente como vem do banco (defaultValue)
-              field.labelValue = field.defaultValue;
-              console.log("Debug Investment - Campo código 5, definindo labelValue igual a defaultValue:", field.defaultValue);
-            } else {
-              const numValue = parseFloat(field.defaultValue);
-              field.labelValue =
-                !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
-              console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
+          // Para o grupo "Client Current Fees", se os campos com código 7 ou 9 vierem vazios, forçamos o valor
+          if (
+            feeGroup.name === "Client Current Fees" &&
+            (field.code === 7 || field.code === 9) &&
+            (!field.defaultValue || field.defaultValue.trim() === "")
+          ) {
+            field.defaultValue = field.tooltip || "$0.05 per share, min charge of $150 per trade";
+            field.labelValue = field.defaultValue;
+            console.log("Debug Investment - Forçando Client Current Fees para campo código", field.code, "com defaultValue:", field.defaultValue);
+          } else {
+            // Procura a conta correspondente (baseada no número e no código)
+            const corresponding = this.#accountsDDA.find(
+              (acc) =>
+                acc.number.toString() === feeGroup.accountNumber.toString() &&
+                acc.code === field.code
+            );
+            if (corresponding) {
+              if (field.code === 5) {
+                // Para o código 5, usamos o valor textual exatamente como vem do banco (defaultValue)
+                field.labelValue = field.defaultValue;
+                console.log("Debug Investment - Campo código 5, definindo labelValue igual a defaultValue:", field.defaultValue);
+              } else {
+                const numValue = parseFloat(field.defaultValue);
+                field.labelValue =
+                  !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+                console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
+              }
             }
           }
         }
