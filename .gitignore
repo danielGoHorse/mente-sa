@@ -1,16 +1,50 @@
-            "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 5,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "hasChanged": false,
-                                "tooltip": "Quarterly on Day 1",
-                                "exceptionOptions": [],
-                                "_id": "67ae0ac80a6a0f77a959a32d",
-                                "labelValue": "375"
-                            },
+ #addCurrentClientValue(equityField) {
+    console.log("Debug Investment - Iniciando #addCurrentClientValue");
+    for (const feeGroup of this.#investiment.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+      console.log("Debug Investment - Processando feeGroup para accountNumber:", feeGroup.accountNumber, "group:", feeGroup.name);
+      for (const field of feeGroup.fields) {
+        console.log("Debug Investment - Processando field:", {
+          code: field.code,
+          name: field.name,
+          defaultValue: field.defaultValue,
+          tooltip: field.tooltip,
+          isException: field.isException
+        });
+        if (feeGroup.name === "Client Current Fees" && field.code === 5) {
+          // Para o grupo "Client Current Fees", se o campo for código 5, forçamos a formatação numérica com 2 casas decimais
+          const numValue = parseFloat(field.defaultValue);
+          field.labelValue = !isNaN(numValue) ? numValue.toFixed(2) : field.defaultValue;
+          console.log("Debug Investment - Client Current Fees: campo código 5 formatado para labelValue:", field.labelValue);
+        } else if (field.code === 5) {
+          // Para os demais grupos, para código 5 usamos o valor textual exatamente como vem do banco
+          field.labelValue = field.defaultValue;
+          console.log("Debug Investment - Campo código 5, definindo labelValue igual a defaultValue:", field.defaultValue);
+        } else {
+          const numValue = parseFloat(field.defaultValue);
+          field.labelValue = !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+          console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
+        }
+        // Formata as opções de exceção, se existirem
+        if (field.exceptionOptions && Array.isArray(field.exceptionOptions)) {
+          field.exceptionOptions.forEach(option => {
+            const optNum = parseFloat(option.value);
+            if (!isNaN(optNum)) {
+              option.text = "$" + optNum.toFixed(2);
+            } else {
+              option.text = option.value;
+            }
+            console.log("Debug Investment - Exception option formatada:", option);
+          });
+        }
+      }
+    }
+    this.#clearMemory();
+  }
+
+  #clearMemory() {
+    this.#accounts = [];
+    this.#accountsDDA = [];
+    this.#allExceptions = new Set();
+  }
+}
