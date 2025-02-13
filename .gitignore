@@ -54,7 +54,6 @@ export default class InvestmentAccountFee {
   }
 
   #addMultiplesAccount(cif) {
-   
     const result = {};
 
     for (const feeGroup of this.#investiment.feeGroups) {
@@ -71,7 +70,7 @@ export default class InvestmentAccountFee {
 
           feeGroup.fields?.forEach((item) => {
             if(!item.exceptionOptions){
-              item.exceptionOptions = []
+              item.exceptionOptions = [];
             }
 
             item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
@@ -128,10 +127,8 @@ export default class InvestmentAccountFee {
               feeGroup.accountNumber === account.ddaNumber
             ) {
               if (field.code === 5) {
-                field.defaultValue = field.isStandard
-                  ? field.defaultValue
-                  : account.feeAmount?.toString() || '';
-                field.labelValue = numberToCurrency(field.defaultValue);
+                // Para fields com código 5, o valor vem do banco já como texto (ex: "$0.10 per share, min charge of $150 per trade")
+                field.labelValue = field.defaultValue;
               } else {
                 if (field.labelValue !== 'Other') {
                   if (field.isCurrentClient) {
