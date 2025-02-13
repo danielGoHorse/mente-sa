@@ -1,98 +1,225 @@
-Process exited with code 1
-C:\Program Files\nodejs\node.exe .\src\app\api\index.js
+import { FeeGroup } from './entities/FeeGroups.js';
+import numberToCurrency from '../core/helpers/currency.js';
 
+export default class InvestmentAccountFee {
+  #feeName = 'Investment Account Fees';
+  #investiment = {};
+  #accounts = [];
+  #accountsDDA = [];
+  #allExceptions = new Set();
 
- ███████╗ ███████╗ ███████╗     ███╗   ███╗  █████╗  ███╗   ██╗  █████╗ 
- ██╔════╝ ██╔════╝ ██╔════╝     ████╗ ████║ ██╔══██╗ ████╗  ██║ ██╔══██╗
- █████╗   █████╗   █████╗       ██╔████╔██║ ███████║ ██╔██╗ ██║ ███████║
- ██╔══╝   ██╔══╝   ██╔══╝       ██║╚██╔╝██║ ██╔══██║ ██║╚██╗██║ ██╔══██║
- ██║      ███████╗ ███████╗     ██║ ╚═╝ ██║ ██║  ██║ ██║ ╚████║ ██║  ██║
- ╚═╝      ╚══════╝ ╚══════╝     ╚═╝     ╚═╝ ╚═╝  ╚═╝ ╚═╝  ╚═══╝ ╚═╝  ╚═╝
+  constructor(fees, accounts, equityField) {
+    if (!fees || !Array.isArray(fees) || fees.length === 0) {
+      throw new Error('Fees is empty or undefined');
+    }
+    // Seleciona o objeto cujo FeeType seja "Investment Account Fees"
+    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
+    if (
+      !this.#investiment ||
+      !Array.isArray(this.#investiment.feeGroups) ||
+      !this.#investiment.feeGroups.length
+    ) {
+      this.#investiment = {};
+      return;
+    }
 
-  ██████╗  ███████╗ ███╗   ███╗ ███████╗ ███╗   ██╗ ████████╗      █████╗ 
- ██╔════╝  ██╔════╝ ████╗ ████║ ██╔════╝ ████╗  ██║ ╚══██╔══╝     ██╔══██╗
- ██║  ███╗ █████╗   ██╔████╔██║ █████╗   ██╔██╗ ██║    ██║        ███████║
- ██║   ██║ ██╔══╝   ██║╚██╔╝██║ ██╔══╝   ██║╚██╗██║    ██║        ██╔══██║
- ╚██████╔╝ ███████╗ ██║ ╚═╝ ██║ ███████╗ ██║ ╚████║    ██║        ██║  ██║
-  ╚═════╝  ╚══════╝ ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝        ╚═╝  ╚═╝
+    // Filtra as contas de investimento (feeType === 3)
+    this.#accounts = accounts.filter((x) => x.feeType === 3);
+    if (this.#accounts.length < 1) {
+      this.#investiment = {};
+      return;
+    }
 
- ██████╗  ██╗     ███████╗ ███████╗ ██████╗  ██╗   ██╗ ███████╗ ██████╗ 
- ██╔══██╗ ██║     ██╔════╝ ██╔════╝ ██╔══██╗ ██║   ██║ ██╔════╝ ██╔══██╗
- ██████╔╝ ██║     ███████╗ █████╗   ██████╔╝ ██║   ██║ █████╗   ██████╔╝
- ██╔═══╝  ██║     ╚════██║ ██╔══╝   ██╔══██╗ ╚██╗ ██╔╝ ██╔══╝   ██╔══██╗
- ██║      ██║     ███████║ ███████╗ ██║  ██║  ╚████╔╝  ███████╗ ██║  ██║
- ╚═╝      ╚═╝     ╚══════╝ ╚══════╝ ╚═╝  ╚═╝   ╚═══╝   ╚══════╝ ╚═╝  ╚═╝
-Debug: Iniciando processamento de feeGroupsByAccount com result: {7113617: {…}, 7115342: {…}, 7115431: {…}, 7115822: {…}}
-Debug: Processando accountNumber: 7113617
-Debug: Grupos para accountNumber 7113617 : (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
-arg3: (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
-0: 'Standard Fees'
-1: 'Client Current Fees'
-2: 'Exceptions Request'
-length: 3
-[[Prototype]]: Array(0)
-[[Prototype]]: Object
-Debug: Adicionando grupo Standard Fees para accountNumber 7113617
-Debug: Adicionando grupo Client Current Fees para accountNumber 7113617
-Debug: Adicionando grupo Exceptions Request para accountNumber 7113617
-Debug: Processando accountNumber: 7115342
-Debug: Grupos para accountNumber 7115342 : (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
-Debug: Adicionando grupo Standard Fees para accountNumber 7115342
-Debug: Adicionando grupo Client Current Fees para accountNumber 7115342
-Debug: Adicionando grupo Exceptions Request para accountNumber 7115342
-Debug: Processando accountNumber: 7115431
-Debug: Grupos para accountNumber 7115431 : (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
-Debug: Adicionando grupo Standard Fees para accountNumber 7115431
-Debug: Adicionando grupo Client Current Fees para accountNumber 7115431
-Debug: Adicionando grupo Exceptions Request para accountNumber 7115431
-Debug: Processando accountNumber: 7115822
-Debug: Grupos para accountNumber 7115822 : (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
-Debug: Adicionando grupo Standard Fees para accountNumber 7115822
-Debug: Adicionando grupo Client Current Fees para accountNumber 7115822
-Debug: Adicionando grupo Exceptions Request para accountNumber 7115822
-Debug: feeGroupsByAccount concluído: (12) [Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1)]
-arg1: (12) [Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1)]
-0: (1) [model]
-0: model {$__: InternalCache, _doc: {…}}
-length: 1
-[[Prototype]]: Array(0)
-[[Prototype]]: Object
-1: (1) [model]
-0: model {$__: InternalCache, _doc: {…}}
-length: 1
-[[Prototype]]: Array(0)
-[[Prototype]]: Object
-2: (1) [model]
-3: (1) [model]
-4: (1) [model]
-5: (1) [model]
-6: (1) [model]
-7: (1) [model]
-8: (1) [model]
-9: (1) [model]
-10: (1) [model]
-11: (1) [model]
-length: 12
-[[Prototype]]: Array(0)
-[[Prototype]]: Object
-debug investment {}
+    // Para cada conta, cria itens para os códigos 5, 7, 6 e 9 (para Investment)
+    this.#accounts.forEach((acc) => {
+      if (acc.ddaNumber) {
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 5,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 7,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 6,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 9,
+          entity: acc.entity || null,
+        });
+      }
+    });
 
+    // Deduplica os itens de accountsDDA com base na chave composta "number-code"
+    this.#accountsDDA = Array.from(
+      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
+    );
 
+    console.log("Debug Investment - accountsDDA:", this.#accountsDDA);
 
+    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    this.#addCurrentClientValue(equityField);
+  }
 
+  get fee() {
+    if (!this.#investiment || !this.#investiment.feeGroups) {
+      return null;
+    }
+    return this.#investiment;
+  }
 
+  // Deduplica os fields com base no fee code
+  #deduplicateFields(fields) {
+    const map = new Map();
+    for (const field of fields) {
+      if (!map.has(field.code)) {
+        map.set(field.code, field);
+      }
+    }
+    return Array.from(map.values());
+  }
 
+  /**
+   * Para cada feeGroup de investimento e para cada conta única (accountsDDA),
+   * clona o feeGroup atribuindo o número da conta (accountNumber) e o entityCode.
+   * Se o grupo vier com fields vazio, insere um field default para evitar erros no front.
+   */
+  #addMultiplesAccount(cif) {
+    const result = {};
 
- {
-                                "code": 6,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "",
-                                "defaultValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67adf5f35abe626fe9cc2437",
-                                "labelValue": ""
-                            },
+    for (const feeGroup of this.#investiment.feeGroups) {
+      // Garante que fields esteja definido
+      feeGroup.fields = feeGroup.fields || [];
+      // Clona os fields para evitar referências compartilhadas
+      feeGroup.fields = feeGroup.fields.map((field) => ({
+        ...field,
+        exceptionOptions: field.exceptionOptions
+          ? field.exceptionOptions.map((opt) => ({ ...opt }))
+          : []
+      }));
+
+      for (const account of this.#accountsDDA) {
+        if (!result[account.number]) {
+          result[account.number] = {};
+        }
+        // Filtra os fields do grupo que correspondem ao código (5, 7, 6 ou 9)
+        let fieldsForAccount = feeGroup.fields.filter((x) => x.code === account.code);
+        // Se não houver fields para esta conta, insere um fallback para evitar erro no front
+        if (fieldsForAccount.length === 0) {
+          fieldsForAccount.push({
+            code: account.code,
+            name: '',
+            defaultValue: '',
+            tooltip: '',
+            isException: true,
+            exceptionOptions: []
+          });
+        }
+        if (!result[account.number][feeGroup.name]) {
+          result[account.number][feeGroup.name] = [];
+          // Processa as exceptionOptions para agregar em allExceptions
+          feeGroup.fields.forEach((item) => {
+            item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
+            item.exceptionOptions.forEach(this.#allExceptions.add, this.#allExceptions);
+          });
+          const newFeeGroup = new FeeGroup({
+            name: feeGroup.name,
+            fields: fieldsForAccount,
+            cif,
+            accountNumber: account.number,
+            visible: feeGroup.visible,
+            code: feeGroup.code,
+            entityCode: account.entity,
+          });
+          result[account.number][feeGroup.name].push(newFeeGroup);
+        } else {
+          const feeGroupToAddFields = result[account.number][feeGroup.name][0];
+          feeGroupToAddFields.fields = [...feeGroupToAddFields.fields, ...fieldsForAccount];
+        }
+      }
+    }
+
+    // Agrupa os feeGroups por conta (corrigindo o uso da variável accountNumber)
+    console.log("Debug Investment - Agrupando feeGroups, result:", result);
+    const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
+      console.log("Debug Investment - Processando accountNumber:", accountNumber);
+      const groupNames = Object.keys(result[accountNumber]);
+      console.log("Debug Investment - Grupos para accountNumber", accountNumber, ":", groupNames);
+      groupNames.forEach((groupName) => {
+        console.log("Debug Investment - Adicionando grupo", groupName, "para accountNumber", accountNumber);
+        acc.push(result[accountNumber][groupName]);
+      });
+      return acc;
+    }, []);
+
+    console.log("Debug Investment - feeGroupsByAccount concluído:", feeGroupsByAccount);
+
+    this.#investiment.feeGroups = [];
+    for (const feeGroups of feeGroupsByAccount) {
+      for (const feeGroup of feeGroups) {
+        this.#investiment.feeGroups.push(feeGroup);
+      }
+    }
+  }
+
+  /**
+   * Atualiza os valores dos fields para cada FeeGroup de investimento.
+   * Para o field com código 5 (que traz um valor textual completo, oriundo da coluna Frequency/Default Frequency),
+   * define labelValue igual ao tooltip (mantendo o dado extenso conforme vem do banco);
+   * para os demais, tenta converter defaultValue para número e formata como moeda.
+   * Logs foram adicionados para facilitar a depuração.
+   */
+  #addCurrentClientValue(equityField) {
+    console.log("Debug Investment - Iniciando #addCurrentClientValue");
+    // Converte as exceptionOptions para array (caso necessário)
+    const exceptionsOptions = Array.from(this.#allExceptions);
+    for (const feeGroup of this.#investiment.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+      console.log("Debug Investment - Processando feeGroup para accountNumber:", feeGroup.accountNumber);
+      for (const field of feeGroup.fields) {
+        console.log("Debug Investment - Processando field:", {
+          code: field.code,
+          name: field.name,
+          defaultValue: field.defaultValue,
+          tooltip: field.tooltip,
+          isException: field.isException
+        });
+        if (field.isException) {
+          field.labelValue = field.labelValue || '';
+        } else {
+          // Procura a conta correspondente (baseada no número e no código)
+          const corresponding = this.#accountsDDA.find(
+            (acc) =>
+              acc.number.toString() === feeGroup.accountNumber.toString() &&
+              acc.code === field.code
+          );
+          if (corresponding) {
+            if (field.code === 5) {
+              // Para o código 5, usamos o valor textual completo que vem na coluna Frequency/Default Frequency (armazenado em tooltip)
+              field.labelValue = field.tooltip;
+              console.log("Debug Investment - Campo código 5, definindo labelValue como tooltip:", field.tooltip);
+            } else {
+              const numValue = parseFloat(field.defaultValue);
+              field.labelValue =
+                !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+              console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
+            }
+          }
+        }
+      }
+    }
+    this.#clearMemory();
+  }
+
+  #clearMemory() {
+    this.#accounts = [];
+    this.#accountsDDA = [];
+    this.#allExceptions = new Set();
+  }
+}
