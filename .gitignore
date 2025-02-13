@@ -8,9 +8,6 @@ import {
   executeStoreProcedure,
 } from '#core/data/mssql/index.js';
 
-//
-// 1) Reverter o BPS004 para 9 e manter BPS005 como 7
-//
 const deParaFeeCodes = {
   JH001: 1,
   JH002: 2,
@@ -18,19 +15,13 @@ const deParaFeeCodes = {
   JH007: 8,
   BPS002: 6,
   BPS003: 5,
-  BPS004: 9,  // <-- BPS004 volta para 9
+  BPS004: 9,
   BPS005: 7,
   JH010: 3,
 };
 
-//
-// 2) excludedCodes para não trazer o 8 (JH007)
-//
 const excludedCodes = new Set([8]);
 
-//
-// 3) mapDbFeeTypeToApp converte 'Investment Fees' do banco para 'Investment Account Fees'
-//
 function mapDbFeeTypeToApp(feeTypeFromDb) {
   switch (feeTypeFromDb) {
     case 'Client Fees':
@@ -38,22 +29,19 @@ function mapDbFeeTypeToApp(feeTypeFromDb) {
     case 'Bank Account Fees':
       return 'Bank Account Fees';
     case 'Investment Fees':
-      return 'Investment Account Fees'; // <-- Ajuste para o front
+      return 'Investment Fees';
     default:
       return feeTypeFromDb;
   }
 }
 
-//
-// Se for 'Investment Account Fees' retorna 3
-//
 function mapFeeTypeToNumber(feeType) {
   switch (feeType) {
     case 'Customer Fees':
       return 1;
     case 'Bank Account Fees':
       return 2;
-    case 'Investment Account Fees':
+    case 'Investment Fees':
       return 3;
   }
 }
@@ -98,9 +86,11 @@ export default class FeeGetByCifUseCase {
       }
     });
 
+
     result.feesActives = feesActives?.map((x) => ({
       caseNumber: x.caseNumber,
       id: x.id,
+
       status: x.status,
       reason: x.reason,
       caseId: x.caseId,
@@ -115,16 +105,12 @@ export default class FeeGetByCifUseCase {
       return { groupedFees: [], accounts: [] };
     }
 
-    // Remover duplicados (CIFNO-ACCTNO-FeeCode-FeeType)
     const feesData = Array.from(
-      new Map(
-        feesDataRaw.map(row => [
-          `${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}`, row
-        ])
-      ).values()
+      new Map(feesDataRaw.map(row => [
+        ${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}, row
+      ])).values()
     );
 
-    // Verifica defaultFeePackageId
     const feePackageId = feesData[0]['Default Fee Package Id'];
     if (!feePackageId) {
       throw new Error('Default Fee Package Id not found in feesData');
@@ -132,7 +118,6 @@ export default class FeeGetByCifUseCase {
 
     const documentUrl = this.#getDocumentUrl(feePackageId);
 
-    // Mapeia as contas (cada row gera um "account" no front)
     const accounts = feesData.map((fee) => ({
       cifno: fee.CIFNO,
       ddaNumber: fee.ACCTNO,
@@ -148,13 +133,8 @@ export default class FeeGetByCifUseCase {
       documentUrl
     }));
 
-    // Cria o objeto { "Customer Fees": {...}, "Bank Account Fees": {...}, "Investment Account Fees": {...} }
     const groupedFeesMap = {};
-    const possibleFeeTypes = [
-      'Customer Fees',
-      'Bank Account Fees',
-      'Investment Account Fees'
-    ];
+    const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Fees'];
     for (const ft of possibleFeeTypes) {
       groupedFeesMap[ft] = {
         feeType: ft,
@@ -166,7 +146,6 @@ export default class FeeGetByCifUseCase {
       };
     }
 
-    // Alimenta standard/client current
     for (const row of feesData) {
       const feeTypeDb = row.FeeType;
       const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
@@ -176,20 +155,12 @@ export default class FeeGetByCifUseCase {
       const DefaultFeeAmount = row["Default Fee Amount"];
       const DefaultFrequency = row["Default Frequency"];
 
-      // Mapeia FeeCode, ex. BPS004 -> 9
       const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-
-      // Pula se estiver no excludedCodes (ex: 8)
       if (excludedCodes.has(mappedCode)) continue;
-
-      // Filtra os que não estão na lista final
       if (
-        feeTypeApp === 'Customer Fees' &&
-        ![1, 2].includes(mappedCode) ||
-        feeTypeApp === 'Bank Account Fees' &&
-        ![3, 4].includes(mappedCode) ||
-        feeTypeApp === 'Investment Account Fees' &&
-        ![5, 7, 6, 9].includes(mappedCode)
+        feeTypeApp === 'Customer Fees' && ![1, 2].includes(mappedCode) ||
+        feeTypeApp === 'Bank Account Fees' && ![3, 4].includes(mappedCode) ||
+        feeTypeApp === 'Investment Fees' && ![5, 7, 6, 9].includes(mappedCode)
       ) {
         continue;
       }
@@ -198,7 +169,6 @@ export default class FeeGetByCifUseCase {
       const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
       const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
 
-      // Adiciona no Standard Fees
       standardGroup.fields.push({
         code: mappedCode,
         name: FeeDescription,
@@ -207,7 +177,6 @@ export default class FeeGetByCifUseCase {
         isException: false,
       });
 
-      // Adiciona no Client Current Fees
       clientCurrentGroup.fields.push({
         code: mappedCode,
         name: FeeDescription,
@@ -217,7 +186,6 @@ export default class FeeGetByCifUseCase {
       });
     }
 
-    // Trata exceptions
     const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
     const exceptionsByFeeTypeAndCode = {};
     for (const exc of exceptions) {
@@ -232,7 +200,6 @@ export default class FeeGetByCifUseCase {
       exceptionsByFeeTypeAndCode[feeTypeApp][code].push(exc);
     }
 
-    // Preenche "Exception Request" (code: 3) com base em standard/client + exceptions
     for (const ft of possibleFeeTypes) {
       const groupObj = groupedFeesMap[ft];
       if (!groupObj) continue;
@@ -246,7 +213,6 @@ export default class FeeGetByCifUseCase {
       const clientCodes = clientCurrentGroup?.fields.map((f) => f.code) || [];
       const allCodes = new Set([...standardCodes, ...clientCodes]);
 
-      // Cria os campos de exceção com base nos codes encontrados
       for (const code of allCodes) {
         let field = exceptionGroup.fields.find((f) => f.code === code);
         if (!field) {
@@ -268,16 +234,9 @@ export default class FeeGetByCifUseCase {
         }
       }
 
-      // Para cada exception do feeType atual, atribui as exceptionOptions
       const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
       for (const [codeStr, listExc] of Object.entries(codeMap)) {
         const code = Number(codeStr);
-
-        // Pula exceptions se estiver no excludedCodes (ex. code 8)
-        if (excludedCodes.has(code)) {
-          continue;
-        }
-
         let field = exceptionGroup.fields.find((f) => f.code === code);
         if (!field) {
           const stdField = standardGroup?.fields.find((f) => f.code === code);
@@ -296,15 +255,13 @@ export default class FeeGetByCifUseCase {
             field.name = stdField?.name || listExc[0].name || '';
           }
         }
-
         for (const exc of listExc) {
           const amountNumber = parseFloat(exc.defaultValue || '0');
           field.exceptionOptions.push({
             approvedByDoubleA: null,
             value: exc.defaultValue,
-            text: isNaN(amountNumber)
-              ? exc.defaultValue
-              : `$${amountNumber.toFixed(2)}`,
+            text: isNaN(amountNumber) ? exc.defaultValue :
+              $${amountNumber.toFixed(2)},
             visible: true,
             retired: false,
             parameterOptionId: exc.parameterOptionId,
@@ -318,7 +275,6 @@ export default class FeeGetByCifUseCase {
   }
 
   #getDocumentUrl(feePackageId) {
-    // Retorna a URL do PDF, etc. (caso necessário)
     const scheduleUrls = global.environment.scheduleUrls;
     const packageMap = {
       1: 'intlPB3',
