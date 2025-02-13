@@ -29,7 +29,6 @@
               acc.code === field.code
           );
           if (corresponding) {
-            // Para qualquer campo (incluindo código 5), formatamos o valor numérico com "$" e duas casas decimais
             const numValue = parseFloat(field.defaultValue);
             field.labelValue = !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
             console.log("Debug Investment - Campo código", field.code, "formatado para labelValue:", field.labelValue);
@@ -40,18 +39,3 @@
   }
   this.#clearMemory();
 }
-
-
- {
-                                "code": 6,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "0.35% /YR min $375.00/QTR",
-                                "hasChanged": false,
-                                "tooltip": "0.35% /YR min $375.00/QTR",
-                                "exceptionOptions": [],
-                                "_id": "67ae2eaef837818a10115b81",
-                                "labelValue": "$0.35"
-                            },
