@@ -21,8 +21,6 @@ export default class CustomerFees {
     // Para Customer Fees, geralmente há apenas uma conta
     this.#accounts = [accounts[0]];
 
-    
-
     this.#addMultiplesAccount(this.#accounts[0].cifno);
     this.#addCurrentClientValue();
   }
@@ -67,8 +65,7 @@ export default class CustomerFees {
       clonedFields = this.#deduplicateFields(clonedFields);
 
       // Define o kycMailingStatus: utiliza o valor da conta, se existir, ou "Standard" como padrão.
-      const kycMailingStatus =
-        this.#accounts[0].kycMailingStatus || 'Print';
+      const kycMailingStatus = this.#accounts[0].kycMailingStatus || 'Standard';
 
       const newFeeGroup = new FeeGroup({
         name: template.name,
@@ -88,12 +85,25 @@ export default class CustomerFees {
   /**
    * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
    * Para Customer Fees, se o campo defaultValue já estiver definido (vindo do banco),
-   * ele não é sobrescrito.
+   * ele não é sobrescrito, exceto para o grupo "Client Current Fees". Nesse grupo,
+   * se o kycMailingStatus for "Standard" (indicando que o cliente não possui atualizações),
+   * os campos devem ser forçados a ter o valor "NOT APPLICABLE".
    */
   #addCurrentClientValue() {
+    const kycStatus = this.#accounts[0].kycMailingStatus || 'Standard';
     for (const feeGroup of this.#customer.feeGroups) {
-      for (const field of feeGroup.fields) {
-        field.labelValue = numberToCurrency(field.defaultValue);
+      if (feeGroup.name === "Client Current Fees" && kycStatus === "Standard") {
+        for (const field of feeGroup.fields) {
+          field.defaultValue = "NOT APPLICABLE";
+          field.labelValue = "NOT APPLICABLE";
+          console.log(
+            `CustomerFees - Forçando campo ${field.code} em Client Current Fees para NOT APPLICABLE por kycMailingStatus "${kycStatus}"`
+          );
+        }
+      } else {
+        for (const field of feeGroup.fields) {
+          field.labelValue = numberToCurrency(field.defaultValue);
+        }
       }
     }
   }
