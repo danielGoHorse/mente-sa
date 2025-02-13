@@ -1,5 +1,8 @@
-  const investment = new InvestmentAccountFee(groupedFees, accounts, equityField);
-    console.log("debug investment", JSON.stringify(investment, null, 2));
-    if (investment.fee) {
-      result.fees.push(investment.fee);
-    }
+constructor(fees, accounts, equityField) {
+  console.log("Fees recebidos para Investment:", fees);
+  this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
+  if (!this.#investiment || !Array.isArray(this.#investiment.feeGroups)) {
+    this.#investiment = { feeGroups: [] };
+  }
+  // ... restante do código ...
+}
