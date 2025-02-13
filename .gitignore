@@ -39,7 +39,7 @@ export default class InvestmentAccountFee {
     });
     
     this.#accountsDDA = Array.from(
-      new Map(this.#accountsDDA.map(item => [${item.number}-${item.code}, item])).values()
+      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
     );
 
     this.#addMultiplesAccount(this.#accounts[0].cifno);
@@ -163,13 +163,3 @@ export default class InvestmentAccountFee {
     this.#allExceptions = new Set();
   }
 }
-
-Preciso da mesma tratativa do Banc Account, com relação a não duplicar informações....
-
-Só mais uma coisa.....on vem o valor Fee Amount agora vem uma string, com um dado assim:
-
-FeeAmount
-$0.10 per share, min charge of $150 per trade
-
-Eu preciso apresentar este valor desta forma....
-
