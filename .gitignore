@@ -1,16 +1,196 @@
+import { FeeGroup } from './entities/FeeGroups.js';
+import numberToCurrency from '../core/helpers/currency.js';
 
- 1 of 2 unhandled errors
+export default class InvestmentAccountFee {
+  #feeName = 'Investment Account Fees';
+  #investiment = {};
+  #accounts = [];
+  #accountsDDA = [];
+  #allExceptions = new Set();
 
-Unhandled Runtime Error
-TypeError: Cannot read properties of undefined (reading 'exceptionOptions')
+  constructor(fees, accounts, equityField) {
+    if (!fees || !Array.isArray(fees) || fees.length === 0) {
+      throw new Error('Fees is empty or undefined');
+    }
+    // Seleciona o objeto cujo FeeType seja "Investment Account Fees"
+    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
+    if (
+      !this.#investiment ||
+      !Array.isArray(this.#investiment.feeGroups) ||
+      !this.#investiment.feeGroups.length
+    ) {
+      this.#investiment = {};
+      return;
+    }
 
-Source
-src\pages\app\feemanagement\components\Tab\components\newRequest\index.tsx (502:19) @ exceptionOptions
+    // Filtra as contas de investimento (considere feeType === 3 para investimentos)
+    this.#accounts = accounts.filter((x) => x.feeType === 3);
+    if (this.#accounts.length < 1) {
+      this.#investiment = {};
+      return;
+    }
 
-  500 | const lastException = feeGroupsItem[2].fields
-  501 |   .slice(-1)[0]
-> 502 |   .exceptionOptions.slice(-1)[0];
-      |   ^
-  503 | if (
-  504 |   feeData?.data?.canEditEquity &&
-  505 |   (lastException.text !== "Other" || lastException.value === "")
+    // Para cada conta, cria itens para os códigos 5 e 7 (para investimento)
+    this.#accounts.forEach((acc) => {
+      if (acc.ddaNumber) {
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 5,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 7,
+          entity: acc.entity || null,
+        });
+      }
+    });
+
+    // Deduplica os itens de accountsDDA com base na chave composta "number-code"
+    this.#accountsDDA = Array.from(
+      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
+    );
+
+    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    this.#addCurrentClientValue(equityField);
+  }
+
+  get fee() {
+    if (!this.#investiment || !this.#investiment.feeGroups) {
+      return null;
+    }
+    return this.#investiment;
+  }
+
+  // Auxiliar para deduplicar fields com base no fee code
+  #deduplicateFields(fields) {
+    const map = new Map();
+    for (const field of fields) {
+      if (!map.has(field.code)) {
+        map.set(field.code, field);
+      }
+    }
+    return Array.from(map.values());
+  }
+
+  /**
+   * Para cada feeGroup de investimento e para cada conta única (accountsDDA),
+   * clona o feeGroup atribuindo o número da conta. Se o grupo vier com fields vazio,
+   * é inserido um campo default para evitar erro no front.
+   */
+  #addMultiplesAccount(cif) {
+    const result = {};
+
+    for (const feeGroup of this.#investiment.feeGroups) {
+      // Caso o array de fields não exista, define como vazio
+      feeGroup.fields = feeGroup.fields || [];
+      // Clona os fields para garantir que cada field tenha exceptionOptions definida
+      feeGroup.fields = feeGroup.fields.map((field) => ({
+        ...field,
+        exceptionOptions: field.exceptionOptions
+          ? field.exceptionOptions.map(opt => ({ ...opt }))
+          : []
+      }));
+
+      for (const account of this.#accountsDDA) {
+        if (!result[account.number]) {
+          result[account.number] = {};
+        }
+        // Filtra os fields do grupo que correspondem ao código (5 ou 7)
+        let fieldsForAccount = feeGroup.fields.filter((x) => x.code === account.code);
+        // Se não houver fields, insere um fallback (campo vazio) para evitar erro no front
+        if (fieldsForAccount.length === 0) {
+          fieldsForAccount.push({
+            code: account.code,
+            name: '',
+            defaultValue: '',
+            tooltip: '',
+            isException: true,
+            exceptionOptions: []
+          });
+        }
+
+        if (!result[account.number][feeGroup.name]) {
+          result[account.number][feeGroup.name] = [];
+
+          // Processa as exceptionOptions para agregar em allExceptions
+          feeGroup.fields.forEach((item) => {
+            item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
+            item.exceptionOptions.forEach(this.#allExceptions.add, this.#allExceptions);
+          });
+
+          const newFeeGroup = new FeeGroup({
+            name: feeGroup.name,
+            fields: fieldsForAccount,
+            cif,
+            accountNumber: account.number,
+            visible: feeGroup.visible,
+            code: feeGroup.code,
+            entityCode: account.entity,
+          });
+          result[account.number][feeGroup.name].push(newFeeGroup);
+        } else {
+          const feeGroupToAddFields = result[account.number][feeGroup.name][0];
+          feeGroupToAddFields.fields = [...feeGroupToAddFields.fields, ...fieldsForAccount];
+        }
+      }
+    }
+
+    const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
+      Object.keys(result[accountNumber]).forEach((groupName) => {
+        acc.push(result[accountNumber][groupName]);
+      });
+      return acc;
+    }, []);
+
+    this.#investiment.feeGroups = [];
+    for (const feeGroups of feeGroupsByAccount) {
+      for (const feeGroup of feeGroups) {
+        this.#investiment.feeGroups.push(feeGroup);
+      }
+    }
+  }
+
+  /**
+   * Atualiza os valores dos fields para cada FeeGroup:
+   * - Para fields com código 5, usa o defaultValue (texto completo, por exemplo, "$0.10 per share, min charge of $150 per trade")
+   * - Para os demais, tenta converter o defaultValue para número e formata como moeda (com "$" e 2 casas decimais)
+   */
+  #addCurrentClientValue(equityField) {
+    const exceptionsOptions = Array.from(this.#allExceptions);
+    for (const feeGroup of this.#investiment.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+      for (const field of feeGroup.fields) {
+        if (field.isException) {
+          field.labelValue = field.labelValue || '';
+        } else {
+          for (const account of this.#accounts) {
+            if (
+              field.code === account.ddaNumber &&
+              feeGroup.accountNumber.toString() === account.ddaNumber.toString()
+            ) {
+              if (field.code === 5) {
+                // Para fields com código 5, utiliza o defaultValue recebido (texto completo)
+                field.labelValue = field.defaultValue;
+              } else {
+                if (field.isCurrentClient) {
+                  field.defaultValue = account.feeCode?.toString() || '';
+                }
+                const numValue = parseFloat(field.defaultValue);
+                field.labelValue =
+                  !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+              }
+            }
+          }
+        }
+      }
+    }
+    this.#clearMemory();
+  }
+
+  #clearMemory() {
+    this.#accounts = [];
+    this.#accountsDDA = [];
+    this.#allExceptions = new Set();
+  }
+}
