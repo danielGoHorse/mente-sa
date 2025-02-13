@@ -40,3 +40,18 @@
   }
   this.#clearMemory();
 }
+
+
+ {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.35% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.35% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "67ae2eaef837818a10115b81",
+                                "labelValue": "$0.35"
+                            },
