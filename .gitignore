@@ -1,68 +1,361 @@
+import Result from '#features/shared/result.js';
+import CustomerFees from '#src/models/CustomerFees.js';
+import BankAccountFee from '#src/models/BankAccountFee.js';
+import InvestmentAccountFee from '#src/models/InvestmentAccountFee.js';
+import { FeeCase } from '#src/models/entities/FeeCase.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure,
+} from '#core/data/mssql/index.js';
+
+const deParaFeeCodes = {
+  JH001: 1,
+  JH002: 2,
+  JH006: 4,
+  JH007: 8,
+  BPS002: 6,
+  BPS003: 5,
+  BPS004: 9,
+  BPS005: 7,
+  JH010: 3,
+};
+
+const excludedCodes = new Set([8]);
+
+function mapDbFeeTypeToApp(feeTypeFromDb) {
+  switch (feeTypeFromDb) {
+    case 'Client Fees':
+      return 'Customer Fees';
+    case 'Bank Account Fees':
+      return 'Bank Account Fees';
+    case 'Investment Fees':
+      return 'Investment Fees';
+    default:
+      return feeTypeFromDb;
+  }
+}
+
+function mapFeeTypeToNumber(feeType) {
+  switch (feeType) {
+    case 'Customer Fees':
+      return 1;
+    case 'Bank Account Fees':
+      return 2;
+    case 'Investment Fees':
+      return 3;
+  }
+}
+
+
+export default class FeeGetByCifUseCase {
+ 
+  async execute({ customerAccount }) {
+    const result = { fees: [] };
+
+    const { groupedFees, accounts } = await this.#getFeesStructuredFromSQL(customerAccount);
+
+    result.accounts = accounts.map((account) => ({
+      cifno: account.cifno,
+      ddaNumber: account.ddaNumber,
+      branchCity: account.branchCity,
+      branchState: account.branchState,
+      branchType: account.branchType,
+      documentUrl: account.documentUrl,
+      defaultPackageType: account.defaultPackageType,
+      feePackage: account.feePackage,
+    }));
+
+    const customer = new CustomerFees(groupedFees, accounts);
+    if (customer.fee) result.fees.push(customer.fee);
+
+    const bank = new BankAccountFee(groupedFees, accounts);
+    if (bank.fee) result.fees.push(bank.fee);
+
+    const equityField = { exceptionOptions: [] };
+
+    const investment = new InvestmentAccountFee(groupedFees, accounts, equityField);
+    console.log("debug investment", JSON.stringify(investment, null, 2));
+    if (investment.fee) {
+      result.fees.push(investment.fee);
+    }
+
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
+    });
+
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id,
+    }));
+
+    return Result.ok(result);
+  }
+
+
+  async #getFeesStructuredFromSQL(customerAccount) {
+    const feesDataRaw = await this.#getFeesFromSQL(customerAccount[0].cifno);
+    if (!feesDataRaw || feesDataRaw.length === 0) {
+      return { groupedFees: [], accounts: [] };
+    }
+
+    const feesData = Array.from(
+      new Map(feesDataRaw.map(row => [
+        `${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}`, row
+      ])).values()
+    );
+
+    const feePackageId = feesData[0]['Default Fee Package Id'];
+    if (!feePackageId) {
+      throw new Error('Default Fee Package Id not found in feesData');
+    }
+
+    const documentUrl = this.#getDocumentUrl(feePackageId);
+
+    const accounts = feesData.map((fee) => ({
+      cifno: fee.CIFNO,
+      ddaNumber: fee.ACCTNO,
+      branchCity: fee['Branch City'],
+      branchState: fee['Branch State'],
+      branchType: fee['Branch Type'],
+      defaultPackageType: fee['Default Package Type'],
+      feePackage: fee['Default Fee Package']?.trim() || '',
+      defaultFeePackageId: fee['Default Fee Package Id'] || '',
+      feeType: mapFeeTypeToNumber(mapDbFeeTypeToApp(fee.FeeType)),
+      feeGroup: 1,
+      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
+      documentUrl
+    }));
+
+    const groupedFeesMap = {};
+    const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
+    for (const ft of possibleFeeTypes) {
+      groupedFeesMap[ft] = {
+        feeType: ft,
+        feeGroups: [
+          { name: 'Standard Fees', code: 1, fields: [] },
+          { name: 'Client Current Fees', code: 2, fields: [] },
+          { name: 'Exceptions Request', code: 3, fields: [] },
+        ],
+      };
+    }
+
+    for (const row of feesData) {
+      const feeTypeDb = row.FeeType;
+      const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
+      if (!groupedFeesMap[feeTypeApp]) continue;
+
+      const { FeeDescription, FeeCode, FeeAmount, Frequency } = row;
+      const DefaultFeeAmount = row["Default Fee Amount"];
+      const DefaultFrequency = row["Default Frequency"];
+
+      const mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+      if (excludedCodes.has(mappedCode)) continue;
+      if (
+        feeTypeApp === 'Customer Fees' && ![1, 2].includes(mappedCode) ||
+        feeTypeApp === 'Bank Account Fees' && ![3, 4].includes(mappedCode) ||
+        feeTypeApp === 'Investment Account Fees' && ![5,7,6,9].includes(mappedCode)
+      ) {
+        continue;
+      }
+
+      const groupObj = groupedFeesMap[feeTypeApp];
+      const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
+      const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
+
+      standardGroup.fields.push({
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: FeeAmount ? FeeAmount.toString() : '',
+        tooltip: Frequency || '',
+        isException: false,
+      });
+
+      clientCurrentGroup.fields.push({
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: DefaultFeeAmount ? DefaultFeeAmount.toString() : '',
+        tooltip: DefaultFrequency || '',
+        isException: false,
+      });
+    }
+
+    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
+
+    const exceptionsByFeeTypeAndCode = {};
+    for (const exc of exceptions) {
+      const feeTypeApp = exc.feeType;
+      if (!exceptionsByFeeTypeAndCode[feeTypeApp]) {
+        exceptionsByFeeTypeAndCode[feeTypeApp] = {};
+      }
+      const code = exc.code;
+      if (!exceptionsByFeeTypeAndCode[feeTypeApp][code]) {
+        exceptionsByFeeTypeAndCode[feeTypeApp][code] = [];
+      }
+      exceptionsByFeeTypeAndCode[feeTypeApp][code].push(exc);
+    }
+
+    for (const ft of possibleFeeTypes) {
+      const groupObj = groupedFeesMap[ft];
+      if (!groupObj) continue;
+
+      const exceptionGroup = groupObj.feeGroups.find((g) => g.name === 'Exceptions Request');
+      if (!exceptionGroup) continue;
+
+      const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
+      const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
+      const standardCodes = standardGroup?.fields.map((f) => f.code) || [];
+      const clientCodes = clientCurrentGroup?.fields.map((f) => f.code) || [];
+      const allCodes = new Set([...standardCodes, ...clientCodes]);
+
+      for (const code of allCodes) {
+        let field = exceptionGroup.fields.find((f) => f.code === code);
+        if (!field) {
+          const stdField = standardGroup?.fields.find((f) => f.code === code);
+          field = {
+            code,
+            name: stdField?.name || '',
+            defaultValue: '0',
+            tooltip: '',
+            isException: true,
+            exceptionOptions: []
+          };
+          exceptionGroup.fields.push(field);
+        } else {
+          if (!field.name || field.name.trim() === '') {
+            const stdField = standardGroup?.fields.find((f) => f.code === code);
+            field.name = stdField?.name || '';
+          }
+        }
+      }
+
+      const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
+      for (const [codeStr, listExc] of Object.entries(codeMap)) {
+        const code = Number(codeStr);
+        let field = exceptionGroup.fields.find((f) => f.code === code);
+        if (!field) {
+          const stdField = standardGroup?.fields.find((f) => f.code === code);
+          field = {
+            code,
+            name: stdField?.name || listExc[0].name || '',
+            defaultValue: listExc[0].defaultValue || '0',
+            tooltip: listExc[0].tooltip || '',
+            isException: true,
+            exceptionOptions: []
+          };
+          exceptionGroup.fields.push(field);
+        } else {
+          if (!field.name || field.name.trim() === '') {
+            const stdField = standardGroup?.fields.find((f) => f.code === code);
+            field.name = stdField?.name || listExc[0].name || '';
+          }
+        }
+        for (const exc of listExc) {
+          const amountNumber = parseFloat(exc.defaultValue || '0');
+          field.exceptionOptions.push({
+            approvedByDoubleA: null,
+            value: exc.defaultValue,
+            text: `$${amountNumber.toFixed(2)}`,
+            visible: true,
+            retired: false,
+            parameterOptionId: exc.parameterOptionId,
+          });
+        }
+      }
+    }
+
+    const groupedFees = Object.values(groupedFeesMap);
+    return { groupedFees, accounts };
+  }
+
+  #getDocumentUrl(feePackageId) {
+    const scheduleUrls = global.environment.scheduleUrls;
+    const packageMap = {
+      1: 'intlPB3',
+      2: 'uSPBIndividual3',
+      3: 'uSPBCorporation3',
+      4: 'efraPB3',
+      5: 'eraPB3'
+    };
+
+    const scheduleType = packageMap[feePackageId] || '';
+    return scheduleUrls[scheduleType] || '';
+  }
+
+  async #getFeesFromSQL(cifno) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+  }
+
+
+  async #getExceptionFeesFromSQL(feePackageId) {
+    const connection = await connectToFeeMgmtDb();
+    const data = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
+    return data.map((exception) => {
+      const feeTypeApp = mapDbFeeTypeToApp(exception.FeeType);
+      return {
+        feeType: feeTypeApp,
+        code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
+        name: exception.FeeDescription, 
+        defaultValue: exception.Amount?.toString() || '0',
+        tooltip: exception.FreqDescription || '',
+        isException: true,
+        parameterOptionId: exception.FeeParameterOptionId,
+      };
+    });
+  }
+}
+
 import { FeeGroup } from './entities/FeeGroups.js';
 import numberToCurrency from '../core/helpers/currency.js';
 
-export default class InvestmentAccountFee {
-  #feeName = 'Investment Account Fees';
-  #investiment = {};
+export default class BankAccountFee {
+  #feeName = 'Bank Account Fees';
+  #bank = {};
   #accounts = [];
   #accountsDDA = [];
-  #allExceptions = new Set();
 
-  constructor(fees, accounts, equityField) {
+  constructor(fees, accounts) {
     if (!fees || !Array.isArray(fees) || fees.length === 0) {
       throw new Error('Fees is empty or undefined');
     }
-    // Seleciona o objeto cujo FeeType seja "Investment Account Fees"
-    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (
-      !this.#investiment ||
-      !Array.isArray(this.#investiment.feeGroups) ||
-      !this.#investiment.feeGroups.length
-    ) {
-      this.#investiment = {};
-      return;
+
+    // Seleciona os dados do fee do tipo Bank Account Fees
+    this.#bank = fees.filter((x) => x.feeType === this.#feeName)[0];
+    if (!this.#bank || !Array.isArray(this.#bank.feeGroups)) {
+      throw new Error('Bank Account Fees or feeGroups are undefined');
     }
 
-    // Filtra as contas de investimento (feeType === 3)
-    this.#accounts = accounts.filter((x) => x.feeType === 3);
-    if (this.#accounts.length < 1) {
-      this.#investiment = {};
-      return;
+    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
+      throw new Error('Accounts is empty or undefined');
     }
 
-    // Para cada conta, cria itens para os códigos 5 e 7 (para Investment)
-    this.#accounts.forEach((acc) => {
-      if (acc.ddaNumber) {
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 5,
-          entity: acc.entity || null,
-        });
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 7,
-          entity: acc.entity || null,
-        });
-      }
-    });
-
-    // Deduplica os itens de accountsDDA com base na chave composta "number-code"
-    this.#accountsDDA = Array.from(
-      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
+    const feeGroupCode = this.#bank.feeGroups[0].code;
+    // Filtra as contas que pertencem ao grupo e deduplica com base no número de conta (ddaNumber)
+    const accountsFiltered = accounts.filter((x) => x.feeGroup === feeGroupCode);
+    this.#accounts = Array.from(
+      new Map(accountsFiltered.map((a) => [a.ddaNumber, a])).values()
     );
+    // Obtém os números de conta de forma única (já em string)
+    this.#accountsDDA = this.#accounts.map((a) => a.ddaNumber.toString());
 
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue(equityField);
-  }
-
-  get fee() {
-    if (!this.#investiment || !this.#investiment.feeGroups) {
-      return null;
+    if (this.#accounts.length === 0) {
+      throw new Error('No accounts matched with Bank Account Fees feeGroup');
     }
-    return this.#investiment;
+
+    // Cria os feeGroups para cada conta única
+    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    // Atualiza os valores de cada fee com os dados do cliente
+    this.#addCurrentClientValue();
   }
 
-  // Deduplica os fields com base no fee code
+  /**
+   * Função auxiliar para deduplicar os campos (fields) com base no fee code.
+   *
+   * @param {Array} fields - Array de fields a serem deduplicados.
+   * @returns {Array} - Array de fields sem duplicação.
+   */
   #deduplicateFields(fields) {
     const map = new Map();
     for (const field of fields) {
@@ -74,107 +367,73 @@ export default class InvestmentAccountFee {
   }
 
   /**
-   * Para cada feeGroup de investimento e para cada conta única (accountsDDA),
-   * clona o feeGroup atribuindo o número da conta (accountNumber) e o entityCode.
-   * Se o grupo vier com fields vazio, insere um field default para evitar erros no front.
+   * Para cada conta única, gera um novo conjunto de feeGroups a partir dos templates
+   * existentes, atribuindo o número da conta (accountNumber) adequadamente.
+   *
+   * @param {string} cif - O CIF da conta.
    */
   #addMultiplesAccount(cif) {
-    const result = {};
+    if (!this.#accounts || this.#accounts.length < 1) {
+      this.#bank = {};
+      return;
+    }
 
-    for (const feeGroup of this.#investiment.feeGroups) {
-      // Garante que fields esteja definido
-      feeGroup.fields = feeGroup.fields || [];
-      // Clona os fields para evitar referências compartilhadas
-      feeGroup.fields = feeGroup.fields.map((field) => ({
-        ...field,
-        exceptionOptions: field.exceptionOptions
-          ? field.exceptionOptions.map((opt) => ({ ...opt }))
-          : []
-      }));
+    const feeGroupTemplates = this.#bank.feeGroups;
+    const newFeeGroups = [];
 
-      for (const account of this.#accountsDDA) {
-        if (!result[account.number]) {
-          result[account.number] = {};
-        }
-        // Filtra os fields do grupo que correspondem ao código (5 ou 7)
-        let fieldsForAccount = feeGroup.fields.filter((x) => x.code === account.code);
-        // Se não houver fields para esta conta, insere um fallback para evitar erro no front
-        if (fieldsForAccount.length === 0) {
-          fieldsForAccount.push({
-            code: account.code,
-            name: '',
-            defaultValue: '',
-            tooltip: '',
-            isException: true,
-            exceptionOptions: []
-          });
-        }
-        if (!result[account.number][feeGroup.name]) {
-          result[account.number][feeGroup.name] = [];
-          // Processa as exceptionOptions para agregar em allExceptions
-          feeGroup.fields.forEach((item) => {
-            item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
-            item.exceptionOptions.forEach(this.#allExceptions.add, this.#allExceptions);
-          });
-          const newFeeGroup = new FeeGroup({
-            name: feeGroup.name,
-            fields: fieldsForAccount,
-            cif,
-            accountNumber: account.number,
-            visible: feeGroup.visible,
-            code: feeGroup.code,
-            entityCode: account.entity,
-          });
-          result[account.number][feeGroup.name].push(newFeeGroup);
-        } else {
-          const feeGroupToAddFields = result[account.number][feeGroup.name][0];
-          feeGroupToAddFields.fields = [...feeGroupToAddFields.fields, ...fieldsForAccount];
-        }
+    for (const account of this.#accounts) {
+      const accountNumber = account.ddaNumber.toString();
+      for (const template of feeGroupTemplates) {
+        // Clona os fields para evitar referências compartilhadas
+        let clonedFields = template.fields.map((field) => ({
+          ...field,
+          exceptionOptions: field.exceptionOptions
+            ? field.exceptionOptions.map((opt) => ({ ...opt }))
+            : []
+        }));
+
+        // Deduplica os fields com base no fee code
+        clonedFields = this.#deduplicateFields(clonedFields);
+
+        const newFeeGroup = new FeeGroup({
+          name: template.name,
+          fields: clonedFields,
+          cif,
+          accountNumber,
+          visible: template.visible,
+          code: template.code
+        });
+        newFeeGroups.push(newFeeGroup);
       }
     }
 
-    // Agrupa os feeGroups por conta
-    const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
-      Object.keys(result[accountNumber]).forEach((groupName) => {
-        acc.push(result[accountNumber][groupName]);
-      });
-      return acc;
-    }, []);
-
-    this.#investiment.feeGroups = [];
-    for (const feeGroups of feeGroupsByAccount) {
-      for (const feeGroup of feeGroups) {
-        this.#investiment.feeGroups.push(feeGroup);
-      }
-    }
+    this.#bank.feeGroups = newFeeGroups;
   }
 
   /**
-   * Atualiza os valores dos fields para cada FeeGroup de investimento.
-   * Para o field com código 5 (que traz um valor textual completo, como "$0.10 per share, min charge of $150 per trade"),
-   * define labelValue igual a defaultValue; para os demais, tenta converter defaultValue para número e formata como moeda.
-   * A correspondência é feita usando a lista deduplicada accountsDDA.
+   * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
+   * Para os fees não-exception, converte o defaultValue para número e formata como moeda (com "$" e 2 casas decimais).
    */
-  #addCurrentClientValue(equityField) {
-    // Converte as exceptionOptions para array
-    const exceptionsOptions = Array.from(this.#allExceptions);
-    for (const feeGroup of this.#investiment.feeGroups) {
+  #addCurrentClientValue() {
+    for (const [feeGroupIndex, feeGroup] of this.#bank.feeGroups.entries()) {
       feeGroup.cif = this.#accounts[0]?.cifno || null;
-      for (const field of feeGroup.fields) {
+      for (const [fieldIndex, field] of feeGroup.fields.entries()) {
         if (field.isException) {
-          field.labelValue = field.labelValue || '';
+          const previousGroup = this.#bank.feeGroups[feeGroupIndex - 1];
+          if (previousGroup) {
+            field.labelValue =
+              previousGroup.fields[fieldIndex]?.labelValue || '';
+          }
         } else {
-          // Para cada field, encontra a conta correspondente (baseada no número e no código)
-          const corresponding = this.#accountsDDA.find(
-            (acc) =>
-              acc.number.toString() === feeGroup.accountNumber.toString() &&
-              acc.code === field.code
-          );
-          if (corresponding) {
-            if (field.code === 5) {
-              // Para o código 5, deixa o valor textual intacto
-              field.labelValue = field.defaultValue;
-            } else {
+          for (const account of this.#accounts) {
+            if (
+              field.code === account.feeType &&
+              feeGroup.accountNumber === account.ddaNumber.toString()
+            ) {
+              if (field.isCurrentClient) {
+                field.defaultValue = account.feeAmount?.toString() || '';
+              }
+              // Converte o defaultValue para número e formata como moeda com "$" e duas casas decimais
               const numValue = parseFloat(field.defaultValue);
               field.labelValue =
                 !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
@@ -186,9 +445,12 @@ export default class InvestmentAccountFee {
     this.#clearMemory();
   }
 
+  get fee() {
+    return this.#bank;
+  }
+
   #clearMemory() {
     this.#accounts = [];
     this.#accountsDDA = [];
-    this.#allExceptions = new Set();
   }
 }
