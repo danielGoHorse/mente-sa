@@ -1,31 +1,15 @@
-#addCurrentClientValue() {
-  for (const [feeGroupIndex, feeGroup] of this.#bank.feeGroups.entries()) {
-    feeGroup.cif = this.#accounts[0]?.cifno || null;
-    for (const [fieldIndex, field] of feeGroup.fields.entries()) {
-      if (field.isException) {
-        const previousGroup = this.#bank.feeGroups[feeGroupIndex - 1];
-        if (previousGroup) {
-          field.labelValue =
-            previousGroup.fields[fieldIndex]?.labelValue || '';
-        }
-      } else {
-        for (const account of this.#accounts) {
-          if (
-            field.code === account.feeType &&
-            feeGroup.accountNumber === account.ddaNumber.toString()
-          ) {
-            if (field.isCurrentClient) {
-              const feeAmount = parseFloat(account.feeAmount);
-              field.defaultValue = !isNaN(feeAmount) ? feeAmount.toFixed(2) : '';
-            }
-            // Converte o defaultValue para número e formata como moeda com "$" e duas casas decimais
-            const numValue = parseFloat(field.defaultValue);
-            field.labelValue =
-              !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
-          }
-        }
-      }
+for (const account of this.#accounts) {
+  if (
+    field.code === account.feeType &&
+    feeGroup.accountNumber === account.ddaNumber.toString()
+  ) {
+    console.log('Field atual:', field); // Verifique o valor de isCurrentClient
+    if (field.isCurrentClient) {
+      const feeAmount = parseFloat(account.feeAmount);
+      field.defaultValue = !isNaN(feeAmount) ? feeAmount.toFixed(2) : '';
     }
+    const numValue = parseFloat(field.defaultValue);
+    field.labelValue =
+      !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
   }
-  this.#clearMemory();
 }
