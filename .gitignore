@@ -9,10 +9,7 @@ export default class InvestmentAccountFee {
   #allExceptions = new Set();
 
   constructor(fees, accounts, equityField) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
-    }
-    // Seleciona o objeto cujo FeeType seja "Investment Account Fees"
+    // Seleciona o fee cujo FeeType seja "Investment Account Fees"
     this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
     if (
       !this.#investiment ||
@@ -23,14 +20,15 @@ export default class InvestmentAccountFee {
       return;
     }
 
-    // Filtra as contas de investimento (FeeType mapeado para 3)
+    // Filtra as contas de investimento – 
+    // IMPORTANTE: Certifique-se de que as contas de investimento estejam marcadas com feeType === 3
     this.#accounts = accounts.filter((x) => x.feeType === 3);
     if (this.#accounts.length < 1) {
       this.#investiment = {};
       return;
     }
 
-    // Para cada conta, cria itens para os códigos 5 e 7 (que definem os grupos de Investment)
+    // Para cada conta, cria dois itens (para os códigos 5 e 7)
     this.#accounts.forEach((acc) => {
       if (acc.ddaNumber) {
         this.#accountsDDA.push({
@@ -62,6 +60,7 @@ export default class InvestmentAccountFee {
     return this.#investiment;
   }
 
+  // Função auxiliar para deduplicar os fields com base no código do fee
   #deduplicateFields(fields) {
     const map = new Map();
     for (const field of fields) {
@@ -73,15 +72,15 @@ export default class InvestmentAccountFee {
   }
 
   /**
-   * Para cada feeGroup do objeto de investimento, verifica se o grupo possui fields.
-   * Se estiver vazio, o grupo é ignorado.
-   * Caso haja fields, clona os fields e os agrupa para cada conta (identificada em accountsDDA).
+   * Para cada feeGroup do objeto de investimento, para cada conta única (representada em accountsDDA),
+   * clona os feeGroups e filtra os fields de acordo com o código (5 ou 7).
+   * Se o grupo não possuir fields (array vazio), ele é ignorado.
    */
   #addMultiplesAccount(cif) {
     const result = {};
 
     for (const feeGroup of this.#investiment.feeGroups) {
-      // Se não houver fields no grupo, ignora-o
+      // Se o array de fields estiver vazio, ignora este grupo
       if (!feeGroup.fields || feeGroup.fields.length === 0) {
         continue;
       }
@@ -96,14 +95,14 @@ export default class InvestmentAccountFee {
           result[account.number] = {};
         }
 
-        // Filtra os fields do grupo que correspondem ao código da conta
+        // Filtra os fields do grupo que correspondem ao código da conta (5 ou 7)
         const fieldsForAccount = feeGroup.fields.filter((x) => x.code === account.code);
         if (fieldsForAccount.length === 0) continue;
 
         if (!result[account.number][feeGroup.name]) {
           result[account.number][feeGroup.name] = [];
 
-          // Processa as exceptionOptions dos fields para agregar em allExceptions
+          // Processa as exceptionOptions para agregar em allExceptions
           feeGroup.fields.forEach((item) => {
             item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired);
             item.exceptionOptions.forEach(this.#allExceptions.add, this.#allExceptions);
@@ -143,9 +142,9 @@ export default class InvestmentAccountFee {
   }
 
   /**
-   * Atualiza os valores de cada field.
-   * Para fields com código 5, utiliza o defaultValue recebido (que contém o texto completo).
-   * Para os demais, tenta converter o defaultValue para número e formata como moeda.
+   * Atualiza os valores dos fields de cada FeeGroup:
+   * - Para fields com código 5, utiliza o defaultValue recebido (que contém o texto completo, ex: "$0.10 per share, min charge of $150 per trade")
+   * - Para os demais, tenta converter o defaultValue para número e formata como moeda (com "$" e duas casas decimais)
    */
   #addCurrentClientValue(equityField) {
     const exceptionsOptions = Array.from(this.#allExceptions);
@@ -161,7 +160,7 @@ export default class InvestmentAccountFee {
               feeGroup.accountNumber.toString() === account.ddaNumber.toString()
             ) {
               if (field.code === 5) {
-                // Para fields com código 5, usa o defaultValue (texto completo, ex: "$0.10 per share, min charge of $150 per trade")
+                // Para fields com código 5, utiliza o defaultValue recebido (texto completo)
                 field.labelValue = field.defaultValue;
               } else {
                 if (field.isCurrentClient) {
