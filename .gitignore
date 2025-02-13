@@ -1,16 +1,78 @@
-console.log("Debug: Iniciando processamento de feeGroupsByAccount com result:", result);
+Process exited with code 1
+C:\Program Files\nodejs\node.exe .\src\app\api\index.js
 
-const feeGroupsByAccount = Object.keys(result).reduce((acc, accountNumber) => {
-  console.log("Debug: Processando accountNumber:", accountNumber);
-  const groupNames = Object.keys(result[accountNumber]);
-  console.log("Debug: Grupos para accountNumber", accountNumber, ":", groupNames);
-  
-  groupNames.forEach((groupName) => {
-    console.log("Debug: Adicionando grupo", groupName, "para accountNumber", accountNumber);
-    acc.push(result[accountNumber][groupName]);
-  });
-  
-  return acc;
-}, []);
 
-console.log("Debug: feeGroupsByAccount concluído:", feeGroupsByAccount);
+ ███████╗ ███████╗ ███████╗     ███╗   ███╗  █████╗  ███╗   ██╗  █████╗ 
+ ██╔════╝ ██╔════╝ ██╔════╝     ████╗ ████║ ██╔══██╗ ████╗  ██║ ██╔══██╗
+ █████╗   █████╗   █████╗       ██╔████╔██║ ███████║ ██╔██╗ ██║ ███████║
+ ██╔══╝   ██╔══╝   ██╔══╝       ██║╚██╔╝██║ ██╔══██║ ██║╚██╗██║ ██╔══██║
+ ██║      ███████╗ ███████╗     ██║ ╚═╝ ██║ ██║  ██║ ██║ ╚████║ ██║  ██║
+ ╚═╝      ╚══════╝ ╚══════╝     ╚═╝     ╚═╝ ╚═╝  ╚═╝ ╚═╝  ╚═══╝ ╚═╝  ╚═╝
+
+  ██████╗  ███████╗ ███╗   ███╗ ███████╗ ███╗   ██╗ ████████╗      █████╗ 
+ ██╔════╝  ██╔════╝ ████╗ ████║ ██╔════╝ ████╗  ██║ ╚══██╔══╝     ██╔══██╗
+ ██║  ███╗ █████╗   ██╔████╔██║ █████╗   ██╔██╗ ██║    ██║        ███████║
+ ██║   ██║ ██╔══╝   ██║╚██╔╝██║ ██╔══╝   ██║╚██╗██║    ██║        ██╔══██║
+ ╚██████╔╝ ███████╗ ██║ ╚═╝ ██║ ███████╗ ██║ ╚████║    ██║        ██║  ██║
+  ╚═════╝  ╚══════╝ ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝        ╚═╝  ╚═╝
+
+ ██████╗  ██╗     ███████╗ ███████╗ ██████╗  ██╗   ██╗ ███████╗ ██████╗ 
+ ██╔══██╗ ██║     ██╔════╝ ██╔════╝ ██╔══██╗ ██║   ██║ ██╔════╝ ██╔══██╗
+ ██████╔╝ ██║     ███████╗ █████╗   ██████╔╝ ██║   ██║ █████╗   ██████╔╝
+ ██╔═══╝  ██║     ╚════██║ ██╔══╝   ██╔══██╗ ╚██╗ ██╔╝ ██╔══╝   ██╔══██╗
+ ██║      ██║     ███████║ ███████╗ ██║  ██║  ╚████╔╝  ███████╗ ██║  ██║
+ ╚═╝      ╚═╝     ╚══════╝ ╚══════╝ ╚═╝  ╚═╝   ╚═══╝   ╚══════╝ ╚═╝  ╚═╝
+Debug: Iniciando processamento de feeGroupsByAccount com result: {7113617: {…}, 7115342: {…}, 7115431: {…}, 7115822: {…}}
+Debug: Processando accountNumber: 7113617
+Debug: Grupos para accountNumber 7113617 : (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
+arg3: (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
+0: 'Standard Fees'
+1: 'Client Current Fees'
+2: 'Exceptions Request'
+length: 3
+[[Prototype]]: Array(0)
+[[Prototype]]: Object
+Debug: Adicionando grupo Standard Fees para accountNumber 7113617
+Debug: Adicionando grupo Client Current Fees para accountNumber 7113617
+Debug: Adicionando grupo Exceptions Request para accountNumber 7113617
+Debug: Processando accountNumber: 7115342
+Debug: Grupos para accountNumber 7115342 : (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
+Debug: Adicionando grupo Standard Fees para accountNumber 7115342
+Debug: Adicionando grupo Client Current Fees para accountNumber 7115342
+Debug: Adicionando grupo Exceptions Request para accountNumber 7115342
+Debug: Processando accountNumber: 7115431
+Debug: Grupos para accountNumber 7115431 : (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
+Debug: Adicionando grupo Standard Fees para accountNumber 7115431
+Debug: Adicionando grupo Client Current Fees para accountNumber 7115431
+Debug: Adicionando grupo Exceptions Request para accountNumber 7115431
+Debug: Processando accountNumber: 7115822
+Debug: Grupos para accountNumber 7115822 : (3) ['Standard Fees', 'Client Current Fees', 'Exceptions Request']
+Debug: Adicionando grupo Standard Fees para accountNumber 7115822
+Debug: Adicionando grupo Client Current Fees para accountNumber 7115822
+Debug: Adicionando grupo Exceptions Request para accountNumber 7115822
+Debug: feeGroupsByAccount concluído: (12) [Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1)]
+arg1: (12) [Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1), Array(1)]
+0: (1) [model]
+0: model {$__: InternalCache, _doc: {…}}
+length: 1
+[[Prototype]]: Array(0)
+[[Prototype]]: Object
+1: (1) [model]
+0: model {$__: InternalCache, _doc: {…}}
+length: 1
+[[Prototype]]: Array(0)
+[[Prototype]]: Object
+2: (1) [model]
+3: (1) [model]
+4: (1) [model]
+5: (1) [model]
+6: (1) [model]
+7: (1) [model]
+8: (1) [model]
+9: (1) [model]
+10: (1) [model]
+11: (1) [model]
+length: 12
+[[Prototype]]: Array(0)
+[[Prototype]]: Object
+debug investment {}
