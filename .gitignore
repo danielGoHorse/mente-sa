@@ -1,15 +1,30 @@
-for (const account of this.#accounts) {
-  if (
-    field.code === account.feeType &&
-    feeGroup.accountNumber === account.ddaNumber.toString()
-  ) {
-    console.log('Field atual:', field); // Verifique o valor de isCurrentClient
-    if (field.isCurrentClient) {
-      const feeAmount = parseFloat(account.feeAmount);
-      field.defaultValue = !isNaN(feeAmount) ? feeAmount.toFixed(2) : '';
-    }
-    const numValue = parseFloat(field.defaultValue);
-    field.labelValue =
-      !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
-  }
-}
+this.#accounts (4) [{…}, {…}, {…}, {…}]
+BankAccountFee.js:123
+arg1 =
+(4) [{…}, {…}, {…}, {…}]
+0 =
+{cifno: 'F016583', ddaNumber: 7115342, branchCity: 'New York', branchState: 'NY', branchType: 'Domestic', …}
+branchCity =
+'New York'
+branchState =
+'NY'
+branchType =
+'Domestic'
+cifno =
+'F016583'
+ddaNumber =
+7115342
+defaultFeePackageId =
+2
+defaultPackageType =
+'Individual'
+documentUrl =
+'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNVU1BCSW5kaXZpZHVhbDMucGRm&version_id=null'
+feeGroup =
+1
+feePackage =
+'Domestic Individual'
+feeType =
+3
+kycMailingStatus =
+'Standard'
