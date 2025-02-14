@@ -1,73 +1,286 @@
-import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
-import mongoose, { Schema } from 'mongoose'
-import { FeeSchema } from './Fees.js'
-import { FeeCaseUserApproverSchema } from './FeeCaseUserApprover.js'
+import Result from '#features/shared/result.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure,
+} from '#core/data/mssql/index.js'
 
-export const FeeCaseSchema = new Schema(
-  {
-    caseId: { type: String, required: false },
-    caseNumber: { type: String, required: false },
-    cif: { type: String, required: true },
-    customerName: { type: String, required: true },
-    customerAddress: { type: String, required: true },
-    customerAccountOfficer: { type: String, required: true },
-    fees: { type: [FeeSchema], required: true },
-    usersApprovers: { type: [FeeCaseUserApproverSchema], required: false },
-    equityTeam: { type: [FeeCaseUserApproverSchema], required: false },
-    secopsTeam: { type: [FeeCaseUserApproverSchema], required: false },
-    visibleToUsers: { type: [Object], required: false },
-    reason: { type: String, required: false, maxLength: 501 },
-    levelApprover: { type: Number, required: false },
-    documents: { type: [String], required: false },
-    status: {
-      type: String,
-      required: false,
-      enum: ['INITIAL','PENDING_APPROVAL','PENDING_EQUITY','PENDING_SECOPS','REJECTED','DONE'],
-      default: 'INITIAL'
-    },
-    userOwner: { type: String, required: true },
-    userOwnerName: { type: String, required: false },
-    userOwnerEmail: { type: String, required: false },
-
-    // -- NOVOS CAMPOS
-    branchCity: { type: String, required: false },
-    branchState: { type: String, required: false },
-    branchType: { type: String, required: false },
-    defaultPackageType: { type: String, required: false },
-    feePackage: { type: String, required: false },
-    documentUrl: { type: String, required: false }
-  },
-  {
-    collection: 'FeeCase',
-    timestamps: true
-  }
-)
-
-configureSchemaMongoToReturnId('toObject', FeeCaseSchema)
-
-// Virtual para signatureApprover (sem mudança)
-FeeCaseSchema.virtual('signatureApprover').get(function () {
-  if (!this.usersApprovers || this.usersApprovers.length === 0) return ''
-  const order = ['PB AA', 'PB AAS', 'PB AAA', 'ExCom AA']
-  const signatures = new Set(
-    this.usersApprovers
-      .filter(item => !!item.signature)
-      .map(item => item.signature)
+/**
+ * Ajuste conforme seu environment, se houver:
+ * ex.: global.environment.documentUrl || ...
+ */
+function getDocumentUrl() {
+  return (
+    global.environment?.documentUrl ||
+    'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
   )
-  let finalSignature = ''
-  order.forEach(signature => {
-    if (signatures.has(signature) && finalSignature === '') {
-      finalSignature = signature
+}
+
+/**
+ * Se no FeeGetByCifUseCase você tem essa lógica:
+ *   - mapDbFeeTypeToApp
+ *   - mapFeeTypeToNumber
+ * Ajuste conforme necessário. Talvez nem precise dessas funções
+ * se você só quer branch info.
+ */
+function mapDbFeeTypeToApp(feeTypeFromDb) {
+  switch (feeTypeFromDb) {
+    case 'Client Fees':
+      return 'Customer Fees'
+    case 'Bank Account Fees':
+      return 'Bank Account Fees'
+    case 'Investment Fees':
+      return 'Investment Account Fees'
+    default:
+      return feeTypeFromDb
+  }
+}
+
+function mapFeeTypeToNumber(feeType) {
+  switch (feeType) {
+    case 'Customer Fees':
+      return 1
+    case 'Bank Account Fees':
+      return 2
+    case 'Investment Account Fees':
+      return 3
+    default:
+      return 0
+  }
+}
+
+/**
+ * Obtém a lista de contas (accounts) via a sp_get_fees_byCIF, tal como no FeeGetByCifUseCase.
+ * Depois mapeia cada row -> {cifno, ddaNumber, branchCity, ...}
+ */
+async function getAccountsByCif(cifno) {
+  const connection = await connectToFeeMgmtDb()
+  const feesData = await executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno })
+
+  if (!feesData || !Array.isArray(feesData) || feesData.length === 0) {
+    return []
+  }
+
+  const documentUrl = getDocumentUrl()
+
+  // Cria o array de accounts
+  const accounts = feesData.map((fee) => {
+    const feeTypeApp = mapDbFeeTypeToApp(fee.FeeType)
+    return {
+      cifno: fee.CIFNO,
+      ddaNumber: fee.ACCTNO,
+      branchCity: fee['Branch City'],
+      branchState: fee['Branch State'],
+      branchType: fee['Branch Type'],
+      defaultPackageType: fee['Default Package Type'],
+      feePackage: fee['Default Fee Package']?.trim() || '',
+      defaultFeePackageId: fee['Default Fee Package Id'] || '',
+      feeType: mapFeeTypeToNumber(feeTypeApp),
+      feeGroup: 1,
+      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
+      documentUrl,
     }
   })
-  return finalSignature
-})
 
-// Virtual para levelApproverType (sem mudança)
-FeeCaseSchema.virtual('levelApproverType', FeeCaseSchema).get(function () {
-  return this.fees.length >= 3
-    ? 'Fee Exception Investiment'
-    : 'Bank Fee Exception'
-})
+  // Se quiser remover duplicados por DDA, etc.:
+  const unique = new Map()
+  for (const acc of accounts) {
+    unique.set(acc.ddaNumber, acc)
+  }
 
-export const FeeCase = mongoose.model('FeeCase', FeeCaseSchema)
+  return Array.from(unique.values())
+}
+
+function formatMessage(result, userNameFull, updatedAt) {
+  return `${result} by ${userNameFull} on ${new Date(
+    updatedAt
+  ).toLocaleDateString('en-US')}`
+}
+
+function findApprover(field, approver) {
+  global.logger.info('findApprover()')
+  const result = field.results.get(approver.userName.toUpperCase())
+  if (!result) return null
+
+  const message = formatMessage(result, approver.userNameFull, approver.updatedAt)
+  return {
+    message,
+    approved: result === 'Approved',
+    note: field.rejectComment
+  }
+}
+
+function processCommonApprover(feeCase, feeGroup, commonApprover) {
+  global.logger.info('processCommonApprover()')
+  const approvers = []
+
+  const field = feeGroup.fields.find(
+    (field) => field.hasChanged && (field.approved || field.reject)
+  )
+  if (!field) return approvers
+
+  if (!field.results) {
+    field.results = {}
+  } else {
+    const commonApproverResult = findApprover(field, commonApprover)
+    if (commonApproverResult) {
+      approvers.push(commonApproverResult)
+    }
+
+    const equityApprover = feeCase.equityTeam.find((user) => user.result)
+    if (equityApprover) {
+      const equityField = feeGroup.fields.find(
+        (fld) =>
+          fld.results &&
+          !!fld.results.get(equityApprover.userName.toUpperCase())
+      )
+
+      if (equityField) {
+        const equityApproverResult = findApprover(equityField, equityApprover)
+        if (equityApproverResult) approvers.push(equityApproverResult)
+        equityField.results = Object.fromEntries(field.results)
+      }
+    }
+
+    if (field.results instanceof Map) {
+      field.results = Object.fromEntries(field.results)
+    }
+  }
+
+  return approvers
+}
+
+function resetLastFieldBasedOnConditions(lastField, lastOption, feeCase) {
+  if (
+    lastOption.text === 'Other' &&
+    lastOption.value !== '' &&
+    feeCase.status === 'PENDING_EQUITY' &&
+    lastField.approved
+  ) {
+    delete lastField.approved
+    delete lastField.reject
+    delete lastField.rejectComment
+  }
+}
+
+export default class FeeCaseGetByIdAndUserNameUseCase {
+  async execute({ feeId, userName }) {
+    global.logger.info(`FeeCaseGetByIdAndUserNameUseCase(fee=${feeId}, userName=${userName})`)
+
+    const strategyForStatus = {
+      INITIAL: 'usersApprovers',
+      PENDING_APPROVAL: 'usersApprovers',
+      PENDING_EQUITY: 'equityTeam',
+      PENDING_SECOPS: 'secopsTeam',
+      VISIBLE_ONLY: 'visibleToUsers',
+    }
+    const strategyForApprover = {
+      INITIAL: 'canApprove',
+      PENDING_APPROVAL: 'canApprove',
+      PENDING_EQUITY: 'canEditEquity',
+      PENDING_SECOPS: 'canEditSecops',
+    }
+
+    // 1) Verifica se existe
+    const hasFee = await FeeCase.exists({ _id: feeId })
+    if (!hasFee) {
+      return Result.fail('Fee case not found')
+    }
+
+    // 2) Carrega do banco e converte em objeto
+    const feeCase = await (await FeeCase.findById(feeId)).toObject()
+
+    // 3) Busca "accounts" via sp_get_fees_byCIF, baseando-se em feeCase.cif
+    const accounts = await getAccountsByCif(feeCase.cif)
+
+    // 4) Atribui esse array como "accounts" no feeCase
+    feeCase.accounts = accounts
+
+    // feesActives
+    const feesActives = await FeeCase.find({
+      cif: feeCase.cif,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
+    })
+
+    feeCase.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id,
+    }))
+
+    // Se status != 'INITIAL' ou 'PENDING_APPROVAL', processa exceções
+    if (!['INITIAL', 'PENDING_APPROVAL'].includes(feeCase.status)) {
+      feeCase.fees.forEach((fee) => {
+        fee.feeGroups.forEach((feeGroup) => {
+          if (feeGroup.name !== 'Exception Request') return
+
+          const lastField = feeGroup.fields.slice(-1)[0]
+          const lastOption = lastField.exceptionOptions.slice(-1)[0]
+
+          const commonApprover = feeCase.usersApprovers.find((user) => user.result)
+          if (commonApprover) {
+            feeGroup.approvalResults = processCommonApprover(
+              feeCase,
+              feeGroup,
+              commonApprover
+            )
+          }
+
+          resetLastFieldBasedOnConditions(lastField, lastOption, feeCase)
+        })
+      })
+    }
+
+    // Se o usuário dono do case é o userName
+    if (feeCase?.userOwner?.toUpperCase() === userName?.toUpperCase()) {
+      feeCase.canApprove = false
+      return Result.ok(feeCase)
+    }
+
+    // Qual a lista que contém este user no status atual
+    const userListProperty = strategyForStatus[feeCase.status]
+    const canApproveProperty = strategyForApprover[feeCase.status]
+
+    if (
+      feeCase[userListProperty] &&
+      feeCase[userListProperty].some(
+        (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
+      )
+    ) {
+      feeCase[canApproveProperty] = true
+
+      if (
+        feeCase.status === 'PENDING_APPROVAL' &&
+        feeCase[userListProperty]
+          .filter((x) => x.userName?.toUpperCase() === userName?.toUpperCase())[0]
+          ?.signature.includes('AAA')
+      ) {
+        feeCase.canSeeRevenueReport = true
+      }
+
+      return Result.ok(feeCase)
+    }
+
+    // Se não está, checamos se pode "ver" (canSeeCase)
+    const propertys = Object.keys(strategyForStatus)
+    let canSeeCase = false
+    for (const property of propertys) {
+      const userProperty = strategyForStatus[property]
+      if (
+        feeCase[userProperty] &&
+        feeCase[userProperty].some(
+          (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
+        )
+      ) {
+        canSeeCase = true
+        break
+      }
+    }
+
+    if (canSeeCase) {
+      return Result.ok(feeCase)
+    }
+
+    return Result.fail('Not found')
+  }
+}
