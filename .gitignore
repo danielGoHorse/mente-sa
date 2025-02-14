@@ -1,539 +1,152 @@
-{
-    "code": 200,
-    "data": {
-        "caseId": "fcf7b6d9-c39d-410e-8860-fa2ecaca0bf1",
-        "caseNumber": "FEE4513",
-        "cif": "F016583",
-        "customerName": "FRANCO JACK",
-        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
-        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
-        "fees": [
-            {
-                "feeType": "Investment Account Fees",
-                "feeGroups": [
-                    {
-                        "name": "Standard Fees",
-                        "code": 1,
-                        "fields": [
-                            {
-                                "code": 5,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375.00",
-                                "labelValue": "$375.00",
-                                "hasChanged": false,
-                                "tooltip": "Quarterly on Day 1",
-                                "exceptionOptions": [],
-                                "createdAt": "2025-02-14T13:14:06.249Z",
-                                "updatedAt": "2025-02-14T13:14:06.249Z",
-                                "id": "67af4184263883bbd401e905"
-                            },
-                            {
-                                "code": 6,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "0.35% /YR min $375.00/QTR",
-                                "labelValue": "0.35% /YR min $375.00/QTR",
-                                "hasChanged": false,
-                                "tooltip": "0.35% /YR min $375.00/QTR",
-                                "exceptionOptions": [],
-                                "createdAt": "2025-02-14T13:14:06.250Z",
-                                "updatedAt": "2025-02-14T13:14:06.250Z",
-                                "id": "67af4184263883bbd401e906"
-                            },
-                            {
-                                "code": 7,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Equity and Options Commission",
-                                "defaultValue": "Equity: $0.10 per share, min charge of $150 per trade ; Option: $0.05 per share, min charge of $150 per trade",
-                                "labelValue": "Equity: $0.10 per share, min charge of $150 per trade ; Option: $0.05 per share, min charge of $150 per trade",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "createdAt": "2025-02-14T13:14:06.250Z",
-                                "updatedAt": "2025-02-14T13:14:06.250Z",
-                                "id": "67af4184263883bbd401e907"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115822",
-                        "entityCode": null,
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "createdAt": "2025-02-14T13:14:06.250Z",
-                        "updatedAt": "2025-02-14T13:14:06.250Z",
-                        "id": "67af4184263883bbd401e904"
-                    },
-                    {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 5,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "labelValue": "$375.00",
-                                "hasChanged": false,
-                                "tooltip": "Quarterly on Day 1",
-                                "exceptionOptions": [],
-                                "createdAt": "2025-02-14T13:14:06.250Z",
-                                "updatedAt": "2025-02-14T13:14:06.250Z",
-                                "id": "67af4184263883bbd401e915"
-                            },
-                            {
-                                "code": 6,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "0.35% /YR min $375.00/QTR",
-                                "labelValue": "0.35% /YR min $375.00/QTR",
-                                "hasChanged": false,
-                                "tooltip": "0.35% /YR min $375.00/QTR",
-                                "exceptionOptions": [],
-                                "createdAt": "2025-02-14T13:14:06.250Z",
-                                "updatedAt": "2025-02-14T13:14:06.250Z",
-                                "id": "67af4184263883bbd401e916"
-                            },
-                            {
-                                "code": 7,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Options Commission",
-                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
-                                "labelValue": "$0.05 per share, min charge of $150 per trade",
-                                "hasChanged": false,
-                                "tooltip": "$0.05 per share, min charge of $150 per trade",
-                                "exceptionOptions": [],
-                                "createdAt": "2025-02-14T13:14:06.250Z",
-                                "updatedAt": "2025-02-14T13:14:06.250Z",
-                                "id": "67af4184263883bbd401e917"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115822",
-                        "entityCode": null,
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "createdAt": "2025-02-14T13:14:06.250Z",
-                        "updatedAt": "2025-02-14T13:14:06.250Z",
-                        "id": "67af4184263883bbd401e914"
-                    },
-                    {
-                        "name": "Exception Request",
-                        "code": 3,
-                        "fields": [
-                            {
-                                "code": 5,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375.00",
-                                "labelValue": "",
-                                "hasChanged": true,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "375.00",
-                                        "text": "$375.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67af4184263883bbd401e92a"
-                                    }
-                                ],
-                                "createdAt": "2025-02-14T13:14:06.250Z",
-                                "updatedAt": "2025-02-14T13:14:06.250Z",
-                                "id": "67af4184263883bbd401e929"
-                            },
-                            {
-                                "code": 6,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "0.35% /YR min $375.00/QTR",
-                                "labelValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "0.35% /YR min $375.00/QTR",
-                                        "text": "0.35% /YR min $375.00/QTR",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67af4184263883bbd401e92c"
-                                    }
-                                ],
-                                "createdAt": "2025-02-14T13:14:06.251Z",
-                                "updatedAt": "2025-02-14T13:14:06.251Z",
-                                "id": "67af4184263883bbd401e92b"
-                            },
-                            {
-                                "code": 7,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": true,
-                                "name": "Equity and Options Commission",
-                                "defaultValue": "$0.05 per share, min charge of $150 per trade",
-                                "labelValue": "",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [
-                                    {
-                                        "value": "$0.10 per share, min charge of $150 per trade",
-                                        "text": "$0.10 per share, min charge of $150 per trade",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67af4184263883bbd401e92e"
-                                    },
-                                    {
-                                        "value": "$0.05 per share, min charge of $150 per trade",
-                                        "text": "$0.05 per share, min charge of $150 per trade",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "67af4184263883bbd401e92f"
-                                    }
-                                ],
-                                "createdAt": "2025-02-14T13:14:06.251Z",
-                                "updatedAt": "2025-02-14T13:14:06.251Z",
-                                "id": "67af4184263883bbd401e92d"
-                            }
-                        ],
-                        "cif": "F016583",
-                        "accountNumber": "7115822",
-                        "entityCode": null,
-                        "visible": true,
-                        "kycMailingStatus": null,
-                        "createdAt": "2025-02-14T13:14:06.251Z",
-                        "updatedAt": "2025-02-14T13:14:06.251Z",
-                        "id": "67af4184263883bbd401e928"
-                    }
-                ],
-                "createdAt": "2025-02-14T13:14:06.251Z",
-                "updatedAt": "2025-02-14T13:14:06.251Z",
-                "id": "67af419d263883bbd401e978"
-            }
-        ],
-        "visibleToUsers": [
-            {
-                "userName": "AlexR"
-            },
-            {
-                "userName": "AliciaH"
-            },
-            {
-                "userName": "AndreB"
-            },
-            {
-                "userName": "AndreF"
-            },
-            {
-                "userName": "AndresA"
-            },
-            {
-                "userName": "AnthonyD"
-            },
-            {
-                "userName": "BetiM"
-            },
-            {
-                "userName": "BryanP"
-            },
-            {
-                "userName": "CameronC"
-            },
-            {
-                "userName": "CarolP"
-            },
-            {
-                "userName": "CatherinaM"
-            },
-            {
-                "userName": "CharlieB"
-            },
-            {
-                "userName": "DanielD"
-            },
-            {
-                "userName": "EitanF"
-            },
-            {
-                "userName": "FatimaS"
-            },
-            {
-                "userName": "GerardM"
-            },
-            {
-                "userName": "GustavoB"
-            },
-            {
-                "userName": "hazelc"
-            },
-            {
-                "userName": "IsabelleLI"
-            },
-            {
-                "userName": "IvanM"
-            },
-            {
-                "userName": "JeremyJ"
-            },
-            {
-                "userName": "JosephC"
-            },
-            {
-                "userName": "JosephineV"
-            },
-            {
-                "userName": "JuanO"
-            },
-            {
-                "userName": "KenP"
-            },
-            {
-                "userName": "KerenS"
-            },
-            {
-                "userName": "KyriacosS"
-            },
-            {
-                "userName": "ManuelR"
-            },
-            {
-                "userName": "MariaP"
-            },
-            {
-                "userName": "MarilenaV"
-            },
-            {
-                "userName": "MartinB"
-            },
-            {
-                "userName": "MauricioF"
-            },
-            {
-                "userName": "MelissaS"
-            },
-            {
-                "userName": "MichaelKap"
-            },
-            {
-                "userName": "MichaelV"
-            },
-            {
-                "userName": "MilenaK"
-            },
-            {
-                "userName": "MordekhaiA"
-            },
-            {
-                "userName": "MurielANF"
-            },
-            {
-                "userName": "MurielAZ"
-            },
-            {
-                "userName": "MurielDW"
-            },
-            {
-                "userName": "MurielDWA"
-            },
-            {
-                "userName": "MurielFHO"
-            },
-            {
-                "userName": "MurielJBR"
-            },
-            {
-                "userName": "MurielMBA"
-            },
-            {
-                "userName": "MURIELMBA1"
-            },
-            {
-                "userName": "MurielMSE"
-            },
-            {
-                "userName": "MurielSAZA"
-            },
-            {
-                "userName": "MurielSJOR"
-            },
-            {
-                "userName": "MurielSMO"
-            },
-            {
-                "userName": "PaulaR"
-            },
-            {
-                "userName": "PauloS"
-            },
-            {
-                "userName": "PedroNa"
-            },
-            {
-                "userName": "RaquelR"
-            },
-            {
-                "userName": "RenataSc"
-            },
-            {
-                "userName": "RichardSc"
-            },
-            {
-                "userName": "SamanthaO"
-            },
-            {
-                "userName": "SandriniD"
-            },
-            {
-                "userName": "Shakeyak"
-            },
-            {
-                "userName": "SheilaO"
-            },
-            {
-                "userName": "SheldonKI"
-            },
-            {
-                "userName": "SigiL"
-            },
-            {
-                "userName": "SylviaRC"
-            },
-            {
-                "userName": "ThomasO"
-            },
-            {
-                "userName": "TiffanyO"
-            },
-            {
-                "userName": "VictoriaR"
-            },
-            {
-                "userName": "YaakobA"
-            }
-        ],
-        "reason": "Texte",
-        "documents": [],
-        "status": "PENDING_APPROVAL",
-        "userOwner": "MariaP",
-        "usersApprovers": [
-            {
-                "userName": "AlexandreT",
-                "userNameFull": "Alexandre Tassari",
-                "email": "Alexandre.Tassari@safra.com",
-                "signature": "PB AA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eab0"
-            },
-            {
-                "userName": "Carlosb",
-                "userNameFull": "Carlos Bomfim",
-                "email": "Carlos.bertaco@safra.com",
-                "signature": "ExCom AA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eab2"
-            },
-            {
-                "userName": "FlavioH",
-                "userNameFull": "Flavio Hojda",
-                "email": "Flavio.Hojda@safra.com",
-                "signature": "PB AAA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eab4"
-            },
-            {
-                "userName": "IsabelleL",
-                "userNameFull": "Isabelle Le Roch",
-                "email": "Isabelle.LeRoch@safra.com",
-                "signature": "PB AAA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eab6"
-            },
-            {
-                "userName": "MichellB",
-                "userNameFull": "Michell Brown",
-                "email": "Michell.Brown@safra.com",
-                "signature": "PB AAA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eab8"
-            },
-            {
-                "userName": "Muriels",
-                "userNameFull": "Muriel Seligson",
-                "email": "muriel.seligson@safra.com",
-                "signature": "PB AAA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eaba"
-            },
-            {
-                "userName": "PeterJ",
-                "userNameFull": "Peter Javier",
-                "email": "Peter.Javier@safra.com",
-                "signature": "ExCom AA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eabc"
-            },
-            {
-                "userName": "RafaeloC",
-                "userNameFull": "Rafaelo Colombo",
-                "email": "Rafaelo.Colombo@safra.com",
-                "signature": "ExCom AA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eabe"
-            },
-            {
-                "userName": "SheldonK",
-                "userNameFull": "Sheldon Kirsh",
-                "email": "Sheldon.Kirsh@safra.com",
-                "signature": "PB AA",
-                "createdAt": "2025-02-14T13:14:09.132Z",
-                "updatedAt": "2025-02-14T13:14:09.132Z",
-                "id": "67af41a1263883bbd401eac0"
-            }
-        ],
-        "equityTeam": [],
-        "secopsTeam": [],
-        "createdAt": "2025-02-14T13:14:06.252Z",
-        "updatedAt": "2025-02-14T13:14:09.133Z",
-        "__v": 1,
-        "levelApprover": 1,
-        "userOwnerEmail": "Maria.Peixoto@safra.com",
-        "userOwnerName": "Maria Peixoto",
-        "signatureApprover": "PB AA",
-        "levelApproverType": "Bank Fee Exception",
-        "id": "67af419d263883bbd401e941",
-        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm",
-        "feesActives": [
-            {
-                "caseNumber": "FEE4513",
-                "id": "67af419d263883bbd401e941"
-            }
-        ],
-        "canApprove": false
+import Result from '#features/shared/result.js'
+import numberToCurrency from '#core/helpers/currency.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+import { Fee } from '#src/models/entities/Fees.js'
+const { logger } = global
+
+export default class FeeCaseCreateUseCase {
+  async execute(feeTicketRequest) {
+    logger.info('FeeCaseCreateUseCase()')
+
+    // 1) Cria uma instância do schema FeeCase a partir do payload
+    const feeTicket = new FeeCase(feeTicketRequest)
+
+    // 2) Busca dados "Fee Standard" (seu fallback de 3 feeTypes)
+    const fieldsDataBase = await this.#getFeeStandard([
+      { feeType: 'Customer Fees' },
+      { feeType: 'Bank Account Fees' },
+      { feeType: 'Investment Account Fees' }
+    ])
+
+    // 3) Retorna todas as exceptions disponíveis
+    const allExceptions = this.#returnAllExceptions(fieldsDataBase)
+
+    logger.info('validateSync()')
+    const validate = feeTicket.validateSync()
+    if (validate && validate?.errors) {
+      return Result.fail(validate.errors)
     }
+
+    let hasAnyChange = false
+    // 4) Itera pelos fees do feeTicket para identificar campos "hasChanged"
+    for (const fee of feeTicket.fees) {
+      for (const [groupIndex, group] of fee.feeGroups.entries()) {
+        for (const [fieldIndex, field] of group.fields.entries()) {
+          if (field.isException) {
+            // se for uma exception, verifica se é uma alteração
+            const newValue =
+              field.defaultValue !== fee.feeGroups[groupIndex - 1].fields[fieldIndex].defaultValue
+            const validValue = !!field.defaultValue && field.defaultValue !== 'NOT APPLICABLE'
+            field.hasChanged = newValue && validValue
+
+            if (field.hasChanged) {
+              hasAnyChange = true
+              fee.hasAnyChange = true
+              group.hasAnyChange = true
+              // marca grupos anteriores (Standard / Client Current) como hasAnyChange para controlar no front
+              fee.feeGroups[groupIndex - 1].hasAnyChange = true
+              fee.feeGroups[groupIndex - 2].hasAnyChange = true
+            }
+
+            if (!field.hasChanged) {
+              // se não houve mudança, a exception recebe o mesmo valor do "Client Current Fees"
+              field.defaultValue = fee.feeGroups[groupIndex - 1].fields[fieldIndex].defaultValue
+            }
+          }
+
+          // se o valor for apenas dígitos, converte em moeda
+          if (/^\d+$/.test(field.defaultValue)) {
+            field.labelValue = numberToCurrency(field.defaultValue)
+            continue
+          }
+
+          // Lógica para equity safekeeping etc. (exemplo original)
+          if (field.labelValue === 'Other') {
+            const other = field.exceptionOptions.filter(x => x.text === 'Other')[0]
+            const fieldEquities = (
+              await Field.find({
+                code: 7,
+                isException: true
+              })
+            )[0]
+
+            field.exceptionOptions = [...fieldEquities.exceptionOptions, other]
+          }
+          else if (!field.labelValue || !field.labelValue.includes(field.defaultValue)) {
+            let exception = allExceptions.find(e => e.value === field.defaultValue)
+            if (!exception) {
+              exception = { text: '' }
+            }
+            field.labelValue = exception.text
+          }
+        }
+      }
+    }
+
+    if (!hasAnyChange) {
+      return Result.fail('Cannot create Fee Case without any change.')
+    }
+
+    // Filtra fees e feeGroups que realmente tiveram mudança
+    feeTicket.fees = feeTicket.fees.filter(x => x.hasAnyChange)
+    feeTicket.fees?.forEach(item => {
+      item.feeGroups = item.feeGroups.filter(x => x.hasAnyChange)
+    })
+
+    try {
+      // 5) Salva no banco
+      const model = await feeTicket.save()
+      // 6) Converte em objeto
+      const resultObject = model.toObject()
+
+      // 7) Aqui, injete os campos extras no payload final
+      //    Ajuste para pegar do feeTicketRequest (ou outro local)
+      // Exemplo:
+      resultObject.branchCity = feeTicketRequest.branchCity
+      resultObject.branchType = feeTicketRequest.branchType
+      resultObject.defaultPackageType = feeTicketRequest.defaultPackageType
+      resultObject.feePackage = feeTicketRequest.feePackage
+      // Outras propriedades se desejar
+
+      // retorna com os campos extras
+      return Result.ok(resultObject)
+    } catch (err) {
+      logger.error(err)
+      return Result.fail('Error when try to save Fee Case')
+    }
+  }
+
+  async #getFeeStandard(filter) {
+    logger.info('getFeeStandard()')
+    const feeResult = []
+
+    for await (const fee of Fee.find({
+      $or: filter
+    }).select({
+      feeGroups: {
+        fields: 1,
+        code: 1
+      }
+    })) {
+      feeResult.push(fee.toObject())
+    }
+
+    return feeResult
+  }
+
+  #returnAllExceptions(fees) {
+    logger.info('returnAllExceptions()')
+    const allExceptions = new Set()
+    fees.forEach(fee => {
+      fee.feeGroups.forEach(feeGroup => {
+        feeGroup.fields.forEach(field => {
+          if (field.isException) {
+            field.exceptionOptions.forEach(allExceptions.add, allExceptions)
+          }
+        })
+      })
+    })
+    return Array.from(allExceptions)
+  }
 }
