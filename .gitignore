@@ -5,114 +5,65 @@ import { FeeCaseUserApproverSchema } from './FeeCaseUserApprover.js'
 
 export const FeeCaseSchema = new Schema(
   {
-    caseId: {
-      type: String,
-      required: false
-    },
-    caseNumber: {
-      type: String,
-      required: false
-    },
-    cif: {
-      type: String,
-      required: true
-    },
-    customerName: {
-      type: String,
-      required: true
-    },
-    customerAddress: {
-      type: String,
-      required: true
-    },
-    customerAccountOfficer: {
-      type: String,
-      required: true
-    },
-    fees: {
-      type: [FeeSchema],
-      required: true
-    },
-    usersApprovers: {
-      type: [FeeCaseUserApproverSchema],
-      required: false
-    },
-    equityTeam: {
-      type: [FeeCaseUserApproverSchema],
-      required: false
-    },
-    secopsTeam: {
-      type: [FeeCaseUserApproverSchema],
-      required: false
-    },
-    visibleToUsers: {
-      type: [Object],
-      required: false
-    },
-    reason: {
-      type: String,
-      required: false,
-      maxLength: 501
-    },
-    levelApprover: {
-      type: Number,
-      required: false
-    },
+    caseId: { type: String, required: false },
+    caseNumber: { type: String, required: false },
+    cif: { type: String, required: true },
+    customerName: { type: String, required: true },
+    customerAddress: { type: String, required: true },
+    customerAccountOfficer: { type: String, required: true },
+    fees: { type: [FeeSchema], required: true },
+    usersApprovers: { type: [FeeCaseUserApproverSchema], required: false },
+    equityTeam: { type: [FeeCaseUserApproverSchema], required: false },
+    secopsTeam: { type: [FeeCaseUserApproverSchema], required: false },
+    visibleToUsers: { type: [Object], required: false },
+    reason: { type: String, required: false, maxLength: 501 },
+    levelApprover: { type: Number, required: false },
     documents: { type: [String], required: false },
     status: {
       type: String,
       required: false,
-      enum: [
-        'INITIAL',
-        'PENDING_APPROVAL',
-        'PENDING_EQUITY',
-        'PENDING_SECOPS',
-        'REJECTED',
-        'DONE'
-      ],
+      enum: ['INITIAL','PENDING_APPROVAL','PENDING_EQUITY','PENDING_SECOPS','REJECTED','DONE'],
       default: 'INITIAL'
     },
-    userOwner: {
-      type: String,
-      required: true
-    },
-    userOwnerName: {
-      type: String,
-      required: false
-    },
-    userOwnerEmail: {
-      type: String,
-      required: false
-    }
+    userOwner: { type: String, required: true },
+    userOwnerName: { type: String, required: false },
+    userOwnerEmail: { type: String, required: false },
+
+    // -- NOVOS CAMPOS
+    branchCity: { type: String, required: false },
+    branchState: { type: String, required: false },
+    branchType: { type: String, required: false },
+    defaultPackageType: { type: String, required: false },
+    feePackage: { type: String, required: false },
+    documentUrl: { type: String, required: false }
   },
   {
     collection: 'FeeCase',
     timestamps: true
   }
 )
+
 configureSchemaMongoToReturnId('toObject', FeeCaseSchema)
 
+// Virtual para signatureApprover (sem mudança)
 FeeCaseSchema.virtual('signatureApprover').get(function () {
   if (!this.usersApprovers || this.usersApprovers.length === 0) return ''
-
   const order = ['PB AA', 'PB AAS', 'PB AAA', 'ExCom AA']
-
   const signatures = new Set(
     this.usersApprovers
-      .filter((item) => !!item.signature)
-      .map((item) => item.signature)
+      .filter(item => !!item.signature)
+      .map(item => item.signature)
   )
-
   let finalSignature = ''
-  order.forEach((signature) => {
+  order.forEach(signature => {
     if (signatures.has(signature) && finalSignature === '') {
       finalSignature = signature
     }
   })
-
   return finalSignature
 })
 
+// Virtual para levelApproverType (sem mudança)
 FeeCaseSchema.virtual('levelApproverType', FeeCaseSchema).get(function () {
   return this.fees.length >= 3
     ? 'Fee Exception Investiment'
