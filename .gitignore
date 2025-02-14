@@ -1,47 +1,122 @@
-#addCurrentClientValue() {
-  for (const feeGroup of this.#investiment.feeGroups) {
-    feeGroup.cif = this.#accounts[0]?.cifno || null;
+import { configureSchemaMongoToReturnId } from '#src/core/data/mongoSchemaBase.js'
+import mongoose, { Schema } from 'mongoose'
+import { FeeSchema } from './Fees.js'
+import { FeeCaseUserApproverSchema } from './FeeCaseUserApprover.js'
 
-    for (const field of feeGroup.fields) {
-      if (field.isException) {
-        // isException => não faz fallback
-        field.labelValue = field.labelValue || '';
-      } else {
-        // Se estivermos em "Client Current Fees" e code=7,9,6 e defaultValue vazio => fallback
-        // MAS REMOVEMOS OU AJUSTAMOS PARA NAO PEGAR code=6, caso não queiramos
-        if (
-          feeGroup.name === "Client Current Fees" &&
-          (field.code === 7 || field.code === 9 /* || field.code === 6 */) &&
-          (!field.defaultValue || field.defaultValue.trim() === "")
-        ) {
-          field.defaultValue = field.tooltip || '';
-          field.labelValue = field.defaultValue;
-        } else {
-          // code=6 => textual, sem fallback
-          if (field.code === 6) {
-            field.labelValue = field.defaultValue;
-          }
-          // code=7 => textual
-          else if (field.code === 7) {
-            field.labelValue = field.defaultValue;
-          }
-          // code=5 => parse numeric
-          else if (field.code === 5) {
-            const numValue = parseFloat(field.defaultValue);
-            field.labelValue = !isNaN(numValue)
-              ? "$" + numValue.toFixed(2)
-              : field.defaultValue;
-          }
-          // caso contrário => parse numeric se for número
-          else {
-            const numValue = parseFloat(field.defaultValue);
-            field.labelValue = !isNaN(numValue)
-              ? "$" + numValue.toFixed(2)
-              : field.defaultValue;
-          }
-        }
-      }
+export const FeeCaseSchema = new Schema(
+  {
+    caseId: {
+      type: String,
+      required: false
+    },
+    caseNumber: {
+      type: String,
+      required: false
+    },
+    cif: {
+      type: String,
+      required: true
+    },
+    customerName: {
+      type: String,
+      required: true
+    },
+    customerAddress: {
+      type: String,
+      required: true
+    },
+    customerAccountOfficer: {
+      type: String,
+      required: true
+    },
+    fees: {
+      type: [FeeSchema],
+      required: true
+    },
+    usersApprovers: {
+      type: [FeeCaseUserApproverSchema],
+      required: false
+    },
+    equityTeam: {
+      type: [FeeCaseUserApproverSchema],
+      required: false
+    },
+    secopsTeam: {
+      type: [FeeCaseUserApproverSchema],
+      required: false
+    },
+    visibleToUsers: {
+      type: [Object],
+      required: false
+    },
+    reason: {
+      type: String,
+      required: false,
+      maxLength: 501
+    },
+    levelApprover: {
+      type: Number,
+      required: false
+    },
+    documents: { type: [String], required: false },
+    status: {
+      type: String,
+      required: false,
+      enum: [
+        'INITIAL',
+        'PENDING_APPROVAL',
+        'PENDING_EQUITY',
+        'PENDING_SECOPS',
+        'REJECTED',
+        'DONE'
+      ],
+      default: 'INITIAL'
+    },
+    userOwner: {
+      type: String,
+      required: true
+    },
+    userOwnerName: {
+      type: String,
+      required: false
+    },
+    userOwnerEmail: {
+      type: String,
+      required: false
     }
+  },
+  {
+    collection: 'FeeCase',
+    timestamps: true
   }
-  this.#clearMemory();
-}
+)
+configureSchemaMongoToReturnId('toObject', FeeCaseSchema)
+
+FeeCaseSchema.virtual('signatureApprover').get(function () {
+  if (!this.usersApprovers || this.usersApprovers.length === 0) return ''
+
+  const order = ['PB AA', 'PB AAS', 'PB AAA', 'ExCom AA']
+
+  const signatures = new Set(
+    this.usersApprovers
+      .filter((item) => !!item.signature)
+      .map((item) => item.signature)
+  )
+
+  let finalSignature = ''
+  order.forEach((signature) => {
+    if (signatures.has(signature) && finalSignature === '') {
+      finalSignature = signature
+    }
+  })
+
+  return finalSignature
+})
+
+FeeCaseSchema.virtual('levelApproverType', FeeCaseSchema).get(function () {
+  return this.fees.length >= 3
+    ? 'Fee Exception Investiment'
+    : 'Bank Fee Exception'
+})
+
+export const FeeCase = mongoose.model('FeeCase', FeeCaseSchema)
