@@ -1,66 +1,17 @@
-for (const row of feesData) {
-  const feeTypeDb = row.FeeType;
-  const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
-  if (!groupedFeesMap[feeTypeApp]) continue;
-
-  const { FeeDescription, FeeCode, FeeAmount, Frequency } = row;
-  const DefaultFeeAmount = row["Default Fee Amount"];
-  const DefaultFrequency = row["Default Frequency"];
-
-  let mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-
-  if (excludedCodes.has(mappedCode)) continue;
-
-  // Filtra codes inválidos, etc. (igual antes)
-  // ...
-
-  const groupObj = groupedFeesMap[feeTypeApp];
-  const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
-  const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
-
-  // Exemplo: se code for 9 ou 7 => unifica para 7 (depende da sua regra)
-  // ...
-
-  // 1) Standard Fees
-  let stdField = standardGroup.fields.find((f) => f.code === mappedCode);
-  if (!stdField) {
-    stdField = {
-      code: mappedCode,
-      name: FeeDescription,
-      defaultValue: '',
-      tooltip: '',
-      isException: false
-    };
-    standardGroup.fields.push(stdField);
-  }
-  // Atribui FeeAmount, Frequency etc.
-  stdField.defaultValue = FeeAmount ? FeeAmount.toString() : '';
-  stdField.tooltip = Frequency || '';
-  stdField.name = FeeDescription;
-
-  // 2) Client Current Fees
-  let cliField = clientCurrentGroup.fields.find((f) => f.code === mappedCode);
-  if (!cliField) {
-    cliField = {
-      code: mappedCode,
-      name: FeeDescription,
-      defaultValue: '',
-      tooltip: '',
-      isException: false
-    };
-    clientCurrentGroup.fields.push(cliField);
+if (mappedCode === 6 || mappedCode === 7) {
+    let currentValue = '';
+    if (DefaultFeeAmount) {
+      currentValue = DefaultFeeAmount.toString();
+    } else if (DefaultFrequency) {
+      currentValue = DefaultFrequency.toString();
+    }
+    cliField.defaultValue = currentValue;
+  } else {
+    // Para outros códigos (ex.: 5, 3, 4, etc.) permanece a lógica normal
+    cliField.defaultValue = DefaultFeeAmount ? DefaultFeeAmount.toString() : '';
   }
 
-  // Novo: fallback se DefaultFeeAmount estiver null/undefined/vazio => usar DefaultFrequency
-  let currentValue = '';
-  if (DefaultFeeAmount) {
-    currentValue = DefaultFeeAmount.toString();
-  } else if (DefaultFrequency) {
-    currentValue = DefaultFrequency.toString();
-  } 
-  // se ambos forem null, permanece string vazia
-
-  cliField.name = FeeDescription;
-  cliField.defaultValue = currentValue;
+  // Sempre define tooltip e name
   cliField.tooltip = DefaultFrequency || '';
+  cliField.name = FeeDescription;
 }
