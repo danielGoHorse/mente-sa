@@ -1,103 +1,147 @@
-import { FeeGroup } from './entities/FeeGroups.js';
-import numberToCurrency from '../core/helpers/currency.js';
+import Result from '#features/shared/result.js'
+import numberToCurrency from '#core/helpers/currency.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+import { Fee } from '#src/models/entities/Fees.js'
+const { logger } = global
 
-export default class CustomerFees {
-  #feeName = 'Customer Fees';
-  #customer = {};
-  #accounts = [];
+export default class FeeCaseCreateUseCase {
+  async execute(feeTicketRequest) {
+    logger.info('FeeCaseCreateUseCase()')
+    const feeTicket = new FeeCase(feeTicketRequest)
 
-  constructor(fees, accounts) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
-    }
-    // Seleciona "Customer Fees"
-    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
-      throw new Error('Customer Fees or feeGroups are undefined');
-    }
-    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
-      throw new Error('Accounts is empty or undefined');
-    }
-    // Mantemos só a primeira conta (se for a lógica do seu caso)
-    this.#accounts = [accounts[0]];
-
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue();
-  }
-
-  /**
-   * Deduplica fields por code.
-   */
-  #deduplicateFields(fields) {
-    const map = new Map();
-    for (const field of fields) {
-      if (!map.has(field.code)) {
-        map.set(field.code, field);
+    const fieldsDataBase = await this.#getFeeStandard([
+      {
+        feeType: 'Customer Fees'
+      },
+      {
+        feeType: 'Bank Account Fees'
+      },
+      {
+        feeType: 'Investment Account Fees'
       }
+    ])
+
+    const allExceptions = this.#returnAllExceptions(fieldsDataBase)
+
+    logger.info('validateSync()')
+    const validate = feeTicket.validateSync()
+
+    if (validate && validate?.errors) {
+      return Result.fail(validate.errors)
     }
-    return Array.from(map.values());
-  }
+    let hasAnyChange = false
+    for (const fee of feeTicket.fees) {
+      for (const [groupIndex, group] of fee.feeGroups.entries()) {
+        for (const [fieldIndex, field] of group.fields.entries()) {
+          if (field.isException) {
+            // se for uma exception, verifica se é uma alteração
+            const newValue =
+              field.defaultValue !==
+              fee.feeGroups[groupIndex - 1].fields[fieldIndex].defaultValue
+            const validValue =
+              !!field.defaultValue && field.defaultValue !== 'NOT APPLICABLE'
+            field.hasChanged = newValue && validValue
 
-  /**
-   * Clona os feeGroups, define kycMailingStatus e atribui ao #customer.feeGroups.
-   */
-  #addMultiplesAccount(cif) {
-    const feeGroupTemplates = this.#customer.feeGroups;
-    const newFeeGroups = [];
+            if (field.hasChanged) {
+              hasAnyChange = true
+              fee.hasAnyChange = true
+              group.hasAnyChange = true
+              fee.feeGroups[groupIndex - 1].hasAnyChange = true
+              fee.feeGroups[groupIndex - 2].hasAnyChange = true
+            }
 
-    for (const template of feeGroupTemplates) {
-      let clonedFields = template.fields.map((field) => ({
-        ...field,
-        exceptionOptions: field.exceptionOptions
-          ? field.exceptionOptions.map((opt) => ({ ...opt }))
-          : []
-      }));
+            if (!field.hasChanged) {
+              field.defaultValue =
+                fee.feeGroups[groupIndex - 1].fields[fieldIndex].defaultValue
+            }
+          }
 
-      clonedFields = this.#deduplicateFields(clonedFields);
+          if (/^\d+$/.test(field.defaultValue)) {
+            // se o defaultvalue tiver apenas digitos
+            field.labelValue = numberToCurrency(field.defaultValue)
+            continue
+          }
 
-      const kycMailingStatus = this.#accounts[0].kycMailingStatus || 'Standard';
+          // safekeeping ou equity
+          if (field.labelValue === 'Other') {
+            const other = field.exceptionOptions.filter(
+              (x) => x.text === 'Other'
+            )[0]
+            const fieldEquities = (
+              await Field.find({
+                code: 7,
+                isException: true
+              })
+            )[0]
 
-      const newFeeGroup = new FeeGroup({
-        name: template.name,
-        fields: clonedFields,
-        cif,
-        accountNumber: this.#accounts[0].ddaNumber.toString(),
-        visible: template.visible,
-        code: template.code,
-        kycMailingStatus 
-      });
-      newFeeGroups.push(newFeeGroup);
-    }
+            field.exceptionOptions = [...fieldEquities.exceptionOptions, other]
+          } else if (
+            !field.labelValue ||
+            !field.labelValue.includes(field.defaultValue)
+          ) {
+            let exception = allExceptions.find(
+              (e) => e.value === field.defaultValue
+            )
 
-    this.#customer.feeGroups = newFeeGroups;
-  }
+            if (!exception) {
+              exception = { text: '' }
+            }
 
-  /**
-   * Aplica "NOT APPLICABLE" se code=2 e kycMailingStatus=Standard,
-   * não só em "Client Current Fees", mas também em "Exception Request".
-   * Caso contrário, formata o valor monetariamente.
-   */
-  #addCurrentClientValue() {
-    const kycStatus = this.#accounts[0].kycMailingStatus || 'Standard';
-    for (const feeGroup of this.#customer.feeGroups) {
-      for (const field of feeGroup.fields) {
-        // Verifica se code=2 e kycMailingStatus=Standard
-        // e se o grupo é "Client Current Fees" OU "Exception Request"
-        if (
-          (feeGroup.name === "Client Current Fees" || feeGroup.name === "Exception Request") &&
-          kycStatus === "Standard" &&
-          field.code === 2
-        ) {
-          field.defaultValue = "NOT APPLICABLE";
-          field.labelValue = "NOT APPLICABLE";
-        } else {
-          field.labelValue = numberToCurrency(field.defaultValue);
+            field.labelValue = exception.text
+          }
         }
       }
     }
+
+    if (!hasAnyChange) {
+      return Result.fail('Cannot create Fee Case without any change.')
+    }
+
+    feeTicket.fees = feeTicket.fees.filter((x) => x.hasAnyChange)
+    feeTicket.fees?.forEach((item) => {
+      item.feeGroups = item.feeGroups.filter((x) => x.hasAnyChange)
+    })
+
+    try {
+      const model = await feeTicket.save()
+      return Result.ok(model.toObject())
+    } catch (err) {
+      logger.error(err)
+      return Result.fail('Error when try to save Fee Case')
+    }
   }
 
-  get fee() {
-    return this.#customer;
+  async #getFeeStandard(filter) {
+    logger.info('getFeeStandard()')
+    const feeResult = []
+
+    for await (const fee of Fee.find({
+      $or: filter
+    }).select({
+      feeGroups: {
+        fields: 1,
+        code: 1
+      }
+    })) {
+      feeResult.push(fee.toObject())
+    }
+
+    return feeResult
+  }
+
+  #returnAllExceptions(fees) {
+    logger.info('returnAllExceptions()')
+    const allExceptions = new Set()
+    fees.forEach((fee) => {
+      fee.feeGroups.forEach((feeGroup) => {
+        feeGroup.fields.forEach((field) => {
+          if (field.isException) {
+            field.exceptionOptions.forEach(allExceptions.add, allExceptions)
+          }
+        })
+      })
+    })
+    return Array.from(allExceptions)
   }
 }
