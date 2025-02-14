@@ -1,209 +1,186 @@
-import Result from '#features/shared/result.js'
-import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { FeeGroup } from './entities/FeeGroups.js';
 
-function formatMessage(result, userNameFull, updatedAt) {
-  return `${result} by ${userNameFull} on ${new Date(
-    updatedAt
-  ).toLocaleDateString('en-US')}`
-}
+export default class InvestmentAccountFee {
+  #feeName = 'Investment Account Fees';
+  #investiment = {};
+  #accounts = [];
+  #accountsDDA = [];
+  #allExceptions = new Set();
 
-function findApprover(field, approver) {
-  global.logger.info('findApprover()')
-  const result = field.results.get(approver.userName.toUpperCase())
-  if (!result) return null
-
-  const message = formatMessage(result, approver.userNameFull, approver.updatedAt)
-  return {
-    message,
-    approved: result === 'Approved',
-    note: field.rejectComment
-  }
-}
-
-function processCommonApprover(feeCase, feeGroup, commonApprover) {
-  global.logger.info('processCommonApprover()')
-  const approvers = []
-
-  const field = feeGroup.fields.find(
-    (field) => field.hasChanged && (field.approved || field.reject)
-  )
-  if (!field) return approvers
-
-  if (!field.results) {
-    field.results = {}
-  } else {
-    const commonApproverResult = findApprover(field, commonApprover)
-    if (commonApproverResult) {
-      approvers.push(commonApproverResult)
+  constructor(fees, accounts, equityField) {
+    if (!fees || !Array.isArray(fees) || fees.length === 0) {
+      throw new Error('Fees is empty or undefined');
     }
 
-    const equityApprover = feeCase.equityTeam.find((user) => user.result)
-    if (equityApprover) {
-      const equityField = feeGroup.fields.find(
-        (f) =>
-          f.results &&
-          !!f.results.get(equityApprover.userName.toUpperCase())
-      )
-
-      if (equityField) {
-        const equityApproverResult = findApprover(equityField, equityApprover)
-        if (equityApproverResult) {
-          approvers.push(equityApproverResult)
-        }
-        equityField.results = Object.fromEntries(field.results)
-      }
-    }
-
-    if (field.results instanceof Map) {
-      field.results = Object.fromEntries(field.results)
-    }
-  }
-
-  return approvers
-}
-
-function resetLastFieldBasedOnConditions(lastField, lastOption, feeCase) {
-  if (
-    lastOption.text === 'Other' &&
-    lastOption.value !== '' &&
-    feeCase.status === 'PENDING_EQUITY' &&
-    lastField.approved
-  ) {
-    delete lastField.approved
-    delete lastField.reject
-    delete lastField.rejectComment
-  }
-}
-
-// Exemplo de função auxiliar que pega a URL do environment, caso queira
-function getDocumentUrl() {
-  // Ajuste o nome do bucket, prefix, etc., conforme sua config:
-  return global.environment?.documentUrl || 
-    'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
-}
-
-export default class FeeCaseGetByIdAndUserNameUseCase {
-  async execute({ feeId, userName }) {
-    global.logger.info(`FeeCaseGetByIdAndUserNameUseCase(fee=${feeId}, userName=${userName})`)
-
-    const strategyForStatus = {
-      INITIAL: 'usersApprovers',
-      PENDING_APPROVAL: 'usersApprovers',
-      PENDING_EQUITY: 'equityTeam',
-      PENDING_SECOPS: 'secopsTeam',
-      VISIBLE_ONLY: 'visibleToUsers'
-    }
-
-    const strategyForApprover = {
-      INITIAL: 'canApprove',
-      PENDING_APPROVAL: 'canApprove',
-      PENDING_EQUITY: 'canEditEquity',
-      PENDING_SECOPS: 'canEditSecops'
-    }
-
-    // Verifica se existe
-    const hasFee = await FeeCase.exists({ _id: feeId })
-    if (!hasFee) {
-      return Result.fail('Fee case not found')
-    }
-
-    // Carrega do banco e converte em objeto
-    const feeCase = await (await FeeCase.findById(feeId)).toObject()
-
-    // Injetamos manualmente a documentUrl
-    feeCase.documentUrl = getDocumentUrl()
-
-    // Caso possua defaultPackageType, branchType, etc., podemos adicioná-los também
-    // feeCase.branchType = ...
-    // feeCase.defaultPackageType = ...
-    // feeCase.feePackage = ...
-    // Exemplo (caso feeCase já tenha, ou venha de outro local):
-    // feeCase.branchType = feeCase.branchType || 'Domestic'
-    // feeCase.defaultPackageType = feeCase.defaultPackageType || 'Individual'
-
-    // feesActives
-    const feesActives = await FeeCase.find({
-      cif: feeCase.cif,
-      status: { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true }
-    })
-
-    feeCase.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id
-    }))
-
-    // Se status != 'INITIAL' ou 'PENDING_APPROVAL', processa exceções
-    if (!['INITIAL', 'PENDING_APPROVAL'].includes(feeCase.status)) {
-      feeCase.fees.forEach((fee) => {
-        fee.feeGroups.forEach((feeGroup) => {
-          if (feeGroup.name !== 'Exception Request') return
-
-          const lastField = feeGroup.fields.slice(-1)[0]
-          const lastOption = lastField.exceptionOptions.slice(-1)[0]
-
-          const commonApprover = feeCase.usersApprovers.find((user) => user.result)
-          if (commonApprover) {
-            feeGroup.approvalResults = processCommonApprover(feeCase, feeGroup, commonApprover)
-          }
-
-          resetLastFieldBasedOnConditions(lastField, lastOption, feeCase)
-        })
-      })
-    }
-
-    // Se o usuário dono do case é o userName
-    if (feeCase?.userOwner?.toUpperCase() === userName?.toUpperCase()) {
-      feeCase.canApprove = false
-      return Result.ok(feeCase)
-    }
-
-    // Qual a lista que contém este user no status atual
-    const userListProperty = strategyForStatus[feeCase.status]
-    const canApproveProperty = strategyForApprover[feeCase.status]
-
-    // Verifica se userName está no userListProperty
+    this.#investiment = fees.find((x) => x.feeType === this.#feeName);
     if (
-      feeCase[userListProperty] &&
-      feeCase[userListProperty].some(
-        (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
-      )
+      !this.#investiment ||
+      !Array.isArray(this.#investiment.feeGroups) ||
+      !this.#investiment.feeGroups.length
     ) {
-      feeCase[canApproveProperty] = true
+      this.#investiment = {};
+      return;
+    }
 
-      // Se 'PENDING_APPROVAL' e signature AAA => canSeeRevenueReport
-      if (
-        feeCase.status === 'PENDING_APPROVAL' &&
-        feeCase[userListProperty]
-          .filter((x) => x.userName?.toUpperCase() === userName?.toUpperCase())[0]
-          ?.signature.includes('AAA')
-      ) {
-        feeCase.canSeeRevenueReport = true
+    this.#accounts = accounts.filter((x) => x.feeType === 3);
+    if (this.#accounts.length < 1) {
+      this.#investiment = {};
+      return;
+    }
+
+    this.#accounts.forEach((acc) => {
+      if (acc.ddaNumber) {
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 5,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 6,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 7,
+          entity: acc.entity || null,
+        });
       }
+    });
 
-      return Result.ok(feeCase)
+    this.#accountsDDA = Array.from(
+      new Map(
+        this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])
+      ).values()
+    );
+
+    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    this.#addCurrentClientValue(equityField);
+  }
+
+  get fee() {
+    if (!this.#investiment || !this.#investiment.feeGroups) {
+      return null;
     }
+    return this.#investiment;
+  }
 
-    // Se não está, checamos se pode "ver" (canSeeCase)
-    const propertys = Object.keys(strategyForStatus)
-    let canSeeCase = false
-    for (const property of propertys) {
-      const userProperty = strategyForStatus[property]
-      if (
-        feeCase[userProperty] &&
-        feeCase[userProperty].some(
-          (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
-        )
-      ) {
-        canSeeCase = true
-        break
+  #deduplicateFields(fields) {
+    const map = new Map();
+    for (const field of fields) {
+      if (!map.has(field.code)) {
+        map.set(field.code, field);
+      }
+    }
+    return Array.from(map.values());
+  }
+
+  #addMultiplesAccount(cif) {
+    const result = {};
+
+    for (const feeGroup of this.#investiment.feeGroups) {
+      const clonedFields = (feeGroup.fields || []).map((field) => ({
+        ...field,
+        exceptionOptions: field.exceptionOptions
+          ? field.exceptionOptions.map((opt) => ({ ...opt }))
+          : []
+      }));
+
+      for (const account of this.#accountsDDA) {
+        if (!result[account.number]) {
+          result[account.number] = {};
+        }
+
+        let fieldsForAccount = clonedFields.filter(
+          (x) => x.code === account.code
+        );
+
+        if (fieldsForAccount.length === 0) {
+          fieldsForAccount.push({
+            code: account.code,
+            name: '',
+            defaultValue: '',
+            tooltip: '',
+            isException: true,
+            exceptionOptions: []
+          });
+        }
+
+        if (!result[account.number][feeGroup.name]) {
+          const dedupedFields = this.#deduplicateFields(fieldsForAccount);
+          const newFeeGroup = new FeeGroup({
+            name: feeGroup.name,
+            fields: dedupedFields,
+            cif,
+            accountNumber: account.number,
+            visible: feeGroup.visible,
+            code: feeGroup.code,
+            entityCode: account.entity,
+          });
+          result[account.number][feeGroup.name] = newFeeGroup;
+        } else {
+          const existingFeeGroup = result[account.number][feeGroup.name];
+          existingFeeGroup.fields = this.#deduplicateFields([
+            ...existingFeeGroup.fields,
+            ...fieldsForAccount
+          ]);
+        }
       }
     }
 
-    if (canSeeCase) {
-      return Result.ok(feeCase)
+    const feeGroupsArray = [];
+    for (const accountNumber in result) {
+      for (const groupName in result[accountNumber]) {
+        feeGroupsArray.push(result[accountNumber][groupName]);
+      }
     }
+    this.#investiment.feeGroups = feeGroupsArray;
+  }
 
-    return Result.fail('Not found')
+  #addCurrentClientValue(equityField) {
+    for (const feeGroup of this.#investiment.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+
+      for (const field of feeGroup.fields) {
+        if (field.isException) {
+          field.labelValue = field.labelValue || '';
+        } else {
+          if (
+            feeGroup.name === "Client Current Fees" &&
+            (field.code === 6 || field.code === 7) &&
+            (!field.defaultValue || field.defaultValue.trim() === "")
+          ) {
+            field.defaultValue = field.tooltip || '';
+            field.labelValue = field.defaultValue;
+          } else {
+            if (field.code === 6) {
+              field.labelValue = field.defaultValue;
+            }
+            else if (field.code === 7) {
+              field.labelValue = field.defaultValue;
+            }
+            else if (field.code === 5) {
+              const numValue = parseFloat(field.defaultValue);
+              field.labelValue = !isNaN(numValue)
+                ? "$" + numValue.toFixed(2)
+                : field.defaultValue;
+            }
+            else {
+              const numValue = parseFloat(field.defaultValue);
+              field.labelValue = !isNaN(numValue)
+                ? "$" + numValue.toFixed(2)
+                : field.defaultValue;
+            }
+          }
+        }
+      }
+    }
+    this.#clearMemory();
+  }
+  
+  #clearMemory() {
+    this.#accounts = [];
+    this.#accountsDDA = [];
+    this.#allExceptions = new Set();
   }
 }
