@@ -1,215 +1,66 @@
-import { FeeGroup } from './entities/FeeGroups.js';
+for (const row of feesData) {
+  const feeTypeDb = row.FeeType;
+  const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
+  if (!groupedFeesMap[feeTypeApp]) continue;
 
-export default class InvestmentAccountFee {
-  #feeName = 'Investment Account Fees';
-  #investiment = {};
-  #accounts = [];
-  #accountsDDA = [];
-  #allExceptions = new Set();
+  const { FeeDescription, FeeCode, FeeAmount, Frequency } = row;
+  const DefaultFeeAmount = row["Default Fee Amount"];
+  const DefaultFrequency = row["Default Frequency"];
 
-  constructor(fees, accounts, equityField) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
-    }
+  let mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
 
-    // Localiza o feeType "Investment Account Fees"
-    this.#investiment = fees.find((x) => x.feeType === this.#feeName);
-    if (
-      !this.#investiment ||
-      !Array.isArray(this.#investiment.feeGroups) ||
-      !this.#investiment.feeGroups.length
-    ) {
-      this.#investiment = {};
-      return;
-    }
+  if (excludedCodes.has(mappedCode)) continue;
 
-    // Filtra as contas (accounts) que têm feeType=3 (Investment)
-    this.#accounts = accounts.filter((x) => x.feeType === 3);
-    if (this.#accounts.length < 1) {
-      this.#investiment = {};
-      return;
-    }
+  // Filtra codes inválidos, etc. (igual antes)
+  // ...
 
-    // Monta a lista de codes que iremos tratar: 5, 7, 6 
-    // (pois code=9 já foi unificado em 7 no UseCase)
-    this.#accounts.forEach((acc) => {
-      if (acc.ddaNumber) {
-        // BPS003 => code=5
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 5,
-          entity: acc.entity || null,
-        });
-        // BPS004/BPS005 => code=7 (unificado)
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 7,
-          entity: acc.entity || null,
-        });
-        // BPS002 => code=6
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 6,
-          entity: acc.entity || null,
-        });
-      }
-    });
+  const groupObj = groupedFeesMap[feeTypeApp];
+  const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
+  const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
 
-    // Remove duplicados
-    this.#accountsDDA = Array.from(
-      new Map(
-        this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])
-      ).values()
-    );
+  // Exemplo: se code for 9 ou 7 => unifica para 7 (depende da sua regra)
+  // ...
 
-    // Monta feeGroups para cada conta
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    // Formata valores
-    this.#addCurrentClientValue(equityField);
+  // 1) Standard Fees
+  let stdField = standardGroup.fields.find((f) => f.code === mappedCode);
+  if (!stdField) {
+    stdField = {
+      code: mappedCode,
+      name: FeeDescription,
+      defaultValue: '',
+      tooltip: '',
+      isException: false
+    };
+    standardGroup.fields.push(stdField);
+  }
+  // Atribui FeeAmount, Frequency etc.
+  stdField.defaultValue = FeeAmount ? FeeAmount.toString() : '';
+  stdField.tooltip = Frequency || '';
+  stdField.name = FeeDescription;
+
+  // 2) Client Current Fees
+  let cliField = clientCurrentGroup.fields.find((f) => f.code === mappedCode);
+  if (!cliField) {
+    cliField = {
+      code: mappedCode,
+      name: FeeDescription,
+      defaultValue: '',
+      tooltip: '',
+      isException: false
+    };
+    clientCurrentGroup.fields.push(cliField);
   }
 
-  get fee() {
-    if (!this.#investiment || !this.#investiment.feeGroups) {
-      return null;
-    }
-    return this.#investiment;
-  }
+  // Novo: fallback se DefaultFeeAmount estiver null/undefined/vazio => usar DefaultFrequency
+  let currentValue = '';
+  if (DefaultFeeAmount) {
+    currentValue = DefaultFeeAmount.toString();
+  } else if (DefaultFrequency) {
+    currentValue = DefaultFrequency.toString();
+  } 
+  // se ambos forem null, permanece string vazia
 
-  #deduplicateFields(fields) {
-    const map = new Map();
-    for (const field of fields) {
-      if (!map.has(field.code)) {
-        map.set(field.code, field);
-      }
-    }
-    return Array.from(map.values());
-  }
-
-  /**
-   * Gera feeGroups (Standard Fees, Client Current Fees, etc.)
-   * para cada conta e code no #accountsDDA
-   */
-  #addMultiplesAccount(cif) {
-    const result = {};
-
-    for (const feeGroup of this.#investiment.feeGroups) {
-      // Clona fields para evitar referências compartilhadas
-      const clonedFields = (feeGroup.fields || []).map((field) => ({
-        ...field,
-        exceptionOptions: field.exceptionOptions
-          ? field.exceptionOptions.map((opt) => ({ ...opt }))
-          : []
-      }));
-
-      // Para cada code presente em #accountsDDA
-      for (const account of this.#accountsDDA) {
-        if (!result[account.number]) {
-          result[account.number] = {};
-        }
-        // Filtra os fields do feeGroup que correspondem a esse code
-        let fieldsForAccount = clonedFields.filter((x) => x.code === account.code);
-
-        // Se não houver fields, cria placeholder
-        if (fieldsForAccount.length === 0) {
-          fieldsForAccount.push({
-            code: account.code,
-            name: '',
-            defaultValue: '',
-            tooltip: '',
-            isException: true,
-            exceptionOptions: []
-          });
-        }
-
-        if (!result[account.number][feeGroup.name]) {
-          const dedupedFields = this.#deduplicateFields(fieldsForAccount);
-          const newFeeGroup = new FeeGroup({
-            name: feeGroup.name,
-            fields: dedupedFields,
-            cif,
-            accountNumber: account.number,
-            visible: feeGroup.visible,
-            code: feeGroup.code,
-            entityCode: account.entity,
-          });
-          result[account.number][feeGroup.name] = newFeeGroup;
-        } else {
-          const existingFeeGroup = result[account.number][feeGroup.name];
-          existingFeeGroup.fields = this.#deduplicateFields([
-            ...existingFeeGroup.fields,
-            ...fieldsForAccount,
-          ]);
-        }
-      }
-    }
-
-    // Converte "result" => array
-    const feeGroupsArray = [];
-    for (const accountNumber in result) {
-      for (const groupName in result[accountNumber]) {
-        feeGroupsArray.push(result[accountNumber][groupName]);
-      }
-    }
-    this.#investiment.feeGroups = feeGroupsArray;
-  }
-
-  /**
-   * Formata os valores de cada campo (field):
-   * - se code=7 => exibe textual (já unificado: "Equity: ... ; Option: ...")
-   * - se code=5 => formata numeric com "$"
-   * - se code=6 em "Standard Fees" => exibe textual
-   * - etc.
-   */
-  #addCurrentClientValue(equityField) {
-    for (const feeGroup of this.#investiment.feeGroups) {
-      feeGroup.cif = this.#accounts[0]?.cifno || null;
-
-      for (const field of feeGroup.fields) {
-        if (field.isException) {
-          // Campo de exceção => labelValue vazio ou original
-          field.labelValue = field.labelValue || '';
-        } else {
-          // Se "Client Current Fees" e code=6 ou 7, e defaultValue está vazio, usar tooltip
-          if (
-            feeGroup.name === "Client Current Fees" &&
-            (field.code === 7 || field.code === 6) &&
-            (!field.defaultValue || field.defaultValue.trim() === "")
-          ) {
-            field.defaultValue = field.tooltip || '';
-            field.labelValue = field.defaultValue;
-          } else {
-            // Se code=7 => assumimos que defaultValue = "Equity: ... ; Option: ..."
-            if (field.code === 7) {
-              field.labelValue = field.defaultValue;
-            }
-            // Se code=5 => parse numeric e formata "$"
-            else if (field.code === 5) {
-              const numValue = parseFloat(field.defaultValue);
-              field.labelValue = !isNaN(numValue)
-                ? "$" + numValue.toFixed(2)
-                : field.defaultValue;
-            }
-            // Se "Standard Fees" e code=6 => textual
-            else if (feeGroup.name === "Standard Fees" && field.code === 6) {
-              field.labelValue = field.defaultValue;
-            }
-            // Caso contrário => parse numeric normal
-            else {
-              const numValue = parseFloat(field.defaultValue);
-              field.labelValue = !isNaN(numValue)
-                ? "$" + numValue.toFixed(2)
-                : field.defaultValue;
-            }
-          }
-        }
-      }
-    }
-    this.#clearMemory();
-  }
-
-  #clearMemory() {
-    this.#accounts = [];
-    this.#accountsDDA = [];
-    this.#allExceptions = new Set();
-  }
+  cliField.name = FeeDescription;
+  cliField.defaultValue = currentValue;
+  cliField.tooltip = DefaultFrequency || '';
 }
