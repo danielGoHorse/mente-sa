@@ -1,217 +1,23 @@
-import { FeeGroup } from './entities/FeeGroups.js';
+for (const exc of listExc) {
+  const rawVal = exc.defaultValue || '';
 
-export default class InvestmentAccountFee {
-  #feeName = 'Investment Account Fees';
-  #investiment = {};
-  #accounts = [];
-  #accountsDDA = [];
-  #allExceptions = new Set();
+  // Regex que só aceita dígitos e ponto decimal (ex.: "375", "375.00", "12.5")
+  const numericRegex = /^[0-9]+(\.[0-9]+)?$/;
 
-  constructor(fees, accounts, equityField) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
-    }
-
-    // Seleciona o feeType "Investment Account Fees"
-    this.#investiment = fees.find((x) => x.feeType === this.#feeName);
-    if (
-      !this.#investiment ||
-      !Array.isArray(this.#investiment.feeGroups) ||
-      !this.#investiment.feeGroups.length
-    ) {
-      this.#investiment = {};
-      return;
-    }
-
-    // Filtra as contas (accounts) que têm feeType = 3
-    this.#accounts = accounts.filter((x) => x.feeType === 3);
-    if (this.#accounts.length < 1) {
-      this.#investiment = {};
-      return;
-    }
-
-    // Monta codes relevantes => 5, 6, 7
-    // (Supondo que 9 foi unificado em 7 no UseCase)
-    this.#accounts.forEach((acc) => {
-      if (acc.ddaNumber) {
-        // code=5 => BPS003
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 5,
-          entity: acc.entity || null,
-        });
-        // code=6 => BPS002
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 6,
-          entity: acc.entity || null,
-        });
-        // code=7 => BPS005 / BPS004 unificado
-        this.#accountsDDA.push({
-          number: acc.ddaNumber,
-          code: 7,
-          entity: acc.entity || null,
-        });
-      }
-    });
-
-    // Remove duplicados
-    this.#accountsDDA = Array.from(
-      new Map(
-        this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])
-      ).values()
-    );
-
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue(equityField);
+  let finalText = rawVal;
+  if (numericRegex.test(rawVal)) {
+    // É estritamente numérico => converte e formata
+    const num = parseFloat(rawVal);
+    finalText = `$${num.toFixed(2)}`;
   }
+  // Caso contrário, finalText continua sendo rawVal (texto extenso)
 
-  get fee() {
-    if (!this.#investiment || !this.#investiment.feeGroups) {
-      return null;
-    }
-    return this.#investiment;
-  }
-
-  #deduplicateFields(fields) {
-    const map = new Map();
-    for (const field of fields) {
-      if (!map.has(field.code)) {
-        map.set(field.code, field);
-      }
-    }
-    return Array.from(map.values());
-  }
-
-  /**
-   * Cria os feeGroups para cada conta e code no #accountsDDA.
-   */
-  #addMultiplesAccount(cif) {
-    const result = {};
-
-    for (const feeGroup of this.#investiment.feeGroups) {
-      // Clona fields
-      const clonedFields = (feeGroup.fields || []).map((field) => ({
-        ...field,
-        exceptionOptions: field.exceptionOptions
-          ? field.exceptionOptions.map((opt) => ({ ...opt }))
-          : []
-      }));
-
-      // Para cada code presente em #accountsDDA
-      for (const account of this.#accountsDDA) {
-        if (!result[account.number]) {
-          result[account.number] = {};
-        }
-
-        // Filtra os fields do group que correspondem ao code
-        let fieldsForAccount = clonedFields.filter(
-          (x) => x.code === account.code
-        );
-
-        // Se não houver fields, cria um placeholder
-        if (fieldsForAccount.length === 0) {
-          fieldsForAccount.push({
-            code: account.code,
-            name: '',
-            defaultValue: '',
-            tooltip: '',
-            isException: true,
-            exceptionOptions: []
-          });
-        }
-
-        // Mescla/deduplica
-        if (!result[account.number][feeGroup.name]) {
-          const dedupedFields = this.#deduplicateFields(fieldsForAccount);
-          const newFeeGroup = new FeeGroup({
-            name: feeGroup.name,
-            fields: dedupedFields,
-            cif,
-            accountNumber: account.number,
-            visible: feeGroup.visible,
-            code: feeGroup.code,
-            entityCode: account.entity,
-          });
-          result[account.number][feeGroup.name] = newFeeGroup;
-        } else {
-          const existingFeeGroup = result[account.number][feeGroup.name];
-          existingFeeGroup.fields = this.#deduplicateFields([
-            ...existingFeeGroup.fields,
-            ...fieldsForAccount
-          ]);
-        }
-      }
-    }
-
-    // Converte o 'result' => array
-    const feeGroupsArray = [];
-    for (const accountNumber in result) {
-      for (const groupName in result[accountNumber]) {
-        feeGroupsArray.push(result[accountNumber][groupName]);
-      }
-    }
-    this.#investiment.feeGroups = feeGroupsArray;
-  }
-
-  /**
-   * Formata os valores de cada field:
-   * - code=5 => parse numeric e "$"
-   * - code=6 => exibe textual (pois pode vir "0.35% /YR min $375.00/QTR")
-   * - code=7 => exibe textual (pois pode vir "Equity: ... ; Option: ...")
-   * - se isException => labelValue vazio
-   * - se group "Client Current Fees" e code=6/7 vier vazio => fallback pro tooltip
-   */
-  #addCurrentClientValue(equityField) {
-    for (const feeGroup of this.#investiment.feeGroups) {
-      feeGroup.cif = this.#accounts[0]?.cifno || null;
-
-      for (const field of feeGroup.fields) {
-        if (field.isException) {
-          // Campos de exceção => labelValue mantido ou vazio
-          field.labelValue = field.labelValue || '';
-        } else {
-          // Fallback se "Client Current Fees" e code=6 ou 7 e defaultValue vazio
-          if (
-            feeGroup.name === "Client Current Fees" &&
-            (field.code === 6 || field.code === 7) &&
-            (!field.defaultValue || field.defaultValue.trim() === "")
-          ) {
-            field.defaultValue = field.tooltip || '';
-            field.labelValue = field.defaultValue;
-          } else {
-            // Se code=6 => textual
-            if (field.code === 6) {
-              field.labelValue = field.defaultValue;
-            }
-            // Se code=7 => textual
-            else if (field.code === 7) {
-              field.labelValue = field.defaultValue;
-            }
-            // Se code=5 => parse numeric e format "$"
-            else if (field.code === 5) {
-              const numValue = parseFloat(field.defaultValue);
-              field.labelValue = !isNaN(numValue)
-                ? "$" + numValue.toFixed(2)
-                : field.defaultValue;
-            }
-            // Caso contrário => parse numeric normal
-            else {
-              const numValue = parseFloat(field.defaultValue);
-              field.labelValue = !isNaN(numValue)
-                ? "$" + numValue.toFixed(2)
-                : field.defaultValue;
-            }
-          }
-        }
-      }
-    }
-    this.#clearMemory();
-  }
-
-  #clearMemory() {
-    this.#accounts = [];
-    this.#accountsDDA = [];
-    this.#allExceptions = new Set();
-  }
+  field.exceptionOptions.push({
+    approvedByDoubleA: null,
+    value: rawVal,
+    text: finalText,
+    visible: true,
+    retired: false,
+    parameterOptionId: exc.parameterOptionId,
+  });
 }
