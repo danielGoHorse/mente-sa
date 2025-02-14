@@ -10,7 +10,6 @@ export default class CustomerFees {
     if (!fees || !Array.isArray(fees) || fees.length === 0) {
       throw new Error('Fees is empty or undefined');
     }
-    // Seleciona os dados do fee do tipo Customer Fees
     this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
     if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
       throw new Error('Customer Fees or feeGroups are undefined');
@@ -78,25 +77,29 @@ export default class CustomerFees {
 
   /**
    * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
-   * No grupo "Client Current Fees" com code 2 e kycMailingStatus "Standard", o valor é fixado em "NOT APPLICABLE".
-   * No grupo "Exception Request", se o valor vier "$0.00", deixa vazio (pois o usuário ainda não selecionou uma nova taxa).
-   * Caso contrário, formata o valor como moeda.
+   * - Para "Client Current Fees" com code 2 e kycMailingStatus "Standard": valor é "NOT APPLICABLE".
+   * - Para "Exception Request", se for Account Management (code 1) e NÃO houver alteração (hasChanged false),
+   *   deixa o valor vazio (para que o front entenda que o usuário ainda não escolheu uma nova taxa).
+   * - Caso contrário, formata o valor com numberToCurrency.
    */
   #addCurrentClientValue() {
+    const kycStatus = this.#accounts[0].kycMailingStatus || 'Standard';
     for (const feeGroup of this.#customer.feeGroups) {
       for (const field of feeGroup.fields) {
         if (
           feeGroup.name === "Client Current Fees" &&
-          feeGroup.kycMailingStatus === "Standard" &&
+          kycStatus === "Standard" &&
           field.code === 2
         ) {
           field.defaultValue = "NOT APPLICABLE";
           field.labelValue = "NOT APPLICABLE";
         } else if (
           feeGroup.name === "Exception Request" &&
-          field.defaultValue === "$0.00"
+          field.code === 1 &&
+          !field.hasChanged
         ) {
-          // Se no grupo de exceção o valor vier "$0.00", deixamos vazio
+          // Para o campo Account Maintenance no grupo Exception Request,
+          // se não houve alteração, o valor deve ficar vazio.
           field.defaultValue = "";
           field.labelValue = "";
         } else {
