@@ -1,4 +1,47 @@
-{ feeCase.branchCity = mainAccount.branchCity
-  feeCase.branchType = mainAccount.branchType
-  feeCase.feePackage = mainAccount.feePackage
+#addCurrentClientValue() {
+  for (const feeGroup of this.#investiment.feeGroups) {
+    feeGroup.cif = this.#accounts[0]?.cifno || null;
+
+    for (const field of feeGroup.fields) {
+      if (field.isException) {
+        // isException => não faz fallback
+        field.labelValue = field.labelValue || '';
+      } else {
+        // Se estivermos em "Client Current Fees" e code=7,9,6 e defaultValue vazio => fallback
+        // MAS REMOVEMOS OU AJUSTAMOS PARA NAO PEGAR code=6, caso não queiramos
+        if (
+          feeGroup.name === "Client Current Fees" &&
+          (field.code === 7 || field.code === 9 /* || field.code === 6 */) &&
+          (!field.defaultValue || field.defaultValue.trim() === "")
+        ) {
+          field.defaultValue = field.tooltip || '';
+          field.labelValue = field.defaultValue;
+        } else {
+          // code=6 => textual, sem fallback
+          if (field.code === 6) {
+            field.labelValue = field.defaultValue;
+          }
+          // code=7 => textual
+          else if (field.code === 7) {
+            field.labelValue = field.defaultValue;
+          }
+          // code=5 => parse numeric
+          else if (field.code === 5) {
+            const numValue = parseFloat(field.defaultValue);
+            field.labelValue = !isNaN(numValue)
+              ? "$" + numValue.toFixed(2)
+              : field.defaultValue;
+          }
+          // caso contrário => parse numeric se for número
+          else {
+            const numValue = parseFloat(field.defaultValue);
+            field.labelValue = !isNaN(numValue)
+              ? "$" + numValue.toFixed(2)
+              : field.defaultValue;
+          }
+        }
+      }
+    }
+  }
+  this.#clearMemory();
 }
