@@ -1,253 +1,184 @@
-async #getFeesStructuredFromSQL(customerAccount) {
-  const feesDataRaw = await this.#getFeesFromSQL(customerAccount[0].cifno);
-  if (!feesDataRaw || feesDataRaw.length === 0) {
-    return { groupedFees: [], accounts: [] };
-  }
+import { FeeGroup } from './entities/FeeGroups.js';
 
-  // Remove duplicados
-  const feesData = Array.from(
-    new Map(
-      feesDataRaw.map(row => [
-        `${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}`,
-        row
-      ])
-    ).values()
-  );
+export default class InvestmentAccountFee {
+  #feeName = 'Investment Account Fees';
+  #investiment = {};
+  #accounts = [];
+  #accountsDDA = [];
+  #allExceptions = new Set();
 
-  const feePackageId = feesData[0]['Default Fee Package Id'];
-  if (!feePackageId) {
-    throw new Error('Default Fee Package Id not found in feesData');
-  }
-
-  const documentUrl = this.#getDocumentUrl(feePackageId);
-
-  // Monta as accounts para retorno
-  const accounts = feesData.map((fee) => ({
-    cifno: fee.CIFNO,
-    ddaNumber: fee.ACCTNO,
-    branchCity: fee['Branch City'],
-    branchState: fee['Branch State'],
-    branchType: fee['Branch Type'],
-    defaultPackageType: fee['Default Package Type'],
-    feePackage: fee['Default Fee Package']?.trim() || '',
-    defaultFeePackageId: fee['Default Fee Package Id'] || '',
-    feeType: mapFeeTypeToNumber(mapDbFeeTypeToApp(fee.FeeType)),
-    feeGroup: 1,
-    kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
-    documentUrl
-  }));
-
-  // Cria a estrutura para agrupar fees
-  const groupedFeesMap = {};
-  const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
-  for (const ft of possibleFeeTypes) {
-    groupedFeesMap[ft] = {
-      feeType: ft,
-      feeGroups: [
-        { name: 'Standard Fees', code: 1, fields: [] },
-        { name: 'Client Current Fees', code: 2, fields: [] },
-        { name: 'Exception Request', code: 3, fields: [] },
-      ],
-    };
-  }
-
-  // Função auxiliar para juntar o texto de BPS004(9) e BPS005(7)
-  // Armazenando internamente em _eqVal / _opVal e concatenando no defaultValue
-  function mergeEquityOptionText(field, originalCode, rawText) {
-    if (field._eqVal === undefined) field._eqVal = '';
-    if (field._opVal === undefined) field._opVal = '';
-
-    // originalCode=9 => BPS004 => "Equity"
-    if (originalCode === 9) {
-      field._eqVal = rawText;
+  constructor(fees, accounts, equityField) {
+    if (!fees || !Array.isArray(fees) || fees.length === 0) {
+      throw new Error('Fees is empty or undefined');
     }
-    // originalCode=7 => BPS005 => "Option"
-    else if (originalCode === 7) {
-      field._opVal = rawText;
-    }
-
-    field.defaultValue = `Equity: ${field._eqVal} ; Option: ${field._opVal}`;
-  }
-
-  // 1) Alimenta as "Standard Fees" e "Client Current Fees"
-  for (const row of feesData) {
-    const feeTypeDb = row.FeeType;
-    const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
-    if (!groupedFeesMap[feeTypeApp]) continue;
-
-    const { FeeDescription, FeeCode, FeeAmount, Frequency } = row;
-    const DefaultFeeAmount = row["Default Fee Amount"];
-    const DefaultFrequency = row["Default Frequency"];
-
-    let mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-
-    // Se o code estiver em excludedCodes (ex: 8), pula
-    if (excludedCodes.has(mappedCode)) continue;
-
-    // Valida codes para cada feeType
+    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
     if (
-      feeTypeApp === 'Customer Fees' &&
-      ![1, 2].includes(mappedCode) ||
-      feeTypeApp === 'Bank Account Fees' &&
-      ![3, 4].includes(mappedCode) ||
-      feeTypeApp === 'Investment Account Fees' &&
-      ![5, 7, 6, 9].includes(mappedCode)
+      !this.#investiment ||
+      !Array.isArray(this.#investiment.feeGroups) ||
+      !this.#investiment.feeGroups.length
     ) {
-      continue;
+      this.#investiment = {};
+      return;
     }
 
-    const groupObj = groupedFeesMap[feeTypeApp];
-    const standardGroup = groupObj.feeGroups.find(g => g.name === 'Standard Fees');
-    const clientCurrentGroup = groupObj.feeGroups.find(g => g.name === 'Client Current Fees');
-
-    // Unifica BPS004(9) e BPS005(7) => code=7
-    let originalCode = mappedCode; // 7 ou 9
-    if (mappedCode === 9 || mappedCode === 7) {
-      mappedCode = 7;
+    this.#accounts = accounts.filter((x) => x.feeType === 3);
+    if (this.#accounts.length < 1) {
+      this.#investiment = {};
+      return;
     }
 
-    // STANDARD FEES
-    let stdField = standardGroup.fields.find(f => f.code === mappedCode);
-    if (!stdField) {
-      stdField = {
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: '',
-        tooltip: '',
-        isException: false
-      };
-      standardGroup.fields.push(stdField);
-    }
-    if (mappedCode === 7) {
-      // Concatena "Equity and Options Commission"
-      stdField.name = "Equity and Options Commission";
-      mergeEquityOptionText(stdField, originalCode, FeeAmount?.toString() || '');
-    } else {
-      stdField.name = FeeDescription;
-      stdField.defaultValue = FeeAmount ? FeeAmount.toString() : '';
-      stdField.tooltip = Frequency || '';
-    }
-
-    // CLIENT CURRENT FEES
-    let cliField = clientCurrentGroup.fields.find(f => f.code === mappedCode);
-    if (!cliField) {
-      cliField = {
-        code: mappedCode,
-        name: FeeDescription,
-        defaultValue: '',
-        tooltip: '',
-        isException: false
-      };
-      clientCurrentGroup.fields.push(cliField);
-    }
-    if (mappedCode === 7) {
-      cliField.name = "Equity and Options Commission";
-      mergeEquityOptionText(cliField, originalCode, DefaultFeeAmount?.toString() || '');
-    } else {
-      cliField.name = FeeDescription;
-      cliField.defaultValue = DefaultFeeAmount ? DefaultFeeAmount.toString() : '';
-      cliField.tooltip = DefaultFrequency || '';
-    }
-  }
-
-  // 2) Trata as Exceptions (Exception Request)
-  const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
-  const exceptionsByFeeTypeAndCode = {};
-  for (const exc of exceptions) {
-    const feeTypeApp = exc.feeType;
-    if (!exceptionsByFeeTypeAndCode[feeTypeApp]) {
-      exceptionsByFeeTypeAndCode[feeTypeApp] = {};
-    }
-    let code = exc.code;
-    // se code=9 ou 7 => vira 7
-    if (code === 9 || code === 7) {
-      code = 7;
-    }
-    if (excludedCodes.has(code)) continue;
-
-    if (!exceptionsByFeeTypeAndCode[feeTypeApp][code]) {
-      exceptionsByFeeTypeAndCode[feeTypeApp][code] = [];
-    }
-    // ajusta exc.code => 7
-    exc.code = code;
-    exceptionsByFeeTypeAndCode[feeTypeApp][code].push(exc);
-  }
-
-  for (const ft of possibleFeeTypes) {
-    const groupObj = groupedFeesMap[ft];
-    if (!groupObj) continue;
-
-    const exceptionGroup = groupObj.feeGroups.find(g => g.name === 'Exception Request');
-    if (!exceptionGroup) continue;
-
-    const standardGroup = groupObj.feeGroups.find(g => g.name === 'Standard Fees');
-    const clientCurrentGroup = groupObj.feeGroups.find(g => g.name === 'Client Current Fees');
-    const standardCodes = standardGroup?.fields.map((f) => f.code) || [];
-    const clientCodes = clientCurrentGroup?.fields.map((f) => f.code) || [];
-    const allCodes = new Set([...standardCodes, ...clientCodes]);
-
-    // Cria os campos no Exception Request
-    for (const code of allCodes) {
-      let field = exceptionGroup.fields.find(f => f.code === code);
-      if (!field) {
-        const stdField = standardGroup.fields.find((f) => f.code === code);
-        field = {
-          code,
-          name: stdField?.name || '',
-          defaultValue: '',
-          tooltip: '',
-          isException: true,
-          exceptionOptions: []
-        };
-        exceptionGroup.fields.push(field);
-      } else {
-        if (!field.name || field.name.trim() === '') {
-          const stdField = standardGroup.fields.find((f) => f.code === code);
-          field.name = stdField?.name || '';
-        }
-        // defaultValue vazio para não sinalizar mudança automática no front
-        field.defaultValue = '';
-      }
-    }
-
-    // Adiciona as exceptionOptions
-    const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
-    for (const [codeStr, listExc] of Object.entries(codeMap)) {
-      const code = Number(codeStr);
-      if (excludedCodes.has(code)) continue;
-
-      let field = exceptionGroup.fields.find((f) => f.code === code);
-      if (!field) {
-        const firstExc = listExc[0];
-        field = {
-          code,
-          name: firstExc.name || '',
-          defaultValue: '',
-          tooltip: firstExc.tooltip || '',
-          isException: true,
-          exceptionOptions: []
-        };
-        exceptionGroup.fields.push(field);
-      }
-      if (code === 7) {
-        field.name = "Equity and Options Commission";
-      }
-      for (const exc of listExc) {
-        const amountNumber = parseFloat(exc.defaultValue || '0');
-        field.exceptionOptions.push({
-          approvedByDoubleA: null,
-          value: exc.defaultValue,
-          text: isNaN(amountNumber)
-            ? exc.defaultValue
-            : `$${amountNumber.toFixed(2)}`,
-          visible: true,
-          retired: false,
-          parameterOptionId: exc.parameterOptionId
+    this.#accounts.forEach((acc) => {
+      if (acc.ddaNumber) {
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 5,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 7,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 6,
+          entity: acc.entity || null,
         });
       }
-    }
+    });
+
+    this.#accountsDDA = Array.from(
+      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
+    );
+
+    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    this.#addCurrentClientValue(equityField);
   }
 
-  const groupedFees = Object.values(groupedFeesMap);
-  return { groupedFees, accounts };
+  get fee() {
+    if (!this.#investiment || !this.#investiment.feeGroups) {
+      return null;
+    }
+    return this.#investiment;
+  }
+
+  #deduplicateFields(fields) {
+    const map = new Map();
+    for (const field of fields) {
+      if (!map.has(field.code)) {
+        map.set(field.code, field);
+      }
+    }
+    return Array.from(map.values());
+  }
+
+  #addMultiplesAccount(cif) {
+    const result = {};
+
+    for (const feeGroup of this.#investiment.feeGroups) {
+      const clonedFields = (feeGroup.fields || []).map((field) => ({
+        ...field,
+        exceptionOptions: field.exceptionOptions
+          ? field.exceptionOptions.map((opt) => ({ ...opt }))
+          : []
+      }));
+
+      for (const account of this.#accountsDDA) {
+        if (!result[account.number]) {
+          result[account.number] = {};
+        }
+        let fieldsForAccount = clonedFields.filter((x) => x.code === account.code);
+        if (fieldsForAccount.length === 0) {
+          fieldsForAccount.push({
+            code: account.code,
+            name: '',
+            defaultValue: '',
+            tooltip: '',
+            isException: true,
+            exceptionOptions: []
+          });
+        }
+        if (!result[account.number][feeGroup.name]) {
+          const dedupedFields = this.#deduplicateFields(fieldsForAccount);
+          const newFeeGroup = new FeeGroup({
+            name: feeGroup.name,
+            fields: dedupedFields,
+            cif,
+            accountNumber: account.number,
+            visible: feeGroup.visible,
+            code: feeGroup.code,
+            entityCode: account.entity,
+          });
+          result[account.number][feeGroup.name] = newFeeGroup;
+        } else {
+          const existingFeeGroup = result[account.number][feeGroup.name];
+          existingFeeGroup.fields = this.#deduplicateFields([
+            ...existingFeeGroup.fields,
+            ...fieldsForAccount,
+          ]);
+        }
+      }
+    }
+
+    const feeGroupsArray = [];
+    for (const accountNumber in result) {
+      for (const groupName in result[accountNumber]) {
+        feeGroupsArray.push(result[accountNumber][groupName]);
+      }
+    }
+    this.#investiment.feeGroups = feeGroupsArray;
+  }
+
+  #addCurrentClientValue(equityField) {
+    for (const feeGroup of this.#investiment.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+  
+      for (const field of feeGroup.fields) {
+        if (field.isException) {
+          // Continua a mesma regra de exceção
+          field.labelValue = field.labelValue || '';
+        } else {
+          // 1) Se estivermos no grupo “Client Current Fees”, 
+          // e o code for 6,7,9, etc. (caso exista), 
+          // use a regra que você já tem para trocar defaultValue p/ tooltip se vazio
+          if (
+            feeGroup.name === "Client Current Fees" &&
+            (field.code === 7 || field.code === 6) &&
+            (!field.defaultValue || field.defaultValue.trim() === "")
+          ) {
+            field.defaultValue = field.tooltip || '';
+            field.labelValue = field.defaultValue;
+          } else {
+            // 2) Se for code=7 => pular parseFloat e exibir o valor textual
+            if (field.code === 7) {
+              // Mantenha a string "Equity: ... ; Option: ..."
+              field.labelValue = field.defaultValue;
+            } 
+            // 3) Se for code=5 => formata com "$" e duas casas
+            else if (field.code === 5) {
+              const numValue = parseFloat(field.defaultValue);
+              field.labelValue = !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+            } 
+            // 4) Se for Standard Fees com code=6 => exibe textual
+            else if (feeGroup.name === "Standard Fees" && field.code === 6) {
+              field.labelValue = field.defaultValue;
+            } 
+            // 5) Caso contrário => parse numérico normal
+            else {
+              const numValue = parseFloat(field.defaultValue);
+              field.labelValue =
+                !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+            }
+          }
+        }
+      }
+    }
+    this.#clearMemory();
+  }
+  
+  #clearMemory() {
+    this.#accounts = [];
+    this.#accountsDDA = [];
+    this.#allExceptions = new Set();
+  }
 }
