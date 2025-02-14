@@ -1,88 +1,261 @@
-function mergeEquityOptionText(field, originalCode, text) {
-  // _eqVal e _opVal serão campos internos usados só para construir a string final
-  if (field._eqVal === undefined) field._eqVal = '';
-  if (field._opVal === undefined) field._opVal = '';
-
-  if (originalCode === 9) {
-    // BPS004 -> equidade
-    field._eqVal = text;
-  } else {
-    // BPS005 -> opção
-    field._opVal = text;
+async #getFeesStructuredFromSQL(customerAccount) {
+  const feesDataRaw = await this.#getFeesFromSQL(customerAccount[0].cifno);
+  if (!feesDataRaw || feesDataRaw.length === 0) {
+    return { groupedFees: [], accounts: [] };
   }
 
-  // Concatena final
-  field.defaultValue = `Equity: ${field._eqVal} ; Option: ${field._opVal}`;
+  // Remove duplicados
+  const feesData = Array.from(
+    new Map(
+      feesDataRaw.map(row => [
+        `${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}`,
+        row
+      ])
+    ).values()
+  );
+
+  const feePackageId = feesData[0]['Default Fee Package Id'];
+  if (!feePackageId) {
+    throw new Error('Default Fee Package Id not found in feesData');
+  }
+
+  const documentUrl = this.#getDocumentUrl(feePackageId);
+
+  // Mapeia as "accounts" para retorno
+  const accounts = feesData.map((fee) => ({
+    cifno: fee.CIFNO,
+    ddaNumber: fee.ACCTNO,
+    branchCity: fee['Branch City'],
+    branchState: fee['Branch State'],
+    branchType: fee['Branch Type'],
+    defaultPackageType: fee['Default Package Type'],
+    feePackage: fee['Default Fee Package']?.trim() || '',
+    defaultFeePackageId: fee['Default Fee Package Id'] || '',
+    feeType: mapFeeTypeToNumber(mapDbFeeTypeToApp(fee.FeeType)),
+    feeGroup: 1,
+    kycMailingStatus:
+      fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
+    documentUrl
+  }));
+
+  // Cria a estrutura para agrupar fees
+  const groupedFeesMap = {};
+  const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
+
+  for (const ft of possibleFeeTypes) {
+    groupedFeesMap[ft] = {
+      feeType: ft,
+      feeGroups: [
+        { name: 'Standard Fees', code: 1, fields: [] },
+        { name: 'Client Current Fees', code: 2, fields: [] },
+        { name: 'Exception Request', code: 3, fields: [] },
+      ],
+    };
+  }
+
+  // Função auxiliar para juntar os textos de BPS004 (9) e BPS005 (7) em um único defaultValue
+  function mergeEquityOptionText(field, originalCode, rawText) {
+    // Campos internos para armazenar separadamente o texto de equity / option
+    if (field._eqVal === undefined) field._eqVal = '';
+    if (field._opVal === undefined) field._opVal = '';
+
+    // Se originalCode era 9 => BPS004 => texto de Equity
+    if (originalCode === 9) {
+      field._eqVal = rawText;
+    }
+    // Se originalCode era 7 => BPS005 => texto de Option
+    else if (originalCode === 7) {
+      field._opVal = rawText;
+    }
+
+    // Exemplo de concat final:
+    // "Equity: <eqVal> ; Option: <opVal>"
+    field.defaultValue = `Equity: ${field._eqVal} ; Option: ${field._opVal}`;
+  }
+
+  // 1) Alimenta Standard Fees e Client Current Fees
+  for (const row of feesData) {
+    const feeTypeDb = row.FeeType;
+    const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
+    if (!groupedFeesMap[feeTypeApp]) continue;
+
+    const { FeeDescription, FeeCode, FeeAmount, Frequency } = row;
+    const DefaultFeeAmount = row["Default Fee Amount"];
+    const DefaultFrequency = row["Default Frequency"];
+
+    let mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+
+    // Se estiver em excludedCodes, pula (por ex. code 8)
+    if (excludedCodes.has(mappedCode)) continue;
+
+    // Verifica se esse code é válido no feeType
+    if (
+      feeTypeApp === 'Customer Fees' &&
+      ![1, 2].includes(mappedCode) ||
+      feeTypeApp === 'Bank Account Fees' &&
+      ![3, 4].includes(mappedCode) ||
+      feeTypeApp === 'Investment Account Fees' &&
+      ![5, 7, 6, 9].includes(mappedCode)
+    ) {
+      continue;
+    }
+
+    const groupObj = groupedFeesMap[feeTypeApp];
+    const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
+    const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
+
+    // Se code for 9 (BPS004) ou 7 (BPS005), unificamos em 7
+    let originalCode = mappedCode; // armazena 9 ou 7
+    if (mappedCode === 9 || mappedCode === 7) {
+      mappedCode = 7; // unificado
+    }
+
+    // STANDARD
+    let stdField = standardGroup.fields.find((f) => f.code === mappedCode);
+    if (!stdField) {
+      stdField = {
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: '',
+        tooltip: '',
+        isException: false
+      };
+      standardGroup.fields.push(stdField);
+    }
+    // Se mapeado =>7, ajusta nome e mescla text
+    if (mappedCode === 7) {
+      stdField.name = "Equity and Options Commission";
+      mergeEquityOptionText(stdField, originalCode, FeeAmount?.toString() || '');
+    } else {
+      // Campo normal
+      stdField.name = FeeDescription;
+      stdField.defaultValue = FeeAmount ? FeeAmount.toString() : '';
+      stdField.tooltip = Frequency || '';
+    }
+
+    // CLIENT CURRENT
+    let cliField = clientCurrentGroup.fields.find((f) => f.code === mappedCode);
+    if (!cliField) {
+      cliField = {
+        code: mappedCode,
+        name: FeeDescription,
+        defaultValue: '',
+        tooltip: '',
+        isException: false
+      };
+      clientCurrentGroup.fields.push(cliField);
+    }
+    if (mappedCode === 7) {
+      cliField.name = "Equity and Options Commission";
+      mergeEquityOptionText(cliField, originalCode, DefaultFeeAmount?.toString() || '');
+    } else {
+      cliField.name = FeeDescription;
+      cliField.defaultValue = DefaultFeeAmount ? DefaultFeeAmount.toString() : '';
+      cliField.tooltip = DefaultFrequency || '';
+    }
+  }
+
+  // 2) Trata as exceptions
+  const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
+  const exceptionsByFeeTypeAndCode = {};
+  for (const exc of exceptions) {
+    const feeTypeApp = exc.feeType;
+    if (!exceptionsByFeeTypeAndCode[feeTypeApp]) {
+      exceptionsByFeeTypeAndCode[feeTypeApp] = {};
+    }
+    let code = exc.code;
+
+    // unifica 9 => 7
+    if (code === 9 || code === 7) {
+      code = 7;
+    }
+    if (excludedCodes.has(code)) continue;
+
+    if (!exceptionsByFeeTypeAndCode[feeTypeApp][code]) {
+      exceptionsByFeeTypeAndCode[feeTypeApp][code] = [];
+    }
+    // Ajusta exc.code para 7 se for 9
+    exc.code = code;
+    exceptionsByFeeTypeAndCode[feeTypeApp][code].push(exc);
+  }
+
+  for (const ft of possibleFeeTypes) {
+    const groupObj = groupedFeesMap[ft];
+    if (!groupObj) continue;
+
+    const exceptionGroup = groupObj.feeGroups.find((g) => g.name === 'Exception Request');
+    if (!exceptionGroup) continue;
+
+    const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
+    const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
+    const standardCodes = standardGroup?.fields.map((f) => f.code) || [];
+    const clientCodes = clientCurrentGroup?.fields.map((f) => f.code) || [];
+    const allCodes = new Set([...standardCodes, ...clientCodes]);
+
+    // Cria os campos do Exception Request
+    for (const code of allCodes) {
+      let field = exceptionGroup.fields.find((f) => f.code === code);
+      if (!field) {
+        const stdField = standardGroup.fields.find((f) => f.code === code);
+        field = {
+          code,
+          name: stdField?.name || '',
+          defaultValue: '',
+          tooltip: '',
+          isException: true,
+          exceptionOptions: []
+        };
+        exceptionGroup.fields.push(field);
+      } else {
+        if (!field.name || field.name.trim() === '') {
+          const stdField = standardGroup.fields.find((f) => f.code === code);
+          field.name = stdField?.name || '';
+        }
+        field.defaultValue = '';
+      }
+    }
+
+    // Para cada code, aplica as exceptionOptions
+    const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
+    for (const [codeStr, listExc] of Object.entries(codeMap)) {
+      const code = Number(codeStr);
+      if (excludedCodes.has(code)) continue;
+
+      let field = exceptionGroup.fields.find((f) => f.code === code);
+      if (!field) {
+        const firstExc = listExc[0];
+        field = {
+          code,
+          name: firstExc.name || '',
+          defaultValue: '',
+          tooltip: firstExc.tooltip || '',
+          isException: true,
+          exceptionOptions: []
+        };
+        exceptionGroup.fields.push(field);
+      }
+      // Se code=7 => name => "Equity and Options Commission"
+      if (code === 7) {
+        field.name = "Equity and Options Commission";
+      }
+
+      // Monta as exceptionOptions
+      for (const exc of listExc) {
+        const amountNumber = parseFloat(exc.defaultValue || '0');
+        field.exceptionOptions.push({
+          approvedByDoubleA: null,
+          value: exc.defaultValue,
+          text: isNaN(amountNumber)
+            ? exc.defaultValue
+            : `$${amountNumber.toFixed(2)}`,
+          visible: true,
+          retired: false,
+          parameterOptionId: exc.parameterOptionId,
+        });
+      }
+    }
+  }
+
+  const groupedFees = Object.values(groupedFeesMap);
+  return { groupedFees, accounts };
 }
-
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-// Supõe que row => { FeeDescription, FeeCode, FeeAmount, Frequency, ... }
-// Mapeia code
-let mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
-
-// Exclui se estiver no excludedCodes
-if (excludedCodes.has(mappedCode)) continue;
-
-// Se code é 9 ou 7 => unifica em 7
-let originalCode = mappedCode; 
-if (mappedCode === 9 || mappedCode === 7) {
-  mappedCode = 7;
-}
-
-// Localiza ou cria o campo no Standard Fees
-let standardField = standardGroup.fields.find((f) => f.code === mappedCode);
-if (!standardField) {
-  standardField = {
-    code: mappedCode,
-    name: FeeDescription,
-    defaultValue: '',
-    tooltip: '',
-    isException: false,
-  };
-  standardGroup.fields.push(standardField);
-}
-
-// Se code=7 => name => "Equity and Options Commission"
-if (mappedCode === 7) {
-  standardField.name = "Equity and Options Commission";
-  // Em FeeAmount vem o texto extenso, ex: "$0.10 per share, min charge of $150 per trade"
-  mergeEquityOptionText(standardField, originalCode, FeeAmount?.toString() || '');
-} else {
-  // Caso normal
-  standardField.defaultValue = FeeAmount ? FeeAmount.toString() : '';
-  standardField.tooltip = Frequency || '';
-  standardField.name = FeeDescription;
-}
-
-// Análogo para Client Current Fees
-let clientField = clientCurrentGroup.fields.find((f) => f.code === mappedCode);
-if (!clientField) {
-  clientField = {
-    code: mappedCode,
-    name: FeeDescription,
-    defaultValue: '',
-    tooltip: '',
-    isException: false
-  };
-  clientCurrentGroup.fields.push(clientField);
-}
-
-if (mappedCode === 7) {
-  clientField.name = "Equity and Options Commission";
-  mergeEquityOptionText(clientField, originalCode, DefaultFeeAmount?.toString() || '');
-} else {
-  clientField.defaultValue = DefaultFeeAmount ? DefaultFeeAmount.toString() : '';
-  clientField.tooltip = DefaultFrequency || '';
-  clientField.name = FeeDescription;
-}
-
->>>>>>>>>>>>>>>>>>>>>>
-
-
-if (originalCode === 9 || originalCode === 7) {
-  // code => 7
-  field.name = "Equity and Options Commission";
-  mergeEquityOptionText(field, originalCode, exc.defaultValue);
-}
->>>>>>>>>>>>>>>>>>>>>>
