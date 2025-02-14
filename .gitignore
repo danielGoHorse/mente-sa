@@ -10,6 +10,7 @@ export default class CustomerFees {
     if (!fees || !Array.isArray(fees) || fees.length === 0) {
       throw new Error('Fees is empty or undefined');
     }
+    // Seleciona "Customer Fees"
     this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
     if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
       throw new Error('Customer Fees or feeGroups are undefined');
@@ -17,12 +18,16 @@ export default class CustomerFees {
     if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
       throw new Error('Accounts is empty or undefined');
     }
+    // Mantemos só a primeira conta (se for a lógica do seu caso)
     this.#accounts = [accounts[0]];
 
     this.#addMultiplesAccount(this.#accounts[0].cifno);
     this.#addCurrentClientValue();
   }
 
+  /**
+   * Deduplica fields por code.
+   */
   #deduplicateFields(fields) {
     const map = new Map();
     for (const field of fields) {
@@ -33,6 +38,9 @@ export default class CustomerFees {
     return Array.from(map.values());
   }
 
+  /**
+   * Clona os feeGroups, define kycMailingStatus e atribui ao #customer.feeGroups.
+   */
   #addMultiplesAccount(cif) {
     const feeGroupTemplates = this.#customer.feeGroups;
     const newFeeGroups = [];
@@ -64,12 +72,19 @@ export default class CustomerFees {
     this.#customer.feeGroups = newFeeGroups;
   }
 
+  /**
+   * Aplica "NOT APPLICABLE" se code=2 e kycMailingStatus=Standard,
+   * não só em "Client Current Fees", mas também em "Exception Request".
+   * Caso contrário, formata o valor monetariamente.
+   */
   #addCurrentClientValue() {
     const kycStatus = this.#accounts[0].kycMailingStatus || 'Standard';
     for (const feeGroup of this.#customer.feeGroups) {
       for (const field of feeGroup.fields) {
+        // Verifica se code=2 e kycMailingStatus=Standard
+        // e se o grupo é "Client Current Fees" OU "Exception Request"
         if (
-          feeGroup.name === "Client Current Fees" &&
+          (feeGroup.name === "Client Current Fees" || feeGroup.name === "Exception Request") &&
           kycStatus === "Standard" &&
           field.code === 2
         ) {
