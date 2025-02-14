@@ -9,17 +9,10 @@ function formatMessage(result, userNameFull, updatedAt) {
 
 function findApprover(field, approver) {
   global.logger.info('findApprover()')
-
   const result = field.results.get(approver.userName.toUpperCase())
-
   if (!result) return null
 
-  const message = formatMessage(
-    result,
-    approver.userNameFull,
-    approver.updatedAt
-  )
-
+  const message = formatMessage(result, approver.userNameFull, approver.updatedAt)
   return {
     message,
     approved: result === 'Approved',
@@ -34,14 +27,15 @@ function processCommonApprover(feeCase, feeGroup, commonApprover) {
   const field = feeGroup.fields.find(
     (field) => field.hasChanged && (field.approved || field.reject)
   )
-
   if (!field) return approvers
 
   if (!field.results) {
     field.results = {}
   } else {
     const commonApproverResult = findApprover(field, commonApprover)
-    if (commonApproverResult) approvers.push(commonApproverResult)
+    if (commonApproverResult) {
+      approvers.push(commonApproverResult)
+    }
 
     const equityApprover = feeCase.equityTeam.find((user) => user.result)
     if (equityApprover) {
@@ -54,10 +48,10 @@ function processCommonApprover(feeCase, feeGroup, commonApprover) {
       if (equityField) {
         const equityApproverResult = findApprover(equityField, equityApprover)
         if (equityApproverResult) approvers.push(equityApproverResult)
-
         equityField.results = Object.fromEntries(field.results)
       }
     }
+
     if (field.results instanceof Map) {
       field.results = Object.fromEntries(field.results)
     }
@@ -98,30 +92,30 @@ export default class FeeCaseGetByIdAndUserNameUseCase {
     }
 
     const hasFee = await FeeCase.exists({ _id: feeId })
-
     if (!hasFee) {
       return Result.fail('Fee case not found')
     }
 
+    // Carrega feeCase do banco
     const feeCase = await (await FeeCase.findById(feeId)).toObject()
+
+    // Exemplo: você pode ter guardado esses dados no feeCase ou pode vir de outro lugar.
+    // Se não estiver no feeCase, poderá vir de outro repositório / service.
+    // Aqui apenas simulo que já está no feeCase ou algo do tipo:
     feeCase.documentUrl =
       'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
 
     const feesActives = await FeeCase.find({
       cif: feeCase.cif,
-      status: {
-        $nin: ['DONE', 'REJECTED']
-      },
-      caseNumber: {
-        $exists: true
-      }
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true }
     })
-
     feeCase.feesActives = feesActives?.map((x) => ({
       caseNumber: x.caseNumber,
       id: x.id
     }))
 
+    // Lógica para remover, aprovar, etc. se status não for INITIAL ou PENDING_APPROVAL
     if (!['INITIAL', 'PENDING_APPROVAL'].includes(feeCase.status)) {
       feeCase.fees.forEach((fee) => {
         fee.feeGroups.forEach((feeGroup) => {
@@ -130,30 +124,34 @@ export default class FeeCaseGetByIdAndUserNameUseCase {
           const lastField = feeGroup.fields.slice(-1)[0]
           const lastOption = lastField.exceptionOptions.slice(-1)[0]
 
-          const commonApprover = feeCase.usersApprovers.find(
-            (user) => user.result
-          )
+          const commonApprover = feeCase.usersApprovers.find((user) => user.result)
           if (commonApprover) {
-            feeGroup.approvalResults = processCommonApprover(
-              feeCase,
-              feeGroup,
-              commonApprover
-            )
+            feeGroup.approvalResults = processCommonApprover(feeCase, feeGroup, commonApprover)
           }
-
           resetLastFieldBasedOnConditions(lastField, lastOption, feeCase)
         })
       })
     }
 
+    // Se for o usuário dono
     if (feeCase?.userOwner?.toUpperCase() === userName?.toUpperCase()) {
       feeCase.canApprove = false
+
+      // Aqui, ou no final, injetamos manualmente alguns campos se necessário
+      // feeCase.branchCity = ...
+      // feeCase.branchType = ...
+      // feeCase.defaultPackageType = ...
+      // feeCase.feePackage = ...
+
       return Result.ok(feeCase)
     }
 
+    // Descobre qual property gerencia a lista de usuários aprovadores nesse status
     const userListProperty = strategyForStatus[feeCase.status]
+    // Descobre a property que define a permissão de approval
     const canApproveProperty = strategyForApprover[feeCase.status]
 
+    // Verifica se userName está em feeCase[userListProperty] => se sim, pode aprovar
     if (
       feeCase[userListProperty] &&
       feeCase[userListProperty].some(
@@ -165,22 +163,28 @@ export default class FeeCaseGetByIdAndUserNameUseCase {
       if (
         feeCase.status === 'PENDING_APPROVAL' &&
         feeCase[userListProperty]
-          .filter(
-            (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
-          )[0]
+          .filter((x) => x.userName?.toUpperCase() === userName?.toUpperCase())[0]
           ?.signature.includes('AAA')
       ) {
         feeCase.canSeeRevenueReport = true
       }
 
+      // Aqui também podemos injetar os campos extras:
+      // feeCase.branchCity = ...
+      // feeCase.branchType = ...
+      // feeCase.defaultPackageType = ...
+      // feeCase.feePackage = ...
+
       return Result.ok(feeCase)
     }
 
+    // Senão, tentamos ver se userName aparece em ANY do strategyForStatus => canSeeCase
     const propertys = Object.keys(strategyForStatus)
     let canSeeCase = false
     for (const property of propertys) {
       const userProperty = strategyForStatus[property]
       if (
+        feeCase[userProperty] &&
         feeCase[userProperty].some(
           (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
         )
@@ -191,6 +195,12 @@ export default class FeeCaseGetByIdAndUserNameUseCase {
     }
 
     if (canSeeCase) {
+      // Injetar manualmente aqui também se quiser
+      // feeCase.branchCity = ...
+      // feeCase.branchType = ...
+      // feeCase.defaultPackageType = ...
+      // feeCase.feePackage = ...
+
       return Result.ok(feeCase)
     }
 
