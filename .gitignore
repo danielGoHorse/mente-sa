@@ -77,10 +77,14 @@ export default class CustomerFees {
 
   /**
    * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
-   * - Para "Client Current Fees" com code 2 e kycMailingStatus "Standard": valor é "NOT APPLICABLE".
-   * - Para "Exception Request", se for Account Management (code 1) e NÃO houver alteração (hasChanged false),
-   *   deixa o valor vazio (para que o front entenda que o usuário ainda não escolheu uma nova taxa).
-   * - Caso contrário, formata o valor com numberToCurrency.
+   *
+   * Regras:
+   * - No grupo "Client Current Fees": se o campo for de Hold Mail Fee (code 2) e kycMailingStatus for "Standard",
+   *   o valor será fixado como "NOT APPLICABLE".
+   * - No grupo "Exception Request":
+   *    - Se o campo for Account Maintenance Fee (code 1) e não houve alteração, deixa o valor vazio.
+   *    - Se for Hold Mail Fee (code 2) e não houve alteração, mantém "NOT APPLICABLE".
+   * - Para os demais casos, formata com numberToCurrency.
    */
   #addCurrentClientValue() {
     const kycStatus = this.#accounts[0].kycMailingStatus || 'Standard';
@@ -98,10 +102,19 @@ export default class CustomerFees {
           field.code === 1 &&
           !field.hasChanged
         ) {
-          // Para o campo Account Maintenance no grupo Exception Request,
-          // se não houve alteração, o valor deve ficar vazio.
+          // Para o campo Account Maintenance Fee (code 1) no grupo Exception Request,
+          // se não houve alteração, deixa vazio.
           field.defaultValue = "";
           field.labelValue = "";
+        } else if (
+          feeGroup.name === "Exception Request" &&
+          field.code === 2 &&
+          !field.hasChanged
+        ) {
+          // Para Hold Mail Fee (code 2) no grupo Exception Request, se não houve alteração,
+          // mantém "NOT APPLICABLE".
+          field.defaultValue = "NOT APPLICABLE";
+          field.labelValue = "NOT APPLICABLE";
         } else {
           field.labelValue = numberToCurrency(field.defaultValue);
         }
