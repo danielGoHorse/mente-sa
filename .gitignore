@@ -29,7 +29,7 @@ function mapDbFeeTypeToApp(feeTypeFromDb) {
     case 'Bank Account Fees':
       return 'Bank Account Fees';
     case 'Investment Fees':
-      return 'Investment Fees';
+      return 'Investment Account Fees';
     default:
       return feeTypeFromDb;
   }
@@ -41,7 +41,7 @@ function mapFeeTypeToNumber(feeType) {
       return 1;
     case 'Bank Account Fees':
       return 2;
-    case 'Investment Fees':
+    case 'Investment Account Fees':
       return 3;
   }
 }
@@ -78,22 +78,13 @@ export default class FeeGetByCifUseCase {
 
     const feesActives = await FeeCase.find({
       cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED']
-      },
-      caseNumber: {
-        $exists: true
-      }
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
     });
-
 
     result.feesActives = feesActives?.map((x) => ({
       caseNumber: x.caseNumber,
       id: x.id,
-
-      status: x.status,
-      reason: x.reason,
-      caseId: x.caseId,
     }));
 
     return Result.ok(result);
@@ -107,7 +98,7 @@ export default class FeeGetByCifUseCase {
 
     const feesData = Array.from(
       new Map(feesDataRaw.map(row => [
-        ${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}, row
+        `${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}`, row
       ])).values()
     );
 
@@ -134,7 +125,7 @@ export default class FeeGetByCifUseCase {
     }));
 
     const groupedFeesMap = {};
-    const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Fees'];
+    const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
     for (const ft of possibleFeeTypes) {
       groupedFeesMap[ft] = {
         feeType: ft,
@@ -160,7 +151,7 @@ export default class FeeGetByCifUseCase {
       if (
         feeTypeApp === 'Customer Fees' && ![1, 2].includes(mappedCode) ||
         feeTypeApp === 'Bank Account Fees' && ![3, 4].includes(mappedCode) ||
-        feeTypeApp === 'Investment Fees' && ![5, 7, 6, 9].includes(mappedCode)
+        feeTypeApp === 'Investment Account Fees' && ![5, 7, 6, 9].includes(mappedCode)
       ) {
         continue;
       }
@@ -235,15 +226,19 @@ export default class FeeGetByCifUseCase {
       }
 
       const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
+
       for (const [codeStr, listExc] of Object.entries(codeMap)) {
         const code = Number(codeStr);
+
+        if(excludedCodes.has(code)) continue;
+
         let field = exceptionGroup.fields.find((f) => f.code === code);
         if (!field) {
           const stdField = standardGroup?.fields.find((f) => f.code === code);
           field = {
             code,
             name: stdField?.name || listExc[0].name || '',
-            defaultValue: listExc[0].defaultValue || '0',
+            defaultValue:'',
             tooltip: listExc[0].tooltip || '',
             isException: true,
             exceptionOptions: []
@@ -254,14 +249,16 @@ export default class FeeGetByCifUseCase {
             const stdField = standardGroup?.fields.find((f) => f.code === code);
             field.name = stdField?.name || listExc[0].name || '';
           }
+          field.defaultValue = '';
+
         }
         for (const exc of listExc) {
           const amountNumber = parseFloat(exc.defaultValue || '0');
           field.exceptionOptions.push({
             approvedByDoubleA: null,
             value: exc.defaultValue,
-            text: isNaN(amountNumber) ? exc.defaultValue :
-              $${amountNumber.toFixed(2)},
+            text:isNaN(amountNumber) ? exc.defaultValue : 
+            `$${amountNumber.toFixed(2)}`,
             visible: true,
             retired: false,
             parameterOptionId: exc.parameterOptionId,
@@ -301,12 +298,196 @@ export default class FeeGetByCifUseCase {
       return {
         feeType: feeTypeApp,
         code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
-        name: exception.FeeDescription,
+        name: exception.FeeDescription, 
         defaultValue: exception.Amount?.toString() || '0',
         tooltip: exception.FreqDescription || '',
         isException: true,
         parameterOptionId: exception.FeeParameterOptionId,
       };
     });
+  }
+}
+
+
+
+
+import { FeeGroup } from './entities/FeeGroups.js';
+
+export default class InvestmentAccountFee {
+  #feeName = 'Investment Account Fees';
+  #investiment = {};
+  #accounts = [];
+  #accountsDDA = [];
+  #allExceptions = new Set();
+
+  constructor(fees, accounts, equityField) {
+    if (!fees || !Array.isArray(fees) || fees.length === 0) {
+      throw new Error('Fees is empty or undefined');
+    }
+    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0];
+    if (
+      !this.#investiment ||
+      !Array.isArray(this.#investiment.feeGroups) ||
+      !this.#investiment.feeGroups.length
+    ) {
+      this.#investiment = {};
+      return;
+    }
+
+    this.#accounts = accounts.filter((x) => x.feeType === 3);
+    if (this.#accounts.length < 1) {
+      this.#investiment = {};
+      return;
+    }
+
+    this.#accounts.forEach((acc) => {
+      if (acc.ddaNumber) {
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 5,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 7,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 6,
+          entity: acc.entity || null,
+        });
+        this.#accountsDDA.push({
+          number: acc.ddaNumber,
+          code: 9,
+          entity: acc.entity || null,
+        });
+      }
+    });
+
+    this.#accountsDDA = Array.from(
+      new Map(this.#accountsDDA.map(item => [`${item.number}-${item.code}`, item])).values()
+    );
+
+    this.#addMultiplesAccount(this.#accounts[0].cifno);
+    this.#addCurrentClientValue(equityField);
+  }
+
+  get fee() {
+    if (!this.#investiment || !this.#investiment.feeGroups) {
+      return null;
+    }
+    return this.#investiment;
+  }
+
+  #deduplicateFields(fields) {
+    const map = new Map();
+    for (const field of fields) {
+      if (!map.has(field.code)) {
+        map.set(field.code, field);
+      }
+    }
+    return Array.from(map.values());
+  }
+
+  #addMultiplesAccount(cif) {
+    const result = {};
+
+    for (const feeGroup of this.#investiment.feeGroups) {
+      const clonedFields = (feeGroup.fields || []).map((field) => ({
+        ...field,
+        exceptionOptions: field.exceptionOptions
+          ? field.exceptionOptions.map((opt) => ({ ...opt }))
+          : []
+      }));
+
+      for (const account of this.#accountsDDA) {
+        if (!result[account.number]) {
+          result[account.number] = {};
+        }
+        let fieldsForAccount = clonedFields.filter((x) => x.code === account.code);
+        if (fieldsForAccount.length === 0) {
+          fieldsForAccount.push({
+            code: account.code,
+            name: '',
+            defaultValue: '',
+            tooltip: '',
+            isException: true,
+            exceptionOptions: []
+          });
+        }
+        if (!result[account.number][feeGroup.name]) {
+          const dedupedFields = this.#deduplicateFields(fieldsForAccount);
+          const newFeeGroup = new FeeGroup({
+            name: feeGroup.name,
+            fields: dedupedFields,
+            cif,
+            accountNumber: account.number,
+            visible: feeGroup.visible,
+            code: feeGroup.code,
+            entityCode: account.entity,
+          });
+          result[account.number][feeGroup.name] = newFeeGroup;
+        } else {
+          const existingFeeGroup = result[account.number][feeGroup.name];
+          existingFeeGroup.fields = this.#deduplicateFields([
+            ...existingFeeGroup.fields,
+            ...fieldsForAccount,
+          ]);
+        }
+      }
+    }
+
+    const feeGroupsArray = [];
+    for (const accountNumber in result) {
+      for (const groupName in result[accountNumber]) {
+        feeGroupsArray.push(result[accountNumber][groupName]);
+      }
+    }
+    this.#investiment.feeGroups = feeGroupsArray;
+  }
+
+  #addCurrentClientValue(equityField) {
+    for (const feeGroup of this.#investiment.feeGroups) {
+      feeGroup.cif = this.#accounts[0]?.cifno || null;
+      for (const field of feeGroup.fields) {
+        if (field.isException) {
+          field.labelValue = field.labelValue || '';
+        } else {
+          if (
+            feeGroup.name === "Client Current Fees" &&
+            (field.code === 7 || field.code === 9 || field.code === 6) &&
+            (!field.defaultValue || field.defaultValue.trim() === "")
+          ) {
+            field.defaultValue = field.tooltip || '';
+            field.labelValue = field.defaultValue;
+          } else {
+            const corresponding = this.#accountsDDA.find(
+              (acc) =>
+                acc.number.toString() === feeGroup.accountNumber.toString() &&
+                acc.code === field.code
+            );
+            if (corresponding) {
+              if (field.code === 5) {
+                const numValue = parseFloat(field.defaultValue);
+                field.labelValue = !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+              } else if (feeGroup.name === "Standard Fees" && field.code === 6) {
+                field.labelValue = field.defaultValue;
+              } else {
+                const numValue = parseFloat(field.defaultValue);
+                field.labelValue = !isNaN(numValue) ? "$" + numValue.toFixed(2) : field.defaultValue;
+              }
+            }
+          }
+        }
+      }
+    }
+    this.#clearMemory();
+  }
+  
+  #clearMemory() {
+    this.#accounts = [];
+    this.#accountsDDA = [];
+    this.#allExceptions = new Set();
   }
 }
