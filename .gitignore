@@ -1,152 +1,199 @@
 import Result from '#features/shared/result.js'
-import numberToCurrency from '#core/helpers/currency.js'
 import { FeeCase } from '#src/models/entities/FeeCase.js'
-import { Field } from '#src/models/entities/Fields.js'
-import { Fee } from '#src/models/entities/Fees.js'
-const { logger } = global
 
-export default class FeeCaseCreateUseCase {
-  async execute(feeTicketRequest) {
-    logger.info('FeeCaseCreateUseCase()')
+function formatMessage(result, userNameFull, updatedAt) {
+  return `${result} by ${userNameFull} on ${new Date(
+    updatedAt
+  ).toLocaleDateString('en-US')}`
+}
 
-    // 1) Cria uma instância do schema FeeCase a partir do payload
-    const feeTicket = new FeeCase(feeTicketRequest)
+function findApprover(field, approver) {
+  global.logger.info('findApprover()')
 
-    // 2) Busca dados "Fee Standard" (seu fallback de 3 feeTypes)
-    const fieldsDataBase = await this.#getFeeStandard([
-      { feeType: 'Customer Fees' },
-      { feeType: 'Bank Account Fees' },
-      { feeType: 'Investment Account Fees' }
-    ])
+  const result = field.results.get(approver.userName.toUpperCase())
 
-    // 3) Retorna todas as exceptions disponíveis
-    const allExceptions = this.#returnAllExceptions(fieldsDataBase)
+  if (!result) return null
 
-    logger.info('validateSync()')
-    const validate = feeTicket.validateSync()
-    if (validate && validate?.errors) {
-      return Result.fail(validate.errors)
-    }
+  const message = formatMessage(
+    result,
+    approver.userNameFull,
+    approver.updatedAt
+  )
 
-    let hasAnyChange = false
-    // 4) Itera pelos fees do feeTicket para identificar campos "hasChanged"
-    for (const fee of feeTicket.fees) {
-      for (const [groupIndex, group] of fee.feeGroups.entries()) {
-        for (const [fieldIndex, field] of group.fields.entries()) {
-          if (field.isException) {
-            // se for uma exception, verifica se é uma alteração
-            const newValue =
-              field.defaultValue !== fee.feeGroups[groupIndex - 1].fields[fieldIndex].defaultValue
-            const validValue = !!field.defaultValue && field.defaultValue !== 'NOT APPLICABLE'
-            field.hasChanged = newValue && validValue
+  return {
+    message,
+    approved: result === 'Approved',
+    note: field.rejectComment
+  }
+}
 
-            if (field.hasChanged) {
-              hasAnyChange = true
-              fee.hasAnyChange = true
-              group.hasAnyChange = true
-              // marca grupos anteriores (Standard / Client Current) como hasAnyChange para controlar no front
-              fee.feeGroups[groupIndex - 1].hasAnyChange = true
-              fee.feeGroups[groupIndex - 2].hasAnyChange = true
-            }
+function processCommonApprover(feeCase, feeGroup, commonApprover) {
+  global.logger.info('processCommonApprover()')
+  const approvers = []
 
-            if (!field.hasChanged) {
-              // se não houve mudança, a exception recebe o mesmo valor do "Client Current Fees"
-              field.defaultValue = fee.feeGroups[groupIndex - 1].fields[fieldIndex].defaultValue
-            }
-          }
+  const field = feeGroup.fields.find(
+    (field) => field.hasChanged && (field.approved || field.reject)
+  )
 
-          // se o valor for apenas dígitos, converte em moeda
-          if (/^\d+$/.test(field.defaultValue)) {
-            field.labelValue = numberToCurrency(field.defaultValue)
-            continue
-          }
+  if (!field) return approvers
 
-          // Lógica para equity safekeeping etc. (exemplo original)
-          if (field.labelValue === 'Other') {
-            const other = field.exceptionOptions.filter(x => x.text === 'Other')[0]
-            const fieldEquities = (
-              await Field.find({
-                code: 7,
-                isException: true
-              })
-            )[0]
+  if (!field.results) {
+    field.results = {}
+  } else {
+    const commonApproverResult = findApprover(field, commonApprover)
+    if (commonApproverResult) approvers.push(commonApproverResult)
 
-            field.exceptionOptions = [...fieldEquities.exceptionOptions, other]
-          }
-          else if (!field.labelValue || !field.labelValue.includes(field.defaultValue)) {
-            let exception = allExceptions.find(e => e.value === field.defaultValue)
-            if (!exception) {
-              exception = { text: '' }
-            }
-            field.labelValue = exception.text
-          }
-        }
+    const equityApprover = feeCase.equityTeam.find((user) => user.result)
+    if (equityApprover) {
+      const equityField = feeGroup.fields.find(
+        (field) =>
+          field.results &&
+          !!field.results.get(equityApprover.userName.toUpperCase())
+      )
+
+      if (equityField) {
+        const equityApproverResult = findApprover(equityField, equityApprover)
+        if (equityApproverResult) approvers.push(equityApproverResult)
+
+        equityField.results = Object.fromEntries(field.results)
       }
     }
+    if (field.results instanceof Map) {
+      field.results = Object.fromEntries(field.results)
+    }
+  }
 
-    if (!hasAnyChange) {
-      return Result.fail('Cannot create Fee Case without any change.')
+  return approvers
+}
+
+function resetLastFieldBasedOnConditions(lastField, lastOption, feeCase) {
+  if (
+    lastOption.text === 'Other' &&
+    lastOption.value !== '' &&
+    feeCase.status === 'PENDING_EQUITY' &&
+    lastField.approved
+  ) {
+    delete lastField.approved
+    delete lastField.reject
+    delete lastField.rejectComment
+  }
+}
+
+export default class FeeCaseGetByIdAndUserNameUseCase {
+  async execute({ feeId, userName }) {
+    global.logger.info(`FeeCaseGetByIdAndUserNameUseCase(fee=${feeId}, userName=${userName})`)
+
+    const strategyForStatus = {
+      INITIAL: 'usersApprovers',
+      PENDING_APPROVAL: 'usersApprovers',
+      PENDING_EQUITY: 'equityTeam',
+      PENDING_SECOPS: 'secopsTeam',
+      VISIBLE_ONLY: 'visibleToUsers'
+    }
+    const strategyForApprover = {
+      INITIAL: 'canApprove',
+      PENDING_APPROVAL: 'canApprove',
+      PENDING_EQUITY: 'canEditEquity',
+      PENDING_SECOPS: 'canEditSecops'
     }
 
-    // Filtra fees e feeGroups que realmente tiveram mudança
-    feeTicket.fees = feeTicket.fees.filter(x => x.hasAnyChange)
-    feeTicket.fees?.forEach(item => {
-      item.feeGroups = item.feeGroups.filter(x => x.hasAnyChange)
+    const hasFee = await FeeCase.exists({ _id: feeId })
+
+    if (!hasFee) {
+      return Result.fail('Fee case not found')
+    }
+
+    const feeCase = await (await FeeCase.findById(feeId)).toObject()
+    feeCase.documentUrl =
+      'https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm'
+
+    const feesActives = await FeeCase.find({
+      cif: feeCase.cif,
+      status: {
+        $nin: ['DONE', 'REJECTED']
+      },
+      caseNumber: {
+        $exists: true
+      }
     })
 
-    try {
-      // 5) Salva no banco
-      const model = await feeTicket.save()
-      // 6) Converte em objeto
-      const resultObject = model.toObject()
+    feeCase.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }))
 
-      // 7) Aqui, injete os campos extras no payload final
-      //    Ajuste para pegar do feeTicketRequest (ou outro local)
-      // Exemplo:
-      resultObject.branchCity = feeTicketRequest.branchCity
-      resultObject.branchType = feeTicketRequest.branchType
-      resultObject.defaultPackageType = feeTicketRequest.defaultPackageType
-      resultObject.feePackage = feeTicketRequest.feePackage
-      // Outras propriedades se desejar
+    if (!['INITIAL', 'PENDING_APPROVAL'].includes(feeCase.status)) {
+      feeCase.fees.forEach((fee) => {
+        fee.feeGroups.forEach((feeGroup) => {
+          if (feeGroup.name !== 'Exception Request') return
 
-      // retorna com os campos extras
-      return Result.ok(resultObject)
-    } catch (err) {
-      logger.error(err)
-      return Result.fail('Error when try to save Fee Case')
-    }
-  }
+          const lastField = feeGroup.fields.slice(-1)[0]
+          const lastOption = lastField.exceptionOptions.slice(-1)[0]
 
-  async #getFeeStandard(filter) {
-    logger.info('getFeeStandard()')
-    const feeResult = []
-
-    for await (const fee of Fee.find({
-      $or: filter
-    }).select({
-      feeGroups: {
-        fields: 1,
-        code: 1
-      }
-    })) {
-      feeResult.push(fee.toObject())
-    }
-
-    return feeResult
-  }
-
-  #returnAllExceptions(fees) {
-    logger.info('returnAllExceptions()')
-    const allExceptions = new Set()
-    fees.forEach(fee => {
-      fee.feeGroups.forEach(feeGroup => {
-        feeGroup.fields.forEach(field => {
-          if (field.isException) {
-            field.exceptionOptions.forEach(allExceptions.add, allExceptions)
+          const commonApprover = feeCase.usersApprovers.find(
+            (user) => user.result
+          )
+          if (commonApprover) {
+            feeGroup.approvalResults = processCommonApprover(
+              feeCase,
+              feeGroup,
+              commonApprover
+            )
           }
+
+          resetLastFieldBasedOnConditions(lastField, lastOption, feeCase)
         })
       })
-    })
-    return Array.from(allExceptions)
+    }
+
+    if (feeCase?.userOwner?.toUpperCase() === userName?.toUpperCase()) {
+      feeCase.canApprove = false
+      return Result.ok(feeCase)
+    }
+
+    const userListProperty = strategyForStatus[feeCase.status]
+    const canApproveProperty = strategyForApprover[feeCase.status]
+
+    if (
+      feeCase[userListProperty] &&
+      feeCase[userListProperty].some(
+        (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
+      )
+    ) {
+      feeCase[canApproveProperty] = true
+
+      if (
+        feeCase.status === 'PENDING_APPROVAL' &&
+        feeCase[userListProperty]
+          .filter(
+            (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
+          )[0]
+          ?.signature.includes('AAA')
+      ) {
+        feeCase.canSeeRevenueReport = true
+      }
+
+      return Result.ok(feeCase)
+    }
+
+    const propertys = Object.keys(strategyForStatus)
+    let canSeeCase = false
+    for (const property of propertys) {
+      const userProperty = strategyForStatus[property]
+      if (
+        feeCase[userProperty].some(
+          (x) => x.userName?.toUpperCase() === userName?.toUpperCase()
+        )
+      ) {
+        canSeeCase = true
+        break
+      }
+    }
+
+    if (canSeeCase) {
+      return Result.ok(feeCase)
+    }
+
+    return Result.fail('Not found')
   }
 }
