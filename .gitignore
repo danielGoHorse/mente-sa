@@ -1,43 +1,107 @@
- {
-                        "name": "Client Current Fees",
-                        "code": 2,
-                        "fields": [
-                            {
-                                "code": 5,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "SSL Account Maintanance Fee",
-                                "defaultValue": "375",
-                                "hasChanged": false,
-                                "tooltip": "Quarterly on Day 1",
-                                "exceptionOptions": [],
-                                "_id": "67aeabb5d2d5e136edd79ef0",
-                                "labelValue": "$375.00"
-                            },
-                            {
-                                "code": 7,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Equity and Options Commission",
-                                "defaultValue": "Equity:  ; Option: ",
-                                "hasChanged": false,
-                                "tooltip": "",
-                                "exceptionOptions": [],
-                                "_id": "67aeabb5d2d5e136edd79ef1",
-                                "labelValue": "Equity:  ; Option: "
-                            },
-                            {
-                                "code": 6,
-                                "isStandard": false,
-                                "isCurrentClient": false,
-                                "isException": false,
-                                "name": "Safekeeping of Securities",
-                                "defaultValue": "0.35% /YR min $375.00/QTR",
-                                "hasChanged": false,
-                                "tooltip": "0.35% /YR min $375.00/QTR",
-                                "exceptionOptions": [],
-                                "_id": "67aeabb5d2d5e136edd79ef2",
-                                "labelValue": "0.35% /YR min $375.00/QTR"
-                            }
+// Função auxiliar para concatenar
+function mergeEquityOption(field, originalCode, rawText) {
+  // Salva internamente
+  if (field._eq === undefined) field._eq = '';
+  if (field._op === undefined) field._op = '';
+
+  // Se originalCode era 9 => BPS004 => equity
+  if (originalCode === 9) {
+    field._eq = rawText;
+  } else {
+    // originalCode = 7 => BPS005 => option
+    field._op = rawText;
+  }
+
+  // Exemplo final
+  field.defaultValue = `Equity: ${field._eq} ; Option: ${field._op}`;
+}
+
+for (const row of feesData) {
+  const feeTypeDb = row.FeeType;
+  const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
+  if (!groupedFeesMap[feeTypeApp]) continue;
+
+  const { FeeDescription, FeeCode, FeeAmount, Frequency } = row;
+  const DefaultFeeAmount = row["Default Fee Amount"];
+  const DefaultFrequency = row["Default Frequency"];
+
+  let mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+
+  // Se for code=8 (excluído) => continue
+  if (excludedCodes.has(mappedCode)) continue;
+
+  // Filtra se não for code esperado
+  if (
+    feeTypeApp === 'Investment Account Fees' &&
+    ![5, 7, 6, 9].includes(mappedCode)
+  ) {
+    continue;
+  }
+  // Para Customer Fees e Bank Account Fees, idem.
+
+  // Unifica code=9 => code=7
+  let originalCode = mappedCode; // 9 ou 7
+  if (mappedCode === 9 || mappedCode === 7) {
+    mappedCode = 7;
+  }
+
+  const groupObj = groupedFeesMap[feeTypeApp];
+  const standardGroup = groupObj.feeGroups.find((g) => g.name === 'Standard Fees');
+  const clientCurrentGroup = groupObj.feeGroups.find((g) => g.name === 'Client Current Fees');
+
+  // STANDARD
+  let stdField = standardGroup.fields.find((f) => f.code === mappedCode);
+  if (!stdField) {
+    stdField = {
+      code: mappedCode,
+      name: FeeDescription,
+      defaultValue: '',
+      tooltip: '',
+      isException: false
+    };
+    standardGroup.fields.push(stdField);
+  }
+  if (mappedCode === 7) {
+    stdField.name = "Equity and Options Commission";
+    mergeEquityOption(stdField, originalCode, FeeAmount?.toString() || '');
+  } else {
+    stdField.defaultValue = FeeAmount ? FeeAmount.toString() : '';
+    stdField.tooltip = Frequency || '';
+    stdField.name = FeeDescription;
+  }
+
+  // CLIENT CURRENT
+  let cliField = clientCurrentGroup.fields.find((f) => f.code === mappedCode);
+  if (!cliField) {
+    cliField = {
+      code: mappedCode,
+      name: FeeDescription,
+      defaultValue: '',
+      tooltip: '',
+      isException: false
+    };
+    clientCurrentGroup.fields.push(cliField);
+  }
+  if (mappedCode === 7) {
+    cliField.name = "Equity and Options Commission";
+    mergeEquityOption(cliField, originalCode, DefaultFeeAmount?.toString() || '');
+  } else {
+    cliField.defaultValue = DefaultFeeAmount ? DefaultFeeAmount.toString() : '';
+    cliField.tooltip = DefaultFrequency || '';
+    cliField.name = FeeDescription;
+  }
+}
+
+
+
+this.#accountsDDA.push({ number: acc.ddaNumber, code: 5, ... });
+this.#accountsDDA.push({ number: acc.ddaNumber, code: 7, ... });
+this.#accountsDDA.push({ number: acc.ddaNumber, code: 6, ... });
+
+
+if (field.code === 7) {
+  // Lógica para code=7 => labelValue = defaultValue
+  field.labelValue = field.defaultValue; // "Equity: ... ; Option: ..."
+} else if (field.code === 5) {
+  // ...
+} ..
