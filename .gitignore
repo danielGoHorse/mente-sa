@@ -1,128 +1,154 @@
-import { FeeGroup } from './entities/FeeGroups.js';
-import numberToCurrency from '../core/helpers/currency.js';
+'use client';
 
-export default class CustomerFees {
-  #feeName = 'Customer Fees';
-  #customer = {};
-  #accounts = [];
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/Tabs';
+import { IData } from '@/store/types';
+import { useState } from 'react';
+import FormFactory from './FormFactory';
+import { Email } from "@snb/ds-email";
+import Buttons from './Buttons';
+import { FormProvider, useForm } from 'react-hook-form';
+import { tranformBackEntriesOnValues } from '@/utils';
+import { ProgressAlert } from '@snb/ds-progress-alert';
+import { DataDisplay } from "@snb/ds-data-display";
+import { RadioButton } from "@snb/ds-radio-button"
 
-  constructor(fees, accounts) {
-    if (!fees || !Array.isArray(fees) || fees.length === 0) {
-      throw new Error('Fees is empty or undefined');
-    }
-    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0];
-    if (!this.#customer || !Array.isArray(this.#customer.feeGroups)) {
-      throw new Error('Customer Fees or feeGroups are undefined');
-    }
-    if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
-      throw new Error('Accounts is empty or undefined');
-    }
-    // Para Customer Fees, normalmente há apenas uma conta
-    this.#accounts = [accounts[0]];
 
-    this.#addMultiplesAccount(this.#accounts[0].cifno);
-    this.#addCurrentClientValue();
+const ForeignCurrenciesTab = (data: IData, useFormObject: any) => {
+  if (!data?.contingencyData?.id || !data?.contingencyData?.status || !data?.contingencyData?.dateAndTime || !data.requestId) return;
+
+  return (
+    <TabsContent value="processing-bank-of-america" className="data-[state=inactive]:hidden">
+      <FormProvider {...useFormObject}>
+        <div className="grid grid-cols-2 gap-8 p-6">
+          <div>
+            <DataDisplay 
+              title='Process Integration: Bank of America'
+              data={[{
+                Id: "320923457#-983242|239",
+                Status: "processed",
+                Date: "2025-11-01T11:49:30.2098749-05:00"
+              }]}
+            />
+          </div>
+
+          <div>
+            <Email senderName={""}
+              subjectName={""}
+              attachments={[]}
+              message={""}></Email>
+          </div>
+        </div>
+
+        <Buttons requestId={data.requestId} initialRequestData={data} data={data.buttons} />
+      </FormProvider>
+    </TabsContent>
+  )
+};
+
+const DomesticInternacionalTab = (data: IData, useFormObject: any) => {
+  const [selectedBank, setSelectedBank] = useState('');
+
+  const handleBankSelection = (bank: string) => {
+    setSelectedBank(bank);
+  };
+
+  if (!data.requestId) {
+    return;
   }
 
-  /**
-   * Deduplica os campos (fields) com base no fee code.
-   */
-  #deduplicateFields(fields) {
-    const map = new Map();
-    for (const field of fields) {
-      if (!map.has(field.code)) {
-        map.set(field.code, field);
-      }
-    }
-    return Array.from(map.values());
+  return (
+    <TabsContent value="processing-bank-of-america" className="data-[state=inactive]:hidden">
+      <FormProvider {...useFormObject}>
+        <div className="grid grid-cols-2 gap-8 p-6">
+          <div>
+            <ProgressAlert 
+            
+              isLayoutInLine={true}
+              cardColor='Yellow'
+              children= '<p>This Wire Transfer is in cutoff time, it might not be processed today</p>'
+              height='56px'
+              cardIcon= 'WarningCircle'
+            
+            />
+            <h1 className='my-6 text-[#484A55] font-Figtree text-lg font-semibold leading-5 tracking-tighter' style={{ color: 'var(--text-[#484A55], #484A55)' }}>
+              Select Bank
+            </h1>
+
+            <div className="flex flex-grow gap-4">
+              <div className='flex items-center w-1/3 space-x-2 px-4 py-6 border border-[#D9D9D9] rounded-md flex-grow'> 
+                <RadioButton onChange={() => handleBankSelection('payplus')}>
+                  <label className="text-[#484A55] font-Figtree text-lg font-semibold leading-5 tracking-tighter">Payplus</label>
+                </RadioButton>
+                <div className='bg-[#008056] text-white font-Figtree text-xs font-semibold py-1 px-2 ml-4 rounded-full'>Default</div>
+              </div>
+
+              <div className='flex items-center w-1/3 space-x-2 px-4 py-6 border border-[#D9D9D9] rounded-md flex-grow'>
+                <RadioButton onChange={() => handleBankSelection('bank-of-america')}>
+                  <label className="text-[#484A55] font-Figtree text-lg font-semibold leading-5 tracking-tighter">Bank of America</label>
+                </RadioButton>
+                <div className='bg-[#C75300] text-white font-Figtree text-xs font-semibold py-1 px-2 ml-4 rounded-full'>Contingency</div>
+              </div>
+            </div>
+
+            <div className='mt-10'>
+              <DataDisplay 
+                title='Process Integration: Bank of America'
+                data={[{
+                  Id: "320923457#-983242|239",
+                  Status: "processed",
+                  Date: "2025-11-01T11:49:30.2098749-05:00"
+                }]}
+              />
+            </div>
+          </div>
+          <div>
+            <Email senderName={""}
+              subjectName={""}
+              attachments={[]}
+              message={""}></Email>
+          </div>
+        </div>
+
+        <Buttons requestId={data.requestId} initialRequestData={data} data={data.buttons} />
+      </FormProvider>
+    </TabsContent>
+  )
+};
+
+export default function TabsFactory({ data }: { data: IData }) {
+  if (!data) {
+    return;
+  }
+  const transferType = data.backEntries['transfer-type'].value;
+  const useFormObject = useForm({
+    defaultValues: tranformBackEntriesOnValues(data.backEntries),
+  });
+
+  const TranferTypeTabs = {
+    'usd-domestic': DomesticInternacionalTab(data, useFormObject),
+    'usd-internacional': DomesticInternacionalTab(data, useFormObject),
+    'foreign-currencies': ForeignCurrenciesTab(data, useFormObject),
   }
 
-  /**
-   * Gera os feeGroups para a conta, clonando os grupos originais
-   * e atribuindo o número da conta (accountNumber) e o kycMailingStatus.
-   */
-  #addMultiplesAccount(cif) {
-    const feeGroupTemplates = this.#customer.feeGroups;
-    const newFeeGroups = [];
+  const [selectedTab, setSelectedTab] = useState('wire-transfer-form');
 
-    for (const template of feeGroupTemplates) {
-      // Clona os fields para evitar referências compartilhadas
-      let clonedFields = template.fields.map((field) => ({
-        ...field,
-        exceptionOptions: field.exceptionOptions
-          ? field.exceptionOptions.map((opt) => ({ ...opt }))
-          : []
-      }));
+  return (
+    <Tabs className="min-h-screen w-full p-6">
+      <TabsList className='m-0 p-0 pb-4 w-1/2 list-none border-b border-[#DBDBDB] rounded-none justify-start'>
+        <TabsTrigger value="wire-transfer-form" className={`p-4 font-body font-Figtree text-base font-normal tracking-tighter underline-from-font decoration-skip-ink-none ${selectedTab === 'wire-transfer-form' ? 'border-b-2 border-blue-500' : ''}`} style={{ color: 'var(--text-light-text-secondary, #636574)' }} onClick={() => setSelectedTab('wire-transfer-form')}>
+          Wire Transfer Form
+        </TabsTrigger>
 
-      // Deduplica os fields com base no fee code
-      clonedFields = this.#deduplicateFields(clonedFields);
+        <TabsTrigger value="processing-bank-of-america" className={`p-4 font-body font-Figtree text-base font-normal tracking-tighter underline-from-font decoration-skip-ink-none ${selectedTab === 'processing-bank-of-america' ? 'border-b-2 border-blue-500' : ''}`} style={{ color: 'var(--text-light-text-secondary, #636574)' }} onClick={() => setSelectedTab('processing-bank-of-america')}>
+          {transferType === 'usd-domestic' || transferType === 'usd-internacional' ? 'Processing' : 'Processing: Bank of America'}
+        </TabsTrigger>
+      </TabsList>
 
-      // Define o kycMailingStatus: utiliza o valor da conta, se existir, ou "Standard" como padrão.
-      const kycMailingStatus = this.#accounts[0].kycMailingStatus || 'Standard';
+      <TabsContent forceMount={true} value="wire-transfer-form" className="data-[state=inactive]:hidden">
+        <FormFactory data={data} />
+      </TabsContent>
 
-      const newFeeGroup = new FeeGroup({
-        name: template.name,
-        fields: clonedFields,
-        cif,
-        accountNumber: this.#accounts[0].ddaNumber.toString(),
-        visible: template.visible,
-        code: template.code,
-        kycMailingStatus // Garante que não venha null
-      });
-      newFeeGroups.push(newFeeGroup);
-    }
-
-    this.#customer.feeGroups = newFeeGroups;
-  }
-
-  /**
-   * Atualiza os valores dos fees para cada grupo, definindo o labelValue com base no valor.
-   *
-   * Regras:
-   * - No grupo "Client Current Fees": se o campo for de Hold Mail Fee (code 2) e kycMailingStatus for "Standard",
-   *   o valor será fixado como "NOT APPLICABLE".
-   * - No grupo "Exception Request":
-   *    - Se o campo for Account Maintenance Fee (code 1) e não houve alteração, deixa o valor vazio.
-   *    - Se for Hold Mail Fee (code 2) e não houve alteração, mantém "NOT APPLICABLE".
-   * - Para os demais casos, formata com numberToCurrency.
-   */
-  #addCurrentClientValue() {
-    const kycStatus = this.#accounts[0].kycMailingStatus || 'Standard';
-    for (const feeGroup of this.#customer.feeGroups) {
-      for (const field of feeGroup.fields) {
-        if (
-          feeGroup.name === "Client Current Fees" &&
-          kycStatus === "Standard" &&
-          field.code === 2
-        ) {
-          field.defaultValue = "NOT APPLICABLE";
-          field.labelValue = "NOT APPLICABLE";
-        } else if (
-          feeGroup.name === "Exception Request" &&
-          field.code === 1 &&
-          !field.hasChanged
-        ) {
-          // Para o campo Account Maintenance Fee (code 1) no grupo Exception Request,
-          // se não houve alteração, deixa vazio.
-          field.defaultValue = "";
-          field.labelValue = "";
-        } else if (
-          feeGroup.name === "Exception Request" &&
-          field.code === 2 &&
-          !field.hasChanged
-        ) {
-          // Para Hold Mail Fee (code 2) no grupo Exception Request, se não houve alteração,
-          // mantém "NOT APPLICABLE".
-          field.defaultValue = "NOT APPLICABLE";
-          field.labelValue = "NOT APPLICABLE";
-        } else {
-          field.labelValue = numberToCurrency(field.defaultValue);
-        }
-      }
-    }
-  }
-
-  get fee() {
-    return this.#customer;
-  }
+      {transferType && TranferTypeTabs[transferType as keyof typeof TranferTypeTabs]}
+    </Tabs>
+  );
 }
