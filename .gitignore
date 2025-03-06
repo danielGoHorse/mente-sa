@@ -1,32 +1,21 @@
-import mssql from 'mssql'
-
-export async function connectToFeeMgmtDb() {
-  const { ...props } = global.environment.sqlserver
-  
-  const config = {
-    ...props,
-    options: {
-      encrypt: false,
-      trustServerCertificate: true
-    }
-  }
-  await mssql.close()
-
-  return mssql.connect(config)
-}
-
 export async function executeStoreProcedure(connection, query, parameters = {}) {
-  const request = connection.request()
+  try {
+    const request = connection.request();
 
-  for (const key of Object.keys(parameters)) {
-    request.input(key, parameters[key])
+    for (const key of Object.keys(parameters)) {
+      request.input(key, parameters[key]);
+    }
+
+    const { recordset } = await request.execute(query);
+    
+    // Fechar a conexão pode ser feito aqui, se for o caso, mas cuidado se estiver reutilizando a conexão
+    await mssql.close();
+
+    if (recordset?.length === 0) return [];
+    return recordset;
+  } catch (error) {
+    global.logger.error(`Erro na execução da procedure ${query}: ${error.message}`, error);
+    // Dependendo da estratégia, pode-se optar por lançar o erro ou retornar um valor padrão.
+    throw error;
   }
-
-  const { recordset } = await request.execute(query)
-
-  await mssql.close()
-
-  if (recordset?.length === 0) return []
-
-  return recordset
 }
