@@ -6,16 +6,22 @@ export async function executeStoreProcedure(connection, query, parameters = {}) 
       request.input(key, parameters[key]);
     }
 
-    const { recordset } = await request.execute(query);
-    
-    // Fechar a conexão pode ser feito aqui, se for o caso, mas cuidado se estiver reutilizando a conexão
+    global.logger.info(`Executando procedure ${query} com parâmetros: ${JSON.stringify(parameters)}`);
+
+    const result = await request.execute(query);
+    global.logger.info(`Resultado da procedure ${query}: ${JSON.stringify(result)}`);
+
+    // Fechar a conexão aqui pode impactar se outras operações usarem a mesma conexão
     await mssql.close();
 
-    if (recordset?.length === 0) return [];
-    return recordset;
+    if (!result.recordset || result.recordset.length === 0) {
+      // Se não há recordset, você pode optar por retornar um valor padrão indicando sucesso.
+      return { success: true };
+    }
+
+    return result.recordset;
   } catch (error) {
     global.logger.error(`Erro na execução da procedure ${query}: ${error.message}`, error);
-    // Dependendo da estratégia, pode-se optar por lançar o erro ou retornar um valor padrão.
     throw error;
   }
 }
