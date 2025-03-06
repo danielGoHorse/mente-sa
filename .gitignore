@@ -1,27 +1,25 @@
-export async function executeStoreProcedure(connection, query, parameters = {}) {
-  try {
-    const request = connection.request();
-
-    for (const key of Object.keys(parameters)) {
-      request.input(key, parameters[key]);
-    }
-
-    global.logger.info(`Executando procedure ${query} com parâmetros: ${JSON.stringify(parameters)}`);
-
-    const result = await request.execute(query);
-    global.logger.info(`Resultado da procedure ${query}: ${JSON.stringify(result)}`);
-
-    // Fechar a conexão aqui pode impactar se outras operações usarem a mesma conexão
-    await mssql.close();
-
-    if (!result.recordset || result.recordset.length === 0) {
-      // Se não há recordset, você pode optar por retornar um valor padrão indicando sucesso.
-      return { success: true };
-    }
-
-    return result.recordset;
-  } catch (error) {
-    global.logger.error(`Erro na execução da procedure ${query}: ${error.message}`, error);
-    throw error;
-  }
+{
+  code: "EREQUEST",
+  number: 229,
+  lineNumber: 1,
+  state: 5,
+  class: 14,
+  serverName: "NYQA01",
+  procName: "sp_upd_feepackagebranch",
+  originalError: {
+    info: {
+      number: 229,
+      state: 5,
+      class: 14,
+      message: "The EXECUTE permission was denied on the object 'sp_upd_feepackagebranch', database 'FeeMgmt', schema 'dbo'.",
+      serverName: "NYQA01",
+      procName: "sp_upd_feepackagebranch",
+      lineNumber: 1,
+      name: "ERROR",
+      event: "errorMessage",
+    },
+  },
+  name: "RequestError",
+  precedingErrors: [
+  ],
 }
