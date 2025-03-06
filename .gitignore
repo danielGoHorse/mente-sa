@@ -1,2 +1,32 @@
-global.logger.info(`Resposta sp_upd_feepackagebranch: ${JSON.stringify(resultBranch)}`);
-global.logger.info(`Resposta sp_upd_feegroupofficer: ${JSON.stringify(resultOfficer)}`);
+import mssql from 'mssql'
+
+export async function connectToFeeMgmtDb() {
+  const { ...props } = global.environment.sqlserver
+  
+  const config = {
+    ...props,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true
+    }
+  }
+  await mssql.close()
+
+  return mssql.connect(config)
+}
+
+export async function executeStoreProcedure(connection, query, parameters = {}) {
+  const request = connection.request()
+
+  for (const key of Object.keys(parameters)) {
+    request.input(key, parameters[key])
+  }
+
+  const { recordset } = await request.execute(query)
+
+  await mssql.close()
+
+  if (recordset?.length === 0) return []
+
+  return recordset
+}
