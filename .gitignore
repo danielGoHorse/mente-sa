@@ -1,156 +1,37 @@
-import {
-    connectToFeeMgmtDb,
-    executeStoreProcedure
-  } from '#core/data/mssql/index.js'
+import Result from '#features/shared/result.js'
+
+import { saveFeePackageBranch } from '#src/models/FeePackageBranch.js'
+
+
+export default class feePackageBranchSaveUseCase {
+  async execute(req) {
+    global.logger.info('FeePackageBranchSaveUseCase()')
+    const rows = req
+    let proccess = false
+
+
+
+    for (let i = 0; i < rows.length; i++) {
+
+      let Branch_cd = rows[i].branchCd ?? 0
+      let Office_id = rows[i].officerId ?? 0
+      let Feegroupid = rows[i].feegroupid ?? 0
+      let Busfeegroup_id = rows[i].busfeegroupid ?? null
+      let Indfeegroup_id = rows[i].indfeegroupid ?? null
+      let Updatedby = req[i].updatedby ?? null
   
-  export async function saveFeePackageBranch(_branchCd, 
-                                             _officerid,
-                                             _feegroupid,
-                                             _busfeegroupid, 
-                                             _indfeegroupid, 
-                                             _updatedby){
+      proccess = await saveFeePackageBranch(Branch_cd,
+                                            Office_id, 
+                                            Feegroupid, 
+                                            Busfeegroup_id, 
+                                            Indfeegroup_id, 
+                                            Updatedby)
 
-   let _result = false
-  
-   try {
+      if(proccess === false){
+        return Result.fail('Error saving fee package branch')
+      }
 
-    const connectionBranch = await connectToFeeMgmtDb()
-    _result = await executeStoreProcedure(connectionBranch, 'sp_upd_feepackagebranch', { branch_cd:_branchCd, 
-                                                                                        feegroupid: _feegroupid,
-                                                                                        busfeegroupid: _busfeegroupid,
-                                                                                        indfeegroupid : _indfeegroupid,
-                                                                                        updatedby: _updatedby })
-
-
-    const connectionOfficer = await connectToFeeMgmtDb()
-    _result = await executeStoreProcedure(connectionOfficer, 'sp_upd_feegroupofficer', { officerid: _officerid, 
-                                                                                  feegroupid: _feegroupid,
-                                                                                  busfeegroupid: _busfeegroupid,
-                                                                                  indfeegroupid : _indfeegroupid,
-                                                                                  updatedby: _updatedby })
-
-    _result = true;
-  } catch (error) {
-    _result = false; 
-   } 
-
-    return _result;
-                                             
-  }
-
-
-  export async function getFeePackageBranch(branchCd){
-  
-    const connection = await connectToFeeMgmtDb()
-
-    const recordset = null;
-
-    if(branchCd === null || branchCd === undefined || branchCd <=0){
-      recordset = await executeStoreProcedure(connection, 'sp_get_branch_feepackage_info')
-    }else{
-      recordset = await executeStoreProcedure(connection, 'sp_get_branch_feepackage_info', { branch_code: branchCd })
     }
-  
-      return result;
+    return Result.ok(proccess)
   }
-
-  export async function getAllPackageBranchsIndividual(id) {
-    const connection = await connectToFeeMgmtDb()
-    const recordset = await executeStoreProcedure(connection, 'sp_get_branch_feepackage_info', {})
-  
-    const listBranchs = recordset.map(record => {
-      const branchId = record.Branch_Id
-      const city = record.City
-      const state = record.State
-      const director = record.Director
-      const branchType = record.Branch_Type
-      const currentBusinessPackage = {
-        id: record.Business_PackageID,
-        name: record.Business_Package
-      }
-      const currentIndividualPackage = {
-        id: record.Individual_PackageID,
-        name: record.Individual_Package
-      }
-  
-      return {
-        branchId,
-        city,
-        state,
-        director,
-        branchType,
-        currentBusinessPackage,
-        currentIndividualPackage
-      }
-    })
-  
-    const result = listBranchs.filter((x) => x.currentIndividualPackage.id === id)
-    
-    //return listBranchs
-    return result
-  }
-
-
-
-
-PROCEDURE  sp_upd_feepackagebranch
-
-
-
-USE [FeeMgmt]
-GO
-/****** Object:  StoredProcedure [dbo].[sp_upd_feepackagebranch]    Script Date: 3/6/2025 2:44:42 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-
-
-
-
-ALTER PROCEDURE [dbo].[sp_upd_feepackagebranch]
-@branch_cd int,
-@feegroupid int,
-@busfeegroupid int,
-@indfeegroupid int,
-@updatedby varchar(50) = NULL
-
-AS
-
-BEGIN
-   
-   /*
-   DECLARE
-   @current_busfeepackageid int,
-   @current_indfeepackageid int
-   */
-
-   IF EXISTS (select 1 from FeePackageBranch where branch_cd=@branch_cd)
-      BEGIN
-	    -- SELECT @current_busfeepackageid=BusFeePackageID,@current_indfeepackageid=IndFeePackageID FROM FeePackageBranch WHERE Branch_CD=@branch_cd
-		-- UPDATE FeePackageBranch set BusFeePackageID=ISNULL(@busfeepackageid,@current_busfeepackageid),IndFeePackageID=ISNULL(@indfeepackageid,@current_indfeepackageid),UpdatedBy=@updatedby,UpdateDt=getdate() where Branch_CD=@branch_cd
-       
-	    UPDATE FeePackageBranch set FeeGroupId=@feegroupid,BusFeeGroupId=@busfeegroupid,IndFeeGroupID=@indfeegroupid,UpdatedBy=@updatedby,UpdateDt=getdate() where Branch_CD=@branch_cd
-		INSERT INTO FeePackageBranchHistory(Branch_CD,FeeGroupId,BusFeeGroupID,IndFeeGroupID,Active,UpdateDt,UpdatedBy,Action) VALUES (@branch_cd,@feegroupid,@busfeegroupid,@indfeegroupid,1,getdate(),@updatedby,'U')
-	  END
-   ELSE
-      BEGIN
-	     INSERT INTO FeePackageBranch(Branch_CD,FeeGroupId,BusFeeGroupID,IndFeeGroupID,Active,CreateDt,UpdateDt,UpdatedBy) VALUES (@branch_cd,@feegroupid,@busfeegroupid,@indfeegroupid,1,getdate(),getdate(),@updatedby)
-		
-         INSERT INTO FeePackageBranchHistory(Branch_CD,FeeGroupId,BusFeeGroupID,IndFeeGroupID,Active,UpdateDt,UpdatedBy,Action) VALUES (@branch_cd,@feegroupid,@busfeegroupid,@indfeegroupid,1,getdate(),@updatedby,'I')
-      END
-
-END
-
-
-
-
-
-
-
-
-
-
-
-
+}
