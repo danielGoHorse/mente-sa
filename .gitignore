@@ -1,7 +1,5 @@
 import Result from '#features/shared/result.js'
-
 import { saveFeePackageBranch } from '#src/models/FeePackageBranch.js'
-
 
 export default class feePackageBranchSaveUseCase {
   async execute(req) {
@@ -9,29 +7,35 @@ export default class feePackageBranchSaveUseCase {
     const rows = req
     let proccess = false
 
+    try {
+      for (let i = 0; i < rows.length; i++) {
+        const Branch_cd = rows[i].branchCd ?? 0
+        const Office_id = rows[i].officerId ?? 0
+        const Feegroupid = rows[i].feegroupid ?? 0
+        const Busfeegroup_id = rows[i].busfeegroupid ?? null
+        const Indfeegroup_id = rows[i].indfeegroupid ?? null
+        // Usando rows[i] para manter consistência
+        const Updatedby = rows[i].updatedby ?? null
+        
+        // Log dos parâmetros
+        global.logger.info(`Salvando branch: Branch_cd=${Branch_cd}, Office_id=${Office_id}, Feegroupid=${Feegroupid}, Busfeegroup_id=${Busfeegroup_id}, Indfeegroup_id=${Indfeegroup_id}, Updatedby=${Updatedby}`)
 
+        proccess = await saveFeePackageBranch(Branch_cd,
+                                              Office_id, 
+                                              Feegroupid, 
+                                              Busfeegroup_id, 
+                                              Indfeegroup_id, 
+                                              Updatedby)
 
-    for (let i = 0; i < rows.length; i++) {
-
-      let Branch_cd = rows[i].branchCd ?? 0
-      let Office_id = rows[i].officerId ?? 0
-      let Feegroupid = rows[i].feegroupid ?? 0
-      let Busfeegroup_id = rows[i].busfeegroupid ?? null
-      let Indfeegroup_id = rows[i].indfeegroupid ?? null
-      let Updatedby = req[i].updatedby ?? null
-  
-      proccess = await saveFeePackageBranch(Branch_cd,
-                                            Office_id, 
-                                            Feegroupid, 
-                                            Busfeegroup_id, 
-                                            Indfeegroup_id, 
-                                            Updatedby)
-
-      if(proccess === false){
-        return Result.fail('Error saving fee package branch')
+        if(proccess === false){
+          global.logger.error(`Error saving fee package branch at index ${i} with branchCd=${Branch_cd}`)
+          return Result.fail('Error saving fee package branch')
+        }
       }
-
+      return Result.ok(proccess)
+    } catch (error) {
+      global.logger.error('Exception in FeePackageBranchSaveUseCase:', error)
+      return Result.fail('Error saving fee package branch')
     }
-    return Result.ok(proccess)
   }
 }
