@@ -1,16 +1,3 @@
-import React from 'react';
-
-interface RadioButtonProps {
-    children?: React.ReactNode;
-    disabled?: boolean;
-    value?: string;
-    styleType?: string;
-    options?: any[];
-    error?: boolean;
-    errorText?: string;
-    name?: string;
-    onChange?: (value: any) => void;
-}
-declare const RadioButton: React.FC<RadioButtonProps>;
-
-export { RadioButton };
+Type '{ children: Element; value: string; externalValue: any; name: string; onChange: (newValue: any) => void; styleType: string; }' is not assignable to type 'IntrinsicAttributes & RadioButtonProps'.
+  Property 'externalValue' does not exist on type 'IntrinsicAttributes & RadioButtonProps'.ts(2322)
+(property) externalValue: any
