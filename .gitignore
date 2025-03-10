@@ -1,216 +1,59 @@
-import { Fragment, useState } from 'react';
+app-index.tsx:25 
+ Warning: The tag <text> is unrecognized in this browser. If you meant to render a React component, start its name with an uppercase letter.
+    at text
+    at div
+    at div
+    at FocusTrap (webpack-internal:///(app-pages-browser)/./node_modules/@mui/base/FocusTrap/FocusTrap.js:105:13)
+    at div
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@emotion/react/dist/emotion-element-43c6fea0.browser.esm.js:60:66)
+    at Portal (webpack-internal:///(app-pages-browser)/./node_modules/@mui/base/Portal/Portal.js:38:13)
+    at Modal (webpack-internal:///(app-pages-browser)/./node_modules/@mui/material/Modal/Modal.js:128:84)
+    at GenericModal (webpack-internal:///(app-pages-browser)/./src/app/components/GenericModal.tsx:7:11)
+    at ButtonModal (webpack-internal:///(app-pages-browser)/./src/app/components/ButtonModal.tsx:43:11)
+    at div
+    at div
+    at Buttons (webpack-internal:///(app-pages-browser)/./src/app/components/Buttons.tsx:43:11)
+    at div
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-primitive/dist/index.mjs:36:13)
+    at Presence (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-presence/dist/index.mjs:28:13)
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tabs/dist/index.mjs:175:13)
+    at _c4 (webpack-internal:///(app-pages-browser)/./src/app/components/Tabs.tsx:47:11)
+    at DomesticInternacionalTab (webpack-internal:///(app-pages-browser)/./src/app/components/TabsFactory.tsx:35:97)
+    at FormProvider (webpack-internal:///(app-pages-browser)/./node_modules/react-hook-form/dist/index.esm.mjs:212:13)
+    at div
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-primitive/dist/index.mjs:36:13)
+    at Provider (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-context/dist/index.mjs:34:15)
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tabs/dist/index.mjs:44:13)
+    at TabsFactory (webpack-internal:///(app-pages-browser)/./src/app/components/TabsFactory.tsx:238:11)
+    at div
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-primitive/dist/index.mjs:36:13)
+    at Presence (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-presence/dist/index.mjs:28:13)
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tabs/dist/index.mjs:175:13)
+    at _c4 (webpack-internal:///(app-pages-browser)/./src/app/components/Tabs.tsx:47:11)
+    at div
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-primitive/dist/index.mjs:36:13)
+    at Provider (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-context/dist/index.mjs:34:15)
+    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tabs/dist/index.mjs:44:13)
+    at PageTabs (webpack-internal:///(app-pages-browser)/./src/app/(private)/[requestName]/[requestId]/page_tabs.tsx:42:11)
+    at div
+    at Page (Server)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:243:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:74:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:82:11)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
+    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:349:11)
+    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:160:11)
+    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:153:9)
+    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:228:11)
+    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/render-from-template-context.js:16:44)
+    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:370:11)
+    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:243:11)
+    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:74:9)
+    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:82:11)
+    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
+[NEW] Explain Console errors by using Copilot in Edge: click 
+ to explain an error. Learn more
+Don't show again
+01958118-1959-78cc-b19d-970f6ab44855:1 [Intervention] Images loaded lazily and replaced with placeholders. Load events are deferred. See https://go.microsoft.com/fwlink/?linkid=2048113
+﻿
 
-import { Button } from '@snb/ds-button';
-
-import Image from 'next/image';
-
-import ApproveIcon from "@/assets/svg/check-white.svg";
-import CloseIcon from "@/assets/svg/close-color.svg";
-import EditIcon from "@/assets/svg/edit.svg";
-import PrintIcon from "@/assets/svg/print-color.svg";
-import ReturnIcon from "@/assets/svg/send-back-color.svg";
-
-import { queryClient } from '@/providers';
-import { useDocumentStore } from '@/store/documentsStore';
-import { CircularProgress } from '@mui/material';
-import { TextArea } from '@snb/ds-text-area';
-import { useParams } from 'next/navigation';
-import GenericModal from './GenericModal';
-
-const IconMap: { [key: string]: string } = {
-  submitButton: "",
-  editButton: EditIcon,
-  printButton: PrintIcon,
-  cancelButton: CloseIcon,
-  returnButton: ReturnIcon,
-  approveButton: ApproveIcon,
-};
-
-type ButtonModalProps = {
-  loading: boolean;
-  button: any;
-  onSubmit: (button: any, text: any, bindButton: any) => Promise<void>;
-};
-
-const ButtonModal = ({ loading, button, onSubmit }: ButtonModalProps) => {
-  const data: any = queryClient.getQueryData(["getRequest"]);
-
-  const [text, setText] = useState("");
-
-  const [openModal, setOpenModal] = useState(false);
-
-  const { documentList } = useDocumentStore((state) => state);
-
-  const { requestId } = useParams();
-
-  const getDocuments = () => {
-    const documents = documentList.length > 0 ? documentList.map((document) => {
-      return {
-        documentName: document.documentName,
-        documentUUID: document.documentUUID,
-        uploadedBy: {
-          fullName: document.uploadedBy.fullName,
-          userId: document.uploadedBy.userId,
-        },
-        createdAt: document.createdAt,
-      };
-    }) : [];
-
-    return documents;
-  }
-
-  const buttonLiterals: Record<string, Record<string, any>> = {
-    'saveButton': {
-      title: '',
-      subtitle: 'Do you want to save your progress to continue later?',
-      submit: 'Save',
-      cancel: 'Cancel',
-      hasTextArea: false,
-      route: '',
-      payload: {
-        ...data,
-        documents: getDocuments(),
-      },
-    },
-    'savereturnButtonButton': {
-      title: 'Do you want to save your progress to continue later?',
-      subtitle: '',
-      label: '',
-      submit: 'Save',
-      cancel: 'Cancel',
-      hasTextArea: false,
-      route: '',
-      payload: {
-        ...data,
-        documents: getDocuments(),
-      },
-    },
-    'returnButton': {
-      title: 'Comment to the Initiator',
-      subtitle: '',
-      label: 'Comment:',
-      submit: 'Submit',
-      cancel: 'Cancel',
-      hasTextArea: true,
-      route: '/approve-request/success',
-
-      payload: {
-        ...data,
-        documents: getDocuments(),
-      },
-    },
-    'returnClarificationButton': {
-      title: 'Comment to the Initiator',
-      subtitle: '',
-      label: 'Comment:',
-      submit: 'Submit',
-      cancel: 'Cancel',
-      hasTextArea: true,
-      route: '/approve-request/success',
-      payload: {
-        ...data,
-        documents: getDocuments(),
-      },
-    },
-    'cancelButton': {
-      title: 'Cancel Request Reason',
-      subtitle: '',
-      label: 'Please provide information to support your decision.',
-      submit: 'Submit',
-      cancel: 'Cancel',
-      hasTextArea: true,
-      route: '/approve-request/canceled',
-      payload: {
-        ...data,
-        documents: getDocuments(),
-      },
-    },
-  }
-
-  const bindButton = buttonLiterals[button.name];
-
-  return (
-    <Fragment>
-      <Button
-        id={`button-${button.name}`}
-        data-test={`button-${button.name}`}
-        size="lg"
-        iconSize={15}
-        icon={IconMap[button.name]}
-        variant={
-          button.theme as "text" | "primary" | "outline" | undefined
-        }
-        onClick={() => {
-          setOpenModal(true);
-        }}
-      >
-        {button.label}
-      </Button>
-
-      <GenericModal open={openModal} onClose={() => { }}>
-        <div className='absolute top-1/2 left-1/2 bg-white min-w-[500px] p-[20px] rounded-lg -translate-x-1/2 -translate-y-1/2 shadow-lg shadow-[rgba(37, 37, 39, 0.08)] focus:outline-none focus:border-e-[1px] focus:shadow-[rgba(5, 145, 255, 0.1)]'>
-          <div className='flex justify-between items-center'>
-            <text className='flex justify-center font-figtree font-semibold text-lg leading-7 align-middle text-center tracking-normal text-[#1e2347]'>
-              {bindButton?.title}
-            </text>
-            <button disabled={loading} onClick={() => setOpenModal(false)} className='font-Figtree flex align-middle text-center justify-center bg-none border-none m-0 p-0 cursor-pointer focus:shadow-[0 0 0 2px #4289f5]'>
-              <Image src={CloseIcon} width={24} height={24} alt='close-icon' />
-            </button>
-          </div>
-
-          <div className='flex gap-4 flex-col'>
-            <div className='flex gap-3 flex-col pt-5 pb-5'>
-              {bindButton?.subtitle && (
-                <text className='flex justify-center font-figtree font-semibold text-lg leading-7 align-middle text-center tracking-normal text-[#1e2347]'>
-                  {bindButton?.subtitle}
-                </text>
-              )}
-            </div>
-
-            {bindButton?.hasTextArea && (
-              <TextArea
-                id="submitModalTextArea"
-                maxLength={500}
-                enableDigitalCount={true}
-                label={bindButton.label}
-                onChangeText={(e) => setText(e)}
-              />
-            )}
-
-            <div className='flex gap-3 justify-between'>
-              <Button
-                disabled={loading}
-                id="cancelButtonModal"
-                data-test={`button-${button.name}`}
-                variant="text"
-                width={"140px"}
-                onClick={() => setOpenModal(false)}
-              >
-                {bindButton?.cancel}
-              </Button>
-
-              <Button
-                disabled={loading}
-                id="submitButtonModal"
-                data-test={`button-${button.name}`}
-                variant="primary"
-                width={"140px"}
-                onClick={() => {
-                  onSubmit(button, text, bindButton).finally(() => setOpenModal(false));
-                }}
-              >
-                {loading ? (
-                  <div className="flex justify-center items-center">
-                    <CircularProgress size={20} color="inherit" />
-                  </div>
-                ) : bindButton?.submit}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </GenericModal>
-    </Fragment>
-  )
-}
-
-export default ButtonModal;
