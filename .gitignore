@@ -1,240 +1,216 @@
-import React, { Fragment, useEffect, useState } from 'react';
+import { Fragment, useState } from 'react';
 
-import { ButtonProps } from '@/store/types';
-import { transformValuesOnBackEntries } from '@/utils';
 import { Button } from '@snb/ds-button';
-import { useFormContext } from 'react-hook-form';
 
-import CheckIcon from '@/assets/svg/check-white-small.svg';
-import { queryClient } from '@/providers';
-import { SubmitProvider } from '@/providers/submitProvider';
-import { useAuthStore } from '@/store/auth/store';
-import { useBackEntriesStore } from '@/store/backEntries/useBackEntries';
-import { useDocumentStore } from '@/store/documentsStore';
-import scrollToTop from '@/utils/scrollToTop';
-import { CircularProgress } from '@mui/material';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ButtonModal from './ButtonModal';
-import ErrorModal from './ErrorModal';
 
-interface ButtonsProps {
-  requestId: string;
-  initialRequestData: any;
-  data: ButtonProps[];
-}
+import ApproveIcon from "@/assets/svg/check-white.svg";
+import CloseIcon from "@/assets/svg/close-color.svg";
+import EditIcon from "@/assets/svg/edit.svg";
+import PrintIcon from "@/assets/svg/print-color.svg";
+import ReturnIcon from "@/assets/svg/send-back-color.svg";
 
-const Buttons: React.FC<ButtonsProps> = ({ requestId, initialRequestData, data }) => {
-  const { getValues, resetField } = useFormContext();
+import { queryClient } from '@/providers';
+import { useDocumentStore } from '@/store/documentsStore';
+import { CircularProgress } from '@mui/material';
+import { TextArea } from '@snb/ds-text-area';
+import { useParams } from 'next/navigation';
+import GenericModal from './GenericModal';
 
-  const [modalError, setModalError] = useState(false);
-  const [errorList, setErrorList] = useState<string[]>([]);
+const IconMap: { [key: string]: string } = {
+  submitButton: "",
+  editButton: EditIcon,
+  printButton: PrintIcon,
+  cancelButton: CloseIcon,
+  returnButton: ReturnIcon,
+  approveButton: ApproveIcon,
+};
 
-  const { mutation } = SubmitProvider();
+type ButtonModalProps = {
+  loading: boolean;
+  button: any;
+  onSubmit: (button: any, text: any, bindButton: any) => Promise<void>;
+};
 
-  const router = useRouter();
-  const { userData } = useAuthStore((state) => state);
+const ButtonModal = ({ loading, button, onSubmit }: ButtonModalProps) => {
+  const data: any = queryClient.getQueryData(["getRequest"]);
 
-  const { backEntries: currentBackEntries, setBackEntries } = useBackEntriesStore((state) => state);
+  const [text, setText] = useState("");
+
+  const [openModal, setOpenModal] = useState(false);
 
   const { documentList } = useDocumentStore((state) => state);
 
-  const CustomIcon: React.FC = () => (
-    <Image
-      src={CheckIcon}
-      width={16}
-      height={12}
-      alt="Close"
-    />
-  )
+  const { requestId } = useParams();
 
-  const propagateApiErrors = (errors: any) => {
-    scrollToTop();
-    setModalError(true);
-
-    const backEntriesWithErrors = errors?.response?.data?.data?.error?.data?.jsonRequest?.backEntries;
-
-    if (!backEntriesWithErrors) {
-      return;
-    };
-
-    const fieldsWithErrors = Object.keys(backEntriesWithErrors).filter(key => backEntriesWithErrors[key]?.errors?.length > 0);
-
-    const newBackEntriesWithErrors: Record<string, Record<string, any>> = {};
-
-    const currentValues = getValues();
-
-    Object.keys(currentBackEntries).forEach((key) => {
-      if (fieldsWithErrors.includes(key)) {
-        newBackEntriesWithErrors[key] = backEntriesWithErrors[key];
-      } else {
-        newBackEntriesWithErrors[key] = {
-          ...currentBackEntries[key],
-          value: currentValues[key],
-          errors: [],
-        };
-      }
-    });
-
-    setBackEntries(newBackEntriesWithErrors);
-
-    Object.keys(backEntriesWithErrors).forEach((key) => {
-      resetField(key, { defaultValue: currentValues[key] });
-    });
-  };
-
-  const [buttonsLoading, setButtonsLoading] = useState<string[]>([]);
-
-  const handleSubmit = async (button: any, bindButton: any = null) => {
-    setButtonsLoading([...buttonsLoading, button.label]);
-
-    const { frontEntries, version } = initialRequestData;
-
-    const pureValues = getValues();
-
-    const newBackEntries = transformValuesOnBackEntries(pureValues, currentBackEntries);
-
-    const method = button.method;
-
-    const url = button.action;
-
-    const body: any = {
-      requestId,
-      version,
-      jsonRequest: {
-        frontEntries,
-        backEntries: newBackEntries,
-        documents: documentList,
-      },
-    };
-
-    try {
-      await mutation.mutateAsync({ url, method, body }, {
-        onSuccess: () => {
-          if (button.label == 'Save' && button.method == 'put') {
-            toast.success('Your editing has been saved', {
-              icon: CustomIcon,
-              style: {
-                backgroundColor: '#008056',
-                color: 'white',
-                borderRadius: '4px',
-                fontSize: '15px',
-                lineHeight: '23px',
-              }
-            });
-          }
-
-          if (button.method == 'put') {
-            queryClient.invalidateQueries({ queryKey: ['requestConfig'] });
-          }
-
-          setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+  const getDocuments = () => {
+    const documents = documentList.length > 0 ? documentList.map((document) => {
+      return {
+        documentName: document.documentName,
+        documentUUID: document.documentUUID,
+        uploadedBy: {
+          fullName: document.uploadedBy.fullName,
+          userId: document.uploadedBy.userId,
         },
-        onError: (errors) => {
-          setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
-        }
-      });
+        createdAt: document.createdAt,
+      };
+    }) : [];
 
-      if (button.method == 'get') {
-        setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+    return documents;
+  }
 
-        return;
-      }
+  const buttonLiterals: Record<string, Record<string, any>> = {
+    'saveButton': {
+      title: '',
+      subtitle: 'Do you want to save your progress to continue later?',
+      submit: 'Save',
+      cancel: 'Cancel',
+      hasTextArea: false,
+      route: '',
+      payload: {
+        ...data,
+        documents: getDocuments(),
+      },
+    },
+    'savereturnButtonButton': {
+      title: 'Do you want to save your progress to continue later?',
+      subtitle: '',
+      label: '',
+      submit: 'Save',
+      cancel: 'Cancel',
+      hasTextArea: false,
+      route: '',
+      payload: {
+        ...data,
+        documents: getDocuments(),
+      },
+    },
+    'returnButton': {
+      title: 'Comment to the Initiator',
+      subtitle: '',
+      label: 'Comment:',
+      submit: 'Submit',
+      cancel: 'Cancel',
+      hasTextArea: true,
+      route: '/approve-request/success',
 
-      router.push(
-        button.method == 'put' || button.label == 'Save to Continue Later'
-          ? `/Create-Department-Wire-Transfer/${requestId}`
-          : '/approve-request/success'
-      );
-      setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
-    } catch (errors) {
-      propagateApiErrors(errors);
-      setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
-    }
-  };
+      payload: {
+        ...data,
+        documents: getDocuments(),
+      },
+    },
+    'returnClarificationButton': {
+      title: 'Comment to the Initiator',
+      subtitle: '',
+      label: 'Comment:',
+      submit: 'Submit',
+      cancel: 'Cancel',
+      hasTextArea: true,
+      route: '/approve-request/success',
+      payload: {
+        ...data,
+        documents: getDocuments(),
+      },
+    },
+    'cancelButton': {
+      title: 'Cancel Request Reason',
+      subtitle: '',
+      label: 'Please provide information to support your decision.',
+      submit: 'Submit',
+      cancel: 'Cancel',
+      hasTextArea: true,
+      route: '/approve-request/canceled',
+      payload: {
+        ...data,
+        documents: getDocuments(),
+      },
+    },
+  }
 
-  const handleSubmitModal = async (button: any, text: string, bindButton: any) => {
-    setButtonsLoading([...buttonsLoading, button.label]);
-
-    if (button.name == "saveButton") {
-      return handleSubmit(button, bindButton);
-    }
-
-    const method = button.method;
-
-    const url = button.action;
-
-    const body: Record<string, any> = {
-      comment: text,
-      name: userData.fullName,
-      documents: documentList
-    };
-
-    try {
-      await mutation.mutateAsync({ url, method, body });
-      router.push(bindButton.route);
-      setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
-    } catch (errors) {
-      setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
-      propagateApiErrors(errors);
-    }
-  };
-
-  useEffect(() => {
-    if (errorList.length === 0) {
-      return;
-    }
-
-    setModalError(true);
-
-    window.scrollTo(0, 0);
-  }, [errorList]);
-
-  const onCloseModalError = () => {
-    setModalError(false);
-
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-    });
-  };
+  const bindButton = buttonLiterals[button.name];
 
   return (
-    <div className="flex justify-between p-6">
-      {data && data.map((button, index) => (
-        <div key={index} style={button.styles}>
-          {button.openModal ? (
-            <ButtonModal loading={buttonsLoading.includes(button.label)} button={button} onSubmit={(button: any, text: string, bindButton: any) => handleSubmitModal(button, text, bindButton)} />
-          ) : (
-            <Fragment>
+    <Fragment>
+      <Button
+        id={`button-${button.name}`}
+        data-test={`button-${button.name}`}
+        size="lg"
+        iconSize={15}
+        icon={IconMap[button.name]}
+        variant={
+          button.theme as "text" | "primary" | "outline" | undefined
+        }
+        onClick={() => {
+          setOpenModal(true);
+        }}
+      >
+        {button.label}
+      </Button>
+
+      <GenericModal open={openModal} onClose={() => { }}>
+        <div className='absolute top-1/2 left-1/2 bg-white min-w-[500px] p-[20px] rounded-lg -translate-x-1/2 -translate-y-1/2 shadow-lg shadow-[rgba(37, 37, 39, 0.08)] focus:outline-none focus:border-e-[1px] focus:shadow-[rgba(5, 145, 255, 0.1)]'>
+          <div className='flex justify-between items-center'>
+            <text className='flex justify-center font-figtree font-semibold text-lg leading-7 align-middle text-center tracking-normal text-[#1e2347]'>
+              {bindButton?.title}
+            </text>
+            <button disabled={loading} onClick={() => setOpenModal(false)} className='font-Figtree flex align-middle text-center justify-center bg-none border-none m-0 p-0 cursor-pointer focus:shadow-[0 0 0 2px #4289f5]'>
+              <Image src={CloseIcon} width={24} height={24} alt='close-icon' />
+            </button>
+          </div>
+
+          <div className='flex gap-4 flex-col'>
+            <div className='flex gap-3 flex-col pt-5 pb-5'>
+              {bindButton?.subtitle && (
+                <text className='flex justify-center font-figtree font-semibold text-lg leading-7 align-middle text-center tracking-normal text-[#1e2347]'>
+                  {bindButton?.subtitle}
+                </text>
+              )}
+            </div>
+
+            {bindButton?.hasTextArea && (
+              <TextArea
+                id="submitModalTextArea"
+                maxLength={500}
+                enableDigitalCount={true}
+                label={bindButton.label}
+                onChangeText={(e) => setText(e)}
+              />
+            )}
+
+            <div className='flex gap-3 justify-between'>
               <Button
-                key={index}
-                variant={button.theme}
-                size={button.size}
-                icon={button.icon}
-                iconSize={button.iconSize}
-                width={button.width}
-                disabled={button.disabled}
-                onClick={() => handleSubmit(button)}
+                disabled={loading}
+                id="cancelButtonModal"
+                data-test={`button-${button.name}`}
+                variant="text"
+                width={"140px"}
+                onClick={() => setOpenModal(false)}
               >
-                {buttonsLoading.includes(button.label) ? (
-                  <div className="flex justify-center items-center min-w-[50px]">
-                    <CircularProgress size={20} color="inherit" />
-                  </div>
-                ) : button?.label}
+                {bindButton?.cancel}
               </Button>
 
-              <ErrorModal
-                open={modalError}
-                onClose={onCloseModalError}
-              />
-            </Fragment>
-          )}
+              <Button
+                disabled={loading}
+                id="submitButtonModal"
+                data-test={`button-${button.name}`}
+                variant="primary"
+                width={"140px"}
+                onClick={() => {
+                  onSubmit(button, text, bindButton).finally(() => setOpenModal(false));
+                }}
+              >
+                {loading ? (
+                  <div className="flex justify-center items-center">
+                    <CircularProgress size={20} color="inherit" />
+                  </div>
+                ) : bindButton?.submit}
+              </Button>
+            </div>
+          </div>
         </div>
-      ))}
-    </div>
-  );
-};
+      </GenericModal>
+    </Fragment>
+  )
+}
 
-export default Buttons;
+export default ButtonModal;
