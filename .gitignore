@@ -1,128 +1,45 @@
-'use client';
+// No seu DomesticInternacionalTab
+import { useFormContext } from 'react-hook-form';
 
-import dynamic from 'next/dynamic';
+const DomesticInternacionalTab = (data: IData, useFormObject: any) => {
+  // Obtém os métodos do hook form
+  const { register, watch, setValue } = useFormContext();
 
-import Loading from '@/components/Loading';
-import { SkeletonForm } from '@/components/SkeletonForm';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/Tabs';
-import { useAuthStore } from '@/store/auth/store';
-import { useDocumentStore } from '@/store/documentsStore';
-import { Documents } from '@snb/ds-documents';
-import { History } from '@snb/ds-history';
+  const selectedBank = watch('bank'); // "Observa" o valor do campo bank
 
-import TabsFactory from '@/components/TabsFactory';
-import RequestConfigProvider from '@/providers/requestConfigProvider';
-import { Document } from '@/store/types';
-
-const FormFactory = dynamic(() => import('@/components/FormFactory'), {
-  loading: () => <SkeletonForm />,
-});
-
-type IPageTabsParams = {
-  params: {
-    requestName: string;
-    requestId: string;
+  const handleBankSelection = (bank: string) => {
+    // Seta diretamente o valor do campo no Hook Form
+    setValue('bank', bank);
   };
-  tabTriggerType: string;
-};
-
-export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
-  const { getRequestConfig } = RequestConfigProvider(params.requestId);
-
-  const { userData } = useAuthStore((state) => state);
-
-  const { setDocumentList } = useDocumentStore((state) => state);
-
-  const { isLoading, isFetching, data } = getRequestConfig;
-
-  const mapPayPlus = data?.timeline?.flat().filter((item: any) => item.name === "Processing")
-  const isContingencyStep = mapPayPlus?.[0].status == "pending" ? true : false;
-  //Setar false caso subir outra versão do wire deprtament sem contigencia.
-
-
-  if (isLoading || isFetching) {
-    return (
-      <Loading />
-    )
-  }
-
-  if (!data) {
-    return;
-  }
 
   return (
-    <Tabs defaultValue={tabTriggerType} className="min-h-screen w-full p-6">
-      <TabsList className="m-0 p-0 list-none self-start ">
-        <TabsTrigger
-          value="request"
-          className='mb-[4px] font-figtree select-none flex flex-row justify-center items-center gap-4 h-[45px] bg-background-primary -order-none grow-0 font-normal text-sm cursor-pointer aria-selected:bg-white aria-selected:border-b-1 aria-selected:border-b-white text-[#636574] aria-selected:text-[#1e2347]'
-          style={{
-            padding: '10px 16px',
-            borderRadius: '8px 8px 0px 0px',
-          }}
-        >
-          Request: {data.caseNumber}
-        </TabsTrigger>
-        <TabsTrigger
-          value="documents"
-          className='mb-[4px] font-figtree select-none flex flex-row justify-center items-center gap-4 h-[45px] bg-background-primary -order-none grow-0 font-normal text-sm cursor-pointer aria-selected:bg-white aria-selected:border-b-1 aria-selected:border-b-white text-[#636574] aria-selected:text-[#1e2347]'
-          style={{
-            padding: '10px 16px',
-            borderRadius: '8px 8px 0px 0px',
-          }}
-        >
-          Documents
-        </TabsTrigger>
-        <TabsTrigger
-          value="history"
-          className='mb-[4px] font-figtree select-none flex flex-row justify-center items-center gap-4 h-[45px] bg-background-primary -order-none grow-0 font-normal text-sm cursor-pointer aria-selected:bg-white aria-selected:border-b-1 aria-selected:border-b-white text-[#636574] aria-selected:text-[#1e2347]'
-          style={{
-            padding: '10px 16px',
-            borderRadius: '8px 8px 0px 0px',
-          }}
-        >
-          History
-        </TabsTrigger>
-      </TabsList>
+    <TabsContent value="processing-bank-of-america" className="data-[state=inactive]:hidden">
+      {/* ... */}
+      <div className="flex flex-grow gap-4">
+        <div className='...'>
+          {/* Como é um componente Custom (RadioButton), passamos o onChange manual */}
+          <RadioButton 
+            name="bank" 
+            onChange={() => handleBankSelection('payplus')}
+            checked={selectedBank === 'payplus'} // Para refletir o estado atual no input
+          >
+            <label>Payplus</label>
+          </RadioButton>
+          {/* ... */}
+        </div>
 
-      <TabsContent
-        forceMount={true}
-        value="request"
-        className="data-[state=inactive]:hidden mt-0 rounded-b-lg rounded-r-lg bg-background-secondary aria-selected:block"
-      >
-        {isContingencyStep ? (
-          <TabsFactory data={data} />
-        ) : (
-          <FormFactory data={data} />
-        )}
-      </TabsContent>
-
-      <TabsContent
-        value="documents"
-        className="mt-0 rounded-b-lg rounded-r-lg bg-background-secondary aria-selected:block rounded-lg p-6"
-      >
-        <Documents
-          baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ''}
-          bucketName="conductor-wire-temp"
-          pathUrl="/v1/file"
-          getListDocument={data.documents ?? []}
-          showUploader={data.buttons?.length > 0}
-          userData={userData}
-          onUploadDocuments={(documents: Document[]) => setDocumentList(documents)}
-        />
-      </TabsContent>
-
-      <TabsContent
-        value="history"
-        className="mt-0 rounded-b-lg rounded-r-lg bg-background-secondary aria-selected:block"
-      >
-        <History
-          status={data?.caseStatus ?? ''}
-          data={data?.workflow ?? []}
-          cardRowData={data?.workflowApprovers}
-          dataDisplayData={data?.processIntegration}
-        />
-      </TabsContent>
-    </Tabs>
+        <div className='...'>
+          <RadioButton
+            name="bank"
+            onChange={() => handleBankSelection('bank-of-america')}
+            checked={selectedBank === 'bank-of-america'}
+          >
+            <label>Bank of America</label>
+          </RadioButton>
+          {/* ... */}
+        </div>
+      </div>
+      {/* ... */}
+    </TabsContent>
   );
-}
+};
