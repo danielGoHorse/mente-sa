@@ -244,4 +244,11 @@ export default function ButtonModal({ loading, button, onSubmit }: ButtonModalPr
                 ) : (
                   bindButton.submit
                 )}
-              </Butto
+              </Button>
+            </div>
+          </div>
+        </div>
+      </GenericModal>
+    </Fragment>
+  );
+}
