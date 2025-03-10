@@ -1,34 +1,16 @@
-{
-  "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "baseUrl": "./",
-    "paths": {
-      "@/*": ["./src/app/*"]
-    }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "index.tjs"
-  ],
-  "exclude": ["node_modules"]
+import React from 'react';
+
+interface RadioButtonProps {
+    children?: React.ReactNode;
+    disabled?: boolean;
+    value?: string;
+    styleType?: string;
+    options?: any[];
+    error?: boolean;
+    errorText?: string;
+    name?: string;
+    onChange?: (value: any) => void;
 }
+declare const RadioButton: React.FC<RadioButtonProps>;
+
+export { RadioButton };
