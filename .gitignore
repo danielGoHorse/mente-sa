@@ -1,3 +1,240 @@
-Type '{ children: Element; value: string; externalValue: any; name: string; onChange: (newValue: any) => void; styleType: string; }' is not assignable to type 'IntrinsicAttributes & RadioButtonProps'.
-  Property 'externalValue' does not exist on type 'IntrinsicAttributes & RadioButtonProps'.ts(2322)
-(property) externalValue: any
+import React, { Fragment, useEffect, useState } from 'react';
+
+import { ButtonProps } from '@/store/types';
+import { transformValuesOnBackEntries } from '@/utils';
+import { Button } from '@snb/ds-button';
+import { useFormContext } from 'react-hook-form';
+
+import CheckIcon from '@/assets/svg/check-white-small.svg';
+import { queryClient } from '@/providers';
+import { SubmitProvider } from '@/providers/submitProvider';
+import { useAuthStore } from '@/store/auth/store';
+import { useBackEntriesStore } from '@/store/backEntries/useBackEntries';
+import { useDocumentStore } from '@/store/documentsStore';
+import scrollToTop from '@/utils/scrollToTop';
+import { CircularProgress } from '@mui/material';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import ButtonModal from './ButtonModal';
+import ErrorModal from './ErrorModal';
+
+interface ButtonsProps {
+  requestId: string;
+  initialRequestData: any;
+  data: ButtonProps[];
+}
+
+const Buttons: React.FC<ButtonsProps> = ({ requestId, initialRequestData, data }) => {
+  const { getValues, resetField } = useFormContext();
+
+  const [modalError, setModalError] = useState(false);
+  const [errorList, setErrorList] = useState<string[]>([]);
+
+  const { mutation } = SubmitProvider();
+
+  const router = useRouter();
+  const { userData } = useAuthStore((state) => state);
+
+  const { backEntries: currentBackEntries, setBackEntries } = useBackEntriesStore((state) => state);
+
+  const { documentList } = useDocumentStore((state) => state);
+
+  const CustomIcon: React.FC = () => (
+    <Image
+      src={CheckIcon}
+      width={16}
+      height={12}
+      alt="Close"
+    />
+  )
+
+  const propagateApiErrors = (errors: any) => {
+    scrollToTop();
+    setModalError(true);
+
+    const backEntriesWithErrors = errors?.response?.data?.data?.error?.data?.jsonRequest?.backEntries;
+
+    if (!backEntriesWithErrors) {
+      return;
+    };
+
+    const fieldsWithErrors = Object.keys(backEntriesWithErrors).filter(key => backEntriesWithErrors[key]?.errors?.length > 0);
+
+    const newBackEntriesWithErrors: Record<string, Record<string, any>> = {};
+
+    const currentValues = getValues();
+
+    Object.keys(currentBackEntries).forEach((key) => {
+      if (fieldsWithErrors.includes(key)) {
+        newBackEntriesWithErrors[key] = backEntriesWithErrors[key];
+      } else {
+        newBackEntriesWithErrors[key] = {
+          ...currentBackEntries[key],
+          value: currentValues[key],
+          errors: [],
+        };
+      }
+    });
+
+    setBackEntries(newBackEntriesWithErrors);
+
+    Object.keys(backEntriesWithErrors).forEach((key) => {
+      resetField(key, { defaultValue: currentValues[key] });
+    });
+  };
+
+  const [buttonsLoading, setButtonsLoading] = useState<string[]>([]);
+
+  const handleSubmit = async (button: any, bindButton: any = null) => {
+    setButtonsLoading([...buttonsLoading, button.label]);
+
+    const { frontEntries, version } = initialRequestData;
+
+    const pureValues = getValues();
+
+    const newBackEntries = transformValuesOnBackEntries(pureValues, currentBackEntries);
+
+    const method = button.method;
+
+    const url = button.action;
+
+    const body: any = {
+      requestId,
+      version,
+      jsonRequest: {
+        frontEntries,
+        backEntries: newBackEntries,
+        documents: documentList,
+      },
+    };
+
+    try {
+      await mutation.mutateAsync({ url, method, body }, {
+        onSuccess: () => {
+          if (button.label == 'Save' && button.method == 'put') {
+            toast.success('Your editing has been saved', {
+              icon: CustomIcon,
+              style: {
+                backgroundColor: '#008056',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '15px',
+                lineHeight: '23px',
+              }
+            });
+          }
+
+          if (button.method == 'put') {
+            queryClient.invalidateQueries({ queryKey: ['requestConfig'] });
+          }
+
+          setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+        },
+        onError: (errors) => {
+          setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+        }
+      });
+
+      if (button.method == 'get') {
+        setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+
+        return;
+      }
+
+      router.push(
+        button.method == 'put' || button.label == 'Save to Continue Later'
+          ? `/Create-Department-Wire-Transfer/${requestId}`
+          : '/approve-request/success'
+      );
+      setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+    } catch (errors) {
+      propagateApiErrors(errors);
+      setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+    }
+  };
+
+  const handleSubmitModal = async (button: any, text: string, bindButton: any) => {
+    setButtonsLoading([...buttonsLoading, button.label]);
+
+    if (button.name == "saveButton") {
+      return handleSubmit(button, bindButton);
+    }
+
+    const method = button.method;
+
+    const url = button.action;
+
+    const body: Record<string, any> = {
+      comment: text,
+      name: userData.fullName,
+      documents: documentList
+    };
+
+    try {
+      await mutation.mutateAsync({ url, method, body });
+      router.push(bindButton.route);
+      setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+    } catch (errors) {
+      setButtonsLoading(buttonsLoading.filter((label) => label !== button.label));
+      propagateApiErrors(errors);
+    }
+  };
+
+  useEffect(() => {
+    if (errorList.length === 0) {
+      return;
+    }
+
+    setModalError(true);
+
+    window.scrollTo(0, 0);
+  }, [errorList]);
+
+  const onCloseModalError = () => {
+    setModalError(false);
+
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    });
+  };
+
+  return (
+    <div className="flex justify-between p-6">
+      {data && data.map((button, index) => (
+        <div key={index} style={button.styles}>
+          {button.openModal ? (
+            <ButtonModal loading={buttonsLoading.includes(button.label)} button={button} onSubmit={(button: any, text: string, bindButton: any) => handleSubmitModal(button, text, bindButton)} />
+          ) : (
+            <Fragment>
+              <Button
+                key={index}
+                variant={button.theme}
+                size={button.size}
+                icon={button.icon}
+                iconSize={button.iconSize}
+                width={button.width}
+                disabled={button.disabled}
+                onClick={() => handleSubmit(button)}
+              >
+                {buttonsLoading.includes(button.label) ? (
+                  <div className="flex justify-center items-center min-w-[50px]">
+                    <CircularProgress size={20} color="inherit" />
+                  </div>
+                ) : button?.label}
+              </Button>
+
+              <ErrorModal
+                open={modalError}
+                onClose={onCloseModalError}
+              />
+            </Fragment>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Buttons;
