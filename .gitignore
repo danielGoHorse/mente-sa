@@ -1,49 +1,35 @@
 import React from 'react';
 
 export interface CustomRadioProps {
-  name: string;                  // nome do grupo de radios
-  value: string;                 // valor que este radio representa
-  checked?: boolean;            // se está selecionado
-  label?: string;                // texto exibido ao lado
-  disabled?: boolean;           // desabilita o clique
-  onChange?: (value: string) => void;  // callback ao clicar
-  className?: string;           // estilização extra via Tailwind
+  name: string;
+  value: string;
+  checked?: boolean;
+  onChange?: (value: string) => void;
 }
 
 export const CustomRadio: React.FC<CustomRadioProps> = ({
   name,
   value,
   checked = false,
-  label,
-  disabled = false,
   onChange,
-  className = '',
 }) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange?.(e.target.value);
   };
 
+  // DEBUG
+  console.log('Radio:', { name, value, checked });
+
   return (
-    <label className={`flex items-center cursor-pointer select-none ${className}`}>
-      {/** 
-       * 1) Input "invisível" para acessibilidade 
-       *    "sr-only" esconde visualmente, mas mantém funcionalidade
-       *    "peer" para usarmos peer-checked:* em estilização
-       */}
+    <label className="flex items-center cursor-pointer">
       <input
         type="radio"
         name={name}
         value={value}
         checked={checked}
-        disabled={disabled}
         onChange={handleChange}
         className="sr-only peer"
       />
-
-      {/** 
-       * 2) O círculo externo. Quando checked, a borda fica preta 
-       *    usando peer-checked:border-black.
-       */}
       <div
         className={`
           h-5 w-5 
@@ -51,32 +37,19 @@ export const CustomRadio: React.FC<CustomRadioProps> = ({
           border-2 border-gray-300
           flex items-center justify-center
           peer-checked:border-black
-          ${disabled ? 'opacity-50' : ''}
         `}
       >
-        {/** 
-         * 3) A bolinha interna. Aparece apenas se checked=true 
-         *    => peer-checked:block (caso contrário fica hidden).
-         *    bg-black para a cor preta.
-         */}
         <div
           className="
-            hidden 
-            peer-checked:block 
-            w-2 
-            h-2 
-            rounded-full 
+            hidden
+            peer-checked:block
+            w-2
+            h-2
+            rounded-full
             bg-black
           "
         />
       </div>
-
-      {/** 4) Label textual ao lado (opcional) */}
-      {label && (
-        <span className="ml-2 text-gray-800">
-          {label}
-        </span>
-      )}
     </label>
   );
 };
