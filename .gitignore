@@ -1,14 +1,111 @@
-Bank of America clicked -> bank-of-america
-TabsFactory.tsx:98 [DomesticInternacionalTab] Selected Bank: bank-of-america
-TabsFactory.tsx:98 [DomesticInternacionalTab] Selected Bank: bank-of-america
-TabsFactory.tsx:36 [CustomRadio] Render: {name: 'bank', value: 'payplus', checked: false}
-TabsFactory.tsx:36 [CustomRadio] Render: {name: 'bank', value: 'payplus', checked: false}
-TabsFactory.tsx:36 [CustomRadio] Render: {name: 'bank', value: 'bank-of-america', checked: true}
-TabsFactory.tsx:36 [CustomRadio] Render: {name: 'bank', value: 'bank-of-america', checked: true}
-TabsFactory.tsx:131 Payplus clicked -> payplus
-TabsFactory.tsx:98 [DomesticInternacionalTab] Selected Bank: payplus
-TabsFactory.tsx:98 [DomesticInternacionalTab] Selected Bank: payplus
-TabsFactory.tsx:36 [CustomRadio] Render: {name: 'bank', value: 'payplus', checked: true}
-TabsFactory.tsx:36 [CustomRadio] Render: {name: 'bank', value: 'payplus', checked: true}
-TabsFactory.tsx:36 [CustomRadio] Render: {name: 'bank', value: 'bank-of-america', checked: false}
-TabsFactory.tsx:36 [CustomRadio] Render: {name: 'bank', value: 'bank-of-america', checked: false}
+// CustomRadio.tsx (componente separado)
+'use client';
+
+import React from 'react';
+
+export interface CustomRadioProps {
+  name: string;
+  value: string;
+  checked?: boolean;
+  label?: string;
+  disabled?: boolean;
+  onChange?: (value: string) => void;
+  className?: string;
+}
+
+export const CustomRadio: React.FC<CustomRadioProps> = ({
+  name,
+  value,
+  checked = false,
+  label,
+  disabled = false,
+  onChange,
+  className = '',
+}) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange?.(e.target.value);
+  };
+
+  return (
+    <label
+      className={`flex items-center cursor-pointer select-none ${className}`}
+    >
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        disabled={disabled}
+        onChange={handleChange}
+        className="sr-only"
+      />
+
+      {/* Círculo externo */}
+      <div
+        className={`
+          h-5 w-5 
+          rounded-full 
+          border-2 
+          border-gray-300 
+          flex items-center 
+          justify-center
+          ${checked ? 'border-black' : ''}
+          ${disabled ? 'opacity-50' : ''}
+        `}
+      >
+        {/* Bolinha interna condicional */}
+        {checked && (
+          <div
+            className="
+              w-2
+              h-2
+              rounded-full
+              bg-black
+            "
+          />
+        )}
+      </div>
+
+      {/* Label textual */}
+      {label && (
+        <span className="ml-2 text-[#484A55] font-Figtree text-lg font-semibold leading-5 tracking-tighter">
+          {label}
+        </span>
+      )}
+    </label>
+  );
+};
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+import { CustomRadio } from '@/app/components/CustomRadio';
+
+
+
+function DomesticInternacionalTab(data: IData) {
+  const { watch, setValue } = useFormContext();
+  const selectedBank = watch('bank') || '';
+
+  return (
+    <div>
+      {/* ... */}
+      <CustomRadio
+        name="bank"
+        value="payplus"
+        checked={selectedBank === 'payplus'}
+        onChange={(v) => setValue('bank', v)}
+        label="Payplus"
+      />
+      <CustomRadio
+        name="bank"
+        value="bank-of-america"
+        checked={selectedBank === 'bank-of-america'}
+        onChange={(v) => setValue('bank', v)}
+        label="Bank of America"
+      />
+    </div>
+  );
+}
