@@ -1,70 +1,27 @@
-import React from 'react';
+import { useFormContext } from 'react-hook-form';
+import { CustomRadio } from './CustomRadio'; // Ajuste o caminho
 
-interface CustomRadioProps {
-  name: string;
-  value: string;
-  checked: boolean;
-  label?: string;
-  disabled?: boolean;
-  onChange?: (value: string) => void;
-}
-
-export const CustomRadio: React.FC<CustomRadioProps> = ({
-  name,
-  value,
-  checked,
-  label,
-  disabled,
-  onChange,
-}) => {
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (onChange) {
-      onChange(event.target.value);
-    }
-  };
+function DomesticInternacionalTab() {
+  const { watch, setValue } = useFormContext();
+  const selectedBank = watch('bank') || '';
 
   return (
-    <label className="flex items-center cursor-pointer">
-      {/* 
-        1) Radio invisível para capturar foco e valor
-           "sr-only" esconde visualmente, mas mantém acessibilidade 
-      */}
-      <input
-        type="radio"
-        name={name}
-        value={value}
-        checked={checked}
-        disabled={disabled}
-        onChange={handleChange}
-        className="sr-only"
+    <div className="flex gap-4">
+      <CustomRadio
+        name="bank"
+        value="payplus"
+        label="PayPlus"
+        checked={selectedBank === 'payplus'}
+        onChange={(newVal) => setValue('bank', newVal)}
       />
 
-      {/* 
-        2) Container que representa o anel (círculo externo)
-           - Se "checked", muda a cor da borda para azul
-      */}
-      <div
-        className={`h-5 w-5 rounded-full border-2 flex items-center justify-center
-          ${checked ? 'border-blue-600' : 'border-gray-300'}
-          ${disabled ? 'opacity-50' : 'opacity-100'}
-        `}
-      >
-        {/* 
-          3) Se "checked", renderiza o círculo preenchido no meio 
-        */}
-        {checked && (
-          <div className="h-2 w-2 rounded-full bg-blue-600" />
-        )}
-      </div>
-
-      {/* 
-        4) Label textual do lado (opcional) 
-      */}
-      {label && (
-        <span className="ml-2 text-gray-800">
-          {label}
-        </span>
-      )}
-    </label>
+      <CustomRadio
+        name="bank"
+        value="bank-of-america"
+        label="Bank of America"
+        checked={selectedBank === 'bank-of-america'}
+        onChange={(newVal) => setValue('bank', newVal)}
+      />
+    </div>
   );
-};
+}
