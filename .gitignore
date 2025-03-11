@@ -1,33 +1,22 @@
 import React from 'react';
 
-interface CustomRadioButtonProps {
-  /** Identificador de grupo (mesmo name = pertencem ao mesmo grupo) */
+interface CustomRadioProps {
   name: string;
-  /** Valor que este radio representa */
   value: string;
-  /** Se este radio está marcado */
-  checked?: boolean;
-  /** Desabilita a interação do usuário */
+  checked: boolean;
+  label?: string;
   disabled?: boolean;
-  /** Handler chamado quando o usuário seleciona este radio */
   onChange?: (value: string) => void;
-  /** Conteúdo que aparece ao lado do radio (pode ser texto ou outro JSX) */
-  children?: React.ReactNode;
-  /** Classe extra para estilização */
-  className?: string;
 }
 
-const CustomRadioButton: React.FC<CustomRadioButtonProps> = ({
+export const CustomRadio: React.FC<CustomRadioProps> = ({
   name,
   value,
-  checked = false,
-  disabled = false,
+  checked,
+  label,
+  disabled,
   onChange,
-  children,
-  className,
 }) => {
-
-  // Dispara o onChange passando o value
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (onChange) {
       onChange(event.target.value);
@@ -35,26 +24,47 @@ const CustomRadioButton: React.FC<CustomRadioButtonProps> = ({
   };
 
   return (
-    <label
-      className={className}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-      }}
-    >
+    <label className="flex items-center cursor-pointer">
+      {/* 
+        1) Radio invisível para capturar foco e valor
+           "sr-only" esconde visualmente, mas mantém acessibilidade 
+      */}
       <input
         type="radio"
         name={name}
         value={value}
-        disabled={disabled}
         checked={checked}
+        disabled={disabled}
         onChange={handleChange}
-        style={{ marginRight: '0.5rem' }}
+        className="sr-only"
       />
-      {children}
+
+      {/* 
+        2) Container que representa o anel (círculo externo)
+           - Se "checked", muda a cor da borda para azul
+      */}
+      <div
+        className={`h-5 w-5 rounded-full border-2 flex items-center justify-center
+          ${checked ? 'border-blue-600' : 'border-gray-300'}
+          ${disabled ? 'opacity-50' : 'opacity-100'}
+        `}
+      >
+        {/* 
+          3) Se "checked", renderiza o círculo preenchido no meio 
+        */}
+        {checked && (
+          <div className="h-2 w-2 rounded-full bg-blue-600" />
+        )}
+      </div>
+
+      {/* 
+        4) Label textual do lado (opcional) 
+      */}
+      {label && (
+        <span className="ml-2 text-gray-800">
+          {label}
+        </span>
+      )}
     </label>
   );
 };
-
-export default CustomRadioButton;
