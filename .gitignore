@@ -1,27 +1,82 @@
-import { useFormContext } from 'react-hook-form';
-import { CustomRadio } from './CustomRadio'; // Ajuste o caminho
+import React from 'react';
 
-function DomesticInternacionalTab() {
-  const { watch, setValue } = useFormContext();
-  const selectedBank = watch('bank') || '';
+/**
+ * Props básicas para um radio customizado
+ */
+export interface CustomRadioProps {
+  name: string;                  // nome do grupo de radio
+  value: string;                 // valor que este radio representa
+  checked?: boolean;            // se está selecionado
+  label?: string;                // texto exibido ao lado
+  disabled?: boolean;           // desabilita o clique
+  onChange?: (value: string) => void;  // callback ao clicar
+  className?: string;           // estilização extra
+}
+
+export const CustomRadio: React.FC<CustomRadioProps> = ({
+  name,
+  value,
+  checked = false,
+  label,
+  disabled = false,
+  onChange,
+  className = '',
+}) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onChange) {
+      onChange(e.target.value);
+    }
+  };
 
   return (
-    <div className="flex gap-4">
-      <CustomRadio
-        name="bank"
-        value="payplus"
-        label="PayPlus"
-        checked={selectedBank === 'payplus'}
-        onChange={(newVal) => setValue('bank', newVal)}
+    <label className={`flex items-center cursor-pointer select-none ${className}`}>
+      {/* 
+        1) <input> real fica "sr-only" (invisível), mas mantemos a acessibilidade 
+           e usamos a classe "peer" para estilizar com base no :checked 
+      */}
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        disabled={disabled}
+        onChange={handleChange}
+        className="sr-only peer"
       />
 
-      <CustomRadio
-        name="bank"
-        value="bank-of-america"
-        label="Bank of America"
-        checked={selectedBank === 'bank-of-america'}
-        onChange={(newVal) => setValue('bank', newVal)}
-      />
-    </div>
+      {/* 
+        2) Div que forma o círculo externo 
+           - se estiver checked, muda a cor de borda p/ azul (border-blue-600) 
+           - se quiser preto, troque 'blue-600' por 'black' 
+      */}
+      <div
+        className={`
+          h-5 w-5 rounded-full border-2 border-gray-300 
+          flex items-center justify-center
+          peer-checked:border-blue-600 
+          ${disabled ? 'opacity-50' : ''}
+        `}
+      >
+        {/* 
+          3) Div menor, que aparece só se checked = true 
+             - se quiser preto, troque 'bg-blue-600' por 'bg-black'
+        */}
+        <div className="
+          hidden 
+          peer-checked:block 
+          w-2 
+          h-2 
+          rounded-full 
+          bg-blue-600
+        " />
+      </div>
+
+      {/* 4) Label textual à direita (opcional) */}
+      {label && (
+        <span className="ml-2 text-gray-800">
+          {label}
+        </span>
+      )}
+    </label>
   );
-}
+};
