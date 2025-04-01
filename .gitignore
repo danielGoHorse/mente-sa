@@ -1,101 +1,62 @@
-import React from "react";
-import Image from "next/image";
+import React, { useState } from 'react';
+import Card from '@/components/ui/Card';
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  border?: boolean;
-  size?: "small" | "medium" | "large";
-  imgSrc?: string;
-  imgWidth?: number;
-  imgHeight?: number;
-  title: string;
-  subtitle?: string;
-  subtitleInfo?: string;
-  status?: {
-    type: "pending" | "approved" | "partial" | "rejected" | "completed";
-    text: string;
-  };
-  className?: string;
+interface ClientInfo {
+  name: string;
+  id: string;
+  email: string;
+  phone: string;
 }
 
-const statusColors = {
-  pending: "bg-yellow-100 text-yellow-800",
-  approved: "bg-green-100 text-green-800",
-  partial: "bg-blue-100 text-blue-800",
-  rejected: "bg-red-100 text-red-800",
-  completed: "bg-gray-100 text-gray-800",
+const mockClientData: ClientInfo = {
+  name: 'João da Silva',
+  id: '123456',
+  email: 'joao.silva@example.com',
+  phone: '(11) 99999-8888',
 };
 
-const Card: React.FC<CardProps> = ({
-  border = false,
-  size = "medium",
-  imgSrc,
-  imgWidth,
-  imgHeight,
-  title,
-  subtitle,
-  subtitleInfo,
-  status,
-  className = "",
-  ...rest
-}) => {
-  const sizeStyles = {
-    small: "p-3 gap-2",
-    medium: "p-4 gap-3",
-    large: "p-6 gap-4",
+const ClientSearch: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
+
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      setClientInfo(mockClientData);
+    }
   };
 
   return (
-    <div
-      className={`
-        ${border ? "border border-gray-300 shadow-sm" : "shadow"}
-        ${sizeStyles[size]}
-        rounded-lg bg-white flex items-center justify-between ${className}
-      `}
-      {...rest}
-    >
-      <div className={`flex items-center ${size === "small" ? "gap-2" : "gap-4"}`}>
-        {imgSrc && (
-          <div className="flex-shrink-0">
-            <Image
-              src={imgSrc}
-              width={imgWidth ?? (size === "small" ? 46 : 70)}
-              height={imgHeight ?? (size === "small" ? 46 : 70)}
-              alt="Card image"
-              className="rounded-md"
-            />
-          </div>
-        )}
-        <div className="flex flex-col">
-          <h4 className={`
-              font-semibold text-gray-800 
-              ${size === "small" ? "text-sm" : size === "medium" ? "text-base" : "text-lg"}
-            `}
-          >
-            {title}
-          </h4>
-          {subtitle && (
-            <div className="flex items-center gap-1">
-              <p className="text-gray-600 text-sm">{subtitle}</p>
-              {subtitleInfo && (
-                <span className="text-gray-800 font-medium text-sm">
-                  {subtitleInfo}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-      {status && (
-        <span
-          className={`py-1 px-3 rounded-full text-xs font-medium ${
-            statusColors[status.type]
-          }`}
+    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded shadow">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="Pesquisar cliente..."
+          className="w-full border px-4 py-2 rounded"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <button
+          onClick={handleSearch}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
         >
-          {status.text}
-        </span>
+          Buscar
+        </button>
+      </div>
+
+      {clientInfo && (
+        <div className="mt-6">
+          <Card
+            border
+            size="medium"
+            title={clientInfo.name}
+            subtitle={`ID: ${clientInfo.id}`}
+            subtitleInfo={clientInfo.email}
+            status={{ type: "approved", text: "Ativo" }}
+          />
+        </div>
       )}
     </div>
   );
 };
 
-export default Card;
+export default ClientSearch;
