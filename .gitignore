@@ -1,369 +1,104 @@
-import * as S from "./styles";
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { ISuggestion } from "./types";
-import { SearchProvider } from "./services/searchProvider";
-import configEnv from "./api/configEnv";
-import { AlertIcon } from "./assets/alert-color";
-import { CloseIcon } from "./assets/close-icon";
+import React, { useState, useRef, useEffect } from "react";
 
-export interface SearchProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
-  baseUrl: string;
-  pathUrl: string;
-  fieldKey: string;
-  defaultValue?: string;
-  onChangeText?: (item: ISuggestion) => void;
-  readOnly?: boolean;
-  disabled?: boolean;
+interface SearchProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  placeholder?: string;
   error?: boolean;
   errorMsg?: string;
   width?: string | number;
+  suggestions?: string[];
 }
 
 const Search: React.FC<SearchProps> = ({
-  baseUrl,
-  pathUrl,
-  fieldKey,
-  defaultValue,
-  onChangeText,
-  readOnly,
-  disabled,
+  placeholder,
   error,
   errorMsg,
-  width,
+  width = "100%",
+  suggestions = [],
   ...rest
 }) => {
-  const container = useRef<HTMLDivElement>(null);
-
-  const [value, setValue] = useState<string>(defaultValue ?? "");
-  const [select, setSelect] = useState<ISuggestion>({});
-
-  const [activeSuggestion, setActiveSuggestion] = useState(0);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<ISuggestion[]>(
-    []
-  );
+  const [value, setValue] = useState("");
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [noSuggestions, setNoSuggestions] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const { getSearchValues } = SearchProvider();
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const userInput = e.target.value;
+    setValue(userInput);
 
-  configEnv.baseUrl = baseUrl;
+    const filtered = suggestions.filter((suggestion) =>
+      suggestion.toLowerCase().includes(userInput.toLowerCase())
+    );
 
-  const handleOutsideEventClick = useCallback(
-    (event: MouseEvent) => {
-      if (!container.current) {
-        return;
-      }
-
-      if (container.current.contains(event.target as Node)) {
-        return;
-      }
-
-      if (value === defaultValue) {
-        return;
-      }
-
-      if (Object.entries(select).length === 0) {
-        if (defaultValue) {
-          setValue(defaultValue);
-          onChangeText?.({ [fieldKey]: defaultValue });
-        } else {
-          setValue("");
-          setSelect({});
-          onChangeText?.({} as ISuggestion);
-        }
-      } else {
-        setValue(select[fieldKey]);
-        onChangeText?.(select);
-      }
-
-      setShowSuggestions(false);
-    },
-    [value, select]
-  );
-
-  useEffect(() => {
-    if (disabled && readOnly) {
-      return;
-    }
-
-    document.addEventListener("mousedown", handleOutsideEventClick);
-
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideEventClick);
-    };
-  }, [handleOutsideEventClick]);
-
-  useEffect(() => {
-    setValue(defaultValue ?? "");
-  }, [disabled, defaultValue]);
-
-  const getSuggestionsValues = (paramsUrl: string) => {
-    if (!paramsUrl) {
-      return;
-    }
-
-    getSearchValues({ pathUrl, paramsUrl }).then((response) => {
-      const suggestions = response.data.data.records;
-
-      const newFilteredSuggestions = suggestions.filter(
-        (suggestion: ISuggestion) =>
-          suggestion[fieldKey]
-            .toString()
-            .toLowerCase()
-            .includes(paramsUrl.toLowerCase())
-      );
-
-      setFilteredSuggestions(newFilteredSuggestions);
-
-      setNoSuggestions(newFilteredSuggestions.length === 0);
-    });
-  };
-
-  const onChangeEvent = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const currentTarget = e.currentTarget.value;
-
-    setValue(currentTarget);
-    getSuggestionsValues(currentTarget);
-
+    setFilteredSuggestions(filtered);
     setShowSuggestions(true);
-    setActiveSuggestion(0);
   };
 
-  const onClickEvent = (item: ISuggestion) => {
-    setActiveSuggestion(0);
-
-    setFilteredSuggestions([]);
-    setShowSuggestions(false);
-
-    setValue(item[fieldKey]);
-
-    setSelect(item);
-    onChangeText?.(item);
-  };
-
-  const onKeyDownEvent = (e: React.KeyboardEvent) => {
-    const keyCode = e.code;
-
-    if (!keyCode) {
-      return;
-    }
-
-    if (keyCode === "ArrowUp") {
-      if (activeSuggestion === 0) {
-        return;
-      }
-
-      setActiveSuggestion(activeSuggestion - 1);
-    }
-
-    if (keyCode === "ArrowDown") {
-      if (activeSuggestion === filteredSuggestions.length - 1) {
-        return;
-      }
-
-      setActiveSuggestion(activeSuggestion + 1);
-    }
-
-    if (keyCode === "Enter") {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
       setShowSuggestions(false);
-      setActiveSuggestion(0);
-
-      setValue(filteredSuggestions[activeSuggestion][fieldKey]);
-      setSelect(filteredSuggestions[activeSuggestion]);
-      onChangeText?.(filteredSuggestions[activeSuggestion]);
     }
   };
 
-  const clearAll = () => {
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const clearInput = () => {
     setValue("");
-    setSelect({} as ISuggestion);
-    onChangeText?.({} as ISuggestion);
+    setFilteredSuggestions([]);
     setShowSuggestions(false);
   };
 
   return (
-    <>
-      <S.AutocompleteContainer ref={container} width={width}>
-        <S.InputWrapper>
-          <S.AutocompleteInput
-            type="text"
-            onChange={onChangeEvent}
-            onKeyDown={onKeyDownEvent}
-            value={value}
-            isError={error}
-            disabled={disabled || readOnly}
-            {...rest}
-          />
+    <div className="relative" style={{ width }} ref={containerRef}>
+      <input
+        type="text"
+        className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
+          error ? "border-red-500 focus:ring-red-300" : "border-gray-300 focus:ring-blue-300"
+        }`}
+        placeholder={placeholder}
+        value={value}
+        onChange={handleChange}
+        {...rest}
+      />
 
-          {value && !disabled && !readOnly && (
-            <S.ClearButton onClick={clearAll}>
-              <CloseIcon />
-            </S.ClearButton>
-          )}
-          {error && (
-            <S.IconError>
-              <AlertIcon />
-            </S.IconError>
-          )}
-        </S.InputWrapper>
+      {value && (
+        <button
+          type="button"
+          onClick={clearInput}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+        >
+          ✕
+        </button>
+      )}
 
-        {showSuggestions && value && (
-          <S.SuggestionsListContainer>
-            {filteredSuggestions.map((suggestion, index) => (
-              <S.SuggestionItem
-                className={index === activeSuggestion ? "suggestion-active" : ""}
-                key={index}
-                onClick={() => onClickEvent(suggestion)}
-              >
-                {suggestion[fieldKey]}
-              </S.SuggestionItem>
-            ))}
-          </S.SuggestionsListContainer>
-        )}
+      {error && <p className="text-sm text-red-500 mt-1">{errorMsg}</p>}
 
-        {noSuggestions && showSuggestions && (
-          <S.NoSuggestionsMessage>
-            <em>No suggestions available.</em>
-          </S.NoSuggestionsMessage>
-        )}
-       
-       {error && <S.ErrorMessage>{errorMsg}</S.ErrorMessage>}
-      </S.AutocompleteContainer>
-    </>
+      {showSuggestions && filteredSuggestions.length > 0 && (
+        <ul className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded shadow-lg">
+          {filteredSuggestions.map((suggestion, index) => (
+            <li
+              key={index}
+              className="px-4 py-2 cursor-pointer hover:bg-blue-500 hover:text-white"
+              onClick={() => {
+                setValue(suggestion);
+                setShowSuggestions(false);
+              }}
+            >
+              {suggestion}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {showSuggestions && filteredSuggestions.length === 0 && (
+        <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded shadow-lg px-4 py-2 text-gray-500">
+          Nenhuma sugestão encontrada.
+        </div>
+      )}
+    </div>
   );
 };
 
 export default Search;
-
-
-
-import styled, { css } from "styled-components";
-
-type SearchSCProps = {
-  isError?: boolean;
-  width?: number | string;
-};
-
-export const AutocompleteContainer = styled.div<SearchSCProps>`
-  position: relative;
-  display: inline-block;
-  ${({ width }) => {
-    if (typeof width === "number") {
-      return css`
-        width: ${width}px;
-      `;
-    } else {
-      return css`
-        width: ${width || "100%"};
-      `;
-    }
-  }}
-`;
-
-export const InputWrapper = styled.div`
-  position: relative;
-`;
-
-export const AutocompleteInput = styled.input<SearchSCProps>`
-  width: 100%;
-  max-width: calc(100% - 24px);
-  padding-inline: 12px;
-  height: 36px;
-  border-radius: 4px;
-  border-width: 1px;
-  border-style: solid;
-  background: #ffffff;
-  border-color: #8a8c98;
-  font-family: "Figtree", sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 21px;
-  letter-spacing: 0.12px;
-  text-align: left;
-
-  &:focus {
-    outline: 2px solid #4289f5;
-    border-radius: 2px;
-    border: none;
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    color: #b8b8b8;
-    background: #f7f7f8;
-    border-color: #b8b8b8;
-  }
-
-  ${({ isError }) =>
-    isError &&
-    css`
-      border-color: #ca3d3d;
-    `}
-`;
-
-export const IconError = styled.span`
-  top: 55%;
-  position: absolute;
-  transform: translateY(-50%);
-  right: 12px;
-`;
-
-export const ClearButton = styled.span`
-  height: 18px;
-  width: 18px;
-  position: absolute;
-  background: #00000080;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  right: 0px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 18px;
-  color: #a0a0a0;
-`;
-
-export const ErrorMessage = styled.div`
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 25px;
-    margin-top: 4px;
-    font-family: 'Figtree';
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 21px;
-    letter-spacing: 0.12px;
-    color: #ca3d3d;
-`;
-
-export const SuggestionsListContainer = styled.div`
-  position: absolute;
-  z-index: 1000;
-
-  border-top-width: 0;
-  background-color: #fff;
-  border-radius: 4px;
-  box-shadow: 0 4px 6px rgba(32, 33, 36, 0.28);
-  cursor: pointer;
-`;
-
-export const SuggestionItem = styled.div`
-  padding: 10px 20px;
-
-  &:hover,
-  &.suggestion-active {
-    background-color: #4289f5;
-    color: #fff;
-  }
-`;
-
-export const NoSuggestionsMessage = styled.div`
-  color: black;
-  font-size: 12px;
-  margin-top: 4px;
-  display: block;
-`;
