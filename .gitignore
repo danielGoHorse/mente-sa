@@ -1,14 +1,58 @@
- ⨯ ./src/app/globals.css
-Error evaluating Node.js code
-Error: Cannot depend on path (\\?\UNC\safra-pdc\sys\USERS\DanielG\workspace\wire-client-frontend\components.json) outside of root directory (H:\workspace\wire-client-frontend)
-    [at toPath (turbopack:///[project]/postcss.config.mjs/transform.ts:18:11)]
-    [at transform (turbopack:///[project]/postcss.config.mjs/transform.ts:109:17)]
-    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+import React, { useState } from 'react';
 
+interface ClientInfo {
+  name: string;
+  id: string;
+  email: string;
+  phone: string;
+}
 
- ○ Compiling /_error ...
- ✓ Compiled /_error in 3.1s
- GET / 500 in 23428ms
- ○ Compiling /favicon.ico ...
- ✓ Compiled /favicon.ico in 2.7s
- GET /favicon.ico 500 in 3429ms
+const mockClientData: ClientInfo = {
+  name: 'João da Silva',
+  id: '123456',
+  email: 'joao.silva@example.com',
+  phone: '(11) 99999-8888',
+};
+
+const ClientSearch: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
+
+  const handleSearch = () => {
+    // Aqui ficará a lógica real de busca futuramente
+    if (searchTerm.trim()) {
+      setClientInfo(mockClientData);
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded shadow">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="Pesquisar cliente..."
+          className="w-full border px-4 py-2 rounded"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <button
+          onClick={handleSearch}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+        >
+          Buscar
+        </button>
+      </div>
+
+      {clientInfo && (
+        <div className="mt-6 border-t pt-4">
+          <p><strong>Nome:</strong> {clientInfo.name}</p>
+          <p><strong>ID:</strong> {clientInfo.id}</p>
+          <p><strong>Email:</strong> {clientInfo.email}</p>
+          <p><strong>Telefone:</strong> {clientInfo.phone}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ClientSearch;
