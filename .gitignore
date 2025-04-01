@@ -1,104 +1,50 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from 'react';
+import Card from '@/components/ui/Card';
+import Search from '@/components/ui/Search';
 
-interface SearchProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  placeholder?: string;
-  error?: boolean;
-  errorMsg?: string;
-  width?: string | number;
-  suggestions?: string[];
+interface ClientInfo {
+  name: string;
+  id: string;
+  email: string;
+  phone: string;
 }
 
-const Search: React.FC<SearchProps> = ({
-  placeholder,
-  error,
-  errorMsg,
-  width = "100%",
-  suggestions = [],
-  ...rest
-}) => {
-  const [value, setValue] = useState("");
-  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+const mockClientData: ClientInfo = {
+  name: 'João da Silva',
+  id: '123456',
+  email: 'joao.silva@example.com',
+  phone: '(11) 99999-8888',
+};
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const userInput = e.target.value;
-    setValue(userInput);
+const ClientSearch: React.FC = () => {
+  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
 
-    const filtered = suggestions.filter((suggestion) =>
-      suggestion.toLowerCase().includes(userInput.toLowerCase())
-    );
-
-    setFilteredSuggestions(filtered);
-    setShowSuggestions(true);
-  };
-
-  const handleClickOutside = (event: MouseEvent) => {
-    if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-      setShowSuggestions(false);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const clearInput = () => {
-    setValue("");
-    setFilteredSuggestions([]);
-    setShowSuggestions(false);
+  const handleSearchSelect = () => {
+    setClientInfo(mockClientData);
   };
 
   return (
-    <div className="relative" style={{ width }} ref={containerRef}>
-      <input
-        type="text"
-        className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 ${
-          error ? "border-red-500 focus:ring-red-300" : "border-gray-300 focus:ring-blue-300"
-        }`}
-        placeholder={placeholder}
-        value={value}
-        onChange={handleChange}
-        {...rest}
+    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded shadow">
+      <Search
+        placeholder="Pesquisar cliente..."
+        suggestions={[mockClientData.name]}
+        onSelect={handleSearchSelect}
       />
 
-      {value && (
-        <button
-          type="button"
-          onClick={clearInput}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-        >
-          ✕
-        </button>
-      )}
-
-      {error && <p className="text-sm text-red-500 mt-1">{errorMsg}</p>}
-
-      {showSuggestions && filteredSuggestions.length > 0 && (
-        <ul className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded shadow-lg">
-          {filteredSuggestions.map((suggestion, index) => (
-            <li
-              key={index}
-              className="px-4 py-2 cursor-pointer hover:bg-blue-500 hover:text-white"
-              onClick={() => {
-                setValue(suggestion);
-                setShowSuggestions(false);
-              }}
-            >
-              {suggestion}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {showSuggestions && filteredSuggestions.length === 0 && (
-        <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded shadow-lg px-4 py-2 text-gray-500">
-          Nenhuma sugestão encontrada.
+      {clientInfo && (
+        <div className="mt-6">
+          <Card
+            border
+            size="medium"
+            title={clientInfo.name}
+            subtitle={`ID: ${clientInfo.id}`}
+            subtitleInfo={clientInfo.email}
+            status={{ type: "approved", text: "Ativo" }}
+          />
         </div>
       )}
     </div>
   );
 };
 
-export default Search;
+export default ClientSearch;
