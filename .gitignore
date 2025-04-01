@@ -1,58 +1,288 @@
-import React, { useState } from 'react';
+import styled, { css } from "styled-components";
 
-interface ClientInfo {
-  name: string;
-  id: string;
-  email: string;
-  phone: string;
-}
-
-const mockClientData: ClientInfo = {
-  name: 'João da Silva',
-  id: '123456',
-  email: 'joao.silva@example.com',
-  phone: '(11) 99999-8888',
+type CardStyleProps = {
+  border?: boolean;
+  size: "small" | "medium" | "large";
+  weight?: number;
+  cardWidth?: string;
+  cardHeight?: string;
+  cardGap?:string;
+  flex?:string;
 };
 
-const ClientSearch: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null);
+type ImgStyleProps = {
+  src?: string;
+  width?: string;
+  height?: string;
+};
 
-  const handleSearch = () => {
-    // Aqui ficará a lógica real de busca futuramente
-    if (searchTerm.trim()) {
-      setClientInfo(mockClientData);
-    }
+export const CardBorder = styled.div<CardStyleProps>`
+  padding: 24px 24px;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+  flex: ${({ flex }) => flex ?? "none"};
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  ${({ border }) =>
+    border === true &&
+    css`
+      width: 100%;
+      display: flex;
+      border-radius: 8px;
+      border: 1px solid;
+      background: #ffffff;
+      border-color: #dbdbdb;
+    `}
+  ${({ size, cardWidth, cardHeight }) =>
+    size === "small" &&
+    css`
+      width: ${cardWidth ? cardWidth : `100%`};
+      min-height: 0;
+      height: ${cardHeight ? cardHeight : `100%`};
+      display: block;
+      padding: 12px 16px 12px 16px;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0px 1px 2px 0px #2525270f;
+      border: none;
+    `}
+`;
+
+export const CardBody = styled.div<CardStyleProps>`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: ${({ cardGap }) => cardGap ?? "none"};
+  max-width: 100%;
+
+  ${({ size }) =>
+    size === "small" &&
+    css`
+      justify-content: space-between;
+      flex-direction: row;
+    `}
+`;
+
+export const CardImgDiv = styled.div<ImgStyleProps>`
+  display: flex;
+  justify-content: center;
+  min-width: ${({width})=> width?? "50px"};
+  min-height: ${({height})=> height?? "50px"};
+`;
+
+export const CardImg = styled.img<ImgStyleProps>`
+`;
+
+export const CardText = styled.div<CardStyleProps>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0px;
+  ${({ size }) =>
+    size === "small" &&
+    css`
+      align-items: flex-start;
+      min-width: 112px;
+      padding: 0px;
+    `}
+`;
+
+export const CardTitle = styled.h4<CardStyleProps>`
+  letter-spacing: 0.12px;
+  line-height: 30px;
+  font-weight: 600;
+  font-size: 20px;
+  color: #1e2347;
+  font-family: "Figtree";
+
+  ${({ size }) =>
+    size === "small" &&
+    css`
+      line-height: 21px;
+      font-weight: 400;
+      font-size: 14px;
+      color: #636574;
+      margin: 0px;
+    `}
+`;
+
+export const CardSubTitle = styled.p<CardStyleProps>`
+  font-weight: ${({ weight }) => (weight ? weight : 400)};
+  font-size: 14px;
+  line-height: 21px;
+  letter-spacing: 0.12px;
+  color: #636574;
+  font-family: "Figtree";
+  margin-right: 5px;
+
+  ${({ size }) =>
+    size === "small" &&
+    css`
+      line-height: 24px;
+      font-weight: 600;
+      font-size: 16px;
+      color: #484a55;
+      max-width: calc(100% + 112px);
+      white-space: nowrap;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0px;
+    `}
+`;
+
+export const CardInfo = styled.span`
+  font-weight: 500;
+`;
+
+export const CardSubTitleArea = styled.div`
+  display: flex;
+`;
+
+
+
+
+
+
+
+
+import React, { Fragment } from "react";
+import Image from "next/image";
+import { Status } from "@snb/ds-status";
+import {
+  CardBody,
+  CardBorder,
+  CardImgDiv,
+  CardSubTitle,
+  CardSubTitleArea,
+  CardText,
+  CardTitle,
+} from "./styles";
+
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  border: boolean;
+  size?: "small" | "medium" | "large";
+  cardWidth?: string;
+  cardHeight?: string;
+  cardGap?:string;
+  img?: string;
+  imgWidth?: number;
+  imgHeight?: number;
+  flex?:string;
+  title: string;
+  subTitle?: string;
+  subTitleInfo?: string;
+  status?: {
+    type:
+      | "pending"
+      | "approved"
+      | "partial"
+      | "rejected"
+      | "completed"
+      | undefined;
+    text: string;
   };
+}
 
+const Card: React.FC<CardProps> = ({
+  border,
+  size = "medium",
+  cardWidth,
+  cardHeight,
+  cardGap,
+  flex,
+  img,
+  imgWidth,
+  imgHeight,
+  title,
+  subTitle,
+  subTitleInfo,
+  status,
+  ...rest
+}) => {
   return (
-    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded shadow">
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="Pesquisar cliente..."
-          className="w-full border px-4 py-2 rounded"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button
-          onClick={handleSearch}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+    <Fragment>
+      {size === "small" && (
+        <CardBorder
+          border={border}
+          cardWidth={cardWidth}
+          cardHeight={cardHeight}
+          size={size}
+          flex={flex}          
+          {...rest}
         >
-          Buscar
-        </button>
-      </div>
-
-      {clientInfo && (
-        <div className="mt-6 border-t pt-4">
-          <p><strong>Nome:</strong> {clientInfo.name}</p>
-          <p><strong>ID:</strong> {clientInfo.id}</p>
-          <p><strong>Email:</strong> {clientInfo.email}</p>
-          <p><strong>Telefone:</strong> {clientInfo.phone}</p>
-        </div>
+          <CardBody size={size} cardGap={cardGap}>
+            <CardText size={size}>
+              <CardTitle size={size}>{title}</CardTitle>
+              <CardSubTitle size={size}>{subTitle}</CardSubTitle>
+            </CardText>
+            {img && (
+              <CardImgDiv>
+                <Image
+                  src={img ?? ""}
+                  height={imgHeight ?? 46}
+                  width={imgWidth ?? 46}
+                  alt="logo"
+                ></Image>
+              </CardImgDiv>
+            )}
+          </CardBody>
+        </CardBorder>
       )}
-    </div>
+      {size === "medium" && (
+        <CardBorder border={border} size={size} {...rest}>
+          <CardBody size={size}>
+            {img && (
+              <CardImgDiv>
+                <Image
+                  src={img ?? ""}
+                  height={imgHeight ?? 70}
+                  width={imgWidth ?? 70}
+                  alt="logo"
+                ></Image>
+              </CardImgDiv>
+            )}
+            <CardText size={size}>
+              <CardTitle size={size}>{title}</CardTitle>
+              <CardSubTitleArea>
+                <CardSubTitle size={size}>{subTitle}</CardSubTitle>
+                <CardSubTitle size={size} weight={600}>
+                  {subTitleInfo}
+                </CardSubTitle>
+              </CardSubTitleArea>
+            </CardText>
+            <Status type={status?.type}>{status?.text}</Status>
+          </CardBody>
+        </CardBorder>
+      )}
+      {size === "large" && (
+        <CardBorder border={border} size={size}>
+          <CardBody size={size}>
+            {img && (
+              <CardImgDiv>
+                <Image
+                  src={img ?? ""}
+                  height={imgHeight ?? 70}
+                  width={imgWidth ?? 70}
+                  alt="logo"
+                ></Image>
+              </CardImgDiv>
+            )}
+            <CardText size={size}>
+              <CardTitle size={size}>{title}</CardTitle>
+              <CardSubTitle size={size}>{subTitle}</CardSubTitle>
+            </CardText>
+            <Status type={status?.type}>{status?.text}</Status>
+          </CardBody>
+        </CardBorder>
+      )}
+    </Fragment>
   );
 };
 
-export default ClientSearch;
+export default Card;
