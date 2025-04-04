@@ -1,4 +1,4 @@
- <div className="relative flex justify-center items-center my-[11px]">
+   <div className="relative flex justify-center items-center my-[11px]">
             <div className="w-full h-px bg-[#E3E3E3]" />
-            <div className="absolute top-[-6px] w-3 h-3 bg-white border-l border-t border-[#E3E3E3] rotate-45"></div>
+            <div className="absolute bottom-[-6px] w-3 h-3 bg-white border-l border-t border-[#E3E3E3] rotate-45"></div>
           </div>
