@@ -1,7 +1,27 @@
-     <div className="relative flex justify-center items-center my-[11px]">
-            <div className="w-full h-px bg-[#E3E3E3]" />
-            {/* Wrapper branco para cobrir linha atrás da seta */}
-            <div className="absolute top-[-6px] w-4 h-4 bg-white flex items-center justify-center">
-              <div className="w-3 h-3 bg-white border-r border-b border-[#E3E3E3] rotate-45"></div>
-            </div>
-          </div>
+nvm : The term 'nvm' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path   
+is correct and try again.
+At line:1 char:1
++ nvm -v
++ ~~~
+    + CategoryInfo          : ObjectNotFound: (nvm:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+PS Z:\workspace\wire-client-frontend> node -v
+node : The term 'node' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the      
+path is correct and try again.
+At line:1 char:1
++ node -v
++ ~~~~
+    + CategoryInfo          : ObjectNotFound: (node:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+PS Z:\workspace\wire-client-frontend> npm -v
+npm : The term 'npm' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path 
+is correct and try again.
+At line:1 char:1
++ npm -v
++ ~~~
+    + CategoryInfo          : ObjectNotFound: (npm:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+PS Z:\workspace\wire-client-frontend>
