@@ -1,212 +1,73 @@
 import React from "react";
-import EmptyLayout from "./layouts/empty";
-import {
-  BodyEmail,
-  ContainerEmail,
-  DownloadLink,
-  EmailWrapper,
-  Text,
-  TextBold,
-  Textarea,
-  TitleEmail,
-} from "./styles";
+import { Paperclip, Mail } from "lucide-react";
 
-import { EmailIcon } from "./assets/email";
-import { AttatchtmentIcon } from "./assets/attatchtment";
+const attachments = [
+  { name: "filename1.doc", href: "#" },
+  { name: "filename2.pdf", href: "#" },
+  { name: "filename3.pdf", href: "#" },
+  { name: "filename4.pdf", href: "#" },
+];
 
-export type EmailProps = {
-  message?: string;
-  senderName?: string;
-  subjectName?: string;
-  attachments?: Record<string, string>[];
-};
+const messageContent = `From: Taya Mullins <taya@abccompany.com>
+Sent: Monday, June 3, 2024 9:17 AM
+To: John Smith <johnsmith@safra.com>
+Cc: Ana Johnson <anajohnson@safra.com>
+Subject: [EXT]|INSTRUCCIONES 03-JUN-2024
 
-const Email: React.FC<EmailProps> = ({
-  attachments,
-  senderName,
-  subjectName,
-  message,
-}) => {
+Attached wire transfer instructions.
 
+Regards,
+Taya Mullins`;
+
+const InstructionEmail: React.FC = () => {
   return (
-    <EmailWrapper>
-      <ContainerEmail>
-        <EmailIcon />
-        <TitleEmail>Instruction Email</TitleEmail>
-      </ContainerEmail>
+    <div className="flex flex-col gap-4 font-figtree">
+      <div className="flex items-center gap-2 bg-[#F7F7F8] rounded-lg px-4 py-3">
+        <Mail size={20} className="text-[#636574]" />
+        <h2 className="text-[#484A55] text-[18px] font-semibold leading-[27px] tracking-[0.12px]">
+          Instruction Email
+        </h2>
+      </div>
 
-      <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
+      <div className="flex flex-col gap-1">
         <div>
-          <TextBold>Sender: </TextBold>
-          <Text>{senderName}</Text>
+          <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Sender: </span>
+          <span className="text-[#636574] text-[16px] leading-[24px] tracking-[0.12px]">Taya Mullins &lt;taya@abccompany.com&gt;</span>
         </div>
         <div>
-          <TextBold>Subject: </TextBold>
-          <Text>{subjectName}</Text>
+          <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Subject: </span>
+          <span className="text-[#636574] text-[16px] leading-[24px] tracking-[0.12px]">Wire Transfer Request</span>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-        }}
-      >
-        <TextBold>Attachments: </TextBold>
-        {attachments?.map((document) => (
-          <div style={{ display: "flex", marginInline: 4 }}>
-            <DownloadLink
-              href={document.href}
-              download={document.href}
-              target="_blank"
-            >
-              <AttatchtmentIcon />
-              {document.name}
-            </DownloadLink>
-          </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Attachments:</span>
+        {attachments.map((doc, idx) => (
+          <a
+            key={idx}
+            href={doc.href}
+            target="_blank"
+            download
+            className="flex items-center gap-1 px-3 py-1 bg-white border border-[#DBDBDB] rounded-full text-[#1564B0] text-[16px] leading-[24px] tracking-[0.12px] hover:underline"
+          >
+            <Paperclip size={16} />
+            {doc.name}
+          </a>
         ))}
       </div>
 
-      <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
-        <TextBold>Message:</TextBold>
-        <BodyEmail>
-          {
-            message ? <Textarea value={message} disabled />
-                    : <EmptyLayout />
-          }
-          
-        </BodyEmail>
+      <div className="flex flex-col gap-2">
+        <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Message:</span>
+        <div className="border border-[#DBDBDB] rounded-lg p-4 bg-white">
+          <textarea
+            value={messageContent}
+            disabled
+            className="w-full h-[200px] resize-none border-none outline-none text-[#636574] text-[16px] leading-[24px] tracking-[0.12px] font-figtree"
+          />
+        </div>
       </div>
-    </EmailWrapper>
+    </div>
   );
 };
 
-export default Email;
-
-
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-import styled from "styled-components";
-
-export const EmailWrapper = styled.div`
-  gap: 16px;
-  display: flex;
-  font-family: "Figtree";
-  flex-direction: column;
-`;
-export const TitleEmail = styled.a`
-  font-size: 18px;
-  color: #484a55;
-  font-weight: 600;
-  text-align: left;
-  line-height: 27px;
-  font-family: "Figtree";
-  letter-spacing: 0.12px;
-`;
-export const ContainerEmail = styled.div`
-  gap: 8px;
-  width: 100%;
-  display: flex;
-  border-radius: 8px;
-  align-items: center;
-  background: #f7f7f8;
-  padding: 16px 0px 16px 16px;
-`;
-export const TextBold = styled.a`
-  font-size: 16px;
-  color: #636574;
-  text-align: left;
-  font-weight: 600;
-  line-height: 24px;
-  font-family: "Figtree";
-  letter-spacing: 0.12px;
-`;
-export const Text = styled.a`
-  font-size: 16px;
-  color: #636574;
-  text-align: left;
-  font-weight: 400;
-  line-height: 24px;
-  font-family: "Figtree";
-  letter-spacing: 0.12px;
-`;
-export const DownloadLink = styled.a`
-  display: flex;
-  cursor: pointer;
-  font-size: 16px;
-  color: #1564b0;
-  font-weight: 400;
-  text-align: left;
-  line-height: 24px;
-  align-items: center;
-  font-family: "Figtree";
-  letter-spacing: 0.12px;
-  text-decoration: none;
-`;
-export const BodyEmail = styled.div`
-  border: 1px;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #dbdbdb;
-`;
-
-export const Textarea = styled.textarea`
-  width: 100%;
-  resize: none;
-  border: none;
-  outline: none;
-  min-height: 200px;
-  font-family: "Figtree";
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 24px;
-  letter-spacing: 0.12px;
-  text-align: left;
-  color: #636574;
-
-  &::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #636574;
-    border-radius: 20px;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: #636574;
-  }
-`;
-
-export const EmptyLayoutWrapper = styled.div`
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin: 120px 0;
-`;
-
-export const EmptyMsg = styled.p`
-    font-size: 16px;
-    color: #636574;
-    text-align: center;
-    font-weight: 400;
-    line-height: 24px;
-    font-family: "Figtree";
-    letter-spacing: 0.12px;
-    margin: 16px 0 !important;
-`;
-
-
-
-
-
-
-
-
+export default InstructionEmail;
