@@ -1,73 +1,53 @@
-import React from "react";
-import { Paperclip, Mail } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronDown, Plus } from "lucide-react";
 
-const attachments = [
-  { name: "filename1.doc", href: "#" },
-  { name: "filename2.pdf", href: "#" },
-  { name: "filename3.pdf", href: "#" },
-  { name: "filename4.pdf", href: "#" },
-];
+const EmailConfirmation: React.FC = () => {
+  const [emailList, setEmailList] = useState<string[]>([""]);
 
-const messageContent = `From: Taya Mullins <taya@abccompany.com>
-Sent: Monday, June 3, 2024 9:17 AM
-To: John Smith <johnsmith@safra.com>
-Cc: Ana Johnson <anajohnson@safra.com>
-Subject: [EXT]|INSTRUCCIONES 03-JUN-2024
+  const handleEmailChange = (index: number, value: string) => {
+    const updated = [...emailList];
+    updated[index] = value;
+    setEmailList(updated);
+  };
 
-Attached wire transfer instructions.
+  const handleAddNew = () => {
+    setEmailList((prev) => [...prev, ""]);
+  };
 
-Regards,
-Taya Mullins`;
-
-const InstructionEmail: React.FC = () => {
   return (
-    <div className="flex flex-col gap-4 font-figtree">
-      <div className="flex items-center gap-2 bg-[#F7F7F8] rounded-lg px-4 py-3">
-        <Mail size={20} className="text-[#636574]" />
-        <h2 className="text-[#484A55] text-[18px] font-semibold leading-[27px] tracking-[0.12px]">
-          Instruction Email
-        </h2>
-      </div>
+    <div className="flex flex-col font-figtree gap-2">
+      <h2 className="text-[#484A55] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">
+        Email for Wire Transfer Confirmation
+      </h2>
 
-      <div className="flex flex-col gap-1">
-        <div>
-          <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Sender: </span>
-          <span className="text-[#636574] text-[16px] leading-[24px] tracking-[0.12px]">Taya Mullins &lt;taya@abccompany.com&gt;</span>
-        </div>
-        <div>
-          <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Subject: </span>
-          <span className="text-[#636574] text-[16px] leading-[24px] tracking-[0.12px]">Wire Transfer Request</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Attachments:</span>
-        {attachments.map((doc, idx) => (
-          <a
-            key={idx}
-            href={doc.href}
-            target="_blank"
-            download
-            className="flex items-center gap-1 px-3 py-1 bg-white border border-[#DBDBDB] rounded-full text-[#1564B0] text-[16px] leading-[24px] tracking-[0.12px] hover:underline"
-          >
-            <Paperclip size={16} />
-            {doc.name}
-          </a>
+      <div className="border border-[#DBDBDB] rounded-lg p-4 flex flex-col gap-3">
+        {emailList.map((email, index) => (
+          <div key={index} className="relative w-full">
+            <label className="block mb-1 text-[#636574] text-[14px] font-medium leading-[21px] tracking-[0.12px]">
+              Email Address *
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => handleEmailChange(index, e.target.value)}
+                className="w-full h-[36px] rounded-[4px] border border-[#D2D5DA] bg-white px-[12px] py-[6px] text-sm text-[#484A55] leading-[21px] tracking-[0.12px] focus:outline-none"
+              />
+              <ChevronDown className="absolute right-2 top-2.5 text-[#8A8C98] w-4 h-4" />
+            </div>
+          </div>
         ))}
-      </div>
 
-      <div className="flex flex-col gap-2">
-        <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Message:</span>
-        <div className="border border-[#DBDBDB] rounded-lg p-4 bg-white">
-          <textarea
-            value={messageContent}
-            disabled
-            className="w-full h-[200px] resize-none border-none outline-none text-[#636574] text-[16px] leading-[24px] tracking-[0.12px] font-figtree"
-          />
-        </div>
+        <button
+          type="button"
+          onClick={handleAddNew}
+          className="mt-2 flex items-center gap-1 border border-[#1E2347] text-[#1E2347] px-3 py-[5px] rounded-[4px] text-sm font-medium hover:bg-[#F7F7F8]"
+        >
+          <Plus size={14} /> Add New
+        </button>
       </div>
     </div>
   );
 };
 
-export default InstructionEmail;
+export default EmailConfirmation;
