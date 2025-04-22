@@ -1,209 +1,64 @@
+#	Atividade	Por quê	Entregável
+1	Revisar mapeamento de nomes de conta/pacote	Os labels retornados pelo banco (“account menor …”, “roadmay note applickble”, etc.) não batem com os que o front espera.	Atualizar view / PROC e/ou camada DTO para retornar nomenclaturas corretas.
+2	Corrigir valores incoerentes	Ex.: conta marcada como standard = 0 mas taxa “FIES Kedel Disk” volta 1500. Deve ser 0 ou ausente.	Lógica de cálculo/consulta revista e testes unitários cobrindo cenário.
+3	Garantir retorno do nº da conta	Campo “account number” vem vazio em vários registros (“shi thai pequeno” na transcrição).	Ajuste na PROC ou JOIN para popular o campo e validação de integridade.
+4	Excluir registros “sobrando”	Linhas extra (“account mentalings holdmil…”) aparecem sem correspondência.	Filtro de consulta ou cláusula WHERE criada; script de limpeza na tabela, se necessário.
+5	Padronizar ordenação dos resultados	Antes vinha Account Maintainers em cima e Road E‑mail embaixo; agora a ordem mudou.	ORDER BY definido na PROC ou no serviço; contrato de API documentado.
+6	Ocultar filas “Not Applicable” quando valor = 0	“Not applickble” está aparecendo e não deveria.	Condicional no DTO ou regra SQL (CASE WHEN fee=0 THEN NULL).
+7	Adicionar lista de nomes novos (paliativo)	Enquanto não há refatoração dinâmica, front precisa dos nomes existentes.	Config tabela de parametrização ou enum; endpoint de sincronização.
+8	Documentar e versionar API	Evitar que mudanças silenciosas quebrem o front.	Swagger atualizado + changelog da rota.
+🕵️ Análises que a equipe de desenvolvimento deve conduzir
+Diff da PROC atual x versão inicial
+Objetivo: localizar colunas/tabelas adicionadas ou alteradas que geraram nomes extras e valores divergentes.
 
-Daniel Henrique Gotardo
-0 minutos 3 segundos0:03
-Daniel Henrique Gotardo 0 minutos 3 segundos
-Discutido isso também lá atrás, de que nós deveríamos é fazer aquilo dinâmico. Mas por conta de de de prazo de estimativa, que não tinha sido feito com referência a isso e nem por por por parte da gente, porque até por parte deles, né, que, que que haviam fal?
-Daniel Henrique Gotardo 0 minutos 22 segundos
-Falou, não mantém como está.
-Daniel Henrique Gotardo 0 minutos 23 segundos
-Então não foi feito dinâmico.
-Daniel Henrique Gotardo 0 minutos 26 segundos
-Porque, para fazer dinâmico, a gente teria que mudar toda a lógica ali da da da da, das chamadas e tal, né, então.
-Daniel Henrique Gotardo 0 minutos 35 segundos
-Está acontecendo essas diferenças. Por conta disso também. E quando a gente conversou ali, né? Com ela, com o Paulo Marques, é, foi foi mostrado que que que essas mudanças poderiam ser benéficas, né? Mas para isso eu teria que fazer uma mudança muito grande, tanto no front quanto no.
-Daniel Henrique Gotardo 0 minutos 54 segundos
-Então?
-Daniel Henrique Gotardo 0 minutos 56 segundos
-É essa, foi. Essa foi. Foi o resumo ali da da, da da, do que aconteceu ali com a piscina, então não sei quais seriam os próximos passos, né?
-Daniel Henrique Gotardo 1 minuto 4 segundos
-O que a gente poderia fazer ali pra pra uma pensão um pouco mais paliativa?
-Daniel Henrique Gotardo 1 minuto 12 segundos
-Seria incluir esses nomes novos ou ela alterar lá no banco, né? Os nomes ao invés dela dela dela fazer com o nome novo a fazer com os donos antigos.
-Daniel Henrique Gotardo 1 minuto 24 segundos
-Mas aí eu não sei qual que foi a definição que só foi falado semana passada e depois não conversou mais sobre.
-BA
-Bruno Aguiar
-24 minutos 27 segundos24:27
-Bruno Aguiar 24 minutos 27 segundos
-Aqueles nomes são esses aqui, o account mentalings holdmil encaminy wrent going wirel.
+Traçado de fluxo de dados (DB ➜ serviço ➜ DTO ➜ API)
+Objetivo: identificar onde ocorre cada transformação (alias, ordenação, filtragem).
 
-Grazielle Helena Gonzaga
-24 minutos 28 segundos24:28
-Grazielle Helena Gonzaga 24 minutos 28 segundos
-Livre?
-BA
-Bruno Aguiar
-24 minutos 36 segundos24:36
-Bruno Aguiar 24 minutos 36 segundos
-Equipe em curso de essa é o account mentor NSA Cristina open's commissions.
-Bruno Aguiar 24 minutos 43 segundos
-Aqui está sobrando uns fios aqui em quase todos.
-Bruno Aguiar 24 minutos 46 segundos
-Esse daqui está sobrando, sobrando.
-Bruno Aguiar 24 minutos 50 segundos
-Imagino que esse daqui seja o que esteja vindo do banco, não é?
-Bruno Aguiar 24 minutos 53 segundos
-Mas antes de a gente.
-Bruno Aguiar 24 minutos 56 segundos
-Não mandava exatamente o que estava no banco. Essa equipe off Securities.
-Bruno Aguiar 25 minutos 4 segundos
-Sef, equipe em curso de, por exemplo.
+Reprodução de bug em ambiente QA
 
-Grazielle Helena Gonzaga
-25 minutos 11 segundos25:11
-Grazielle Helena Gonzaga 25 minutos 11 segundos
-Está na última versão?
-BA
-Bruno Aguiar
-25 minutos 13 segundos25:13
-Bruno Aguiar 25 minutos 13 segundos
-Não.
-Bruno Aguiar 25 minutos 13 segundos
-Eu estou no signo do primeiro. Fique, foi feito.
-Bruno Aguiar 25 minutos 21 segundos
-Olha nele para mim aí.
+Carregar planilha/arquivo fonte mencionado na call.
 
-Grazielle Helena Gonzaga
-25 minutos 25 segundos25:25
-Grazielle Helena Gonzaga 25 minutos 25 segundos
-Bom.
-Grazielle Helena Gonzaga 25 minutos 30 segundos
-E a gente seguiu esse daí. Se 7 é porque nesse que tem agora, parece que tem mais.
-BA
-Bruno Aguiar
-25 minutos 38 segundos25:38
-Bruno Aguiar 25 minutos 38 segundos
-Doente, shi thai pequeno também tá vazio e era pra ter que o número da conta. Não sei se isso é problema da PROC que não tá trazendo isso, ou se o back end não está enviando né? Então tem que dar uma investigada também.
-Bruno Aguiar 26 minutos 4 segundos
-É que tem que dar uma outra olhada aqui também, por exemplo, aqui tá trazendo account menor, isso com o zero como standard. Mas o fies kedel disk é 1500 por ano.
-Bruno Aguiar 26 minutos 18 segundos
-Não tem que dar uma olhada onde tá esse erro, se é no banco, se é no arquivo, se aqui está trazendo o pacote errado.
+Confirmar se discrepância nasce já no dado importado ou na leitura SQL.
 
-Grazielle Helena Gonzaga
-26 minutos 26 segundos26:26
-Grazielle Helena Gonzaga 26 minutos 26 segundos
-Sim, tá dizendo errado, eu sei porque.
-BA
-Bruno Aguiar
-26 minutos 31 segundos26:31
-Bruno Aguiar 26 minutos 31 segundos
-E aqui está dizendo zero accountman esse standard zero, mas aqui no arquivo.
+Revisão do contrato Front‑end ↔ Back‑end
+Objetivo: listar campos obrigatórios, opcionais e seus formatos para alinhar com a equipe de UI.
 
-Grazielle Helena Gonzaga
-26 minutos 33 segundos26:33
-Grazielle Helena Gonzaga 26 minutos 33 segundos
-Sim.
-Grazielle Helena Gonzaga 26 minutos 35 segundos
-Ah, está isso é 1500.
-BA
-Bruno Aguiar
-26 minutos 41 segundos26:41
-Bruno Aguiar 26 minutos 41 segundos
-É, é que esse note aplica bom aqui. Eu não entendi porque que ele está aparecendo.
-Bruno Aguiar 26 minutos 49 segundos
-Esse cara está roadmay note applickble não era para estar aparecendo aqui.
+Estimativa de esforço para tornar as listas dinâmicas
+Passos:
 
-Grazielle Helena Gonzaga
-26 minutos 55 segundos26:55
-Grazielle Helena Gonzaga 26 minutos 55 segundos
-Não.
-Grazielle Helena Gonzaga 27 minutos 1 segundo
-É, aí não pode existir norte.
-BA
-Bruno Aguiar
-27 minutos 4 segundos27:04
-Bruno Aguiar 27 minutos 4 segundos
-Pois é.
+Migrar nomes para tabela de parametrização.
 
-Grazielle Helena Gonzaga
-27 minutos 6 segundos27:06
-Grazielle Helena Gonzaga 27 minutos 6 segundos
-Se for zerar, tem for zerado.
-BA
-Bruno Aguiar
-27 minutos 13 segundos27:13
-Bruno Aguiar 27 minutos 13 segundos
-E que se puder, depois, dá uma olhada, como é que está sendo feita essa ordenação? Porque antes a gente exibia.
-Bruno Aguiar 27 minutos 21 segundos
-É o account mental, isso em cima e o road e-mail em baixo, e agora que por um motivo alterou não é? Então não sei se isso pode acabar gerando algum problema. Usar comunsted acho que já estão acostumados a mudar primeiro e não mudar a segunda, ou ou v.
-Bruno Aguiar 27 minutos 41 segundos
-Hein? Ter algum problema.
+Expor endpoint GET /names.
 
-Grazielle Helena Gonzaga
-27 minutos 45 segundos27:45
-Grazielle Helena Gonzaga 27 minutos 45 segundos
-O que vem primeiro?
-BA
-Bruno Aguiar
-27 minutos 47 segundos27:47
-Bruno Aguiar 27 minutos 47 segundos
-Account meteres.
+Adaptar front para consumir lista.
 
-Grazielle Helena Gonzaga
-27 minutos 48 segundos27:48
-Grazielle Helena Gonzaga 27 minutos 48 segundos
-Ah, não fico mais ainda.
-Grazielle Helena Gonzaga 27 minutos 51 segundos
-E vou de meio em baixo.
-Grazielle Helena Gonzaga 27 minutos 57 segundos
-Que alterar?
-Grazielle Helena Gonzaga 28 minutos 2 segundos
-Nossa, aqui tem que está vontade que OIC gente, deixa eu ver aí matar também essa, essa aí, essa mensagenzinha aí, beleza?
-BA
-Bruno Aguiar
-28 minutos 19 segundos28:19
-Bruno Aguiar 28 minutos 19 segundos
-Beleza, pessoal.
+Avaliar impacto em testes automatizados.
 
-Grazielle Helena Gonzaga
-28 minutos 21 segundos28:21
-Grazielle Helena Gonzaga 28 minutos 21 segundos
-Ah, então é isso.
-BA
-Bruno Aguiar
-28 minutos 22 segundos28:22
-Bruno Aguiar 28 minutos 22 segundos
-Alguém tem alguma dúvida aí que eu posso ajudar Daniel?
-DG
-Daniel Henrique Gotardo
-28 minutos 28 segundos28:28
-Daniel Henrique Gotardo 28 minutos 28 segundos
-Não.
-BA
-Bruno Aguiar
-28 minutos 29 segundos28:29
-Bruno Aguiar 28 minutos 29 segundos
-Beleza.
-Bruno Aguiar 28 minutos 31 segundos
-A coisa é só chamar aí, então.
-DG
-Daniel Henrique Gotardo
-28 minutos 34 segundos28:34
-Daniel Henrique Gotardo 28 minutos 34 segundos
-Inteligente.
+Testes de regressão focados em
 
-Grazielle Helena Gonzaga
-28 minutos 35 segundos28:35
-Grazielle Helena Gonzaga 28 minutos 35 segundos
-Obrigada, Bruno.
-BA
-Bruno Aguiar
-28 minutos 36 segundos28:36
-Bruno Aguiar 28 minutos 36 segundos
-Nada. Valeu, pessoal.
-J
-José Paulino de França Filho
-28 minutos 37 segundos28:37
-José Paulino de França Filho 28 minutos 37 segundos
-Eu, Bruno.
+Ordenação fixa.
 
-Grazielle Helena Gonzaga
-28 minutos 38 segundos28:38
-Grazielle Helena Gonzaga 28 minutos 38 segundos
-Pessoal, fica aí, por favor.
-Grazielle Helena Gonzaga 28 minutos 42 segundos
-Então vamos, vamos traçar uma estratégia porque a gente tá em outros projetos também, né? Não vai ficar essas alterações, eu eu vou ter que abrir Cartes, o João está aí. Eu juntei.
-Grazielle Helena Gonzaga 28 minutos 58 segundos
-Olha que se o que que ficou ficou para a gente tirar uma gravação daqui.
-
-Grazielle Helena Gonzaga parou a transcrição
+Exibição/ocultação de “Not Applicable”.
+
+Consistência de taxas vs. flags (standard, annualFee).
+
+Validação com QA e negócio
+
+Prototipar saída JSON corrigida.
+
+Obter sign‑off antes de promover para produção.
+
+Plano de rollback
+
+Caso patch quebre relatórios existentes, documentar como restaurar PROC e serviços anteriores.
+
+✅ Próximos passos sugeridos
+Criar cards no Jira para cada item de atividade (1 → 8) com prioridade Alta para inconsistências de dados (1‑4) e Média para melhorias (5‑8).
+
+Agendar code‑review coletivo após correção dos pontos críticos (1‑4).
+
+Alinhar com DBA tempo de execução das mudanças em ambiente PRD (manutenção programada).
+
+Comunicar Product Owner sobre impacto em prazos e a necessidade (ou não) de mudança dinâmica a médio prazo.
+
+Assim você garante visão clara do que corrigir agora e do que investigar para evitar novas quebras.
