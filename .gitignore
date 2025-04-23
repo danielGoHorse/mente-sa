@@ -1,32 +1,4 @@
-Chat, como eu resolvo isso ao rodar meu projeto next 
-
-npm error code ERESOLVE
-npm error ERESOLVE could not resolve
-npm error
-npm error While resolving: @conductor/global-activity-user@1.0.5
-npm error Found: @mui/material@5.11.11
-npm error node_modules/@mui/material
-npm error   @mui/material@"5.11.11" from the root project
-npm error   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
-npm error   node_modules/@mui/icons-material
-npm error     @mui/icons-material@"5.11.11" from the root project
-npm error
-npm error Could not resolve dependency:
-npm error peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
-npm error node_modules/@conductor/global-activity-user
-npm error   @conductor/global-activity-user@"^1.0.5" from the root project
-npm error
-npm error Conflicting peer dependency: @mui/material@5.17.1
-npm error node_modules/@mui/material
-npm error   peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
-npm error   node_modules/@conductor/global-activity-user
-npm error     @conductor/global-activity-user@"^1.0.5" from the root project
-npm error
-npm error Fix the upstream dependency conflict, or retry
-npm error this command with --force or --legacy-peer-deps
-npm error to accept an incorrect (and potentially broken) dependency resolution.
-npm error
-npm error
-npm error For a full report see:
-npm error C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-04-23T12_55_53_607Z-eresolve-report.txt
-npm error A complete log of this run can be found in: C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-04-23T12_55_53_607Z-debug-0.log
+# ainda no branch upgrade/mui-5.17
+npm i -D npm-check-updates     # se não tiver instalado
+npx ncu "/@mui\/(material|icons-material)/" -u   # sobe só esses pacotes
+npm install                                            # baixa as novas versões
