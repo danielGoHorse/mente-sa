@@ -1,64 +1,32 @@
-#	Atividade	Por quê	Entregável
-1	Revisar mapeamento de nomes de conta/pacote	Os labels retornados pelo banco (“account menor …”, “roadmay note applickble”, etc.) não batem com os que o front espera.	Atualizar view / PROC e/ou camada DTO para retornar nomenclaturas corretas.
-2	Corrigir valores incoerentes	Ex.: conta marcada como standard = 0 mas taxa “FIES Kedel Disk” volta 1500. Deve ser 0 ou ausente.	Lógica de cálculo/consulta revista e testes unitários cobrindo cenário.
-3	Garantir retorno do nº da conta	Campo “account number” vem vazio em vários registros (“shi thai pequeno” na transcrição).	Ajuste na PROC ou JOIN para popular o campo e validação de integridade.
-4	Excluir registros “sobrando”	Linhas extra (“account mentalings holdmil…”) aparecem sem correspondência.	Filtro de consulta ou cláusula WHERE criada; script de limpeza na tabela, se necessário.
-5	Padronizar ordenação dos resultados	Antes vinha Account Maintainers em cima e Road E‑mail embaixo; agora a ordem mudou.	ORDER BY definido na PROC ou no serviço; contrato de API documentado.
-6	Ocultar filas “Not Applicable” quando valor = 0	“Not applickble” está aparecendo e não deveria.	Condicional no DTO ou regra SQL (CASE WHEN fee=0 THEN NULL).
-7	Adicionar lista de nomes novos (paliativo)	Enquanto não há refatoração dinâmica, front precisa dos nomes existentes.	Config tabela de parametrização ou enum; endpoint de sincronização.
-8	Documentar e versionar API	Evitar que mudanças silenciosas quebrem o front.	Swagger atualizado + changelog da rota.
-🕵️ Análises que a equipe de desenvolvimento deve conduzir
-Diff da PROC atual x versão inicial
-Objetivo: localizar colunas/tabelas adicionadas ou alteradas que geraram nomes extras e valores divergentes.
+Chat, como eu resolvo isso ao rodar meu projeto next 
 
-Traçado de fluxo de dados (DB ➜ serviço ➜ DTO ➜ API)
-Objetivo: identificar onde ocorre cada transformação (alias, ordenação, filtragem).
-
-Reprodução de bug em ambiente QA
-
-Carregar planilha/arquivo fonte mencionado na call.
-
-Confirmar se discrepância nasce já no dado importado ou na leitura SQL.
-
-Revisão do contrato Front‑end ↔ Back‑end
-Objetivo: listar campos obrigatórios, opcionais e seus formatos para alinhar com a equipe de UI.
-
-Estimativa de esforço para tornar as listas dinâmicas
-Passos:
-
-Migrar nomes para tabela de parametrização.
-
-Expor endpoint GET /names.
-
-Adaptar front para consumir lista.
-
-Avaliar impacto em testes automatizados.
-
-Testes de regressão focados em
-
-Ordenação fixa.
-
-Exibição/ocultação de “Not Applicable”.
-
-Consistência de taxas vs. flags (standard, annualFee).
-
-Validação com QA e negócio
-
-Prototipar saída JSON corrigida.
-
-Obter sign‑off antes de promover para produção.
-
-Plano de rollback
-
-Caso patch quebre relatórios existentes, documentar como restaurar PROC e serviços anteriores.
-
-✅ Próximos passos sugeridos
-Criar cards no Jira para cada item de atividade (1 → 8) com prioridade Alta para inconsistências de dados (1‑4) e Média para melhorias (5‑8).
-
-Agendar code‑review coletivo após correção dos pontos críticos (1‑4).
-
-Alinhar com DBA tempo de execução das mudanças em ambiente PRD (manutenção programada).
-
-Comunicar Product Owner sobre impacto em prazos e a necessidade (ou não) de mudança dinâmica a médio prazo.
-
-Assim você garante visão clara do que corrigir agora e do que investigar para evitar novas quebras.
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: @conductor/global-activity-user@1.0.5
+npm error Found: @mui/material@5.11.11
+npm error node_modules/@mui/material
+npm error   @mui/material@"5.11.11" from the root project
+npm error   peer @mui/material@"^5.0.0" from @mui/icons-material@5.11.11
+npm error   node_modules/@mui/icons-material
+npm error     @mui/icons-material@"5.11.11" from the root project
+npm error
+npm error Could not resolve dependency:
+npm error peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm error node_modules/@conductor/global-activity-user
+npm error   @conductor/global-activity-user@"^1.0.5" from the root project
+npm error
+npm error Conflicting peer dependency: @mui/material@5.17.1
+npm error node_modules/@mui/material
+npm error   peer @mui/material@"^5.14.14" from @conductor/global-activity-user@1.0.5
+npm error   node_modules/@conductor/global-activity-user
+npm error     @conductor/global-activity-user@"^1.0.5" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-04-23T12_55_53_607Z-eresolve-report.txt
+npm error A complete log of this run can be found in: C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-04-23T12_55_53_607Z-debug-0.log
