@@ -1,31 +1,1895 @@
-code ERESOLVE
-npm error ERESOLVE could not resolve
-npm error
-npm error While resolving: snb-conductor@0.1.0
-npm error Found: @tanstack/react-query@4.32.0
-npm error node_modules/@tanstack/react-query
-npm error   peer @tanstack/react-query@"^4.29.5" from @conductor/global-activity-user@1.0.5
-npm error   node_modules/@conductor/global-activity-user
-npm error     @conductor/global-activity-user@"^1.0.5" from the root project
-npm error   peer @tanstack/react-query@"^4.29.5" from @conductor/global-header@0.8.1
-npm error   node_modules/@conductor/global-header
-npm error     @conductor/global-header@"^0.8.1" from the root project
-npm error   2 more (@conductor/global-login, the root project)
-npm error
-npm error Could not resolve dependency:
-npm error @tanstack/react-query@"4.29.5" from the root project
-npm error Conflicting peer dependency: react@18.3.1
-npm error node_modules/react
-npm error   peer react@"^19.0.0" from react-native@0.79.1
-npm error   node_modules/react-native
-npm error     node_modules/@tanstack/react-query
-npm error       @tanstack/react-query@"4.29.5" from the root project
-npm error
-npm error Fix the upstream dependency conflict, or retry
-npm error this command with --force or --legacy-peer-deps
-npm error to accept an incorrect (and potentially broken) dependency resolution.
-npm error
-npm error
-npm error For a full report see:
-npm error C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-04-23T16_40_02_131Z-eresolve-report.txt
-npm error A complete log of this run can be found in: C:\Users\DanielG\AppData\Local\npm-cache\_logs\2025-04-23T16_40_02_131Z-debug-0.log
+import Result from '#features/shared/result.js';
+import CustomerFees from '#src/models/CustomerFees.js';
+import BankAccountFee from '#src/models/BankAccountFee.js';
+import InvestmentAccountFee from '#src/models/InvestmentAccountFee.js';
+import { FeeCase } from '#src/models/entities/FeeCase.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure,
+} from '#core/data/mssql/index.js';
+
+const deParaFeeCodes = {
+  JH001: 1,
+  JH002: 2,
+  JH006: 4,
+  JH007: 8,
+  JH008: 0,
+  BPS002: 6,
+  BPS003: 5,
+  BPS004: 9,
+  BPS005: 7,
+  JH010: 3,
+};
+
+const excludedCodes = new Set([8]);
+
+function mapDbFeeTypeToApp(feeTypeFromDb) {
+  switch (feeTypeFromDb) {
+    case 'Client Fees':
+      return 'Customer Fees';
+    case 'Bank Account Fees':
+      return 'Bank Account Fees';
+    case 'Investment Fees':
+      return 'Investment Account Fees';
+    default:
+      return feeTypeFromDb;
+  }
+}
+
+function mapFeeTypeToNumber(feeType) {
+  switch (feeType) {
+    case 'Customer Fees':
+      return 1;
+    case 'Bank Account Fees':
+      return 2;
+    case 'Investment Account Fees':
+      return 3;
+  }
+}
+
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    const result = { fees: [] };
+
+    const { groupedFees, accounts } = await this.#getFeesStructuredFromSQL(customerAccount);
+
+    result.accounts = accounts.map((account) => ({
+      cifno: account.cifno,
+      ddaNumber: account.ddaNumber,
+      branchCity: account.branchCity,
+      branchState: account.branchState,
+      branchType: account.branchType,
+      documentUrl: account.documentUrl,
+      defaultPackageType: account.defaultPackageType,
+      feePackage: account.feePackage,
+    }));
+
+    const customer = new CustomerFees(groupedFees, accounts);
+    if (customer.fee) result.fees.push(customer.fee);
+
+    const bank = new BankAccountFee(groupedFees, accounts);
+    if (bank.fee) result.fees.push(bank.fee);
+
+    const equityField = { exceptionOptions: [] };
+
+    const investment = new InvestmentAccountFee(groupedFees, accounts, equityField);
+    if (investment.fee) {
+      result.fees.push(investment.fee);
+    }
+
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
+    });
+
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id,
+    }));
+
+    return Result.ok(result);
+  }
+
+ 
+  async #getFeesStructuredFromSQL(customerAccount) {
+    const feesDataRaw = await this.#getFeesFromSQL(customerAccount[0].cifno);
+    if (!feesDataRaw || feesDataRaw.length === 0) {
+      return { groupedFees: [], accounts: [] };
+    }
+  
+    const feesData = Array.from(
+      new Map(
+        feesDataRaw.map(row => [
+          `${row.CIFNO}-${row.ACCTNO}-${row.FeeCode}-${row.FeeType}`,
+          row
+        ])
+      ).values()
+    );
+  
+    const feePackageId = feesData[0]['Default Fee Package Id'];
+    if (!feePackageId) {
+      throw new Error('Default Fee Package Id not found in feesData');
+    }
+  
+    const documentUrl = this.#getDocumentUrl(feePackageId);
+  
+    const accounts = feesData.map((fee) => ({
+      cifno: fee.CIFNO,
+      ddaNumber: fee.ACCTNO,
+      branchCity: fee['Branch City'],
+      branchState: fee['Branch State'],
+      branchType: fee['Branch Type'],
+      defaultPackageType: fee['Default Package Type'],
+      feePackage: fee['Default Fee Package']?.trim() || '',
+      defaultFeePackageId: fee['Default Fee Package Id'] || '',
+      feeType: mapFeeTypeToNumber(mapDbFeeTypeToApp(fee.FeeType)),
+      feeGroup: 1,
+      kycMailingStatus: fee.StandardException === 'Standard' ? 'Standard' : 'Hold Mail',
+      documentUrl
+    }));
+  
+    const groupedFeesMap = {};
+    const possibleFeeTypes = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
+    for (const ft of possibleFeeTypes) {
+      groupedFeesMap[ft] = {
+        feeType: ft,
+        feeGroups: [
+          { name: 'Standard Fees', code: 1, fields: [] },
+          { name: 'Client Current Fees', code: 2, fields: [] },
+          { name: 'Exception Request', code: 3, fields: [] },
+        ],
+      };
+    }
+  
+    function mergeEquityOptionText(field, originalCode, rawText) {
+      if (field._eqVal === undefined) field._eqVal = '';
+      if (field._opVal === undefined) field._opVal = '';
+  
+      if (originalCode === 9) {
+        field._eqVal = rawText;
+      }
+      else if (originalCode === 7) {
+        field._opVal = rawText;
+      }
+  
+      field.defaultValue = `Equity: ${field._eqVal} ; Option: ${field._opVal}`;
+    }
+  
+    for (const row of feesData) {
+      const feeTypeDb = row.FeeType;
+      const feeTypeApp = mapDbFeeTypeToApp(feeTypeDb);
+      if (!groupedFeesMap[feeTypeApp]) continue;
+  
+      const { FeeDescription, FeeCode, FeeAmount, Frequency } = row;
+      const DefaultFeeAmount = row["Default Fee Amount"];
+      const DefaultFrequency = row["Default Frequency"];
+  
+      let mappedCode = deParaFeeCodes[FeeCode] || FeeCode;
+  
+      if (excludedCodes.has(mappedCode)) continue;
+  
+      if (
+        feeTypeApp === 'Customer Fees' &&
+        ![1, 2].includes(mappedCode) ||
+        feeTypeApp === 'Bank Account Fees' &&
+        ![3, 4, 0].includes(mappedCode) ||
+        feeTypeApp === 'Investment Account Fees' &&
+        ![5, 7, 6, 9].includes(mappedCode)
+      ) {
+        continue;
+      }
+  
+      const groupObj = groupedFeesMap[feeTypeApp];
+      const standardGroup = groupObj.feeGroups.find(g => g.name === 'Standard Fees');
+      const clientCurrentGroup = groupObj.feeGroups.find(g => g.name === 'Client Current Fees');
+  
+      let originalCode = mappedCode; 
+      if (mappedCode === 9 || mappedCode === 7) {
+        mappedCode = 7;
+      }
+  
+      let stdField = standardGroup.fields.find(f => f.code === mappedCode);
+      if (!stdField) {
+        stdField = {
+          code: mappedCode,
+          name: FeeDescription,
+          defaultValue: '',
+          tooltip: '',
+          isException: false
+        };
+        standardGroup.fields.push(stdField);
+      }
+      if (mappedCode === 7) {
+        stdField.name = "Equity and Options Commission";
+        mergeEquityOptionText(stdField, originalCode, FeeAmount?.toString() || '');
+      } else {
+        stdField.name = FeeDescription;
+        stdField.defaultValue = FeeAmount ? FeeAmount.toString() : '';
+        stdField.tooltip = Frequency || '';
+      }
+  
+      let cliField = clientCurrentGroup.fields.find(f => f.code === mappedCode);
+      if (!cliField) {
+        cliField = {
+          code: mappedCode,
+          name: FeeDescription,
+          defaultValue: '',
+          tooltip: '',
+          isException: false
+        };
+        clientCurrentGroup.fields.push(cliField);
+      }
+      if (mappedCode === 6 || mappedCode === 7) {
+        let currentValue = '';
+        if (DefaultFeeAmount) {
+          currentValue = DefaultFeeAmount.toString();
+        } else if (DefaultFrequency) {
+          currentValue = DefaultFrequency.toString();
+        }
+        cliField.defaultValue = currentValue;
+      } else {
+        cliField.defaultValue = DefaultFeeAmount ? DefaultFeeAmount.toString() : '';
+      }
+    
+      cliField.tooltip = DefaultFrequency || '';
+      cliField.name = FeeDescription;
+    
+    }
+  
+    const exceptions = await this.#getExceptionFeesFromSQL(feePackageId);
+    const exceptionsByFeeTypeAndCode = {};
+    for (const exc of exceptions) {
+      const feeTypeApp = exc.feeType;
+      if (!exceptionsByFeeTypeAndCode[feeTypeApp]) {
+        exceptionsByFeeTypeAndCode[feeTypeApp] = {};
+      }
+      let code = exc.code;
+      if (code === 9 || code === 7) {
+        code = 7;
+      }
+      if (excludedCodes.has(code)) continue;
+  
+      if (!exceptionsByFeeTypeAndCode[feeTypeApp][code]) {
+        exceptionsByFeeTypeAndCode[feeTypeApp][code] = [];
+      }
+      exc.code = code;
+      exceptionsByFeeTypeAndCode[feeTypeApp][code].push(exc);
+    }
+  
+    for (const ft of possibleFeeTypes) {
+      const groupObj = groupedFeesMap[ft];
+      if (!groupObj) continue;
+  
+      const exceptionGroup = groupObj.feeGroups.find(g => g.name === 'Exception Request');
+      if (!exceptionGroup) continue;
+  
+      const standardGroup = groupObj.feeGroups.find(g => g.name === 'Standard Fees');
+      const clientCurrentGroup = groupObj.feeGroups.find(g => g.name === 'Client Current Fees');
+      const standardCodes = standardGroup?.fields.map((f) => f.code) || [];
+      const clientCodes = clientCurrentGroup?.fields.map((f) => f.code) || [];
+      const allCodes = new Set([...standardCodes, ...clientCodes]);
+  
+      for (const code of allCodes) {
+        let field = exceptionGroup.fields.find(f => f.code === code);
+        if (!field) {
+          const stdField = standardGroup.fields.find((f) => f.code === code);
+          field = {
+            code,
+            name: stdField?.name || '',
+            defaultValue: '',
+            tooltip: '',
+            isException: true,
+            exceptionOptions: []
+          };
+          exceptionGroup.fields.push(field);
+        } else {
+          if (!field.name || field.name.trim() === '') {
+            const stdField = standardGroup.fields.find((f) => f.code === code);
+            field.name = stdField?.name || '';
+          }
+          field.defaultValue = '';
+        }
+      }
+  
+      const codeMap = exceptionsByFeeTypeAndCode[ft] || {};
+      for (const [codeStr, listExc] of Object.entries(codeMap)) {
+        const code = Number(codeStr);
+        if (excludedCodes.has(code)) continue;
+  
+        let field = exceptionGroup.fields.find((f) => f.code === code);
+        if (!field) {
+          const firstExc = listExc[0];
+          field = {
+            code,
+            name: firstExc.name || '',
+            defaultValue: '',
+            tooltip: firstExc.tooltip || '',
+            isException: true,
+            exceptionOptions: []
+          };
+          exceptionGroup.fields.push(field);
+        }
+        if (code === 7) {
+          field.name = "Equity and Options Commission";
+        }
+        for (const exc of listExc) {
+          const rawVal = exc.defaultValue || '';
+          const numericRegex = /^[0-9]+(\.[0-9]+)?$/;
+          let finalText = rawVal;
+          if (numericRegex.test(rawVal)) {
+            const num = parseFloat(rawVal);
+            finalText = `$${num.toFixed(2)}`;
+          }
+        
+          field.exceptionOptions.push({
+            approvedByDoubleA: null,
+            value: rawVal,
+            text: finalText,
+            visible: true,
+            retired: false,
+            parameterOptionId: exc.parameterOptionId,
+          });
+        }
+      }
+    }
+    const groupedFees = Object.values(groupedFeesMap);
+    return { groupedFees, accounts };
+  }
+
+  #getDocumentUrl(feePackageId) {
+    const scheduleUrls = global.environment.scheduleUrls;
+    const packageMap = {
+      1: 'intlPB3',
+      2: 'uSPBIndividual3',
+      3: 'uSPBCorporation3',
+      // 4: 'efraPB3',
+      // 5: 'eraPB3'
+    };
+
+    const scheduleType = packageMap[feePackageId] || '';
+    return scheduleUrls[scheduleType] || '';
+  }
+
+  async #getFeesFromSQL(cifno) {
+    const connection = await connectToFeeMgmtDb();
+    return executeStoreProcedure(connection, 'sp_get_fees_byCIF', { cifno });
+  }
+
+  async #getExceptionFeesFromSQL(feePackageId) {
+    const connection = await connectToFeeMgmtDb();
+    const data = await executeStoreProcedure(connection, 'sp_get_exception_fees_bypackage', { feePackageId });
+    return data.map((exception) => {
+      const feeTypeApp = mapDbFeeTypeToApp(exception.FeeType);
+      return {
+        feeType: feeTypeApp,
+        code: deParaFeeCodes[exception.FeeCode] || exception.FeeCode,
+        name: exception.FeeDescription, 
+        defaultValue: exception.Amount?.toString() || '',
+        tooltip: exception.FreqDescription || '',
+        isException: true,
+        parameterOptionId: exception.FeeParameterOptionId,
+      };
+    });
+  }
+}
+
+
+
+
+
+{
+    "code": 200,
+    "data": {
+        "customerName": "FRANCO JACK",
+        "customerAddress": "JACK FRANCO 425 EAST 58TH STREET APT # 48 B NEW YORK NY 10022",
+        "customerAccountOfficer": "036 Sigalit Levy-Shabi        BR 4",
+        "cif": "F016583",
+        "branchCity": "New York",
+        "branchState": "NY",
+        "branchType": "International",
+        "packageType": "Individual",
+        "packageName": "PB International",
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06d0",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06d1",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "6810e8eb52206a316e9e06cf"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "NOT APPLICABLE",
+                                "hasChanged": false,
+                                "tooltip": "Annual - Charged Annual",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06d3",
+                                "labelValue": "NOT APPLICABLE"
+                            },
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "Annual - Charged Semi-Annual",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06d4",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "6810e8eb52206a316e9e06d2"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 2,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Hold Mail Fee",
+                                "defaultValue": "NOT APPLICABLE",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "600.00",
+                                        "text": "$600.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06d7"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e06d6",
+                                "labelValue": "NOT APPLICABLE"
+                            },
+                            {
+                                "code": 1,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Account Maintenance Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "1500.00",
+                                        "text": "$1500.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06d9"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06da"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e06d8",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": "Standard",
+                        "_id": "6810e8eb52206a316e9e06d5"
+                    }
+                ]
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06dc",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06dd",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e06db"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06df",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06e0",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e06de"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06e3"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06e4"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06e5"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e06e2"
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06e7"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e06e6"
+                            },
+                            {
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "USD Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06e9"
+                                    },
+                                    {
+                                        "value": "45.00",
+                                        "text": "$45.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06ea"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06eb"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06ec"
+                                    },
+                                    {
+                                        "value": "20.00",
+                                        "text": "$20.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06ed"
+                                    },
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06ee"
+                                    },
+                                    {
+                                        "value": "30.00",
+                                        "text": "$30.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06ef"
+                                    },
+                                    {
+                                        "value": "35.00",
+                                        "text": "$35.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06f0"
+                                    },
+                                    {
+                                        "value": "40.00",
+                                        "text": "$40.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06f1"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06f2"
+                                    },
+                                    {
+                                        "value": "60.00",
+                                        "text": "$60.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06f3"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e06e8"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e06e1"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06f5",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06f6",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e06f4"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06f8",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e06f9",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e06f7"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06fc"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06fd"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e06fe"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e06fb"
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0700"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e06ff"
+                            },
+                            {
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "USD Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0702"
+                                    },
+                                    {
+                                        "value": "45.00",
+                                        "text": "$45.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0703"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0704"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0705"
+                                    },
+                                    {
+                                        "value": "20.00",
+                                        "text": "$20.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0706"
+                                    },
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0707"
+                                    },
+                                    {
+                                        "value": "30.00",
+                                        "text": "$30.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0708"
+                                    },
+                                    {
+                                        "value": "35.00",
+                                        "text": "$35.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0709"
+                                    },
+                                    {
+                                        "value": "40.00",
+                                        "text": "$40.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e070a"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e070b"
+                                    },
+                                    {
+                                        "value": "60.00",
+                                        "text": "$60.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e070c"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0701"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e06fa"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e070e",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "0.00",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e070f",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e070d"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0711",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0712",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e0710"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "FX Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0715"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0716"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0717"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0714"
+                            },
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "USD/FX Incoming Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0719"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0718"
+                            },
+                            {
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "USD Outgoing Wire Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75.00",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e071b"
+                                    },
+                                    {
+                                        "value": "45.00",
+                                        "text": "$45.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e071c"
+                                    },
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e071d"
+                                    },
+                                    {
+                                        "value": "10.00",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e071e"
+                                    },
+                                    {
+                                        "value": "20.00",
+                                        "text": "$20.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e071f"
+                                    },
+                                    {
+                                        "value": "25.00",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0720"
+                                    },
+                                    {
+                                        "value": "30.00",
+                                        "text": "$30.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0721"
+                                    },
+                                    {
+                                        "value": "35.00",
+                                        "text": "$35.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0722"
+                                    },
+                                    {
+                                        "value": "40.00",
+                                        "text": "$40.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0723"
+                                    },
+                                    {
+                                        "value": "50.00",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0724"
+                                    },
+                                    {
+                                        "value": "60.00",
+                                        "text": "$60.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0725"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e071a"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e0713"
+                    }
+                ]
+            },
+            {
+                "feeType": "Investment Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0727",
+                                "labelValue": "$375.00"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.50% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.50% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0728",
+                                "labelValue": "0.50% /YR min $375.00/QTR"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "Equity: $0.10 per share, min charge of $150 per trade ; Option: $0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0729",
+                                "labelValue": "Equity: $0.10 per share, min charge of $150 per trade ; Option: $0.05 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e0726"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0733",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.50% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.50% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0734",
+                                "labelValue": "0.50% /YR min $375.00/QTR"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0735",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e0732"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375.00",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0740"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e073f",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.50% /YR min $375.00/QTR",
+                                        "text": "0.50% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0742"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0741",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.10 per share, min charge of $150 per trade",
+                                        "text": "$0.10 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0744"
+                                    },
+                                    {
+                                        "value": "$0.05 per share, min charge of $150 per trade",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0745"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0743",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7113617",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e073e"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e072b",
+                                "labelValue": "$375.00"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.50% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.50% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e072c",
+                                "labelValue": "0.50% /YR min $375.00/QTR"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "Equity: $0.10 per share, min charge of $150 per trade ; Option: $0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e072d",
+                                "labelValue": "Equity: $0.10 per share, min charge of $150 per trade ; Option: $0.05 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e072a"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0737",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.50% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.50% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0738",
+                                "labelValue": "0.50% /YR min $375.00/QTR"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0739",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e0736"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375.00",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0748"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0747",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.50% /YR min $375.00/QTR",
+                                        "text": "0.50% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e074a"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0749",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.10 per share, min charge of $150 per trade",
+                                        "text": "$0.10 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e074c"
+                                    },
+                                    {
+                                        "value": "$0.05 per share, min charge of $150 per trade",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e074d"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e074b",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115431",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e0746"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "375.00",
+                                "hasChanged": false,
+                                "tooltip": "Quarterly on Day 1",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e072f",
+                                "labelValue": "$375.00"
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.50% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.50% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0730",
+                                "labelValue": "0.50% /YR min $375.00/QTR"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "Equity: $0.10 per share, min charge of $150 per trade ; Option: $0.05 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e0731",
+                                "labelValue": "Equity: $0.10 per share, min charge of $150 per trade ; Option: $0.05 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e072e"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e073b",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "0.50% /YR min $375.00/QTR",
+                                "hasChanged": false,
+                                "tooltip": "0.50% /YR min $375.00/QTR",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e073c",
+                                "labelValue": "0.50% /YR min $375.00/QTR"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "US Equities Commission",
+                                "defaultValue": "$0.10 per share, min charge of $150 per trade",
+                                "hasChanged": false,
+                                "tooltip": "$0.10 per share, min charge of $150 per trade",
+                                "exceptionOptions": [],
+                                "_id": "6810e8eb52206a316e9e073d",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e073a"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintanance Fee",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375.00",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0750"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e074f",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping of Securities",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0.50% /YR min $375.00/QTR",
+                                        "text": "0.50% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0752"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0751",
+                                "labelValue": ""
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "tooltip": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "$0.10 per share, min charge of $150 per trade",
+                                        "text": "$0.10 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0754"
+                                    },
+                                    {
+                                        "value": "$0.05 per share, min charge of $150 per trade",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6810e8eb52206a316e9e0755"
+                                    }
+                                ],
+                                "_id": "6810e8eb52206a316e9e0753",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "F016583",
+                        "accountNumber": "7115822",
+                        "entityCode": null,
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6810e8eb52206a316e9e074e"
+                    }
+                ]
+            }
+        ],
+        "feesActives": [],
+        "documentUrl": "https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null",
+        "currentFees": [
+            {
+                "feeDescription": "$0.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "Hold Mail Fee $0.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee $375.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "USD Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Checking -D 7113617"
+            },
+            {
+                "feeDescription": "$0.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee $375.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "USD Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Promise   D 7115431"
+            },
+            {
+                "feeDescription": "$0.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee $0.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee $375.00",
+                "feeCode": " Personal Savings 7115822"
+            },
+            {
+                "feeDescription": "USD Outgoing Wire Fee $75.00",
+                "feeCode": " Personal Savings 7115822"
+            }
+        ]
+    }
+}
+
+
+
+
+
+
