@@ -1,43 +1,2247 @@
-NODE_ENV = 'Local'
-APP_NAME = 'snb-fee-management'
-CONFIG_SERVER_APP_NAME = 'snb-fee-management'
-CONFIG_SERVER_URL = 'https://config.dev.k8s.safra.int'
-CONFIG_SERVER_USER = 'safraconfigserver'
-CONFIG_SERVER_PASSWORD = 'Sc$7@gfwertrlM22'
-SERVER_PORT = '3333'
-MONGODB_URI = 'mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb'
-SQLSERVER_SERVER = 'nydev01.snb.safra.int'
-SQLSERVER_USER = 'userFeeMgmtConductor'
-SQLSERVER_PASSWORD = 'userF33MgmtCond'
-SQLSERVER_DATABASE = 'FeeMgmt'
+import numberToCurrency from '../core/helpers/currency.js'
+
+export default class CustomerFees {
+  #feeName = 'Customer Fees'
+  #customer = {}
+  #accounts = []
+  #clientCurrent = []
+  constructor(fees, accounts) {
+  // global.logger.info('CustomerFees()')
+
+    const feeTypes = accounts.reduce((acc, item) => {
+      if (item.feeType > 2) return acc
+      acc = item.feeType
+      return acc
+    }, 0)
+
+    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0]
+
+    this.#customer.feeGroups.forEach((feeGroup) => {
+      feeGroup.fields = feeGroup.fields.filter((x) => x.code <= feeTypes)
+      feeGroup.fields?.forEach((item) => {
+        item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired)
+      })
+    })
+
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#customer.feeGroups[0].code
+    )
+
+    this.#customer.feeGroups[0].kycMailingStatus =
+      accounts.find((account) => account.feeType === 2)?.kycMailingStatus ||
+      null
+    this.#customer.feeGroups[0].fields.forEach((field) => {
+      field.labelValue = numberToCurrency(field.defaultValue)
+    })
+
+    this.#clientCurrent = this.#customer.feeGroups[1].fields
+    this.#configureCustomer()
+
+    this.#customer.feeGroups[2].fields.forEach((field, fieldIndex) => {
+      field.labelValue =
+        this.#customer.feeGroups[1].fields[fieldIndex].labelValue
+      if (
+        field.code === 2 &&
+        this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+      ) {
+        field.defaultValue = field.labelValue
+        field.exceptionOptions = [
+          {
+            value: field.defaultValue,
+            text: field.defaultValue
+          }
+        ]
+      }
+    })
+  }
+
+  get fee() {
+    return this.#customer
+  }
+
+  #configureCustomer() {
+  // global.logger.info('configureCustomer()')
+
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#customer = {}
+      return
+    }
+
+    for (const field of this.#clientCurrent) {
+      for (const account of this.#accounts) {
+        if (field.isCurrentClient && field.code === account.feeType) {
+          if (
+            field.code === 2 &&
+            this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+          ) {
+            field.defaultValue = 'NOT APPLICABLE'
+            field.labelValue = field.defaultValue
+          } else {
+            field.defaultValue = account.feeAmount.toString()
+            field.labelValue = numberToCurrency(field.defaultValue)
+          }
+        }
+      }
+    }
+
+    for (const feeGroup of this.#customer.feeGroups) {
+      feeGroup.cif = this.#accounts[0].cifno
+      feeGroup.accountNumber = this.#accounts[0].ddaNumber
+    }
+
+    this.#clearMemory()
+  }
+
+  #clearMemory() {
+    this.#accounts = []
+    this.#clientCurrent = []
+  }
+}
 
 
+E o que vem em Accounts
 
+[
+  {
+    cifno: "NAA0010",
+  },
+]
 
-CASE_URL= http://casemanagement-backend-http-host.safra-applications-dev
-CONDUCTOR_URL= http://customersearch-backend-http-host.safra-applications-dev
-USER_URL= http://usermanagement-backend-http-host.safra-applications-dev
-FEE_URL= http://feemanagement-backend-http-host.safra-applications-dev
-CONDUCTOR_URL= http://conductor-ui.safra-applications-dev/api/workflow
-JACK_URL= http://jackhenry-backend-http-host.safra-applications-dev
+Em Fees vem correto:
 
- Essa info eu tirei do MONGO
-
-Connection info
-Stats
-
-1 DB
-10 Collections
-
-Host
-
-dash.dev.k8s.safra.int:27017
-
-Cluster
-
-Standalone
-
-Edition
-
-MongoDB 6.0.1 Community
-
+[
+  {
+    feeType: "Customer Fees",
+    feeGroups: [
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Standard Fees",
+        code: 1,
+        fields: [
+          {
+            hasChanged: false,
+            code: 1,
+            isException: false,
+            name: "Account Maintenance",
+            tooltip: "Charged: Semiannual",
+            defaultValue: "600",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.435Z",
+            updatedAt: "2023-05-20T16:25:31.435Z",
+            isCurrentClient: false,
+            isStandard: true,
+            id: "6468f46eff51aa9d77d849d7",
+          },
+          {
+            hasChanged: false,
+            code: 2,
+            isException: false,
+            name: "Hold Mail",
+            defaultValue: "600",
+            tooltip: "Charged: Annually",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.435Z",
+            updatedAt: "2023-05-20T16:25:31.435Z",
+            isCurrentClient: false,
+            isStandard: true,
+            id: "6468f46eff51aa9d77d849d8",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb4b",
+      },
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Client Current Fees",
+        code: 1,
+        fields: [
+          {
+            hasChanged: false,
+            code: 1,
+            isException: false,
+            name: "Account Maintenance",
+            defaultValue: "600",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.436Z",
+            updatedAt: "2023-05-20T16:25:31.436Z",
+            isCurrentClient: true,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d849dc",
+          },
+          {
+            hasChanged: false,
+            code: 2,
+            isException: false,
+            name: "Hold mail",
+            defaultValue: "600",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.436Z",
+            updatedAt: "2023-05-20T16:25:31.436Z",
+            isCurrentClient: true,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d849dd",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb4e",
+      },
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Exception Request",
+        code: 1,
+        fields: [
+          {
+            hasChanged: false,
+            code: 1,
+            isException: true,
+            name: "Account Maintenance",
+            defaultValue: "",
+            exceptionOptions: [
+              {
+                approvedByDoubleA: null,
+                value: "600",
+                text: "$600.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 11,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "0",
+                text: "$0.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 12,
+              },
+            ],
+            createdAt: "2023-05-20T16:25:31.436Z",
+            updatedAt: "2023-05-20T16:25:31.436Z",
+            isCurrentClient: false,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d849e1",
+          },
+          {
+            hasChanged: false,
+            code: 2,
+            isException: true,
+            name: "Hold mail",
+            defaultValue: "",
+            exceptionOptions: [
+              {
+                approvedByDoubleA: null,
+                value: "600",
+                text: "$600.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 13,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "0",
+                text: "$0.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 14,
+              },
+            ],
+            createdAt: "2023-05-20T16:25:31.436Z",
+            updatedAt: "2023-05-20T16:25:31.436Z",
+            isCurrentClient: false,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d849e4",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb51",
+      },
+    ],
+    id: "6468f46eff51aa9d77d849ee",
+  },
+  {
+    feeType: "Bank Account Fees",
+    feeGroups: [
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Standard Fees",
+        code: 2,
+        fields: [
+          {
+            hasChanged: false,
+            code: 3,
+            isException: false,
+            name: "Incoming Wire",
+            defaultValue: "0",
+            tooltip: "Charged: Per Transaction",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.436Z",
+            updatedAt: "2023-05-20T16:25:31.436Z",
+            isCurrentClient: false,
+            isStandard: true,
+            id: "6468f46eff51aa9d77d849fc",
+          },
+          {
+            hasChanged: false,
+            code: 4,
+            isException: false,
+            name: "Outgoing Wire",
+            defaultValue: "75",
+            tooltip: "Charged: Per Transaction",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.436Z",
+            updatedAt: "2023-05-20T16:25:31.436Z",
+            isCurrentClient: false,
+            isStandard: true,
+            id: "6468f46eff51aa9d77d849fd",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb58",
+      },
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Client Current Fees",
+        code: 2,
+        fields: [
+          {
+            hasChanged: false,
+            code: 3,
+            isException: false,
+            name: "Incoming Wire",
+            defaultValue: "10",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.437Z",
+            updatedAt: "2023-05-20T16:25:31.437Z",
+            isCurrentClient: true,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a01",
+          },
+          {
+            hasChanged: false,
+            code: 4,
+            isException: false,
+            name: "Outgoing Wire",
+            defaultValue: "75",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.437Z",
+            updatedAt: "2023-05-20T16:25:31.437Z",
+            isCurrentClient: true,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a02",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb5b",
+      },
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Exception Request",
+        code: 2,
+        fields: [
+          {
+            hasChanged: false,
+            code: 3,
+            isException: true,
+            name: "Incoming Wire",
+            defaultValue: "",
+            exceptionOptions: [
+              {
+                approvedByDoubleA: null,
+                value: "10",
+                text: "$10.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 17,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "0",
+                text: "$0.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 18,
+              },
+            ],
+            createdAt: "2023-05-20T16:25:31.437Z",
+            updatedAt: "2023-05-20T16:25:31.437Z",
+            isCurrentClient: false,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a06",
+          },
+          {
+            hasChanged: false,
+            code: 4,
+            isException: true,
+            name: "Outgoing Wire",
+            defaultValue: "",
+            exceptionOptions: [
+              {
+                approvedByDoubleA: null,
+                value: "75",
+                text: "$75.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 7,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "60",
+                text: "$60.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 49,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "50",
+                text: "$50.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 48,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "40",
+                text: "$40.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 46,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "35",
+                text: "$35.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 45,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "30",
+                text: "$30.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 44,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "25",
+                text: "$25.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                parameterOptionId: 43,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "20",
+                text: "$20.00",
+                visible: true,
+                retired: true,
+                _id: {
+                },
+                parameterOptionId: 42,
+              },
+              {
+                approvedByDoubleA: null,
+                value: "10",
+                text: "$10.00",
+                visible: true,
+                retired: true,
+                _id: {
+                },
+                parameterOptionId: 40,
+              },
+            ],
+            createdAt: "2023-05-20T16:25:31.437Z",
+            updatedAt: "2023-05-20T16:25:31.437Z",
+            isCurrentClient: false,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a09",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb5e",
+      },
+    ],
+    id: "6468f46eff51aa9d77d84a1b",
+  },
+  {
+    feeType: "Investment Account Fees",
+    feeGroups: [
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Standard Fees",
+        code: 3,
+        fields: [
+          {
+            hasChanged: false,
+            code: 6,
+            isException: false,
+            name: "Safekeeping-Custody",
+            defaultValue: "A021",
+            tooltip: "Charged: Quarterly",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.437Z",
+            updatedAt: "2023-05-20T16:25:31.437Z",
+            isCurrentClient: false,
+            isStandard: true,
+            id: "6468f46eff51aa9d77d84a2d",
+          },
+          {
+            hasChanged: false,
+            code: 5,
+            isException: false,
+            name: "SSL Account Maintenance",
+            defaultValue: "375",
+            tooltip: "Charged: Quarterly",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.437Z",
+            updatedAt: "2023-05-20T16:25:31.437Z",
+            isCurrentClient: false,
+            isStandard: true,
+            id: "6468f46eff51aa9d77d84a2e",
+          },
+          {
+            hasChanged: false,
+            code: 7,
+            isException: false,
+            name: "Equity and Options Commission",
+            tooltip: "Charged: Per Trade",
+            defaultValue: "E3",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.438Z",
+            updatedAt: "2023-05-20T16:25:31.438Z",
+            isCurrentClient: false,
+            isStandard: true,
+            id: "6468f46eff51aa9d77d84a2f",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb6c",
+      },
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Client Current Fees",
+        code: 3,
+        fields: [
+          {
+            hasChanged: false,
+            code: 6,
+            isException: false,
+            name: "Safekeeping-Custody",
+            defaultValue: "A021",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.438Z",
+            updatedAt: "2023-05-20T16:25:31.438Z",
+            isCurrentClient: true,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a34",
+          },
+          {
+            hasChanged: false,
+            code: 5,
+            isException: false,
+            name: "SSL Account Maintenance",
+            defaultValue: "375",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.438Z",
+            updatedAt: "2023-05-20T16:25:31.438Z",
+            isCurrentClient: true,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a35",
+          },
+          {
+            hasChanged: false,
+            code: 7,
+            isException: false,
+            name: "Equity and Options Commission",
+            defaultValue: "E3",
+            exceptionOptions: [
+            ],
+            createdAt: "2023-05-20T16:25:31.438Z",
+            updatedAt: "2023-05-20T16:25:31.438Z",
+            isCurrentClient: true,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a36",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb70",
+      },
+      {
+        visible: true,
+        kycMailingStatus: null,
+        name: "Exception Request",
+        code: 3,
+        fields: [
+          {
+            hasChanged: false,
+            code: 6,
+            isException: true,
+            name: "Safekeeping-Custody",
+            defaultValue: "",
+            exceptionOptions: [
+              {
+                _id: {
+                },
+                text: "A032 - 0.50% per year with a minimum of $375.00 per quarter",
+                value: "A032",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A101 - 0.50% per year with a minimum of $250.00 per quarter",
+                value: "A101",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A102 - 0.50% per year with a minimum of $125.00 per quarter",
+                value: "A102",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A031 - 0.45% per year with a minimum of $375.00 per quarter",
+                value: "A031",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A103 - 0.45% per year with a minimum of $250.00 per quarter",
+                value: "A103",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A104 - 0.45% per year with a minimum of $125.00 per quarter",
+                value: "A104",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A030 - 0.40% per year with a minimum of $375.00 per quarter",
+                value: "A030",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A105 - 0.40% per year with a minimum of $250.00 per quarter",
+                value: "A105",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A106 - 0.40% per year with a minimum of $125.00 per quarter",
+                value: "A106",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A021 - 0.35% per year with a minimum of $375.00 per quarter",
+                value: "A021",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A107 - 0.35% per year with a minimum of $250.00 per quarter",
+                value: "A107",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A108 - 0.35% per year with a minimum of $125.00 per quarter",
+                value: "A108",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A001 - 0.30% per year with a minimum of $375.00 per quarter",
+                value: "A001",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A109 - 0.30% per year with a minimum of $250.00 per quarter",
+                value: "A109",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A110 - 0.30% per year with a minimum of $125.00 per quarter",
+                value: "A110",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A022 - 0.25% per year with a minimum of $375.00 per quarter",
+                value: "A022",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A068 - 0.25% per year with a minimum of $250.00 per quarter",
+                value: "A068",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A088 - 0.25% per year with a minimum of $125.00 per quarter",
+                value: "A088",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A053 - 0.20% per year with a minimum of $375.00 per quarter",
+                value: "A053",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A070 - 0.20% per year with a minimum of $250.00 per quarter",
+                value: "A070",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A111 - 0.20% per year with a minimum of $125.00 per quarter",
+                value: "A111",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A089 - 0.15% per year with a minimum of $375.00 per quarter",
+                value: "A089",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A012 - 0.15% per year with a minimum of $250.00 per quarter",
+                value: "A012",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A073 - 0.15% per year with a minimum of $125.00 per quarter",
+                value: "A073",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A071 - 0.10% per year with a minimum of $375.00 per quarter",
+                value: "A071",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A008 - 0.10% per year with a minimum of $250.00 per quarter",
+                value: "A008",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A112 - 0.10% per year with a minimum of $125.00 per quarter",
+                value: "A112",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A113 - 0.05% per year with a minimum of $375.00 per quarter",
+                value: "A113",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: false,
+              },
+              {
+                _id: {
+                },
+                text: "A009 - 0.05% per year with a minimum of $250.00 per quarter",
+                value: "A009",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: false,
+              },
+              {
+                _id: {
+                },
+                text: "A114 - 0.05% per year with a minimum of $125.00 per quarter",
+                value: "A114",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: false,
+              },
+              {
+                _id: {
+                },
+                text: "A115 - 0.50% per year with a minimum of $100.00 per quarter",
+                value: "A115",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A116 - 0.45% per year with a minimum of $100.00 per quarter",
+                value: "A116",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A117 - 0.30% per year with a minimum of $100.00 per quarter",
+                value: "A117",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A118 - 0.25% per year with a minimum of $100.00 per quarter",
+                value: "A118",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A119 - 0.20% per year with a minimum of $100.00 per quarter",
+                value: "A119",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A025 - 0.15% per year with a minimum of $100.00 per quarter",
+                value: "A025",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A023 - 0.10% per year with a minimum of $100.00 per quarter",
+                value: "A023",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A120 - 0.05% per year with a minimum of $100.00 per quarter",
+                value: "A120",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: false,
+              },
+              {
+                _id: {
+                },
+                text: "A121 - 0.50% per year with a minimum of $75.00 per quarter",
+                value: "A121",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A122 - 0.45% per year with a minimum of $75.00 per quarter",
+                value: "A122",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A123 - 0.30% per year with a minimum of $75.00 per quarter",
+                value: "A123",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A124 - 0.25% per year with a minimum of $75.00 per quarter",
+                value: "A124",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A125 - 0.20% per year with a minimum of $75.00 per quarter",
+                value: "A125",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A126 - 0.15% per year with a minimum of $75.00 per quarter",
+                value: "A126",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A127 - 0.10% per year with a minimum of $75.00 per quarter",
+                value: "A127",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "A128 - 0.05% per year with a minimum of $75.00 per quarter",
+                value: "A128",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: false,
+              },
+              {
+                _id: {
+                },
+                text: "F100 - Waived Custody Fee",
+                value: "F100",
+                visible: true,
+                retired: false,
+                approvedByDoubleA: false,
+              },
+              {
+                _id: {
+                },
+                text: "F017 - Flat Quarterly Custody Fee $ 2500",
+                value: "F017",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "F108 - Flat Quarterly Custody Fee $ 1500",
+                value: "F108",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "F009 - Flat Quarterly Custody Fee $ 1000",
+                value: "F009",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                _id: {
+                },
+                text: "F002 - Flat Quarterly Custody Fee $ 500",
+                value: "F002",
+                visible: true,
+                retired: true,
+                approvedByDoubleA: false,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A003  - Cust Fee/YR 0.02% $250 min",
+                value: "A003",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A006  - Cust Fee/YR 0.06% $250 min",
+                value: "A006",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A007  - Cust Fee/YR 0.08% $250 min",
+                value: "A007",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A010  - .1%/YRNMMX",
+                value: "A010",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A011  - .2%/.1% TIERED",
+                value: "A011",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A013  - Cust Fee/YR 0.125% $250 min",
+                value: "A013",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A014  - Cust Fee/YR 0.2% $0 min",
+                value: "A014",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A019  - Cust Fee/YR 0.075% $250 min",
+                value: "A019",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A024  - Cust Fee/YR 0.12% $375 min",
+                value: "A024",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A027  - Cust Fee/YR 0.18% $300 min",
+                value: "A027",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A028  - Cust Fee/YR 0.04% $0 min",
+                value: "A028",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A029  - Cust Fee/YR 0.35% $300 min",
+                value: "A029",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A052  - Cust Fee/YR 0.25% $0 min",
+                value: "A052",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A055  - Cust Fee/YR 0.32% $375 min",
+                value: "A055",
+                visible: false,
+                retired: true,
+              },
+              {
+                _id: {
+                },
+                text: "A056  - 0.37% per yr $375 min",
+                value: "A056",
+                visible: false,
+                retired: true,
+                approvedByDoubleA: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A057  - Cust Fee/YR 0.38% $375 min",
+                value: "A057",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A059  - Cust Fee/YR 0.16% $375 min",
+                value: "A059",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A061  - Cust Fee/YR 0.17% $375 min",
+                value: "A061",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A067  - Cust Fee/YR 0.15% $93.75 min",
+                value: "A067",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A072  - Cust Fee/YR 0.125% $0 min",
+                value: "A072",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A074  - Cust Fee/YR 0.125% $125 min",
+                value: "A074",
+                visible: false,
+                retired: true,
+              },
+              {
+                _id: {
+                },
+                text: "A075  - 0.05%/Yr $0 min",
+                value: "A075",
+                visible: false,
+                retired: true,
+                approvedByDoubleA: false,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A076  - Cust Fee/YR 0.075% $0 min",
+                value: "A076",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A078  - Cust Fee/YR 0.08% $0 min",
+                value: "A078",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A079  - Cust Fee/YR 0.12% $0 min",
+                value: "A079",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A080  - Cust Fee/YR 0.15% $0 min",
+                value: "A080",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A081  - Cust Fee/YR 0.17% $0 min",
+                value: "A081",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A082  - Cust Fee/YR 0.18% $0 min",
+                value: "A082",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A083  - Cust Fee/YR 0.25% $87.5 min",
+                value: "A083",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A084  - Cust Fee/YR 0.15% $56.25 min",
+                value: "A084",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A085  - Cust Fee .15, .125",
+                value: "A085",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A086  - Cust Fee .15, .125 Min $125",
+                value: "A086",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A087  - Cust Fee .25, .15",
+                value: "A087",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A091  - Custody Rate .1% No Min",
+                value: "A091",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A096  - Cust Fee .35%, No Min",
+                value: "A096",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A098  - Cust Fee .3%, $300 Min",
+                value: "A098",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "A099  - Custody Rate 0.0625% No min",
+                value: "A099",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F005  - Flat Fee $200/Yr",
+                value: "F005",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F006  - Flat Fee $500/Yr",
+                value: "F006",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F010  - Flat Fee $7020/Yr",
+                value: "F010",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F016  - Flat Fee $250/Yr",
+                value: "F016",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F018  - Flat Fee $300/Yr",
+                value: "F018",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F019  - Flat Fee $800/Yr",
+                value: "F019",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F021  - Flat Fee Yearly $100/Yr",
+                value: "F021",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F101  - Flat Fee $400/Yr",
+                value: "F101",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F103  - Flat Fee $2500/Yr",
+                value: "F103",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F104  - Flat Fee $820/Yr",
+                value: "F104",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                text: "F105  - Flat Fee $1500/Yr",
+                value: "F105",
+                visible: false,
+                retired: true,
+              },
+            ],
+            createdAt: "2023-05-20T16:25:31.438Z",
+            updatedAt: "2023-05-20T16:25:31.438Z",
+            isCurrentClient: false,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a3b",
+          },
+          {
+            hasChanged: false,
+            code: 5,
+            isException: true,
+            name: "SSL Account Maintenance",
+            defaultValue: "",
+            exceptionOptions: [
+              {
+                approvedByDoubleA: null,
+                value: "375",
+                text: "$375.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+              },
+              {
+                approvedByDoubleA: null,
+                value: "0",
+                text: "$0.00",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+              },
+            ],
+            createdAt: "2023-05-20T16:25:31.438Z",
+            updatedAt: "2023-05-20T16:25:31.438Z",
+            isCurrentClient: false,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a3d",
+          },
+          {
+            hasChanged: false,
+            code: 7,
+            isException: true,
+            name: "Equity and Options Commission",
+            defaultValue: "",
+            exceptionOptions: [
+              {
+                approvedByDoubleA: null,
+                value: "B6",
+                text: "B6 - Equity:$0.03 per share, with a minimum charge of $150 per trade; Option:$0.03 per share, with a minimum charge of $150 per trade",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+              },
+              {
+                approvedByDoubleA: null,
+                value: "C8",
+                text: "C8 - Equity:$0.05 per share, with a minimum charge of $100 per trade; Option:$0.05 per share, with a minimum charge of $100 per trade",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+              },
+              {
+                approvedByDoubleA: null,
+                value: "D2",
+                text: "D2 - Equity:$0.05 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+              },
+              {
+                approvedByDoubleA: null,
+                value: "D7",
+                text: "D7 - Equity:$0.07 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+              },
+              {
+                approvedByDoubleA: null,
+                text: "E3 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+                value: "E3",
+              },
+              {
+                approvedByDoubleA: null,
+                value: "I3",
+                text: "I3 - Equity:100 basis points, with a minimum charge of $150 per trade; Option:100 basis points, with a minimum charge of $150 per trade",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+              },
+              {
+                approvedByDoubleA: null,
+                value: "I8",
+                text: "I8 - Equity:$0.03 per share, with a minimum charge of $100 per trade; Option:$0.03 per share, with a minimum charge of $100 per trade",
+                visible: true,
+                retired: false,
+                _id: {
+                },
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "J6",
+                text: "J6 - Equity:$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more; Option:$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more",
+                visible: true,
+                retired: false,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "K5",
+                text: "K5 - Equity:$0.75 per share, with a minimum charge of $75 per trade; Option:$0.75 per share, with a minimum charge of $75 per trade",
+                visible: true,
+                retired: false,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A1",
+                text: "A1 - Equity:$0.00 per share, with NO minimum charge per trade; Option:$0.00 per share, with NO minimum charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A2",
+                text: "A2 - Equity:$50 flat charge per trade; Option:$50 flat charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A3",
+                text: "A3 - Equity:$100 flat charge per trade; Option:$50 flat charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A4",
+                text: "A4 - Equity:$0.01 per share, with a minimum charge of $150 per trade; Option:$0.01 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A5",
+                text: "A5 - Equity:$0.01 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A6",
+                text: "A6 - Equity:$0.02 per share, with a minimum charge of $50 per trade; Option:$0.02 per share, with a minimum charge of $ 50 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A7",
+                text: "A7 - Equity:$0.02 per share, with a minimum charge of $75 per trade; Option:$0.02 per share, with a minimum charge of $75 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A8",
+                text: "A8 - Equity:$0.02 per share, with a minimum charge of $ 80 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "A9",
+                text: "A9 - Equity:$0.02 per share, with a minimum charge of $150 per trade; Option:$0.006 per share, with NO minimum charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "B1",
+                text: "B1 - Equity:$0.02 per share, with a minimum charge of $150 per trade; Option:$0.02 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "B2",
+                text: "B2 - Equity:$0.02 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "B3",
+                text: "B3 - Equity:$0.03 per share, with a minimum charge of $75 per trade; Option:$0.03 per share, with a minimum charge of $75 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "B4",
+                text: "B4 - Equity:$0.03 per share, with a minimum charge of $100 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "B5",
+                text: "B5 - Equity:$0.03 per share, with a minimum charge of $150 per trade; Option:$0.02 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "B7",
+                text: "B7 - Equity:$0.03 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "B8",
+                text: "B8 - Equity:$0.03 per share, with a minimum charge of $150 per trade; Option:$0.07 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "C1",
+                text: "C1 - Equity:$0.04 per share, with a minimum charge of $50 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "C2",
+                text: "C2 - Equity:$0.04 per share, with a minimum charge of $75 per trade; Option:$0.04 per share, with a minimum charge of $75 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "C4",
+                text: "C4 - Equity:$0.04 per share, with a minimum charge of $150 per trade; Option:$0.04 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "C5",
+                text: "C5 - Equity:$0.04 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "C9",
+                text: "C9 - Equity:$0.05 per share, with a minimum charge of $150 per trade; Option:$0.00 per share, with NO minimum charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "D1",
+                text: "D1 - Equity:$0.05 per share, with a minimum charge of $150 per trade; Option:$0.03 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "D6",
+                text: "D6 - Equity:$0.07 per share, with a minimum charge of $150 per trade; Option:$0.07 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "D8",
+                text: "D8 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.00 per share, with NO minimum charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "D9",
+                text: "D9 - Equity:$0.03 per share, with a minimum charge of $150 per trade; Option:$150 flat charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "E1",
+                text: "E1 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.02 per share, with a minimum charge of $75 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "E4",
+                text: "E4 - Equity:$0.02 per share, with a minimum charge of $80 per trade; Option:$0.02 per share, with a minimum charge of $80 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "Z1",
+                text: "Z1 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "J3",
+                text: "J3 - Equity:$0.02 per share, with a minimum charge of $100 per trade; Option:$0.02 per share, with a minimum charge of $100 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H1",
+                text: "H1 - Equity: $.05 per share, with a minimum charge of $75 per trade;Option: $0.05 per share, with a minimum charge of $75 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H2",
+                text: "H2 - Equity: $0.01 per share, with NO minimum charge;Option: $0.01 per share, with NO minimum charge",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H3",
+                text: "H3 - Equity: $0.015 per share, with NO minimum charge ;Option: $0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H4",
+                text: "H4 - Equity: 25 basis points, with a minimum charge of $100 per trade;Option: 25 basis points, with a minimum charge of $100 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H5",
+                text: "H5 - Equity: $0.015 per share, with a minimum charge of $100 per trade;Option: $0.015 per share, with a minimum charge of $100 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H6",
+                text: "H6 - Equity: $0.05 per share, with a minimum charge of $150 per trade;Option: $0.02 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H7",
+                text: "H7 - Equity: $0.004 per share, with NO minimum charge;Option: $0.01 per share, with NO minimum charge",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H8",
+                text: "H8 - Equity: $0.02 per share, with NO minimum charge;Option: $0.01 per share, with NO minimum charge",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "H9",
+                text: "H9 - Equity: $0.005 per share, with a minimum charge of $30 per trade;Option: $0.01 per share, with a minimum charge of $30 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "I2",
+                text: "I2 - Equity: $0.05 per share, with a minimum charge of $150 per trade;Option: 100 basis points, with a minimum charge of $80 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "I5",
+                text: "I5 - Equity: $0.07 per share, with a minimum charge of $150 per trade;Option: $0.03 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "I6",
+                text: "I6 - Equity: 100 basis points, with a minimum charge of $150 per trade;Option: $0.05 per share, with a minimum charge of $150 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "I7",
+                text: "I7 - Equity: $0.05 per share, with a minimum charge of $50 per trade;Option: $0.05 per share, with a minimum charge of $50 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "I9",
+                text: "I9 - Equity: $0.02 per share, with a minimum charge of $30 per trade;Option: $0.02 per share, with a minimum charge of $ 30 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "J1",
+                text: "J1 - Equity: $0.01 per share, with a minimum charge of $75 per trade;Option: $0.01 per share, with a minimum charge of $75 per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "J2",
+                text: "J2 - Equity: $0.005 per share, with NO minimum charge;Option: $0.005 per share, with NO minimum charge",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "J4",
+                text: "J4 - Equity: $25 flat charge per trade;Option: $25 flat charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "J5",
+                text: "J5 - Equity: $15 flat charge per trade;Option: $15 flat charge per trade",
+                visible: false,
+                retired: true,
+              },
+              {
+                retired: false,
+                visible: true,
+                approvedByDoubleA: null,
+                _id: {
+                },
+                value: "",
+                text: "Other",
+              },
+              {
+                value: "B9",
+                text: "B9 - Equity:B9; Option:B9",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "C3",
+                text: "C3 - Equity:$0.04 per share, with a minimum charge of $80 per trade; Option:$0.04 per share, with a minimum charge of $80 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "C7",
+                text: "C7 - Equity:$0.05 per share, min charge of $50 per trade; Option:$0.05 per share, min charge of $150 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F0",
+                text: "F0 - Equity:$.02 per share on stock trades below $5 per share, $.05 per share on stock trades over $5 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F1",
+                text: "F1 - Equity:$.005 per share on stock trades below $5 per share, $.02 per share on stock trades over $5 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F2",
+                text: "F2 - Equity:$.01 per share on stock trades below $10 per share, $.03 per share on stock trades over $10 per share with a minimum charge of $150 per trade; Option:$.01 cents per share on option trades below $10 per share, & .03 per share on option trades over $10 per share",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F3",
+                text: "F3 - Equity:$.02 per share on stock trades below $1 per share, $.05 per share on stock trades between $1 and $5 per share, $.07 per share on stock trades over $5 per share, with a minimum charge of $150 per trade; Option:$.02 per share on option trades below $1 per share, $.05 per share on option trades between $1 and $5 per share , $.07 per share on option trades over $5 per share, with a min of $ 150.00.",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F4",
+                text: "F4 - Equity:$.02 per share on stock trades below $5 per share, $.05 per share on stock trades over $5 per share; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F5",
+                text: "F5 - Equity:$.02 per share on stock trades below $5 per share, $.07 per share on stock  trades over $5 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F6",
+                text: "F6 - Equity:$.03 per share on stock trades below $5 per share, $.05 per share on stock trades over $5 per share with NO minimum charge per trade; Option:$.03 cents per share on option trades below $5 per share, $.05 per share on option trades over $5 per share",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F7",
+                text: "F7 - Equity:$.03 per share on stock trades below $5 per share, $.05 per share on stock trades over $5 per share with a minimum charge of $150 per trade; Option:$.03 cents per share on option trades below $5 per share , $.05 per share on option trades over $5 per share with a minimum of $150 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F8",
+                text: "F8 - Equity:$.05 per share on stock trades below $5 per share, $.07 per share on stock trades over $5 per share with a minimum charge of $150 per trade; Option:$.05 per share on option trades below $5 per share , $.07 per share on option trades over $5 per share",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "F9",
+                text: "F9 - Equity:$.01 per share on stock trades below $20 per share, $.03 per share on stock trades over $20 per share with a minimum charge of $150 per trade; Option:$.01 per share on option trades below $20 per share , $.03 per share on option trades over $20 per share",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "G1",
+                text: "G1 - Equity:$.03 per share on stocks under $10 & $.10 per share on stocks above $10 with a minimum charge of $150 per trade; Option:$.03 per share on option trades under $10 & $.10 on option trades above $10 per share",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "G2",
+                text: "G2 - Equity:4.5% commission on stock trades below $1 per share, $.10 per share on stock trades over $1 per share with a minimum charge of $150 per trade; Option:4.5% commission on option trades below $1 per share, $.05 per share on option trades over $1 per share with a minimum charge of $150 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "G3",
+                text: "G3 - Equity:Equity Comm Fee; Option:Equity Comm Fee",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "G4",
+                text: "G4 - Option:$0.05 per share, with a minimum charge of $150 per trade",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+              {
+                value: "I4",
+                text: "I4 - Equity:test; Option:test",
+                retired: true,
+                visible: false,
+                approvedByDoubleA: null,
+                _id: {
+                },
+              },
+            ],
+            createdAt: "2023-05-20T16:25:31.438Z",
+            updatedAt: "2024-11-16T12:30:04.292Z",
+            isCurrentClient: false,
+            isStandard: false,
+            id: "6468f46eff51aa9d77d84a40",
+          },
+        ],
+        id: "681a5a03180f4d46ea62eb74",
+      },
+    ],
+    id: "6468f46eff51aa9d77d84a56",
+  },
+]
