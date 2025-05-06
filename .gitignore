@@ -1,88 +1,18 @@
-import { Router } from 'express'
-import feeCaseGetByCifEndpoint from './feeCaseGetByCifEndpoint.js'
+MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
+    at _handleConnectionErrors (h:\workspace\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)
+    at NativeConnection.openUri (H:\workspace\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…modules\\mongoose\\lib\\connection.js:730:11)'}
 
-const feeCaseGetByCifRouter = Router()
-
-feeCaseGetByCifRouter.get('/conductor/fee/:cif', feeCaseGetByCifEndpoint)
-
-export default feeCaseGetByCifRouter
-
-
-
-import Result from '#features/shared/result.js'
-
-export default class FeeCaseGetByCifUseCase {
-  async execute({ cif }, feeManagementModel, customerModel) {
-    global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`)
-    const [errCustomer, responseCustomer] =
-      await customerModel.getCustomerDetailsByCif(cif)
-
-    if (errCustomer) {
-      return Result.fail({ message: "It's not possible to get address cif" })
-    }
-    global.logger.info('feeManagementModel.getFeeByAccount')
-    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(
-      responseCustomer.data.customer
-    )
-
-    if (errFee) {
-      return Result.fail({ message: "Its's not possible get fee values" })
-    }
-
-    const currentFees =
-      responseCustomer?.data?.customer?.customerCurrentFees?.map((x) => ({
-        feeDescription: x.feeDescription,
-        feeCode: x.feeCode
-      }))
-
-    const result = {
-      customerName: responseCustomer.data.customer.customerAddress.name,
-      customerAddress: responseCustomer.data.customer.customerAddress.address,
-      customerAccountOfficer:
-        responseCustomer.data.customer.customerAddress.officer,
-      cif: responseCustomer.data.customer.customerAddress.cif,
-      branchCity: responseFee.data.accounts[0].branchCity,
-      branchState: responseFee.data.accounts[0].branchState,
-      branchType: responseFee.data.accounts[0].branchType,
-      packageType: responseFee.data.accounts[0].defaultPackageType,
-      packageName: responseFee.data.accounts[0].feePackage,
-      defaultFeePackageId: responseFee.data.accounts[0].defaultFeePackageId,
-      fees: responseFee.data.fees,
-      feesActives: responseFee.data.feesActives,
-      documentUrl: responseFee.data.accounts[0].documentUrl,
-      currentFees
-    }
-    global.logger.info('End process')
-    return Result.ok(result)
-  }
-}
-
-
-
-import FeeCaseGetByCifUseCase from './feeCaseGetByCifUseCase.js'
-import ApiResponse from '#core/http/apiResponse.js'
-import FeeManagement from '#src/models/FeeManagement.js'
-import Customer from '#src/models/Customer.js'
-
-export default async function feeCaseGetByCifEndpoint(req, res) {
-  const useCase = new FeeCaseGetByCifUseCase()
-  const feeManagement = new FeeManagement(global)
-  const customer = new Customer(global)
-  const result = await useCase.execute(req.params, feeManagement, customer)
-
-  if (result.isFailure) {
-    const badRequestResponse = ApiResponse.createBadRequestResponse({
-      error: result.error
-    })
-    return res.status(badRequestResponse.code).json(badRequestResponse)
-  }
-
-  const okResponse = ApiResponse.createOkResponse(result.value)
-
-  res.json(okResponse)
-}
-
-
-Só que eu não me lembro o que preciso fazer para trazer as respostas no postman com os dois
-
-Qual informação vc precisa para me ajudar?
+index.js:13
+arg0 =
+MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data\n    at _handleConnectionErrors (H:\workspace\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)\n    at NativeConnection.openUri (H:\workspace\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…modules\\mongoose\\lib\\connection.js:730:11)'}
+code =
+undefined
+message =
+'getaddrinfo ENOTFOUND mongodb.safra-data'
+reason =
+TopologyDescription {type: 'Unknown', servers: Map(1), stale: false, compatible: true, heartbeatFrequencyMS: 10000, …}
+stack =
+'MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data\n    at _handleConnectionErrors (H:\\workspace\\fee-management-backend\\node_modules\\mongoose\\lib\\connection.js:755:11)\n    at NativeConnection.openUri (H:\\workspace\\fee-management-backend\\node_modules\\mongoose\\lib\\connection.js:730:11)'
+[[Prototype]] =
+MongooseError
+<anonymous> @ h:\workspace\fee-management-backend\src\core\data\index.js:13:54
