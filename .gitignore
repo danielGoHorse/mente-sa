@@ -1,119 +1,108 @@
-{
-	"info": {
-		"_postman_id": "701250e9-ebb8-4f89-b5c5-0c8cf13b7bf7",
-		"name": "FeeManagement",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "34847542",
-		"_collection_link": "https://asdasd-1075.postman.co/workspace/asdasd-Workspace~c8b2bac2-0a45-4326-8a43-1f40914e15e8/collection/34847542-701250e9-ebb8-4f89-b5c5-0c8cf13b7bf7?action=share&source=collection_link&creator=34847542"
-	},
-	"item": [
-		{
-			"name": "Dev",
-			"item": [
-				{
-					"name": "GetFeePackageBranch",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "https://api.dev.k8s.safra.int/v1/fee/packages",
-							"protocol": "https",
-							"host": [
-								"api",
-								"dev",
-								"k8s",
-								"safra",
-								"int"
-							],
-							"path": [
-								"v1",
-								"fee",
-								"packages"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GetFeePackageBranch",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "https://api.dev.k8s.safra.int/v1/fee/feePackageBranch/individual",
-							"protocol": "https",
-							"host": [
-								"api",
-								"dev",
-								"k8s",
-								"safra",
-								"int"
-							],
-							"path": [
-								"v1",
-								"fee",
-								"feePackageBranch",
-								"individual"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GetFeePackageBranch",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "https://api.dev.k8s.safra.int/v1/fee/feepackagebranchsave",
-							"protocol": "https",
-							"host": [
-								"api",
-								"dev",
-								"k8s",
-								"safra",
-								"int"
-							],
-							"path": [
-								"v1",
-								"fee",
-								"feepackagebranchsave"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "http://localhost:3333/v1/fee/feePackageBranchSave",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"branchCd\": 1,\r\n    \"busfeepackageid\": 1,\r\n    \"indfeepackageid\": 1,\r\n    \"updatedby\": \"Carlos.Soares\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:3333/v1/fee/feePackageBranchSave",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "3333",
-					"path": [
-						"v1",
-						"fee",
-						"feePackageBranchSave"
-					]
-				}
-			},
-			"response": []
-		}
-	]
-}
+
+
+[14:46:09.451] INFO (13136): Starting configuration for env: Local
+[14:46:09.452] INFO (13136): Loading env using file H:\workspace\fee-management-backend\.env
+[14:46:09.471] INFO (13136): bootstraping application
+[14:46:10.058] INFO (13136): Server started on :::3333
+[14:46:20.636] INFO (13136): request completed
+    req: {
+      "id": "4c4308c133176602c91bb2b9",
+      "method": "GET",
+      "url": "/api/fee/group",
+      "query": {},
+      "params": {},
+      "headers": {
+        "host": "localhost:3333",
+        "connection": "keep-alive",
+        "sec-ch-ua": "\"Chromium\";v=\"136\", \"Microsoft Edge\";v=\"136\", \"Not.A/Brand\";v=\"99\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0",
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "sec-fetch-site": "none",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-user": "?1",
+        "sec-fetch-dest": "document",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.9"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 59091
+    }
+    res: {
+      "statusCode": 404,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "4c4308c133176602c91bb2b9",
+        "x-correlation-id": "4c4308c133176602c91bb2b9",
+        "content-security-policy": "default-src 'none'",
+        "content-type": "text/html; charset=utf-8",
+        "content-length": 152
+      }
+    }
+    responseTime: 5
+[14:46:20.707] INFO (13136): request completed
+    req: {
+      "id": "937b1932329d29fe504c6f0b",
+      "method": "GET",
+      "url": "/.well-known/appspecific/com.chrome.devtools.json",
+      "query": {},
+      "params": {},
+      "headers": {
+        "host": "localhost:3333",
+        "connection": "keep-alive",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-mode": "no-cors",
+        "sec-fetch-dest": "empty",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0",
+        "accept-encoding": "gzip, deflate, br, zstd",
+        "accept-language": "en-US,en;q=0.9"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 59091
+    }
+    res: {
+      "statusCode": 404,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "937b1932329d29fe504c6f0b",
+        "x-correlation-id": "937b1932329d29fe504c6f0b",
+        "content-security-policy": "default-src 'none'",
+        "content-type": "text/html; charset=utf-8",
+        "content-length": 187
+      }
+    }
+    responseTime: 1
+
+Aparece isso no console 
+
+Se eu digito isso em um navegador comum....
+
+http://localhost:3333/api/fee/group
+
+
