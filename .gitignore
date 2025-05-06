@@ -1,116 +1,88 @@
-Eu quero testar esse componente aqui....Com um CIF NAA0010
+import { Router } from 'express'
+import feeCaseGetByCifEndpoint from './feeCaseGetByCifEndpoint.js'
+
+const feeCaseGetByCifRouter = Router()
+
+feeCaseGetByCifRouter.get('/conductor/fee/:cif', feeCaseGetByCifEndpoint)
+
+export default feeCaseGetByCifRouter
 
 
 
-import { Fee } from '#src/models/entities/Fees.js'
 import Result from '#features/shared/result.js'
-import CustomerFees from '#src/models/CustomerFees.js'
-import BankAccountFee from '#src/models/BankAccountFee.js'
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
-import { FeeCase } from '#src/models/entities/FeeCase.js'
-import { Field } from '#src/models/entities/Fields.js'
 
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
-    global.logger.info('FeeGetByCifUseCase()')
+export default class FeeCaseGetByCifUseCase {
+  async execute({ cif }, feeManagementModel, customerModel) {
+    global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`)
+    const [errCustomer, responseCustomer] =
+      await customerModel.getCustomerDetailsByCif(cif)
 
-    const result = { fees: [] }
-    const fees = await this.#getFeeStandard([
-      {
-        feeType: 'Customer Fees'
-      },
-      {
-        feeType: 'Bank Account Fees'
-      },
-      {
-        feeType: 'Investment Account Fees'
-      }
-    ])
-
-    const customer = new CustomerFees(fees, customerAccount)
-    if (customer.fee) result.fees.push(customer.fee)
-
-    const bank = new BankAccountFee(fees, customerAccount)
-    if (bank.fee) result.fees.push(bank.fee)
-
-    const equityField = await Field.find({ code: 7 })
-    const investiment = new InvestimentAccountFee(
-      fees,
-      customerAccount,
-      equityField[0]
+    if (errCustomer) {
+      return Result.fail({ message: "It's not possible to get address cif" })
+    }
+    global.logger.info('feeManagementModel.getFeeByAccount')
+    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(
+      responseCustomer.data.customer
     )
-    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee)
 
-      const feePackageId = feesData[0]['Default Fee Package Id'];
-      if (!feePackageId) {
-        throw new Error('Default Fee Package Id not found in feesData');
-      }
-
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: {
-        $nin: ['DONE', 'REJECTED']
-      },
-      caseNumber: {
-        $exists: true
-      }
-    })
-
-    result.feesActives = feesActives?.map((x) => ({
-      caseNumber: x.caseNumber,
-      id: x.id
-    }))
-
-    result.documentUrl =
-    this.#getDocumentUrl(feePackageId);
-
-    global.logger.info(`documentUrl= ${result.document}`)
-
-    return Result.ok(result)
-  }
-
-  
-  #getDocumentUrl(feePackageId) {
-    const scheduleUrls = global.environment.scheduleUrls;
-    const packageMap = {
-      1: 'intlPB3',
-      2: 'uSPBIndividual3',
-      3: 'uSPBCorporation3',
-     };
-
-    const scheduleType = packageMap[feePackageId] || '';
-    return scheduleUrls[scheduleType] || '';
-  }
-
-  async #getFeeStandard(filter) {
-    global.logger.info('getFeeStandard()')
-
-    const feeResult = []
-
-    for await (const fee of Fee.find({
-      $or: filter
-    }).select({
-      feeType: 1,
-      feeGroups: {
-        name: 1,
-        fields: 1,
-        code: 1
-      }
-    })) {
-      feeResult.push(fee.toObject())
+    if (errFee) {
+      return Result.fail({ message: "Its's not possible get fee values" })
     }
 
-    return feeResult
+    const currentFees =
+      responseCustomer?.data?.customer?.customerCurrentFees?.map((x) => ({
+        feeDescription: x.feeDescription,
+        feeCode: x.feeCode
+      }))
+
+    const result = {
+      customerName: responseCustomer.data.customer.customerAddress.name,
+      customerAddress: responseCustomer.data.customer.customerAddress.address,
+      customerAccountOfficer:
+        responseCustomer.data.customer.customerAddress.officer,
+      cif: responseCustomer.data.customer.customerAddress.cif,
+      branchCity: responseFee.data.accounts[0].branchCity,
+      branchState: responseFee.data.accounts[0].branchState,
+      branchType: responseFee.data.accounts[0].branchType,
+      packageType: responseFee.data.accounts[0].defaultPackageType,
+      packageName: responseFee.data.accounts[0].feePackage,
+      defaultFeePackageId: responseFee.data.accounts[0].defaultFeePackageId,
+      fees: responseFee.data.fees,
+      feesActives: responseFee.data.feesActives,
+      documentUrl: responseFee.data.accounts[0].documentUrl,
+      currentFees
+    }
+    global.logger.info('End process')
+    return Result.ok(result)
   }
 }
 
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-import { Router } from 'express'
-import feeGetByCifEndpoint from './feeGetByCifEndpoint.js'
 
-const feeGetByCifRouter = Router()
+import FeeCaseGetByCifUseCase from './feeCaseGetByCifUseCase.js'
+import ApiResponse from '#core/http/apiResponse.js'
+import FeeManagement from '#src/models/FeeManagement.js'
+import Customer from '#src/models/Customer.js'
 
-feeGetByCifRouter.post('/fee', feeGetByCifEndpoint)
-export default feeGetByCifRouter
+export default async function feeCaseGetByCifEndpoint(req, res) {
+  const useCase = new FeeCaseGetByCifUseCase()
+  const feeManagement = new FeeManagement(global)
+  const customer = new Customer(global)
+  const result = await useCase.execute(req.params, feeManagement, customer)
 
+  if (result.isFailure) {
+    const badRequestResponse = ApiResponse.createBadRequestResponse({
+      error: result.error
+    })
+    return res.status(badRequestResponse.code).json(badRequestResponse)
+  }
+
+  const okResponse = ApiResponse.createOkResponse(result.value)
+
+  res.json(okResponse)
+}
+
+
+Só que eu não me lembro o que preciso fazer para trazer as respostas no postman com os dois
+
+Qual informação vc precisa para me ajudar?
