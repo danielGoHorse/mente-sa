@@ -1,3 +1,7 @@
+Eu quero testar esse componente aqui....Com um CIF NAA0010
+
+
+
 import { Fee } from '#src/models/entities/Fees.js'
 import Result from '#features/shared/result.js'
 import CustomerFees from '#src/models/CustomerFees.js'
