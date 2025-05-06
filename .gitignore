@@ -1,18 +1,43 @@
-MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data
-    at _handleConnectionErrors (h:\workspace\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)
-    at NativeConnection.openUri (H:\workspace\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…modules\\mongoose\\lib\\connection.js:730:11)'}
+NODE_ENV = 'Local'
+APP_NAME = 'snb-fee-management'
+CONFIG_SERVER_APP_NAME = 'snb-fee-management'
+CONFIG_SERVER_URL = 'https://config.dev.k8s.safra.int'
+CONFIG_SERVER_USER = 'safraconfigserver'
+CONFIG_SERVER_PASSWORD = 'Sc$7@gfwertrlM22'
+SERVER_PORT = '3333'
+MONGODB_URI = 'mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb'
+SQLSERVER_SERVER = 'nydev01.snb.safra.int'
+SQLSERVER_USER = 'userFeeMgmtConductor'
+SQLSERVER_PASSWORD = 'userF33MgmtCond'
+SQLSERVER_DATABASE = 'FeeMgmt'
 
-index.js:13
-arg0 =
-MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data\n    at _handleConnectionErrors (H:\workspace\fee-management-backend\node_modules\mongoose\lib\connection.js:755:11)\n    at NativeConnection.openUri (H:\workspace\fee-management-backend\node_modules\mongoose\lib\connection.js:730:11) {message: 'getaddrinfo ENOTFOUND mongodb.safra-data', reason: TopologyDescription, code: undefined, stack: 'MongooseServerSelectionError: getaddrinfo ENO…modules\\mongoose\\lib\\connection.js:730:11)'}
-code =
-undefined
-message =
-'getaddrinfo ENOTFOUND mongodb.safra-data'
-reason =
-TopologyDescription {type: 'Unknown', servers: Map(1), stale: false, compatible: true, heartbeatFrequencyMS: 10000, …}
-stack =
-'MongooseServerSelectionError: getaddrinfo ENOTFOUND mongodb.safra-data\n    at _handleConnectionErrors (H:\\workspace\\fee-management-backend\\node_modules\\mongoose\\lib\\connection.js:755:11)\n    at NativeConnection.openUri (H:\\workspace\\fee-management-backend\\node_modules\\mongoose\\lib\\connection.js:730:11)'
-[[Prototype]] =
-MongooseError
-<anonymous> @ h:\workspace\fee-management-backend\src\core\data\index.js:13:54
+
+
+
+CASE_URL= http://casemanagement-backend-http-host.safra-applications-dev
+CONDUCTOR_URL= http://customersearch-backend-http-host.safra-applications-dev
+USER_URL= http://usermanagement-backend-http-host.safra-applications-dev
+FEE_URL= http://feemanagement-backend-http-host.safra-applications-dev
+CONDUCTOR_URL= http://conductor-ui.safra-applications-dev/api/workflow
+JACK_URL= http://jackhenry-backend-http-host.safra-applications-dev
+
+ Essa info eu tirei do MONGO
+
+Connection info
+Stats
+
+1 DB
+10 Collections
+
+Host
+
+dash.dev.k8s.safra.int:27017
+
+Cluster
+
+Standalone
+
+Edition
+
+MongoDB 6.0.1 Community
+
