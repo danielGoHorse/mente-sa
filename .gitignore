@@ -1,47 +1,34 @@
-import Result from '#features/shared/result.js'
+// FeeGetByCifUseCase.js
+// —————————— ALTERAÇÕES PRINCIPAIS ——————————
 
-export default class FeeCaseGetByCifUseCase {
-  async execute({ cif }, feeManagementModel, customerModel) {
-    global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`)
-    const [errCustomer, responseCustomer] =
-      await customerModel.getCustomerDetailsByCif(cif)
+// ▶ 1. NOVO método que traz *todos* os campos do SQL
+async #getPackageDataFromSQL(cifno) {
+  const conn = await connectToFeeMgmtDb();
+  const [row] =
+    await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
 
-    if (errCustomer) {
-      return Result.fail({ message: "It's not possible to get address cif" })
-    }
-    global.logger.info('feeManagementModel.getFeeByAccount')
-    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(
-      responseCustomer.data.customer
-    )
+  if (!row) return {};
 
-    if (errFee) {
-      return Result.fail({ message: "Its's not possible get fee values" })
-    }
-
-    const currentFees =
-      responseCustomer?.data?.customer?.customerCurrentFees?.map((x) => ({
-        feeDescription: x.feeDescription,
-        feeCode: x.feeCode
-      }))
-
-    const result = {
-      customerName: responseCustomer.data.customer.customerAddress.name,
-      customerAddress: responseCustomer.data.customer.customerAddress.address,
-      customerAccountOfficer:
-        responseCustomer.data.customer.customerAddress.officer,
-      cif: responseCustomer.data.customer.customerAddress.cif,
-      branchCity: responseFee.data.accounts[0].branchCity,
-      branchState: responseFee.data.accounts[0].branchState,
-      branchType: responseFee.data.accounts[0].branchType,
-      packageType: responseFee.data.accounts[0].defaultPackageType,
-      packageName: responseFee.data.accounts[0].feePackage,
-      defaultFeePackageId: responseFee.data.accounts[0].defaultFeePackageId,
-      fees: responseFee.data.fees,
-      feesActives: responseFee.data.feesActives,
-      documentUrl: responseFee.data.accounts[0].documentUrl,
-      currentFees
-    }
-    global.logger.info('End process')
-    return Result.ok(result)
-  }
+  return {
+    defaultFeePackageId: row['Default Fee Package Id'] ?? null,
+    branchCity:          row['Branch City']?.trim()         || '',
+    branchState:         row['Branch State']?.trim()        || '',
+    branchType:          row['Branch Type']?.trim()         || '',
+    defaultPackageType:  row['Default Package Type']?.trim()|| '',
+    feePackage:          row['Default Fee Package']?.trim() || ''
+  };
 }
+
+// ▶ 2. NO execute() — logo depois de obter customerAccount
+const pkgData = await this.#getPackageDataFromSQL(customerAccount[0].cifno);
+
+// monta a URL do PDF
+result.documentUrl = this.#getDocumentUrl(pkgData.defaultFeePackageId);
+
+// injeta os novos campos em todas as contas recebidas
+customerAccount.forEach(acc =>
+  Object.assign(acc, pkgData)
+);
+
+// estes campos agora viajam para o conductor dentro de
+//   responseFee.data.accounts[*]  — nada muda no código do conductor
