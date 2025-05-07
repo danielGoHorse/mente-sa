@@ -1,16 +1,118 @@
-import BaseHttp from './BaseHttp.js'
-export default class Customer extends BaseHttp {
-  #getCustomerDetails = 'customer/v1'
-  constructor({ logger, environment }) {
-    super(logger, environment.customerUrl)
-  }
-
-  async getCustomerDetailsByCif(cif) {
-    const url = `${this.#getCustomerDetails}/${cif}`
-    return await this.httpRequest.get(url)
-  }
-}
+Chat, fiz a chamada e deu esse erro no console do conductor
 
 
-
-Chat, como eu faço essa chamada apontar para meu projeto Fee Management que esta local na porta 3333...esse aqui é o conductor que esta na porta 3334 
+[22:06:46.980] INFO (15312): Starting configuration for env: Local
+[22:06:46.982] INFO (15312): Loading env using file H:\workspace\conductor-fee-management\.env
+[22:06:46.996] INFO (15312): bootstraping application
+[22:06:47.377] INFO (15312): Server started on :::3334
+[22:07:13.174] INFO (15312): customerModel.getCustomerDetailsByCif(MAA0475)
+[22:07:13.371] ERROR (15312): Request failed with status code 404
+    err: {
+      "message": "Request failed with status code 404",
+      "name": "AxiosError",
+      "stack":
+          AxiosError: Request failed with status code 404
+              at settle (file:///H:/workspace/conductor-fee-management/node_modules/axios/lib/core/settle.js:19:12)
+              at IncomingMessage.handleStreamEnd (file:///H:/workspace/conductor-fee-management/node_modules/axios/lib/adapters/http.js:495:11)
+              at IncomingMessage.emit (node:events:536:35)
+              at endReadableNT (node:internal/streams/readable:1698:12)
+              at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+      "config": {
+        "transitional": {
+          "silentJSONParsing": true,
+          "forcedJSONParsing": true,
+          "clarifyTimeoutError": false
+        },
+        "transformRequest": [
+          null
+        ],
+        "transformResponse": [
+          null
+        ],
+        "timeout": 0,
+        "xsrfCookieName": "XSRF-TOKEN",
+        "xsrfHeaderName": "X-XSRF-TOKEN",
+        "maxContentLength": -1,
+        "maxBodyLength": -1,
+        "env": {},
+        "headers": {
+          "Accept": "application/json, text/plain, */*",
+          "User-Agent": "axios/1.1.3",
+          "Accept-Encoding": "gzip, deflate, br"
+        },
+        "baseURL": "http://localhost:3333",
+        "httpsAgent": {
+          "_events": {},
+          "_eventsCount": 2,
+          "defaultPort": 443,
+          "protocol": "https:",
+          "options": {
+            "rejectUnauthorized": false,
+            "noDelay": true,
+            "path": null
+          },
+          "requests": {},
+          "sockets": {},
+          "freeSockets": {},
+          "keepAliveMsecs": 1000,
+          "keepAlive": false,
+          "maxSockets": null,
+          "maxFreeSockets": 256,
+          "scheduling": "lifo",
+          "maxTotalSockets": null,
+          "totalSocketCount": 0,
+          "maxCachedSessions": 100,
+          "_sessionCache": {
+            "map": {},
+            "list": []
+          }
+        },
+        "method": "get",
+        "url": "http://localhost:3333/customer/v1/MAA0475"
+      },
+      "code": "ERR_BAD_REQUEST",
+      "status": 404
+    }
+[22:07:13.374] INFO (15312): request completed
+    req: {
+      "id": "1a804a4b79dea2a5301738c1",
+      "method": "GET",
+      "url": "/v1/conductor/fee/MAA0475",
+      "query": {},
+      "params": {},
+      "headers": {
+        "user-agent": "PostmanRuntime/7.43.4",
+        "accept": "*/*",
+        "cache-control": "no-cache",
+        "postman-token": "9aafaf54-cf93-432d-ba4e-03231a4999d6",
+        "host": "localhost:3334",
+        "accept-encoding": "gzip, deflate, br",
+        "connection": "keep-alive"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 63661
+    }
+    res: {
+      "statusCode": 400,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "1a804a4b79dea2a5301738c1",
+        "x-correlation-id": "1a804a4b79dea2a5301738c1",
+        "content-type": "application/json; charset=utf-8",
+        "content-length": "80",
+        "etag": "W/\"50-d5CG1mdN8h36K2VpTgoRZvyT0rU\""
+      }
+    }
+    responseTime: 203
