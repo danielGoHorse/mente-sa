@@ -1,118 +1,44 @@
-Chat, fiz a chamada e deu esse erro no console do conductor
-
-
-[22:06:46.980] INFO (15312): Starting configuration for env: Local
-[22:06:46.982] INFO (15312): Loading env using file H:\workspace\conductor-fee-management\.env
-[22:06:46.996] INFO (15312): bootstraping application
-[22:06:47.377] INFO (15312): Server started on :::3334
-[22:07:13.174] INFO (15312): customerModel.getCustomerDetailsByCif(MAA0475)
-[22:07:13.371] ERROR (15312): Request failed with status code 404
-    err: {
-      "message": "Request failed with status code 404",
-      "name": "AxiosError",
-      "stack":
-          AxiosError: Request failed with status code 404
-              at settle (file:///H:/workspace/conductor-fee-management/node_modules/axios/lib/core/settle.js:19:12)
-              at IncomingMessage.handleStreamEnd (file:///H:/workspace/conductor-fee-management/node_modules/axios/lib/adapters/http.js:495:11)
-              at IncomingMessage.emit (node:events:536:35)
-              at endReadableNT (node:internal/streams/readable:1698:12)
-              at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
-      "config": {
-        "transitional": {
-          "silentJSONParsing": true,
-          "forcedJSONParsing": true,
-          "clarifyTimeoutError": false
-        },
-        "transformRequest": [
-          null
-        ],
-        "transformResponse": [
-          null
-        ],
-        "timeout": 0,
-        "xsrfCookieName": "XSRF-TOKEN",
-        "xsrfHeaderName": "X-XSRF-TOKEN",
-        "maxContentLength": -1,
-        "maxBodyLength": -1,
-        "env": {},
-        "headers": {
-          "Accept": "application/json, text/plain, */*",
-          "User-Agent": "axios/1.1.3",
-          "Accept-Encoding": "gzip, deflate, br"
-        },
-        "baseURL": "http://localhost:3333",
-        "httpsAgent": {
-          "_events": {},
-          "_eventsCount": 2,
-          "defaultPort": 443,
-          "protocol": "https:",
-          "options": {
-            "rejectUnauthorized": false,
-            "noDelay": true,
-            "path": null
-          },
-          "requests": {},
-          "sockets": {},
-          "freeSockets": {},
-          "keepAliveMsecs": 1000,
-          "keepAlive": false,
-          "maxSockets": null,
-          "maxFreeSockets": 256,
-          "scheduling": "lifo",
-          "maxTotalSockets": null,
-          "totalSocketCount": 0,
-          "maxCachedSessions": 100,
-          "_sessionCache": {
-            "map": {},
-            "list": []
-          }
-        },
-        "method": "get",
-        "url": "http://localhost:3333/customer/v1/MAA0475"
-      },
-      "code": "ERR_BAD_REQUEST",
-      "status": 404
-    }
-[22:07:13.374] INFO (15312): request completed
-    req: {
-      "id": "1a804a4b79dea2a5301738c1",
-      "method": "GET",
-      "url": "/v1/conductor/fee/MAA0475",
-      "query": {},
-      "params": {},
-      "headers": {
-        "user-agent": "PostmanRuntime/7.43.4",
-        "accept": "*/*",
-        "cache-control": "no-cache",
-        "postman-token": "9aafaf54-cf93-432d-ba4e-03231a4999d6",
-        "host": "localhost:3334",
-        "accept-encoding": "gzip, deflate, br",
-        "connection": "keep-alive"
-      },
-      "remoteAddress": "::1",
-      "remotePort": 63661
-    }
-    res: {
-      "statusCode": 400,
-      "headers": {
-        "cross-origin-embedder-policy": "require-corp",
-        "cross-origin-opener-policy": "same-origin",
-        "cross-origin-resource-policy": "same-origin",
-        "x-dns-prefetch-control": "off",
-        "x-frame-options": "SAMEORIGIN",
-        "strict-transport-security": "max-age=15552000; includeSubDomains",
-        "x-download-options": "noopen",
-        "x-content-type-options": "nosniff",
-        "origin-agent-cluster": "?1",
-        "x-permitted-cross-domain-policies": "none",
-        "referrer-policy": "no-referrer",
-        "x-xss-protection": "0",
-        "access-control-allow-origin": "*",
-        "x-request-id": "1a804a4b79dea2a5301738c1",
-        "x-correlation-id": "1a804a4b79dea2a5301738c1",
-        "content-type": "application/json; charset=utf-8",
-        "content-length": "80",
-        "etag": "W/\"50-d5CG1mdN8h36K2VpTgoRZvyT0rU\""
-      }
-    }
-    responseTime: 203
+{
+  "@timestamp": [
+    "2025-05-07T13:11:09.807Z"
+  ],
+  "agent.ephemeral_id": [
+    "7779c944-b30e-496f-beb8-841ad5fc6286"
+  ],
+  "agent.hostname": [
+    "conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6"
+  ],
+  "agent.id": [
+    "fb740d85-0bbc-422f-921f-0accbd054942"
+  ],
+  "agent.name": [
+    "conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6"
+  ],
+  "agent.type": [
+    "filebeat"
+  ],
+  "agent.version": [
+    "8.17.0"
+  ],
+  "ecs.version": [
+    "8.0.0"
+  ],
+  "host.name": [
+    "conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6"
+  ],
+  "input.type": [
+    "log"
+  ],
+  "log.file.path": [
+    "/var/log/http.log"
+  ],
+  "log.offset": [
+    186714
+  ],
+  "message": [
+    "{\"level\":\"INFO\",\"time\":\"2025-05-07T13:11:07.494Z\",\"pid\":1,\"hostname\":\"conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6\",\"req\":{\"id\":\"e26b6576596c974ef0e46ae2\",\"method\":\"GET\",\"url\":\"/v1/conductor/fee/NAA0010\",\"query\":{},\"params\":{},\"headers\":{\"host\":\"conductorfeemanagement-backend-http-host.safra-applications-dev\",\"connection\":\"keep-alive\",\"x-forwarded-for\":\"10.255.252.128, 10.255.252.34\",\"x-forwarded-proto\":\"http\",\"x-forwarded-host\":\"api.dev.k8s.safra.int\",\"x-forwarded-port\":\"80\",\"x-forwarded-path\":\"/v1/conductor/fee/NAA0010\",\"x-real-ip\":\"10.255.252.34\",\"x-kong-request-id\":\"e0c7891f9bcdd11752044e136af38d0f\",\"user-agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0\",\"accept\":\"application/json, text/plain, */*\",\"accept-encoding\":\"gzip, deflate, br, zstd\",\"accept-language\":\"en-US,en;q=0.9\",\"access-control-allow-origin\":\"*\",\"authorization\":\"Bearer \\\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJvQUpNRVNmckJFaWpyYmxaZ1Y5Tl91ME9RZFc5YWdOQXI0Y2czWmdlYlRBIn0.eyJleHAiOjE3NDY1NjQ3NzgsImlhdCI6MTc0NjU2NDQ3OCwianRpIjoiZjM0MmMzOTQtN2U2MC00MDFlLWE0NDgtMDA0M2RjYzQ1ZjE4IiwiaXNzIjoiaHR0cDovL2tleWNsb2FrLnNhZnJhLXNlY3VyaXR5LnN2Yy5jbHVzdGVyLmxvY2FsL3JlYWxtcy9TTkItSW50ZXJuYWwiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiOTljN2ZhMTUtZThiZi00MGUzLTgwOTItOTdlYTkyYTk3ZmJkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoidXNlci1tYW5hZ2VtZW50LWFwaSIsInNlc3Npb25fc3RhdGUiOiJlNDc0MDA4ZS1lM2Y2LTQyNTItOGE2Yi03NjMxYjcyYTc5ZWIiLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJkZWZhdWx0LXJvbGVzLXNuYi1pbnRlcm5hbCJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJzaWQiOiJlNDc0MDA4ZS1lM2Y2LTQyNTItOGE2Yi03NjMxYjcyYTc5ZWIiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJEYW5pZWwgR290YXJkbyIsInByZWZlcnJlZF91c2VybmFtZSI6ImRhbmllbGciLCJnaXZlbl9uYW1lIjoiRGFuaWVsIiwiZmFtaWx5X25hbWUiOiJHb3RhcmRvIiwiZW1haWwiOiJkYW5pZWwuZ290YXJkb0BzYWZyYS5jb20ifQ.ruvpvWzlT9EYWdxb9YYRKg3hERmmTki-WdAkbpy1OKBesl3uDY6dIgtCC2BmUmUPjDT-d89XIl18Il8WH21RnkdySH3oIme1xJ-pFtZ2f9SPJmDYCDwN4zp6NAoAW9DOZq0qPWU6Qg0zIDRoaWDzBKud0dZ3zS11TpWn6VlDIir6gcMUvodK_R-IpLAZEgr2oH3m5oJEJ5XxPm1zPhlfnhxmrESO9dqwHenVAHyV_NaV11okERyuUk_Y-XefOyTHg2PIFaajKcap6sMCTtOq8OXh_QW-NW-QUT2YLb1FApgp8KwuZbjE7XbQIOycvq7tQkMz9pyTsHIUQAOv1qndTA\\\"\",\"content-security-policy\":\"upgrade-insecure-requests\",\"origin\":\"https://feemanagement.dev.k8s.safra.int\",\"priority\":\"u=1, i\",\"referer\":\"https://feemanagement.dev.k8s.safra.int/\",\"sec-ch-ua\":\"\\\"Chromium\\\";v=\\\"136\\\", \\\"Microsoft Edge\\\";v=\\\"136\\\", \\\"Not.A/Brand\\\";v=\\\"99\\\"\",\"sec-ch-ua-mobile\":\"?0\",\"sec-ch-ua-platform\":\"\\\"Windows\\\"\",\"sec-fetch-dest\":\"empty\",\"sec-fetch-mode\":\"cors\",\"sec-fetch-site\":\"same-site\",\"x-auth-profile\":\"employee\",\"x-auth-realm\":\"SNB-Internal\",\"x-forwarded-server\":\"traefik-5689f67f64-nb2l2\",\"x-correlationid\":\"9d582366-45d4-45a4-8874-4f8c4521b52f\"},\"remoteAddress\":\"10.255.252.141\",\"remotePort\":39096},\"res\":{\"statusCode\":null,\"headers\":{\"cross-origin-embedder-policy\":\"require-corp\",\"cross-origin-opener-policy\":\"same-origin\",\"cross-origin-resource-policy\":\"same-origin\",\"x-dns-prefetch-control\":\"off\",\"x-frame-options\":\"SAMEORIGIN\",\"strict-transport-security\":\"max-age=15552000; includeSubDomains\",\"x-download-options\":\"noopen\",\"x-content-type-options\":\"nosniff\",\"origin-agent-cluster\":\"?1\",\"x-permitted-cross-domain-policies\":\"none\",\"referrer-policy\":\"no-referrer\",\"x-xss-protection\":\"0\",\"access-control-allow-origin\":\"*\",\"x-request-id\":\"e26b6576596c974ef0e46ae2\",\"x-correlation-id\":\"e26b6576596c974ef0e46ae2\"}},\"responseTime\":9998,\"msg\":\"request aborted\"}"
+  ],
+  "_id": "xF3fqpYB4Fc6ZbLtOHc2",
+  "_index": ".ds-conductorfeemanagement-backend-http-host-dev-2025.04.14-000041",
+  "_score": null
+}
