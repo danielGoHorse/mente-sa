@@ -1,122 +1,16 @@
-{
-	"info": {
-		"_postman_id": "701250e9-ebb8-4f89-b5c5-0c8cf13b7bf7",
-		"name": "FeeManagement",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "34847542",
-		"_collection_link": "https://asdasd-1075.postman.co/workspace/asdasd-Workspace~c8b2bac2-0a45-4326-8a43-1f40914e15e8/collection/34847542-701250e9-ebb8-4f89-b5c5-0c8cf13b7bf7?action=share&source=collection_link&creator=34847542"
-	},
-	"item": [
-		{
-			"name": "Dev",
-			"item": [
-				{
-					"name": "GetFeePackageBranch",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "https://api.dev.k8s.safra.int/v1/fee/packages",
-							"protocol": "https",
-							"host": [
-								"api",
-								"dev",
-								"k8s",
-								"safra",
-								"int"
-							],
-							"path": [
-								"v1",
-								"fee",
-								"packages"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GetFeePackageBranch",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "https://api.dev.k8s.safra.int/v1/fee/feePackageBranch/individual",
-							"protocol": "https",
-							"host": [
-								"api",
-								"dev",
-								"k8s",
-								"safra",
-								"int"
-							],
-							"path": [
-								"v1",
-								"fee",
-								"feePackageBranch",
-								"individual"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "GetFeePackageBranch",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "https://api.dev.k8s.safra.int/v1/fee/feepackagebranchsave",
-							"protocol": "https",
-							"host": [
-								"api",
-								"dev",
-								"k8s",
-								"safra",
-								"int"
-							],
-							"path": [
-								"v1",
-								"fee",
-								"feepackagebranchsave"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "http://localhost:3333/v1/fee/feePackageBranchSave",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"branchCd\": 1,\r\n    \"busfeepackageid\": 1,\r\n    \"indfeepackageid\": 1,\r\n    \"updatedby\": \"Carlos.Soares\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:3333/v1/fee/feePackageBranchSave",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "3333",
-					"path": [
-						"v1",
-						"fee",
-						"feePackageBranchSave"
-					]
-				}
-			},
-			"response": []
-		}
-	]
+import BaseHttp from './BaseHttp.js'
+export default class Customer extends BaseHttp {
+  #getCustomerDetails = 'customer/v1'
+  constructor({ logger, environment }) {
+    super(logger, environment.customerUrl)
+  }
+
+  async getCustomerDetailsByCif(cif) {
+    const url = `${this.#getCustomerDetails}/${cif}`
+    return await this.httpRequest.get(url)
+  }
 }
+
 
 
 Chat, como eu faço essa chamada apontar para meu projeto Fee Management que esta local na porta 3333...esse aqui é o conductor que esta na porta 3334 
