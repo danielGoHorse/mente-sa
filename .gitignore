@@ -1,3 +1,527 @@
-Chat, eu coloquei essa url que eu encontrei:  https://config.dev.k8s.safra.int e ele me devolveu isso no responseCustomer
+import { Fee } from '#src/models/entities/Fees.js'
+import Result from '#features/shared/result.js'
+import CustomerFees from '#src/models/CustomerFees.js'
+import BankAccountFee from '#src/models/BankAccountFee.js'
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js'
+import { FeeCase } from '#src/models/entities/FeeCase.js'
+import { Field } from '#src/models/entities/Fields.js'
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure,
+} from '#core/data/mssql/index.js';
 
-"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">\n    <meta name=\"description\" content=\"\">\n    <meta name=\"author\" content=\"\">\n    <title>Please sign in</title>\n    <link href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css\" rel=\"stylesheet\" integrity=\"sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M\" crossorigin=\"anonymous\">\n    <link href=\"https://getbootstrap.com/docs/4.0/examples/signin/signin.css\" rel=\"stylesheet\" integrity=\"sha384-oOE/3m0LUMPub4kaC09mrdEhIc+e3exm4xOGxAmuFXhBNF4hcg/6MiAXAf5p0P56\" crossorigin=\"anonymous\"/>\n  </head>\n  <body>\n     <div class=\"container\">\n      <form class=\"form-signin\" method=\"post\" action=\"/login\">\n        <h2 class=\"form-signin-heading\">Please sign in</h2>\n        <p>\n          <label for=\"username\" class=\"sr-only\">Username</label>\n          <input type=\"text\" id=\"username\" name=\"username\" class=\"form-control\" placeholder=\"Username\" required autofocus>\n        </p>\n        <p>\n          <label for=\"password\" class=\"sr-only\">Password</label>\n          <input type=\"password\" id=\"password\" name=\"password\" class=\"form-control\" placeholder=\"Password\" required>\n        </p>\n        <button class=\"btn btn-lg btn-primary btn-block\" type=\"submit\">Sign in</button>\n      </form>\n</div>\n</body></html>"
+
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    global.logger.info('FeeGetByCifUseCase()')
+
+    const result = { fees: [] }
+    const fees = await this.#getFeeStandard([
+      {
+        feeType: 'Customer Fees'
+      },
+      {
+        feeType: 'Bank Account Fees'
+      },
+      {
+        feeType: 'Investment Account Fees'
+      }
+    ])
+
+    const customer = new CustomerFees(fees, customerAccount)
+    if (customer.fee) result.fees.push(customer.fee)
+
+    const bank = new BankAccountFee(fees, customerAccount)
+    if (bank.fee) result.fees.push(bank.fee)
+
+    const equityField = await Field.find({ code: 7 })
+    const investiment = new InvestimentAccountFee(
+      fees,
+      customerAccount,
+      equityField[0]
+    )
+    if (investiment.fee?.feeGroups) result.fees.push(investiment.fee)
+
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: {
+        $nin: ['DONE', 'REJECTED']
+      },
+      caseNumber: {
+        $exists: true
+      }
+    })
+
+    result.feesActives = feesActives?.map((x) => ({
+      caseNumber: x.caseNumber,
+      id: x.id
+    }))
+
+    const pkgData = await this.#getPackageDataFromSQL(customerAccount[0].cifno);
+
+    result.documentUrl = this.#getDocumentUrl(pkgData.defaultFeePackageId);
+    customerAccount.forEach(acc =>
+      Object.assign(acc, pkgData)
+    );
+
+    global.logger.info(`documentUrl= ${result.document}`)
+
+    return Result.ok(result)
+  }
+
+
+  async #getPackageDataFromSQL(cifno) {
+    const conn = await connectToFeeMgmtDb();
+    const [row] =
+      await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
+
+    if (!row) return {};
+
+    return {
+      defaultFeePackageId: row['Default Fee Package Id'] ?? null,
+      branchCity: row['Branch City']?.trim() || '',
+      branchState: row['Branch State']?.trim() || '',
+      branchType: row['Branch Type']?.trim() || '',
+      defaultPackageType: row['Default Package Type']?.trim() || '',
+      feePackage: row['Default Fee Package']?.trim() || ''
+    };
+  }
+
+  #getDocumentUrl(feePackageId) {
+    const urls = global.environment.scheduleUrls || {};
+    const key = { 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' }[feePackageId];
+    return key ? urls[key] || '' : '';
+  }
+
+
+  async #getFeeStandard(filter) {
+    global.logger.info('getFeeStandard()')
+
+    const feeResult = []
+
+    for await (const fee of Fee.find({
+      $or: filter
+    }).select({
+      feeType: 1,
+      feeGroups: {
+        name: 1,
+        fields: 1,
+        code: 1
+      }
+    })) {
+      feeResult.push(fee.toObject())
+    }
+
+    return feeResult
+  }
+}
+
+
+
+{
+    "code": 200,
+    "data": {
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "visible": true,
+                        "kycMailingStatus": "Hold Mail",
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": false,
+                                "name": "Account Maintenance",
+                                "tooltip": "Charged: Semiannual",
+                                "defaultValue": "600",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.435Z",
+                                "updatedAt": "2023-05-20T16:25:31.435Z",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "6468f46eff51aa9d77d849d7",
+                                "labelValue": "$600.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": false,
+                                "name": "Hold Mail",
+                                "defaultValue": "600",
+                                "tooltip": "Charged: Annually",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.435Z",
+                                "updatedAt": "2023-05-20T16:25:31.435Z",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "6468f46eff51aa9d77d849d8",
+                                "labelValue": "$600.00"
+                            }
+                        ],
+                        "id": "681aa9b75655120c47861506",
+                        "cif": "NAA0010",
+                        "accountNumber": "12345678"
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Client Current Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": false,
+                                "name": "Account Maintenance",
+                                "defaultValue": "600",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": true,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849dc",
+                                "labelValue": "$600.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": false,
+                                "name": "Hold mail",
+                                "defaultValue": "600",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": true,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849dd"
+                            }
+                        ],
+                        "id": "681aa9b75655120c47861509",
+                        "cif": "NAA0010",
+                        "accountNumber": "12345678"
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Exception Request",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": true,
+                                "name": "Account Maintenance",
+                                "defaultValue": "",
+                                "exceptionOptions": [
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "600",
+                                        "text": "$600.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e2",
+                                        "parameterOptionId": 11
+                                    },
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e3",
+                                        "parameterOptionId": 12
+                                    }
+                                ],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849e1",
+                                "labelValue": "$600.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": true,
+                                "name": "Hold mail",
+                                "defaultValue": "",
+                                "exceptionOptions": [
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "600",
+                                        "text": "$600.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e5",
+                                        "parameterOptionId": 13
+                                    },
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e6",
+                                        "parameterOptionId": 14
+                                    }
+                                ],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849e4"
+                            }
+                        ],
+                        "id": "681aa9b75655120c4786150c",
+                        "cif": "NAA0010",
+                        "accountNumber": "12345678"
+                    }
+                ],
+                "id": "6468f46eff51aa9d77d849ee"
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Incoming Wire",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Transaction",
+                                "exceptionOptions": [],
+                                "_id": "681aa9ba5655120c478615e4",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "75",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Transaction",
+                                "exceptionOptions": [],
+                                "_id": "681aa9ba5655120c478615e5",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "12345678",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "681aa9ba5655120c478615e3"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Incoming Wire",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "681aa9ba5655120c478615e7",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "75",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "681aa9ba5655120c478615e8",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "12345678",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "681aa9ba5655120c478615e6"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Incoming Wire",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "10",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a07"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a08"
+                                    }
+                                ],
+                                "_id": "681aa9ba5655120c478615ea",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0a"
+                                    },
+                                    {
+                                        "value": "60",
+                                        "text": "$60.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0b"
+                                    },
+                                    {
+                                        "value": "50",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0c"
+                                    },
+                                    {
+                                        "value": "40",
+                                        "text": "$40.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "9468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "35",
+                                        "text": "$35.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "8468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "30",
+                                        "text": "$30.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "25",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "7468f46eff51aa9d77d84a0d"
+                                    }
+                                ],
+                                "_id": "681aa9ba5655120c478615ed",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "12345678",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "681aa9ba5655120c478615e9"
+                    }
+                ],
+                "id": "6468f46eff51aa9d77d84a1b"
+            },
+            {
+                "feeType": "Investment Account Fees",
+                "feeGroups": [],
+                "id": "6468f46eff51aa9d77d84a56"
+            }
+        ],
+        "feesActives": [
+            {
+                "caseNumber": "FEE1078",
+                "id": "659c7c6a07059445c666fffc"
+            },
+            {
+                "caseNumber": "FEE2697",
+                "id": "66463531e0cfba0a5156a06f"
+            },
+            {
+                "caseNumber": "FEE2799",
+                "id": "6654eeffe0cfba0a5156b063"
+            }
+        ],
+        "documentUrl": ""
+    }
+}
+
+
+ const result = {
+      customerName: responseCustomer.data.customer.customerAddress.name,
+      customerAddress: responseCustomer.data.customer.customerAddress.address,
+      customerAccountOfficer:
+        responseCustomer.data.customer.customerAddress.officer,
+      cif: responseCustomer.data.customer.customerAddress.cif,
+      branchCity: responseFee.data.accounts[0].branchCity,
+      branchState: responseFee.data.accounts[0].branchState,
+      branchType: responseFee.data.accounts[0].branchType,
+      packageType: responseFee.data.accounts[0].defaultPackageType,
+      packageName: responseFee.data.accounts[0].feePackage,
+      defaultFeePackageId: responseFee.data.accounts[0].defaultFeePackageId,
+      fees: responseFee.data.fees,
+      feesActives: responseFee.data.feesActives,
+      documentUrl: responseFee.data.accounts[0].documentUrl,
+      currentFees
+    }
+    //global.logger.info('End process')
+    return Result.ok(result)
+  }
+
+
+
+PAssei o codigo que esta no fee management la em cima...e o     return feeResult esta entregando o json que mostrei....eu quero aqueles compos novos no accounts[0] conforme é mapeado no codigo do conductor que eu mostrei no final....
