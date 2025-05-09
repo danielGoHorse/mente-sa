@@ -1,21 +1,21 @@
-import { sqlToFeeType } from '#core/helpers/sqlFeeTypeMap.js';
+// src/core/helpers/sqlFeeTypeMap.js
+export function sqlToFeeType({ FeeCode, BPSFeeTypeCode }) {
+  const byFeeCode = {
+    JH001: 1,
+    JH002: 2,
+    JH010: 3,
+    JH009: 4,
+  };
+  const byBpsCode = {
+    S: 5,
+    C: 6,
+    E: 7,
+    O: 7, // ajuste se for diferente
+  };
 
-async #getPackageDataFromCurrentSQL(cifno) {
-  const conn  = await connectToFeeMgmtDb();
-  const rows  = await executeStoreProcedure(conn, 'sp_GetConductorFees', { CIF: cifno });
-  if (!rows?.length) return [];
+  if (FeeCode && byFeeCode[FeeCode]) return byFeeCode[FeeCode];
+  if (BPSFeeTypeCode && byBpsCode[BPSFeeTypeCode]) return byBpsCode[BPSFeeTypeCode];
 
-  return rows.map(r => ({
-    cifno:          r.CIFNO?.trim(),
-    ddaNumber:      String(r.DDANumber).trim(),
-    feeType:        sqlToFeeType(r),          // <<< aqui!
-    feeDescription: r.FeeDescription?.trim() || '',
-    feeCode:        r.FeeCode?.trim()        || '',
-    bpsFeeTypeCode: r.BPSFeeTypeCode?.trim() || '',
-    feeAmount:      Number(r.FeeAmount),
-    source:         r.Source?.trim()         || '',
-    entity:         r.Entity?.trim()         || '',
-    isFeesStandard: r.IsFeesStandard?.trim() || '',
-    feeGroup:       1,                       // se precisar de grupo extra, calcule aqui
-  }));
+  // fallback: deixa como vem do SQL ou 0 para ignorar
+  return 0;
 }
