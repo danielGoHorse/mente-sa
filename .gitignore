@@ -1,18 +1,32 @@
-0 =
-{cifno: 'NAA0010', ddaNumber: '12345678', feeType: 2, feeGroup: 1, feeAmount: 600, …}
-cifno =
-'NAA0010'
-ddaNumber =
-'12345678'
-feeAmount =
-600
-feeGroup =
-1
-feeType =
-2
-kycMailingStatus =
-'Hold Mail'
+POST http://localhost:3333/v1/fee
+Content‑Type: application/json
 
-
-
- this.#addMultiplesAccount(this.#accounts[0].cifno)
+{
+  "customerAccount": [
+    {
+      /* --------- dados mínimos para o fluxo funcionar ---------- */
+      "cifno":       "NAA0010",   // CIF que você quer testar
+      "ddaNumber":   "12345678",  // nº da conta (aparece nos objetos feeGroup)
+      "feeGroup":    1,           // 1 = Customer Fees | 2 = Bank | 3 = Invest.
+      "feeType":     1,           // 1 = Customer Fees
+      "feeAmount":   600,         // valor atual – só serve para rótulo
+      "kycMailingStatus": "Hold Mail"
+    },
+    {
+      "cifno":       "NAA0010",
+      "ddaNumber":   "12345678",
+      "feeGroup":    1,
+      "feeType":     2,           // 2 = Bank Account Fees
+      "feeAmount":   10,
+      "kycMailingStatus": "Hold Mail"
+    },
+    {
+      "cifno":       "NAA0010",
+      "ddaNumber":   "12345678",
+      "feeGroup":    1,
+      "feeType":     3,           // 3 = Investment Account Fees
+      "feeAmount":   0,
+      "kycMailingStatus": "Hold Mail"
+    }
+  ]
+}
