@@ -1,35 +1,108 @@
-/* FeeGetByCifUseCase.js
- * ........................... outras importações .......................... */
+Perfeito, ficou assim:
+
+
+import { Fee } from '#src/models/entities/Fees.js';
+import Result from '#features/shared/result.js';
+import CustomerFees from '#src/models/CustomerFees.js';
+import BankAccountFee from '#src/models/BankAccountFee.js';
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
+import { FeeCase } from '#src/models/entities/FeeCase.js';
+import { Field } from '#src/models/entities/Fields.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure,
+} from '#core/data/mssql/index.js';
 
 export default class FeeGetByCifUseCase {
-  async execute ({ customerAccount }) {
-    /* ............ a lógica que já estava funcionando permanece ........... */
+ 
+  async execute({ customerAccount }) {
+    //global.logger.info('FeeGetByCifUseCase()');
 
-    // ── NOVA CHAMADA ────────────────────────────────────────────────────
-    const currentPkgRows =
-      await this.#getPackageDataFromCurrentSQL(customerAccount[0].cifno); // ★
+    const fees = await this.#getFeeStandard([
+      { feeType: 'Customer Fees' },
+      { feeType: 'Bank Account Fees' },
+      { feeType: 'Investment Account Fees' },
+    ]);
 
-    /* se você quiser anexar esses dados a cada fee/account */
-    customerAccount.forEach(acc => {
-      // procura o registro da sp cujo DDA bate com este account
-      const row = currentPkgRows.find(r => r.ddaNumber === acc.ddaNumber);
-      if (row) Object.assign(acc, row);
+    const result = { fees: [] };
+
+    const customer   = new CustomerFees(fees, customerAccount);
+    const bank       = new BankAccountFee(fees, customerAccount);
+    const investment = new InvestimentAccountFee(
+      fees,
+      customerAccount,
+      (await Field.find({ code: 7 }))[0],
+    );
+
+    [customer, bank, investment]
+      .filter(f => f.fee && f.fee.feeGroups?.length)
+      .forEach(f => result.fees.push(f.fee));
+
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
     });
 
-    /* … resto do método … */
+    result.feesActives = feesActives.map(x => ({
+      caseNumber: x.caseNumber,
+      id:         x.id,
+    }));
+
+    const pkgData   = await this.#getPackageDataFromSQL(customerAccount[0].cifno);
+    const currentPkgRows =
+    await this.#getPackageDataFromCurrentSQL(customerAccount[0].cifno); 
+
+  customerAccount.forEach(acc => {
+    const row = currentPkgRows.find(r => r.ddaNumber === acc.ddaNumber);
+    if (row) Object.assign(acc, row);
+  });
+    const docUrl    = this.#getDocumentUrl(pkgData.defaultFeePackageId);
+    result.documentUrl = docUrl;
+
+    customerAccount.forEach(acc => Object.assign(acc, pkgData));
+
+    result.accounts = customerAccount.map(acc => ({
+      cifno:               acc.cifno,
+      ddaNumber:           acc.ddaNumber,            
+      branchCity:          acc.branchCity,
+      branchState:         acc.branchState,
+      branchType:          acc.branchType,
+      defaultPackageType:  acc.defaultPackageType,
+      feePackage:          acc.feePackage,
+      defaultFeePackageId: acc.defaultFeePackageId,
+      defaultFeePackage:   acc.defaultFeePackage,
+      documentUrl:         docUrl,
+    }));
+
+    //global.logger.info(`documentUrl = ${docUrl}`);
+    return Result.ok(result);
   }
 
-  /* ------------------------------------------------------------------- */
-  async #getPackageDataFromCurrentSQL (cifno) {          // ★ parâmetro
+  async #getPackageDataFromSQL(cifno) {
+    const conn = await connectToFeeMgmtDb();
+    const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
+
+    if (!row) return {};
+
+    return {
+      defaultFeePackageId: row['Default Fee Package Id'] ?? null,
+      branchCity:          row['Branch City']?.trim()      || '',
+      branchState:         row['Branch State']?.trim()     || '',
+      branchType:          row['Branch Type']?.trim()      || '',
+      defaultPackageType:  row['Default Package Type']?.trim() || '',
+      feePackage:          row['Default Fee Package']?.trim()  || '',
+    };
+  }
+
+  async #getPackageDataFromCurrentSQL (cifno) {         
     const conn  = await connectToFeeMgmtDb();
 
-    // passa o nome correto do parâmetro; o valor vem de cifno
     const rows =
-      await executeStoreProcedure(conn, 'sp_GetConductorFees', { CIF: cifno }); // ★
+      await executeStoreProcedure(conn, 'sp_GetConductorFees', { CIF: cifno });
 
     if (!rows?.length) return [];
 
-    // a procedure devolve várias linhas; transformamos cada uma:
     return rows.map(r => ({
       cifno:            r.CIFNO?.trim(),
       ddaNumber:        String(r.DDANumber).trim(),
@@ -41,9 +114,407 @@ export default class FeeGetByCifUseCase {
       feeAmount:        Number(r.FeeAmount),
       source:           r.Source?.trim()           || '',
       entity:           r.Entity?.trim()           || '',
-      isFeesStandard:   r.IsFeesStandard?.trim()   || ''        // ★ nome certo
+      isFeesStandard:   r.IsFeesStandard?.trim()   || ''        
     }));
   }
 
-  /* #getPackageDataFromSQL, #getDocumentUrl e #getFeeStandard permanecem */
+  #getDocumentUrl(feePackageId) {
+    const urls = global.environment.scheduleUrls || {};
+    const key  = ({ 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' })[feePackageId];
+    return key ? urls[key] || '' : '';
+  }
+
+  async #getFeeStandard(filter) {
+    const feeResult = [];
+    for await (const fee of Fee.find({ $or: filter }).select({
+      feeType: 1,
+      feeGroups: { name: 1, fields: 1, code: 1 },
+    })) {
+      feeResult.push(fee.toObject());
+    }
+    return feeResult;
+  }
 }
+
+
+Agora é o seguinte....existem informações que eu recebo do mongo, que eu devo receber do sql...mas desse novo ai que colocamos....
+
+Consegue identificar quais
+
+
+Vou passar outros 3 passo aqui do projeto que vai ajudar a entender
+
+import numberToCurrency from '../core/helpers/currency.js'
+
+export default class CustomerFees {
+  #feeName = 'Customer Fees'
+  #customer = {}
+  #accounts = []
+  #clientCurrent = []
+  constructor(fees, accounts) {
+  //global.logger.info('CustomerFees()')
+
+    const feeTypes = accounts.reduce((acc, item) => {
+      if (item.feeType > 2) return acc
+      acc = item.feeType
+      return acc
+    }, 0)
+
+    this.#customer = fees.filter((x) => x.feeType === this.#feeName)[0]
+
+    this.#customer.feeGroups.forEach((feeGroup) => {
+      feeGroup.fields = feeGroup.fields.filter((x) => x.code <= feeTypes)
+      feeGroup.fields?.forEach((item) => {
+        item.exceptionOptions = item.exceptionOptions.filter((x) => !x.retired)
+      })
+    })
+
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#customer.feeGroups[0].code
+    )
+
+    this.#customer.feeGroups[0].kycMailingStatus =
+      accounts.find((account) => account.feeType === 2)?.kycMailingStatus ||
+      null
+    this.#customer.feeGroups[0].fields.forEach((field) => {
+      field.labelValue = numberToCurrency(field.defaultValue)
+    })
+
+    this.#clientCurrent = this.#customer.feeGroups[1].fields
+    this.#configureCustomer()
+
+    this.#customer.feeGroups[2].fields.forEach((field, fieldIndex) => {
+      field.labelValue =
+        this.#customer.feeGroups[1].fields[fieldIndex].labelValue
+      if (
+        field.code === 2 &&
+        this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+      ) {
+        field.defaultValue = field.labelValue
+        field.exceptionOptions = [
+          {
+            value: field.defaultValue,
+            text: field.defaultValue
+          }
+        ]
+      }
+    })
+  }
+
+  get fee() {
+    return this.#customer
+  }
+
+  #configureCustomer() {
+  // //global.logger.info('configureCustomer()')
+
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#customer = {}
+      return
+    }
+
+    for (const field of this.#clientCurrent) {
+      for (const account of this.#accounts) {
+        if (field.isCurrentClient && field.code === account.feeType) {
+          if (
+            field.code === 2 &&
+            this.#customer.feeGroups[0].kycMailingStatus !== 'Hold Mail'
+          ) {
+            field.defaultValue = 'NOT APPLICABLE'
+            field.labelValue = field.defaultValue
+          } else {
+            field.defaultValue = account.feeAmount.toString()
+            field.labelValue = numberToCurrency(field.defaultValue)
+          }
+        }
+      }
+    }
+
+    for (const feeGroup of this.#customer.feeGroups) {
+      feeGroup.cif = this.#accounts[0].cifno
+      feeGroup.accountNumber = this.#accounts[0].ddaNumber
+    }
+
+    this.#clearMemory()
+  }
+
+  #clearMemory() {
+    this.#accounts = []
+    this.#clientCurrent = []
+  }
+}
+
+import { FeeGroup } from './entities/FeeGroups.js'
+import numberToCurrency from '../core/helpers/currency.js'
+
+export default class BankAccountFee {
+  #feeName = 'Bank Account Fees'
+  #bank = {}
+  #accounts = []
+  #accountsDDA = []
+  constructor(fees, accounts) {
+  //global.logger.info('BankAccountFee()')
+
+    this.#bank = fees.filter((x) => x.feeType === this.#feeName)[0]
+    const feeGroupCode = this.#bank.feeGroups[0].code
+
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#bank.feeGroups[0].code
+    )
+
+    this.#accountsDDA = new Set(
+      accounts
+        .filter((x) => x.feeGroup === feeGroupCode)
+        .map((x) => x.ddaNumber)
+    )
+
+    this.#addMultiplesAccount(this.#accounts[0]?.cifno)
+    this.#addCurrentClientValue()
+  }
+
+  get fee() {
+    return this.#bank
+  }
+
+  #addMultiplesAccount(cif) {
+  //global.logger.info('addMultiplesAccount()')
+
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#bank = {}
+    }
+    const result = {}
+    for (const feeGroup of this.#bank.feeGroups) {
+      for (const numberAccount of this.#accountsDDA) {
+        if (!result[numberAccount]) result[numberAccount] = []
+
+        feeGroup.fields?.forEach((item) => {
+          item.exceptionOptions = item.exceptionOptions.filter(
+            (x) => !x.retired
+          )
+        })
+
+        const newFeeGroup = new FeeGroup({
+          name: feeGroup.name,
+          fields: feeGroup.fields,
+          cif,
+          accountNumber: numberAccount,
+          visible: feeGroup.visible,
+          code: feeGroup.code
+        })
+
+        result[numberAccount].push(newFeeGroup)
+      }
+    }
+    const feeGroupsByAccount = Object.keys(result).map((item) => result[item])
+    this.#bank.feeGroups = []
+    for (const feeGroups of feeGroupsByAccount) {
+      for (const feeGroup of feeGroups) {
+        this.#bank.feeGroups.push(feeGroup)
+      }
+    }
+  }
+
+  #addCurrentClientValue() {
+  //global.logger.info('addCurrentClientValue()')
+
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#bank = {}
+      return
+    }
+
+    for (const [feeGroupIndex, feeGroup] of this.#bank.feeGroups.entries()) {
+      feeGroup.cif = this.#accounts[0].cifno
+      for (const [fieldIndex, field] of feeGroup.fields.entries()) {
+        if (field.isException) {
+          field.labelValue =
+            this.#bank.feeGroups[feeGroupIndex - 1].fields[
+              fieldIndex
+            ].labelValue
+        } else {
+          for (const account of this.#accounts) {
+            if (
+              field.code === account.feeType &&
+              feeGroup.accountNumber === account.ddaNumber.toString()
+            ) {
+              if (field.isCurrentClient) {
+                field.defaultValue = account.feeAmount.toString()
+              }
+              field.labelValue = numberToCurrency(field.defaultValue)
+            }
+          }
+        }
+      }
+    }
+
+    this.#clearMemory()
+  }
+
+  #clearMemory() {
+    this.#accounts = []
+    this.#accountsDDA = []
+  }
+}
+
+import { FeeGroup } from './entities/FeeGroups.js'
+import numberToCurrency from '../core/helpers/currency.js'
+
+export default class InvestimentAccountFee {
+  #feeName = 'Investment Account Fees'
+  #investiment = {}
+  #accounts = []
+  #accountsDDA = []
+  #allExceptions = new Set()
+  constructor(fees, accounts, equityField) {
+    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0]
+    const feeGroupCode = this.#investiment.feeGroups[0].code
+
+    this.#accounts = accounts.filter(
+      (x) => x.feeGroup === this.#investiment.feeGroups[0].code
+    )
+
+    if (this.#accounts && this.#accounts.length < 1) {
+      this.#investiment = {}
+      return
+    }
+
+    this.#accountsDDA = new Set(
+      accounts
+        .filter((x) => x.feeGroup === feeGroupCode && x.bpsFeeTypeCode !== 'O')
+        .map((x) => ({
+          number: x.bpsAcctNumber,
+          code: x.feeType,
+          entity: x.entity
+        }))
+    )
+
+    this.#addMultiplesAccount(this.#accounts[0].cifno)
+    this.#addCurrentClientValue(equityField)
+  }
+
+  get fee() {
+    return this.#investiment
+  }
+
+  #addMultiplesAccount(cif) {
+    const result = {}
+
+    for (const feeGroup of this.#investiment.feeGroups) {
+      for (const account of this.#accountsDDA) {
+        if (!result[account.number]) {
+          result[account.number] = {}
+        }
+
+        const fields = feeGroup.fields.filter((x) => x.code === account.code)
+
+        if (fields.length === 0) continue
+
+        if (!result[account.number][feeGroup.name]) {
+          result[account.number][feeGroup.name] = []
+
+          feeGroup.fields?.forEach((item) => {
+            item.exceptionOptions.forEach(
+              this.#allExceptions.add,
+              this.#allExceptions
+            )
+            item.exceptionOptions = item.exceptionOptions.filter(
+              (x) => !x.retired
+            )
+          })
+
+          const newFeeGroup = new FeeGroup({
+            name: feeGroup.name,
+            fields,
+            cif,
+            accountNumber: account.number,
+            visible: feeGroup.visible,
+            code: feeGroup.code,
+            entityCode: account.entity
+          })
+          result[account.number][feeGroup.name].push(newFeeGroup)
+          continue
+        }
+
+        const feeGroupToAddFields = result[account.number][feeGroup.name][0]
+        feeGroupToAddFields.fields = [...feeGroupToAddFields.fields, ...fields]
+      }
+    }
+
+    const feeGroupsByAccount = Object.keys(result).reduce((acc, item) => {
+      Object.keys(result[item]).forEach((element) => {
+        acc.push(result[item][element])
+      })
+      return acc
+    }, [])
+    this.#investiment.feeGroups = []
+    for (const feeGroups of feeGroupsByAccount) {
+      for (const feeGroup of feeGroups) {
+        this.#investiment.feeGroups.push(feeGroup)
+      }
+    }
+  }
+
+  #addCurrentClientValue(equityField) {
+    const exceptionsOptions = Array.from(this.#allExceptions)
+    for (const [
+      feeGroupIndex,
+      feeGroup
+    ] of this.#investiment.feeGroups.entries()) {
+      feeGroup.cif = this.#accounts[0].cifno
+      for (const [fieldIndex, field] of feeGroup.fields.entries()) {
+        if (field.isException) {
+          field.labelValue =
+            this.#investiment.feeGroups[feeGroupIndex - 1].fields[
+              fieldIndex
+            ].labelValue
+        } else {
+          for (const account of this.#accounts) {
+            if (
+              field.code === account.feeType &&
+              feeGroup.accountNumber === account.bpsAcctNumber
+            ) {
+              if (field.code === 5) {
+                field.defaultValue = field.isStandard
+                  ? field.defaultValue
+                  : account.feeAmount.toString()
+                field.labelValue = numberToCurrency(field.defaultValue)
+              } else {
+                if (field.labelValue !== 'Other') {
+                  if (field.isCurrentClient) {
+                    field.defaultValue = account.feeCode.toString()
+                  }
+
+                  let exception = exceptionsOptions.find(
+                    (x) => x.value === field.defaultValue
+                  )
+
+                  if (!exception) {
+                    exception = equityField.exceptionOptions.filter(
+                      (e) => e.value === field.defaultValue
+                    )[0]
+
+                    if (!exception) {
+                      exception = { text: '' }
+                    }
+                  }
+
+                  field.labelValue = exception.text
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    this.#clearMemory()
+  }
+
+  #clearMemory() {
+    this.#accounts = []
+    this.#accountsDDA = []
+    this.#allExceptions = new Set()
+  }
+}
+
+
+
