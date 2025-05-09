@@ -1,49 +1,173 @@
-[13:29:32.082] INFO (4796): Starting configuration for env: Local
-[13:29:32.083] INFO (4796): Loading env using file H:\workspace\fee-management-backend\.env
-[13:32:19.154] INFO (4796): request completed
-    req: {
-      "id": "dd7c2b095e9f66e268cb78b8",
-      "method": "POST",
-      "url": "/fee",
-      "query": {},
-      "params": {},
-      "headers": {
-        "accept": "application/json, text/plain, */*",
-        "content-type": "application/json",
-        "user-agent": "axios/1.1.3",
-        "content-length": "1054",
-        "accept-encoding": "gzip, deflate, br",
-        "host": "localhost:3333",
-        "connection": "keep-alive"
-      },
-      "remoteAddress": "::1",
-      "remotePort": 65510
+Chat ele da o erro nessa chamada aqui apenas....que é uma nova procedure que eu esqueci de comentar e eu passei os dados e a tabela dela pra vc ver
+
+  const newPackage   = await this.#getPackageDataFromCurrentSQL(customerAccount[0].cifno);
+
+No codigo eu comentei e rodou normal
+
+
+
+import { Fee } from '#src/models/entities/Fees.js';
+import Result from '#features/shared/result.js';
+import CustomerFees from '#src/models/CustomerFees.js';
+import BankAccountFee from '#src/models/BankAccountFee.js';
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
+import { FeeCase } from '#src/models/entities/FeeCase.js';
+import { Field } from '#src/models/entities/Fields.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure,
+} from '#core/data/mssql/index.js';
+
+export default class FeeGetByCifUseCase {
+ 
+  async execute({ customerAccount }) {
+    //global.logger.info('FeeGetByCifUseCase()');
+
+    const fees = await this.#getFeeStandard([
+      { feeType: 'Customer Fees' },
+      { feeType: 'Bank Account Fees' },
+      { feeType: 'Investment Account Fees' },
+    ]);
+
+    const result = { fees: [] };
+
+    const customer   = new CustomerFees(fees, customerAccount);
+    const bank       = new BankAccountFee(fees, customerAccount);
+    const investment = new InvestimentAccountFee(
+      fees,
+      customerAccount,
+      (await Field.find({ code: 7 }))[0],
+    );
+
+    [customer, bank, investment]
+      .filter(f => f.fee && f.fee.feeGroups?.length)
+      .forEach(f => result.fees.push(f.fee));
+
+    const feesActives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
+    });
+
+    result.feesActives = feesActives.map(x => ({
+      caseNumber: x.caseNumber,
+      id:         x.id,
+    }));
+
+    const pkgData   = await this.#getPackageDataFromSQL(customerAccount[0].cifno);
+    // const newPackage   = await this.#getPackageDataFromCurrentSQL(customerAccount[0].cifno);
+    const docUrl    = this.#getDocumentUrl(pkgData.defaultFeePackageId);
+    result.documentUrl = docUrl;
+
+    customerAccount.forEach(acc => Object.assign(acc, pkgData));
+
+    result.accounts = customerAccount.map(acc => ({
+      cifno:               acc.cifno,
+      ddaNumber:           acc.ddaNumber,            
+      branchCity:          acc.branchCity,
+      branchState:         acc.branchState,
+      branchType:          acc.branchType,
+      defaultPackageType:  acc.defaultPackageType,
+      feePackage:          acc.feePackage,
+      defaultFeePackageId: acc.defaultFeePackageId,
+      defaultFeePackage:   acc.defaultFeePackage,
+      documentUrl:         docUrl,
+    }));
+
+    //global.logger.info(`documentUrl = ${docUrl}`);
+    return Result.ok(result);
+  }
+
+  async #getPackageDataFromSQL(cifno) {
+    const conn = await connectToFeeMgmtDb();
+    const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
+
+    if (!row) return {};
+
+    return {
+      defaultFeePackageId: row['Default Fee Package Id'] ?? null,
+      branchCity:          row['Branch City']?.trim()      || '',
+      branchState:         row['Branch State']?.trim()     || '',
+      branchType:          row['Branch Type']?.trim()      || '',
+      defaultPackageType:  row['Default Package Type']?.trim() || '',
+      feePackage:          row['Default Fee Package']?.trim()  || '',
+    };
+  }
+
+  async #getPackageDataFromCurrentSQL(cifno) {
+    const conn = await connectToFeeMgmtDb();
+    const [row] = await executeStoreProcedure(conn, 'sp_GetConductorFees', { CIF: cif });
+
+    if (!row) return {};
+
+    return {
+      ddaNumber: row['DDANumber'] ?? null,
+      bpsAcctNumber:          row['BPSAcctNumber']?.trim()      || '',
+      feeType:         row['FeeType']?.trim()     || '',
+      feeDescription:          row['FeeDescription']?.trim()      || '',
+      feeCode:  row['FeeCode']?.trim() || '',
+      bpsFeeTypeCode:          row['BPSFeeTypeCode']?.trim()  || '',
+      feeAmount:          row['FeeAmount']?.trim()  || '',
+      source:          row['Source']?.trim()  || '',
+      entity:          row['Entity']?.trim()  || '',
+      isFeesStandard:          row['IsFeesStandar']?.trim()  || '',
+      
+    };
+  }
+
+  #getDocumentUrl(feePackageId) {
+    const urls = global.environment.scheduleUrls || {};
+    const key  = ({ 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' })[feePackageId];
+    return key ? urls[key] || '' : '';
+  }
+
+  async #getFeeStandard(filter) {
+    const feeResult = [];
+    for await (const fee of Fee.find({ $or: filter }).select({
+      feeType: 1,
+      feeGroups: { name: 1, fields: 1, code: 1 },
+    })) {
+      feeResult.push(fee.toObject());
     }
-    res: {
-      "statusCode": 404,
-      "headers": {
-        "cross-origin-embedder-policy": "require-corp",
-        "cross-origin-opener-policy": "same-origin",
-        "cross-origin-resource-policy": "same-origin",
-        "x-dns-prefetch-control": "off",
-        "x-frame-options": "SAMEORIGIN",
-        "strict-transport-security": "max-age=15552000; includeSubDomains",
-        "x-download-options": "noopen",
-        "x-content-type-options": "nosniff",
-        "origin-agent-cluster": "?1",
-        "x-permitted-cross-domain-policies": "none",
-        "referrer-policy": "no-referrer",
-        "x-xss-protection": "0",
-        "access-control-allow-origin": "*",
-        "x-request-id": "dd7c2b095e9f66e268cb78b8",
-        "x-correlation-id": "dd7c2b095e9f66e268cb78b8",
-        "content-security-policy": "default-src 'none'",
-        "content-type": "text/html; charset=utf-8",
-        "content-length": 143
-      }
-    }
-    responseTime: 3
+    return feeResult;
+  }
+}
 
 
 
-Erro quando eu rodei no npm run e rodei o conductor....
+
+USE [FeeMgmt]
+GO
+
+DECLARE	@return_value int
+
+EXEC	@return_value = [dbo].[sp_GetConductorFees]
+		@CIF = N'Naa0010'
+
+SELECT	'Return Value' = @return_value
+
+GO
+
+
+
+CIFNO	DDANumber	BPSAcctNumber	FeeType	FeeDescription	FeeCode	BPSFeeTypeCode	FeeAmount	Source	Entity	IsFeesStandard
+NAA0010	17226444		1	AccountMaintenance	JH001		600.000000000	JHA	SNB/284	Yes
+NAA0010	17226444		2	HoldMail	JH002		0.000000000	JHA	SNB/284	No
+NAA0010	17226444		3	USD/FXIncomingWire	JH010		10.000000000	JHA	SNB/284	Yes
+NAA0010	17226444    	20002089	6	SafekeepingCustody	A053	C	375.000000000	BPS	SNB/284	Yes
+
+
+Procedure
+
+
+sp_getConductorFees 'NAA0010'
+sp_get_exception_fees_bypackage 1
+
+
+
+select fp2.FeeShortDescription, fpo.FeeAmount, * from FeePackage fp
+inner join FeeParameterOption fpo on fpo.FeePackageID = fp.FeePackageId
+inner join FeeParameter fp2 on fp2.FeeParameterID = fpo.FeeParameterID
+where fp.FeePackageId = 1
+and fpo.IsStandard = 1
+
