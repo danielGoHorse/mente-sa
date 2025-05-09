@@ -1,48 +1,98 @@
-TypeError: Cannot read properties of undefined (reading 'status')
-    at HttpRequest.post (file:///H:/workspace/conductor-fee-management/src/core/http/httpRequest.js:36:24)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async FeeManagement.getFeeByAccount (file:///H:/workspace/conductor-fee-management/src/models/FeeManagement.js:17:12)
-    at async FeeCaseGetByCifUseCase.execute (file:///H:/workspace/conductor-fee-management/src/features/feeCaseGetByCif/feeCaseGetByCifUseCase.js:13:35)
-    at async feeCaseGetByCifEndpoint (file:///H:/workspace/conductor-fee-management/src/features/feeCaseGetByCif/feeCaseGetByCifEndpoint.js:10:18)
-apiServer.js:146
-Unhandled Promise Rejection: err:  Cannot read properties of undefined (reading 'status')
-apiServer.js:145
-TypeError: Cannot read properties of undefined (reading 'status')
-    at HttpRequest.post (file:///H:/workspace/conductor-fee-management/src/core/http/httpRequest.js:36:24)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async FeeManagement.getFeeByAccount (file:///H:/workspace/conductor-fee-management/src/models/FeeManagement.js:17:12)
-    at async FeeCaseGetByCifUseCase.execute (file:///H:/workspace/conductor-fee-management/src/features/feeCaseGetByCif/feeCaseGetByCifUseCase.js:13:35)
-    at async feeCaseGetByCifEndpoint (file:///H:/workspace/conductor-fee-management/src/features/feeCaseGetByCif/feeCaseGetByCifEndpoint.js:10:18)
-
-
-
-
-
-:::::::::::::::::::::::::::::::::::::
-
-
-{
-  code: "EREQUEST",
-  number: 201,
-  lineNumber: 0,
-  state: 4,
-  class: 16,
-  serverName: "NYDEV01",
-  procName: "sp_GetConductorFees",
-  originalError: {
-    info: {
-      number: 201,
-      state: 4,
-      class: 16,
-      message: "Procedure or function 'sp_GetConductorFees' expects parameter '@CIF', which was not supplied.",
-      serverName: "NYDEV01",
-      procName: "sp_GetConductorFees",
-      lineNumber: 0,
-      name: "ERROR",
-      event: "errorMessage",
-    },
+[
+  {
+    cifno: "NAA0010",
+    ddaNumber: 17226444,
+    bpsAcctNumber: "",
+    feeType: 1,
+    feeDescription: "AccountMaintenance",
+    feeCode: "JH001",
+    bpsFeeTypeCode: "",
+    source: "JHA",
+    entity: "SNB/284",
+    feeAmount: 600,
+    isFeesStandard: "Yes",
+    kycMailingStatus: null,
+    feeGroup: 1,
   },
-  name: "RequestError",
-  precedingErrors: [
-  ],
+  {
+    cifno: "NAA0010",
+    ddaNumber: 17226444,
+    bpsAcctNumber: "",
+    feeType: 2,
+    feeDescription: "HoldMail",
+    feeCode: "JH002",
+    bpsFeeTypeCode: "",
+    source: "JHA",
+    entity: "SNB/284",
+    feeAmount: 0,
+    isFeesStandard: "No",
+    kycMailingStatus: "Hold Mail",
+    feeGroup: 1,
+  },
+  {
+    cifno: "NAA0010",
+    ddaNumber: 17226444,
+    bpsAcctNumber: "",
+    feeType: 3,
+    feeDescription: "USD/FXIncomingWire",
+    feeCode: "JH010",
+    bpsFeeTypeCode: "",
+    source: "JHA",
+    entity: "SNB/284",
+    feeAmount: 10,
+    isFeesStandard: "Yes",
+    kycMailingStatus: null,
+    feeGroup: 2,
+  },
+  {
+    cifno: "NAA0010",
+    ddaNumber: 17226444,
+    bpsAcctNumber: "20002089",
+    feeType: 6,
+    feeDescription: "SafekeepingCustody",
+    feeCode: "A053",
+    bpsFeeTypeCode: "C",
+    source: "BPS",
+    entity: "SNB/284",
+    feeAmount: 375,
+    isFeesStandard: "Yes",
+    kycMailingStatus: null,
+    feeGroup: 3,
+  },
+]
+
+
+Chat, isso é o que eu envio nessa chamada aqui 
+
+
+  async getFeeByAccount({ customerAccount }) {
+    const url = `${this.#getByAccounts}`
+    return await this.httpRequest.post(url, { customerAccount })
+  }
+
+Que fica aqui
+
+import BaseHttp from './BaseHttp.js'
+export default class FeeManagement extends BaseHttp {
+  #createUrl = 'v1/fee/case'
+  #getByAccounts = 'v1/fee'
+  #getUsersEmail = 'v1/email/feeCase/'
+
+  constructor({ logger, environment }) {
+    super(logger, environment.feeUrl)
+  }
+
+  async create(feeManagement) {
+    return await this.httpRequest.post(this.#createUrl, feeManagement)
+  }
+
+  async getFeeByAccount({ customerAccount }) {
+    const url = `${this.#getByAccounts}`
+    return await this.httpRequest.post(url, { customerAccount })
+  }
+
+  async getUsersToSendEmail(feeCaseId) {
+    const url = `${this.#getUsersEmail}${feeCaseId}`
+    return await this.httpRequest.get(url)
+  }
 }
