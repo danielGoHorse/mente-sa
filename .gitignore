@@ -1,98 +1,49 @@
-[
-  {
-    cifno: "NAA0010",
-    ddaNumber: 17226444,
-    bpsAcctNumber: "",
-    feeType: 1,
-    feeDescription: "AccountMaintenance",
-    feeCode: "JH001",
-    bpsFeeTypeCode: "",
-    source: "JHA",
-    entity: "SNB/284",
-    feeAmount: 600,
-    isFeesStandard: "Yes",
-    kycMailingStatus: null,
-    feeGroup: 1,
-  },
-  {
-    cifno: "NAA0010",
-    ddaNumber: 17226444,
-    bpsAcctNumber: "",
-    feeType: 2,
-    feeDescription: "HoldMail",
-    feeCode: "JH002",
-    bpsFeeTypeCode: "",
-    source: "JHA",
-    entity: "SNB/284",
-    feeAmount: 0,
-    isFeesStandard: "No",
-    kycMailingStatus: "Hold Mail",
-    feeGroup: 1,
-  },
-  {
-    cifno: "NAA0010",
-    ddaNumber: 17226444,
-    bpsAcctNumber: "",
-    feeType: 3,
-    feeDescription: "USD/FXIncomingWire",
-    feeCode: "JH010",
-    bpsFeeTypeCode: "",
-    source: "JHA",
-    entity: "SNB/284",
-    feeAmount: 10,
-    isFeesStandard: "Yes",
-    kycMailingStatus: null,
-    feeGroup: 2,
-  },
-  {
-    cifno: "NAA0010",
-    ddaNumber: 17226444,
-    bpsAcctNumber: "20002089",
-    feeType: 6,
-    feeDescription: "SafekeepingCustody",
-    feeCode: "A053",
-    bpsFeeTypeCode: "C",
-    source: "BPS",
-    entity: "SNB/284",
-    feeAmount: 375,
-    isFeesStandard: "Yes",
-    kycMailingStatus: null,
-    feeGroup: 3,
-  },
-]
+[13:29:32.082] INFO (4796): Starting configuration for env: Local
+[13:29:32.083] INFO (4796): Loading env using file H:\workspace\fee-management-backend\.env
+[13:32:19.154] INFO (4796): request completed
+    req: {
+      "id": "dd7c2b095e9f66e268cb78b8",
+      "method": "POST",
+      "url": "/fee",
+      "query": {},
+      "params": {},
+      "headers": {
+        "accept": "application/json, text/plain, */*",
+        "content-type": "application/json",
+        "user-agent": "axios/1.1.3",
+        "content-length": "1054",
+        "accept-encoding": "gzip, deflate, br",
+        "host": "localhost:3333",
+        "connection": "keep-alive"
+      },
+      "remoteAddress": "::1",
+      "remotePort": 65510
+    }
+    res: {
+      "statusCode": 404,
+      "headers": {
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "x-dns-prefetch-control": "off",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=15552000; includeSubDomains",
+        "x-download-options": "noopen",
+        "x-content-type-options": "nosniff",
+        "origin-agent-cluster": "?1",
+        "x-permitted-cross-domain-policies": "none",
+        "referrer-policy": "no-referrer",
+        "x-xss-protection": "0",
+        "access-control-allow-origin": "*",
+        "x-request-id": "dd7c2b095e9f66e268cb78b8",
+        "x-correlation-id": "dd7c2b095e9f66e268cb78b8",
+        "content-security-policy": "default-src 'none'",
+        "content-type": "text/html; charset=utf-8",
+        "content-length": 143
+      }
+    }
+    responseTime: 3
 
 
-Chat, isso é o que eu envio nessa chamada aqui 
 
-
-  async getFeeByAccount({ customerAccount }) {
-    const url = `${this.#getByAccounts}`
-    return await this.httpRequest.post(url, { customerAccount })
-  }
-
-Que fica aqui
-
-import BaseHttp from './BaseHttp.js'
-export default class FeeManagement extends BaseHttp {
-  #createUrl = 'v1/fee/case'
-  #getByAccounts = 'v1/fee'
-  #getUsersEmail = 'v1/email/feeCase/'
-
-  constructor({ logger, environment }) {
-    super(logger, environment.feeUrl)
-  }
-
-  async create(feeManagement) {
-    return await this.httpRequest.post(this.#createUrl, feeManagement)
-  }
-
-  async getFeeByAccount({ customerAccount }) {
-    const url = `${this.#getByAccounts}`
-    return await this.httpRequest.post(url, { customerAccount })
-  }
-
-  async getUsersToSendEmail(feeCaseId) {
-    const url = `${this.#getUsersEmail}${feeCaseId}`
-    return await this.httpRequest.get(url)
-  }
-}
+Erro quando eu rodei no npm run e rodei o conductor....
