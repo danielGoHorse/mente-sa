@@ -1,16 +1,15 @@
 import { Fee } from '#src/models/entities/Fees.js';
 import Result from '#features/shared/result.js';
-import CustomerFees        from '#src/models/CustomerFees.js';
-import BankAccountFee      from '#src/models/BankAccountFee.js';
+import CustomerFees from '#src/models/CustomerFees.js';
+import BankAccountFee from '#src/models/BankAccountFee.js';
 import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase }         from '#src/models/entities/FeeCase.js';
-import { Field }           from '#src/models/entities/Fields.js';
+import { FeeCase } from '#src/models/entities/FeeCase.js';
+import { Field } from '#src/models/entities/Fields.js';
 import {
   connectToFeeMgmtDb,
   executeStoreProcedure,
 } from '#core/data/mssql/index.js';
 
-import { sqlToFeeType } from '#core/helpers/sqlFeeTypeMap.js';
 
 export default class FeeGetByCifUseCase {
   // --------------------------------------------------
@@ -76,8 +75,6 @@ export default class FeeGetByCifUseCase {
     return Result.ok(result);
   }
 
-  // --------------------------------------------------
-  // Helpers SQL
 
   async #getPackageDataFromSQL(cifno) {
     const conn = await connectToFeeMgmtDb();
@@ -102,7 +99,7 @@ export default class FeeGetByCifUseCase {
     return rows.map(r => ({
       cifno:            r.CIFNO?.trim(),
       ddaNumber:        String(r.DDANumber).trim(),
-      feeType:          sqlToFeeType(r),              // 👈 conversão aqui
+      feeType:          this.#sqlToFeeType(r),              // 👈 conversão aqui
       feeDescription:   r.FeeDescription?.trim() || '',
       feeCode:          r.FeeCode?.trim()        || '',
       bpsFeeTypeCode:   r.BPSFeeTypeCode?.trim() || '',
@@ -112,6 +109,24 @@ export default class FeeGetByCifUseCase {
       isFeesStandard:   r.IsFeesStandard?.trim() || '',
       feeGroup:         (r.FeeType >= 5 ? 3 : r.FeeType >= 3 ? 2 : 1), // regra simples
     }));
+  }
+
+  #sqlToFeeType({ FeeCode, BPSFeeTypeCode }) {
+    const byFeeCode = {
+      JH001: 1,
+      JH002: 2,
+      JH010: 3,
+      JH009: 4,
+    };
+    const byBpsCode = {
+      S: 5,
+      C: 6,
+      E: 7,
+      O: 7,
+    };
+    if (FeeCode && byFeeCode[FeeCode]) return byFeeCode[FeeCode];
+    if (BPSFeeTypeCode && byBpsCode[BPSFeeTypeCode]) return byBpsCode[BPSFeeTypeCode];
+    return 0;
   }
 
   #getDocumentUrl(feePackageId) {
