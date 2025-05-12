@@ -1,80 +1,54 @@
-import { Fee } from '#src/models/entities/Fees.js';
-import Result from '#features/shared/result.js';
-import CustomerFees from '#src/models/CustomerFees.js';
-import BankAccountFee from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import { Field } from '#src/models/entities/Fields.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure,
-} from '#core/data/mssql/index.js';
+// FeeGetByCifUseCase.js
+import { Fee }                         from '#src/models/entities/Fees.js';
+import { FeeCase }                    from '#src/models/entities/FeeCase.js';
+import { Field }                      from '#src/models/entities/Fields.js';
+import Result                         from '#features/shared/result.js';
+import CustomerFees                   from '#src/models/CustomerFees.js';
+import BankAccountFee                 from '#src/models/BankAccountFee.js';
+import InvestimentAccountFee          from '#src/models/InvestimentAccountFee.js';
+import { connectToFeeMgmtDb,
+         executeStoreProcedure }      from '#core/data/mssql/index.js';
 
+/* ----------  mapas fixos ---------- */
+const DOC_URL_KEYS = { 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' };
+const FEE_BY_CODE  = { JH001: 1, JH002: 2, JH010: 3, JH009: 4 };
+const FEE_BY_BPS   = { S: 5,  C: 6,  E: 7,  O: 7 };
 
 export default class FeeGetByCifUseCase {
-  // --------------------------------------------------
 
+  /* ======  API pública ====== */
   async execute({ customerAccount }) {
-    // 1.‑‑ carrega modelo‑padrão de taxas (Mongo)
-    const fees = await this.#getFeeStandard([
-      { feeType: 'Customer Fees' },
-      { feeType: 'Bank Account Fees' },
-      { feeType: 'Investment Account Fees' },
+
+    /* 1. lê Mongo e SQL em paralelo */
+    const [fees, pkgData, currentRows, equityField] = await Promise.all([
+      this.#getFeeStandard(),
+      this.#getPackageDataFromSQL(customerAccount[0].cifno),
+      this.#getPackageDataFromCurrentSQL(customerAccount[0].cifno),
+      Field.findOne({ code: 7 })
     ]);
 
-    // 2.‑‑ enriquece com dados do SQL
-    const pkgData        = await this.#getPackageDataFromSQL(customerAccount[0].cifno);
-    const currentPkgRows = await this.#getPackageDataFromCurrentSQL(customerAccount[0].cifno);
+    /* 2. mescla os dados do SQL em cada conta (branch, package, feeAmount …) */
+    this.#mergeSqlData(customerAccount, pkgData, currentRows);
 
-    // junta feeAmount / feeType em cada account
-    customerAccount.forEach(acc => {
-      const row = currentPkgRows.find(r => r.ddaNumber === acc.ddaNumber);
-      if (row) Object.assign(acc, row);          // feeAmount, feeType, etc.
-      Object.assign(acc, pkgData);               // branchCity, package…
-    });
-
-    // 3.‑‑ monta as estruturas já usadas pelo front
-    const result = { fees: [] };
-
-    const customer   = new CustomerFees       (fees, customerAccount);
-    const bank       = new BankAccountFee     (fees, customerAccount);
-    const investment = new InvestimentAccountFee(
-                          fees, customerAccount, (await Field.find({ code: 7 }))[0]);
-
-    [customer, bank, investment]
-      .filter(f => f.fee && f.fee.feeGroups?.length)
-      .forEach(f => result.fees.push(f.fee));
-
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true },
-    });
-
-    result.feesActives = feesActives.map(x => ({
-      caseNumber: x.caseNumber,
-      id:         x.id,
-    }));
-
-    // accounts detalhados para o Conductor
-    result.accounts = customerAccount.map(acc => ({
-      cifno:               acc.cifno,
-      ddaNumber:           acc.ddaNumber,
-      branchCity:          acc.branchCity,
-      branchState:         acc.branchState,
-      branchType:          acc.branchType,
-      defaultPackageType:  acc.defaultPackageType,
-      feePackage:          acc.feePackage,
-      defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage:   acc.defaultFeePackage,
-      documentUrl:         this.#getDocumentUrl(acc.defaultFeePackageId),
-    }));
-
-    result.documentUrl = this.#getDocumentUrl(pkgData.defaultFeePackageId);
+    /* 3. monta estrutura que o front já espera */
+    const result = {
+      fees:        this.#buildFeeGroups(fees, customerAccount, equityField),
+      feesActives: await this.#getActiveCases(customerAccount[0].cifno),
+      accounts:    this.#serializeAccounts(customerAccount),
+      documentUrl: this.#documentUrl(pkgData.defaultFeePackageId)
+    };
 
     return Result.ok(result);
   }
 
+  /* ======  helpers ====== */
+
+  async #getFeeStandard() {
+    const types = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
+    return Fee.find({ feeType: { $in: types } })
+              .select({ feeType: 1, feeGroups: { name: 1, fields: 1, code: 1 } })
+              .lean();
+  }
 
   async #getPackageDataFromSQL(cifno) {
     const conn = await connectToFeeMgmtDb();
@@ -82,70 +56,83 @@ export default class FeeGetByCifUseCase {
     if (!row) return {};
 
     return {
-      defaultFeePackageId: row['Default Fee Package Id'] ?? null,
-      branchCity:          row['Branch City']?.trim()      || '',
-      branchState:         row['Branch State']?.trim()     || '',
-      branchType:          row['Branch Type']?.trim()      || '',
-      defaultPackageType:  row['Default Package Type']?.trim() || '',
-      feePackage:          row['Default Fee Package']?.trim()  || '',
+      defaultFeePackageId : row['Default Fee Package Id'] ?? null,
+      branchCity          : row['Branch City']?.trim()          ?? '',
+      branchState         : row['Branch State']?.trim()         ?? '',
+      branchType          : row['Branch Type']?.trim()          ?? '',
+      defaultPackageType  : row['Default Package Type']?.trim() ?? '',
+      feePackage          : row['Default Fee Package']?.trim()  ?? '',
     };
   }
 
   async #getPackageDataFromCurrentSQL(cifno) {
-    const conn = await connectToFeeMgmtDb();
-    const rows = await executeStoreProcedure(conn, 'sp_GetConductorFees', { CIF: cifno });
+    const conn  = await connectToFeeMgmtDb();
+    const rows  = await executeStoreProcedure(conn, 'sp_GetConductorFees', { CIF: cifno });
     if (!rows?.length) return [];
 
     return rows.map(r => ({
-      cifno:            r.CIFNO?.trim(),
-      ddaNumber:        String(r.DDANumber).trim(),
-      feeType:          this.#sqlToFeeType(r),              // 👈 conversão aqui
-      feeDescription:   r.FeeDescription?.trim() || '',
-      feeCode:          r.FeeCode?.trim()        || '',
-      bpsFeeTypeCode:   r.BPSFeeTypeCode?.trim() || '',
-      feeAmount:        Number(r.FeeAmount),
-      source:           r.Source?.trim()         || '',
-      entity:           r.Entity?.trim()         || '',
-      isFeesStandard:   r.IsFeesStandard?.trim() || '',
-      feeGroup:         (r.FeeType >= 5 ? 3 : r.FeeType >= 3 ? 2 : 1), // regra simples
+      cifno          : r.CIFNO?.trim(),
+      ddaNumber      : String(r.DDANumber).trim(),
+      feeAmount      : Number(r.FeeAmount),
+      feeType        : this.#mapSqlFeeType(r),
+      feeCode        : r.FeeCode?.trim()        ?? '',
+      feeDescription : r.FeeDescription?.trim() ?? '',
+      bpsAcctNumber  : r.BPSAcctNumber?.trim()  ?? '',
+      bpsFeeTypeCode : r.BPSFeeTypeCode?.trim() ?? '',
+      source         : r.Source?.trim()         ?? '',
+      entity         : r.Entity?.trim()         ?? '',
+      isFeesStandard : r.IsFeesStandard?.trim() ?? '',
+      feeGroup       : r.FeeType >= 5 ? 3 : r.FeeType >= 3 ? 2 : 1,
     }));
   }
 
-  #sqlToFeeType({ FeeCode, BPSFeeTypeCode }) {
-    const byFeeCode = {
-      JH001: 1,
-      JH002: 2,
-      JH010: 3,
-      JH009: 4,
-    };
-    const byBpsCode = {
-      S: 5,
-      C: 6,
-      E: 7,
-      O: 7,
-    };
-    if (FeeCode && byFeeCode[FeeCode]) return byFeeCode[FeeCode];
-    if (BPSFeeTypeCode && byBpsCode[BPSFeeTypeCode]) return byBpsCode[BPSFeeTypeCode];
-    return 0;
+  #mapSqlFeeType({ FeeCode, BPSFeeTypeCode }) {
+    return FEE_BY_CODE[FeeCode] || FEE_BY_BPS[BPSFeeTypeCode] || 0;
   }
 
-  #getDocumentUrl(feePackageId) {
-    const urls = global.environment.scheduleUrls || {};
-    const key  = ({ 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' })[feePackageId];
-    return key ? urls[key] || '' : '';
+  #mergeSqlData(accounts, pkgData, rows) {
+    accounts.forEach(acc => {
+      Object.assign(acc, pkgData);                       // dados do pacote
+      Object.assign(acc, rows.find(r => r.ddaNumber === acc.ddaNumber) || {}); // dados por conta
+    });
   }
 
-  // --------------------------------------------------
-  // Mongo helper
+  #buildFeeGroups(mongoFees, accounts, equityField) {
+    const customer   = new CustomerFees       (mongoFees, accounts);
+    const bank       = new BankAccountFee     (mongoFees, accounts);
+    const investment = new InvestimentAccountFee(mongoFees, accounts, equityField);
 
-  async #getFeeStandard(filter) {
-    const feeResult = [];
-    for await (const fee of Fee.find({ $or: filter }).select({
-      feeType: 1,
-      feeGroups: { name: 1, fields: 1, code: 1 },
-    })) {
-      feeResult.push(fee.toObject());
-    }
-    return feeResult;
+    return [customer, bank, investment]
+            .filter(x => x.fee?.feeGroups?.length)
+            .map(x => x.fee);
+  }
+
+  async #getActiveCases(cif) {
+    const cases = await FeeCase.find({
+      cif,
+      status     : { $nin: ['DONE', 'REJECTED'] },
+      caseNumber : { $exists: true }
+    }).lean();
+
+    return cases.map(({ caseNumber, id }) => ({ caseNumber, id }));
+  }
+
+  #serializeAccounts(accs) {
+    return accs.map(acc => ({
+      cifno              : acc.cifno,
+      ddaNumber          : acc.ddaNumber,
+      branchCity         : acc.branchCity,
+      branchState        : acc.branchState,
+      branchType         : acc.branchType,
+      defaultPackageType : acc.defaultPackageType,
+      feePackage         : acc.feePackage,
+      defaultFeePackageId: acc.defaultFeePackageId,
+      defaultFeePackage  : acc.defaultFeePackage,
+      documentUrl        : this.#documentUrl(acc.defaultFeePackageId),
+    }));
+  }
+
+  #documentUrl(pkgId) {
+    return DOC_URL_KEYS[pkgId] ? (global.environment.scheduleUrls?.[DOC_URL_KEYS[pkgId]] ?? '') : '';
   }
 }
