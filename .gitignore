@@ -1,106 +1,42 @@
-/* src/features/feeGetByCif/feeGetByCifUseCase.js */
-import { Fee }               from '#src/models/entities/Fees.js';
-import Result                from '#features/shared/result.js';
-import CustomerFees          from '#src/models/CustomerFees.js';
-import BankAccountFee        from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase }           from '#src/models/entities/FeeCase.js';
-import { Field }             from '#src/models/entities/Fields.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js';
+import mssql from 'mssql'
 
-export default class FeeGetByCifUseCase {
+export async function connectToFeeMgmtDb() {
+  const { ...props } = global.environment.sqlserver
+  
+  const config = {
+    ...props,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true
+    }
+  }
+  await mssql.close()
 
-  /* -------------------------------------------------------------------- */
-  async execute ({ customerAccount }) {
+  return mssql.connect(config)
+}
 
-    /* 1 ─ modelo‑padrão (Mongo) ---------------------------------------- */
-    const fees = await this.#getFeeStandard([
-      { feeType: 'Customer Fees' },
-      { feeType: 'Bank Account Fees' },
-      { feeType: 'Investment Account Fees' }
-    ]);
+export async function executeStoreProcedure(connection, query, parameters = {}) {
+  try {
+    const request = connection.request();
 
-    /* 2 ─ consulta única ao SQL  --------------------------------------- */
-    const conn = await connectToFeeMgmtDb();
-    let pkgData = {};
-    let stdRows = [];
-
-    try {
-      /* 2.1 package / branch */
-      [pkgData] = await executeStoreProcedure(
-        conn, 'sp_get_fees_byCIF', { cifno: customerAccount[0].cifno }
-      );
-
-      /* 2.2 standard fees by package (só logar por enquanto) */
-      if (pkgData?.['Default Fee Package Id']) {
-        stdRows = await executeStoreProcedure(
-          conn,
-          'sp_get_standard_fees_bypackage',
-          { FeePackageId: pkgData['Default Fee Package Id'] }   // @FeePackageId
-        );
-        console.log('STD rows', stdRows);          // <-- conferência
-      }
-    } finally {
-      await conn.close();                          // evita conexões penduradas
+    for (const key of Object.keys(parameters)) {
+      request.input(key, parameters[key]);
     }
 
-    /* 3 ─ mescla pkgData nas contas recebidas do Conductor -------------- */
-    customerAccount.forEach(acc => Object.assign(acc, pkgData));
+    //global.logger.info(`Executando procedure ${query} com parâmetros: ${JSON.stringify(parameters)}`);
 
-    /* 4 ─ builders já existentes --------------------------------------- */
-    const result   = { fees: [] };
-    const customer = new CustomerFees      (fees, customerAccount);
-    const bank     = new BankAccountFee    (fees, customerAccount);
-    const invest   = new InvestimentAccountFee(
-                        fees, customerAccount,
-                        await Field.findOne({ code: 7 }));
+    const result = await request.execute(query);
+    //global.logger.info(`Resultado da procedure ${query}: ${JSON.stringify(result)}`);
 
-    [customer, bank, invest]
-      .filter(f => f.fee && f.fee.feeGroups?.length)
-      .forEach(f => result.fees.push(f.fee));
+    await mssql.close();
 
-    /* 5 ─ casos ativos -------------------------------------------------- */
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status:     { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true }
-    });
+    if (!result.recordset || result.recordset.length === 0) {
+      return { success: true };
+    }
 
-    result.feesActives = feesActives.map(({ caseNumber, id }) => ({ caseNumber, id }));
-
-    /* 6 ─ contas detalhadas p/ Conductor -------------------------------- */
-    const docUrl = this.#getDocumentUrl(pkgData?.['Default Fee Package Id']);
-
-    result.accounts = customerAccount.map(acc => ({
-      cifno:               acc.cifno,
-      ddaNumber:           acc.ddaNumber,
-      branchCity:          acc.branchCity,
-      branchState:         acc.branchState,
-      branchType:          acc.branchType,
-      defaultPackageType:  acc.defaultPackageType,
-      feePackage:          acc.feePackage,
-      defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage:   acc.defaultFeePackage,
-      documentUrl:         docUrl
-    }));
-
-    result.documentUrl = docUrl;
-    return Result.ok(result);
-  }
-
-  /* ========== helpers ========== */
-
-  #getDocumentUrl (id) {
-    const key = ({ 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' })[id];
-    return key ? (global.environment.scheduleUrls?.[key] || '') : '';
-  }
-
-  async #getFeeStandard (filter) {
-    return Fee.find({ $or: filter })
-              .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-              .lean();
+    return result.recordset;
+  } catch (error) {
+    global.logger.error(`Erro na execução da procedure ${query}: ${error.message}`, error);
+    throw error;
   }
 }
