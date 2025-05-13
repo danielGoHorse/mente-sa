@@ -1,154 +1,88 @@
-// FeeGetByCifUseCase.js
-import { Fee }                         from '#src/models/entities/Fees.js';
-import { FeeCase }                    from '#src/models/entities/FeeCase.js';
-import { Field }                      from '#src/models/entities/Fields.js';
-import Result                         from '#features/shared/result.js';
-import CustomerFees                   from '#src/models/CustomerFees.js';
-import BankAccountFee                 from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee          from '#src/models/InvestimentAccountFee.js';
-import { connectToFeeMgmtDb,
-         executeStoreProcedure }      from '#core/data/mssql/index.js';
-
-/* ----------  mapas fixos ---------- */
-const DOC_URL_KEYS = { 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' };
-const FEE_BY_CODE  = { JH001: 1, JH002: 2, JH010: 3, JH009: 4 };
-const FEE_BY_BPS   = { S: 5,  C: 6,  E: 7,  O: 7 };
-
-export default class FeeGetByCifUseCase {
-
-  /* ======  API pública ====== */
-  async execute({ customerAccount }) {
-
-    /* 1. lê Mongo e SQL em paralelo */
-    const [fees, pkgData, currentRows, equityField] = await Promise.all([
-      this.#getFeeStandard(),
-      this.#getPackageDataFromSQL(customerAccount[0].cifno),
-      this.#getPackageDataFromCurrentSQL(customerAccount[0].cifno),
-      Field.findOne({ code: 7 })
-    ]);
-
-    /* 2. mescla os dados do SQL em cada conta (branch, package, feeAmount …) */
-    this.#mergeSqlData(customerAccount, pkgData, currentRows);
-
-    /* 3. monta estrutura que o front já espera */
-    const result = {
-      fees:        this.#buildFeeGroups(fees, customerAccount, equityField),
-      feesActives: await this.#getActiveCases(customerAccount[0].cifno),
-      accounts:    this.#serializeAccounts(customerAccount),
-      documentUrl: this.#documentUrl(pkgData.defaultFeePackageId)
-    };
-
-    return Result.ok(result);
-  }
-
-  /* ======  helpers ====== */
-
-  async #getFeeStandard() {
-    const types = ['Customer Fees', 'Bank Account Fees', 'Investment Account Fees'];
-    return Fee.find({ feeType: { $in: types } })
-              .select({ feeType: 1, feeGroups: { name: 1, fields: 1, code: 1 } })
-              .lean();
-  }
-
-  async #getPackageDataFromSQL(cifno) {
-    const conn = await connectToFeeMgmtDb();
-    const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
-    if (!row) return {};
-
-    return {
-      defaultFeePackageId : row['Default Fee Package Id'] ?? null,
-      branchCity          : row['Branch City']?.trim()          ?? '',
-      branchState         : row['Branch State']?.trim()         ?? '',
-      branchType          : row['Branch Type']?.trim()          ?? '',
-      defaultPackageType  : row['Default Package Type']?.trim() ?? '',
-      feePackage          : row['Default Fee Package']?.trim()  ?? '',
-    };
-  }
-
-  async #getPackageDataFromCurrentSQL(cifno) {
-    const conn  = await connectToFeeMgmtDb();
-    const rows  = await executeStoreProcedure(conn, 'sp_GetConductorFees', { CIF: cifno });
-    if (!rows?.length) return [];
-
-    return rows.map(r => ({
-      cifno          : r.CIFNO?.trim(),
-      ddaNumber      : String(r.DDANumber).trim(),
-      feeAmount      : Number(r.FeeAmount),
-      feeType        : this.#mapSqlFeeType(r),
-      feeCode        : r.FeeCode?.trim()        ?? '',
-      feeDescription : r.FeeDescription?.trim() ?? '',
-      bpsAcctNumber  : r.BPSAcctNumber?.trim()  ?? '',
-      bpsFeeTypeCode : r.BPSFeeTypeCode?.trim() ?? '',
-      source         : r.Source?.trim()         ?? '',
-      entity         : r.Entity?.trim()         ?? '',
-      isFeesStandard : r.IsFeesStandard?.trim() ?? '',
-      feeGroup       : r.FeeType >= 5 ? 3 : r.FeeType >= 3 ? 2 : 1,
-    }));
-  }
-
-  #mapSqlFeeType({ FeeCode, BPSFeeTypeCode }) {
-    return FEE_BY_CODE[FeeCode] || FEE_BY_BPS[BPSFeeTypeCode] || 0;
-  }
-
-  #mergeSqlData(accounts, pkgData, rows) {
-    accounts.forEach(acc => {
-      Object.assign(acc, pkgData);                       // dados do pacote
-      Object.assign(acc, rows.find(r => r.ddaNumber === acc.ddaNumber) || {}); // dados por conta
-    });
-  }
-
-  #buildFeeGroups(mongoFees, accounts, equityField) {
-    const customer   = new CustomerFees       (mongoFees, accounts);
-    const bank       = new BankAccountFee     (mongoFees, accounts);
-    const investment = new InvestimentAccountFee(mongoFees, accounts, equityField);
-
-    return [customer, bank, investment]
-            .filter(x => x.fee?.feeGroups?.length)
-            .map(x => x.fee);
-  }
-
-  async #getActiveCases(cif) {
-    const cases = await FeeCase.find({
-      cif,
-      status     : { $nin: ['DONE', 'REJECTED'] },
-      caseNumber : { $exists: true }
-    }).lean();
-
-    return cases.map(({ caseNumber, id }) => ({ caseNumber, id }));
-  }
-
-  #serializeAccounts(accs) {
-    return accs.map(acc => ({
-      cifno              : acc.cifno,
-      ddaNumber          : acc.ddaNumber,
-      branchCity         : acc.branchCity,
-      branchState        : acc.branchState,
-      branchType         : acc.branchType,
-      defaultPackageType : acc.defaultPackageType,
-      feePackage         : acc.feePackage,
-      defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage  : acc.defaultFeePackage,
-      documentUrl        : this.#documentUrl(acc.defaultFeePackageId),
-    }));
-  }
-
-  #documentUrl(pkgId) {
-    return DOC_URL_KEYS[pkgId] ? (global.environment.scheduleUrls?.[DOC_URL_KEYS[pkgId]] ?? '') : '';
-  }
-}
+Process exited with code 1
+C:\Program Files\nodejs\node.exe .\src\app\api\index.js
 
 
+ ███████╗ ███████╗ ███████╗     ███╗   ███╗  █████╗  ███╗   ██╗  █████╗ 
+ ██╔════╝ ██╔════╝ ██╔════╝     ████╗ ████║ ██╔══██╗ ████╗  ██║ ██╔══██╗
+ █████╗   █████╗   █████╗       ██╔████╔██║ ███████║ ██╔██╗ ██║ ███████║
+ ██╔══╝   ██╔══╝   ██╔══╝       ██║╚██╔╝██║ ██╔══██║ ██║╚██╗██║ ██╔══██║
+ ██║      ███████╗ ███████╗     ██║ ╚═╝ ██║ ██║  ██║ ██║ ╚████║ ██║  ██║
+ ╚═╝      ╚══════╝ ╚══════╝     ╚═╝     ╚═╝ ╚═╝  ╚═╝ ╚═╝  ╚═══╝ ╚═╝  ╚═╝
 
+  ██████╗  ███████╗ ███╗   ███╗ ███████╗ ███╗   ██╗ ████████╗      █████╗ 
+ ██╔════╝  ██╔════╝ ████╗ ████║ ██╔════╝ ████╗  ██║ ╚══██╔══╝     ██╔══██╗
+ ██║  ███╗ █████╗   ██╔████╔██║ █████╗   ██╔██╗ ██║    ██║        ███████║
+ ██║   ██║ ██╔══╝   ██║╚██╔╝██║ ██╔══╝   ██║╚██╗██║    ██║        ██╔══██║
+ ╚██████╔╝ ███████╗ ██║ ╚═╝ ██║ ███████╗ ██║ ╚████║    ██║        ██║  ██║
+  ╚═════╝  ╚══════╝ ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝        ╚═╝  ╚═╝
 
-
-[21:01:24.979] INFO (17540): Starting configuration for env: Local
-[21:01:24.980] INFO (17540): Loading env using file H:\workspace\fee-management-backend\.env
-[21:02:40.537] ERROR (17540): Unhandled Promise Rejection: err: 
-[21:02:40.538] ERROR (17540): Error: Global connection already exists. Call sql.close() first.
-    at Object.connect (H:\workspace\fee-management-backend\node_modules\mssql\lib\base.js:1723:31)
-    at connectToFeeMgmtDb (file:///H:/workspace/fee-management-backend/src/core/data/mssql/index.js:15:16)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async #getPackageDataFromCurrentSQL (file:///H:/workspace/fee-management-backend/src/features/feeGetByCif/feeGetByCifUseCase.js:69:19)      
-    at async Promise.all (index 2)
-    at async FeeGetByCifUseCase.execute (file:///H:/workspace/fee-management-backend/src/features/feeGetByCif/feeGetByCifUseCase.js:23:55)
-    at async feeGetByCifEndpoint (file:///H:/workspace/fee-management-backend/src/features/feeGetByCif/feeGetByCifEndpoint.js:6:18)
+ ██████╗  ██╗     ███████╗ ███████╗ ██████╗  ██╗   ██╗ ███████╗ ██████╗ 
+ ██╔══██╗ ██║     ██╔════╝ ██╔════╝ ██╔══██╗ ██║   ██║ ██╔════╝ ██╔══██╗
+ ██████╔╝ ██║     ███████╗ █████╗   ██████╔╝ ██║   ██║ █████╗   ██████╔╝
+ ██╔═══╝  ██║     ╚════██║ ██╔══╝   ██╔══██╗ ╚██╗ ██╔╝ ██╔══╝   ██╔══██╗
+ ██║      ██║     ███████║ ███████╗ ██║  ██║  ╚████╔╝  ███████╗ ██║  ██║
+ ╚═╝      ╚═╝     ╚══════╝ ╚══════╝ ╚═╝  ╚═╝   ╚═══╝   ╚══════╝ ╚═╝  ╚═╝
+(4) [{…}, {…}, {…}, {…}]
+0: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '', feeType: 1, feeDescription: 'AccountMaintenance', …}
+bpsAcctNumber: ''
+bpsFeeTypeCode: ''
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 609
+feeCode: 'JH001'
+feeDescription: 'AccountMaintenance'
+feeGroup: 1
+feeType: 1
+isFeesStandard: 'Yes'
+kycMailingStatus: null
+source: 'JHA'
+[[Prototype]]: Object
+1: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '', feeType: 2, feeDescription: 'HoldMail', …}
+bpsAcctNumber: ''
+bpsFeeTypeCode: ''
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 0
+feeCode: 'JH002'
+feeDescription: 'HoldMail'
+feeGroup: 1
+feeType: 2
+isFeesStandard: 'No'
+kycMailingStatus: 'Hold Mail'
+source: 'JHA'
+[[Prototype]]: Object
+2: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '', feeType: 3, feeDescription: 'USD/FXIncomingWire', …}
+bpsAcctNumber: ''
+bpsFeeTypeCode: ''
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 10
+feeCode: 'JH010'
+feeDescription: 'USD/FXIncomingWire'
+feeGroup: 2
+feeType: 3
+isFeesStandard: 'Yes'
+kycMailingStatus: null
+source: 'JHA'
+[[Prototype]]: Object
+3: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '20002089', feeType: 6, feeDescription: 'SafekeepingCustody', …}
+bpsAcctNumber: '20002089'
+bpsFeeTypeCode: 'C'
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 375
+feeCode: 'A053'
+feeDescription: 'SafekeepingCustody'
+feeGroup: 3
+feeType: 6
+isFeesStandard: 'Yes'
+kycMailingStatus: null
+source: 'BPS'
+[[Prototype]]: Object
+length: 4
+[[Prototype]]: Array(0)
+[[Prototype]]: Object
