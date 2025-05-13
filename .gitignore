@@ -40,3 +40,37 @@ export async function executeStoreProcedure(connection, query, parameters = {}) 
     throw error;
   }
 }
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+const conn = await connectToFeeMgmtDb();
+let pkgData = {};
+let stdRows  = [];
+let excRows  = [];
+
+try {
+  /* pacote / dados de agência */
+  [pkgData] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', {
+    cifno: customerAccount[0].cifno
+  });
+
+  const packageId = pkgData?.['Default Fee Package Id'];
+  if (packageId) {
+    stdRows = await executeStoreProcedure(
+      conn, 'sp_get_standard_fees_bypackage', { FeePackageId: packageId }
+    );
+    excRows = await executeStoreProcedure(
+      conn, 'sp_get_exception_fees_bypackage', { FeePackageId: packageId }
+    );
+    console.log('STD rows', stdRows);
+    console.log('EXC rows', excRows);
+  }
+} finally {
+  await conn.close();        // fecha UMA única vez
+}
+
