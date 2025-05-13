@@ -1,54 +1,164 @@
+import { Fee } from '#src/models/entities/Fees.js';
+import Result      from '#features/shared/result.js';
+import CustomerFees        from '#src/models/CustomerFees.js';
+import BankAccountFee      from '#src/models/BankAccountFee.js';
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
+import { FeeCase }         from '#src/models/entities/FeeCase.js';
+import { Field }           from '#src/models/entities/Fields.js';
+
 import {
   connectToFeeMgmtDb,
-  executeStoreProcedure
+  executeStoreProcedure,
 } from '#core/data/mssql/index.js';
 
-async function debugPackages(cifno) {
-  /* ------------------------------------------------------------------ */
-  const conn = await connectToFeeMgmtDb();         //  ➜ 1 pool apenas
-  try {
-    /* 1) linhas “correntes” que já vêm no customerAccount -------------- */
-    const currentRows =
-      await executeStoreProcedure(conn, 'sp_GetConductorFees', { CIF: cifno });
-    console.log('=== CURRENT  (sp_GetConductorFees) =================');
-    console.dir(currentRows, { depth: null });
+export default class FeeGetByCifUseCase {
 
-    /* 2) primeiro pegamos o packageId pela mesma proc usada no código -- */
+  /* =================================================================== */
+  async execute({ customerAccount }) {
+
+    /* 1. Modelo (Mongo) ------------------------------------------------ */
+    const modelFees = await this.#getFeeStandard([
+      { feeType: 'Customer Fees' },
+      { feeType: 'Bank Account Fees' },
+      { feeType: 'Investment Account Fees' },
+    ]);
+
+    /* 2. Dados de pacote + conexões SQL -------------------------------- */
+    const conn           = await connectToFeeMgmtDb();
     const [{ 'Default Fee Package Id': pkgId } = {}] =
-      await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
+      await executeStoreProcedure(conn, 'sp_get_fees_byCIF', {
+        cifno: customerAccount[0].cifno,
+      });
 
-    if (!pkgId) {
-      console.warn(`⚠️  Nenhum FeePackageId para o CIF ${cifno}`);
-      return;
+    if (pkgId) {
+      await this.#applyPackagePricing(conn, modelFees, pkgId);
     }
-    console.log(`\n>> FeePackageId encontrado: ${pkgId}\n`);
 
-    /* 3) STANDARD fees do pacote -------------------------------------- */
-    const standardRows =
-      await executeStoreProcedure(
-        conn,
-        'sp_get_standard_fees_bypackage',
-        { FeePackageId: pkgId }   // ou { packageId: pkgId } se o nome mudar
-      );
-    console.log('=== STANDARD (sp_get_standard_fees_bypackage) =======');
-    console.dir(standardRows, { depth: null });
+    /* 3. Enriquecimento dos accounts----------------------------------- */
+    const pkgInfo = await this.#getPackageInfo(conn, customerAccount[0].cifno);
 
-    /* 4) EXCEPTION fees do mesmo pacote -------------------------------- */
-    const exceptionRows =
-      await executeStoreProcedure(
-        conn,
-        'sp_get_exception_fees_bypackage',
-        { FeePackageId: pkgId }
-      );
-    console.log('=== EXCEPTIONS (sp_get_exception_fees_bypackage) ==== ');
-    console.dir(exceptionRows, { depth: null });
+    customerAccount.forEach(acc => Object.assign(acc, pkgInfo));
 
-  } finally {
-    /* fecha a conexão pra não estourar “Global connection already exists” */
-    await conn.close();
+    /* 4. Montagem dos objetos usados no front -------------------------- */
+    const customer   = new CustomerFees(modelFees, customerAccount);
+    const bank       = new BankAccountFee(modelFees, customerAccount);
+    const investment = new InvestimentAccountFee(
+      modelFees,
+      customerAccount,
+      (await Field.find({ code: 7 }))[0],
+    );
+
+    const feesResult = [customer, bank, investment]
+      .filter(f => f.fee && f.fee.feeGroups?.length)
+      .map(f => f.fee);
+
+    const pendingCases = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status:  { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
+    });
+
+    const result = {
+      fees: feesResult,
+      feesActives: pendingCases.map(c => ({ caseNumber: c.caseNumber, id: c.id })),
+      accounts: customerAccount.map(acc => ({
+        cifno:               acc.cifno,
+        ddaNumber:           acc.ddaNumber,
+        branchCity:          acc.branchCity,
+        branchState:         acc.branchState,
+        branchType:          acc.branchType,
+        defaultPackageType:  acc.defaultPackageType,
+        feePackage:          acc.feePackage,
+        defaultFeePackageId: acc.defaultFeePackageId,
+        defaultFeePackage:   acc.defaultFeePackage,
+        documentUrl:         this.#getDocumentUrl(acc.defaultFeePackageId),
+      })),
+      documentUrl: this.#getDocumentUrl(pkgInfo.defaultFeePackageId),
+    };
+
+    await conn.close();                       // fecha o pool usado aqui
+    return Result.ok(result);
+  }
+
+  /* =================================================================== */
+  /* ------------ helpers --------------------------------------------- */
+
+  /** faz merge de STANDARD e EXCEPTION fees do pacote no modelo (Mongo) */
+  async #applyPackagePricing(conn, modelFees, feePackageId) {
+    const [standardRows, exceptionRows] = await Promise.all([
+      executeStoreProcedure(conn, 'sp_get_standard_fees_bypackage',   { FeePackageId: feePackageId }),
+      executeStoreProcedure(conn, 'sp_get_exception_fees_bypackage', { FeePackageId: feePackageId }),
+    ]);
+
+    /* --- STANDARD → defaultValue ------------------------------------ */
+    for (const row of standardRows) {
+      const name   = row.FeeShortDescription?.trim()?.toLowerCase() ?? '';
+      const amount = row.FeeAmount;
+
+      this.#walkFields(modelFees, field => {
+        if (field.name?.toLowerCase() === name) {
+          field.defaultValue = String(amount ?? field.defaultValue);
+        }
+      });
+    }
+
+    /* --- EXCEPTIONS → exceptionOptions ------------------------------- */
+    for (const row of exceptionRows) {
+      const name   = row.FeeShortDescription?.trim()?.toLowerCase() ?? '';
+      const option = {
+        value:   String(row.OptionValue ?? ''),
+        text:    row.Text ?? '',
+        visible: true,
+        retired: false,
+      };
+
+      this.#walkFields(modelFees, field => {
+        if (field.name?.toLowerCase() === name && field.isException) {
+          if (!field.exceptionOptions.some(o => o.value === option.value)) {
+            field.exceptionOptions.push(option);
+          }
+        }
+      });
+    }
+  }
+
+  /** percorre todos os fields do modelo e executa callback */
+  #walkFields(fees, cb) {
+    for (const fee of fees) {
+      for (const group of fee.feeGroups) {
+        for (const field of group.fields) cb(field);
+      }
+    }
+  }
+
+  /* ----------- dados do pacote (cidade, estado, etc.) --------------- */
+  async #getPackageInfo(conn, cifno) {
+    const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
+    if (!row) return {};
+
+    return {
+      defaultFeePackageId: row['Default Fee Package Id'] ?? null,
+      branchCity:          row['Branch City']?.trim()      || '',
+      branchState:         row['Branch State']?.trim()     || '',
+      branchType:          row['Branch Type']?.trim()      || '',
+      defaultPackageType:  row['Default Package Type']?.trim() || '',
+      feePackage:          row['Default Fee Package']?.trim()  || '',
+    };
+  }
+
+  /* --------- utilidades --------------------------------------------- */
+  #getDocumentUrl(id) {
+    const urls = global.environment.scheduleUrls || {};
+    const key  = { 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' }[id];
+    return key ? urls[key] || '' : '';
+  }
+
+  async #getFeeStandard(filter) {
+    const res = [];
+    for await (const fee of Fee.find({ $or: filter })
+                               .select({ feeType: 1, feeGroups: { name: 1, fields: 1, code: 1 } })) {
+      res.push(fee.toObject());
+    }
+    return res;
   }
 }
-
-/* ---- chame passando o CIF desejado ----------------------------------- */
-debugPackages('NAA0010')
-  .catch(err => console.error('Erro nos testes de package:', err));
