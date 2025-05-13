@@ -1,155 +1,31 @@
-/* src/features/feeGetByCif/feeGetByCifUseCase.js
-   (adicionei **apenas** o helper `applyStandardAmounts` + a chamada logo
-   depois de trazer `stdRows`. Nenhuma outra parte foi modificada) */
-import { Fee }               from '#src/models/entities/Fees.js';
-import Result                from '#features/shared/result.js';
-import CustomerFees          from '#src/models/CustomerFees.js';
-import BankAccountFee        from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase }           from '#src/models/entities/FeeCase.js';
-import { Field }             from '#src/models/entities/Fields.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js';
+Agora foi top...valeu...espero que não esteja bravo
 
-/* helpers ‑‑—————————————————————————————————————————————— */
-async function getPackageData(cifno) {
-  const conn = await connectToFeeMgmtDb();
-  const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
-  if (!row) return {};
-  return {
-    defaultFeePackageId: row['Default Fee Package Id'] ?? null,
-    branchCity:          row['Branch City']?.trim()         || '',
-    branchState:         row['Branch State']?.trim()        || '',
-    branchType:          row['Branch Type']?.trim()         || '',
-    defaultPackageType:  row['Default Package Type']?.trim()|| '',
-    feePackage:          row['Default Fee Package']?.trim() || '',
-  };
-}
 
-async function getStandardFees(packageId) {
-  const conn  = await connectToFeeMgmtDb();
-  const rows  = await executeStoreProcedure(
-                 conn,'sp_get_standard_fees_bypackage',
-                 { FeePackageId: packageId });
-  console.log('STD‑rows', rows?.length);
-  return rows ?? [];
-}
+Vamos para o proximo e ultimo passso
 
-async function getExceptionFees(packageId) {
-  const conn  = await connectToFeeMgmtDb();
-  const rows  = await executeStoreProcedure(
-                 conn,'sp_get_exception_fees_bypackage',
-                 { FeePackageId: packageId });
-  console.log('EXC‑rows', rows?.length);
-  return rows ?? [];
-}
+Vou te mostrar como vem o exception.....e pra ele, vamos ter que fazer um de/para do FeeType, que utilizamos aqui o numero, mas na exception ele vem o nome, na mesma variavel....assim:
 
-function getDocumentUrl(id) {
-  const urls = global.environment.scheduleUrls || {};
-  const key  = ({ 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' })[id];
-  return key ? urls[key] || '' : '';
-}
+Amount =
+'0.00'
+FeeCode =
+'JH001'
+FeeDescription =
+'Account Maintenance Fee'
+FeeParameterOptionId =
+98
+FeeType =
+'Customer Fees'
+FreqDescription =
+null
 
-/* ← novo helper: grava o FeeAmount do Standard dentro do defaultValue ------- */
-function applyStandardAmounts(mongoFees, stdRows){
-  const amountByType = new Map(
-        stdRows.map(r => [ Number(r.FeeType), Number(r.FeeAmount) ]));
+Veja que o FeeCode vem o codigo JH001 e o FeeType que utilizamos para identificar aqui:
 
-  mongoFees.forEach(fee => {
-    const stdGrp = fee.feeGroups?.find(g => g.name === 'Standard Fees');
-    if (!stdGrp) return;
+  const fees = await getFeeStandard([
+         { feeType:'Customer Fees'     },
+         { feeType:'Bank Account Fees' },
+         { feeType:'Investment Account Fees' }
+       ]);
 
-    stdGrp.fields.forEach(field => {
-      const amt = amountByType.get(field.code);   // field.code === FeeType
-      if (amt !== undefined) field.defaultValue = amt.toString();
-    });
-  });
-}
+Esta com suadescrição...então vai ter que identificar e codifica-lo da forma necessaria....sao 1, 2 e 3 os codigos deles se não me engano...
 
-/* Mongo helper (inalterado) */
-async function getFeeStandard(filter) {
-  return Fee.find({ $or: filter })
-            .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-            .lean();
-}
-
-/* ================================================================== */
-export default class FeeGetByCifUseCase {
-
-  async execute({ customerAccount }) {
-    /* 1) modelo‑padrão Mongo */
-    const fees = await getFeeStandard([
-      { feeType:'Customer Fees'     },
-      { feeType:'Bank Account Fees' },
-      { feeType:'Investment Account Fees' }
-    ]);
-
-    /* 2) dados de Package (SQL) */
-    const pkgData   = await getPackageData(customerAccount[0].cifno);
-    const packageId = pkgData.defaultFeePackageId ?? 1; // fallback
-
-    /* 3) valores Standard / Exception (SQL) */
-    const stdRows = await getStandardFees  (packageId);
-    const excRows = await getExceptionFees (packageId);
-
-    /* 3a) aplica FeeAmount do Standard diretamente no modelo Mongo */
-    applyStandardAmounts(fees, stdRows);
-
-    /* 4) mescla pkgData + valores vindos do SQL na lista de contas */
-    customerAccount.forEach(acc => {
-      Object.assign(acc, pkgData);
-
-      /* procura valor (Standard) que combine com feeType */
-      const std = stdRows.find(r => Number(r.FeeType) === acc.feeType);
-      if (std) acc.feeAmount = Number(std.FeeAmount);
-
-      /* procura exception específica pelo FeeCode */
-      const exc = excRows.find(e => e.FeeCode === acc.feeCode);
-      if (exc) acc.exceptionAmount = Number(exc.Amount);
-    });
-
-    /* 5) construtores já existentes */
-    const result   = { fees: [] };
-    const [customer, bank, investment] = [
-      new CustomerFees      (fees, customerAccount),
-      new BankAccountFee    (fees, customerAccount),
-      new InvestimentAccountFee(
-        fees, customerAccount, await Field.findOne({ code:7 }))
-    ];
-
-    [customer, bank, investment]
-      .filter(f => f.fee && f.fee.feeGroups?.length)
-      .forEach(f => result.fees.push(f.fee));
-
-    /* casos ativos */
-    const actives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: { $nin:['DONE','REJECTED'] },
-      caseNumber: { $exists:true }
-    });
-
-    result.feesActives = actives.map(({ caseNumber,id })=>({ caseNumber,id }));
-
-    /* contas detalhadas */
-    const docUrl = getDocumentUrl(packageId);
-    result.accounts = customerAccount.map(acc => ({
-      cifno:               acc.cifno,
-      ddaNumber:           acc.ddaNumber,
-      branchCity:          acc.branchCity,
-      branchState:         acc.branchState,
-      branchType:          acc.branchType,
-      defaultPackageType:  acc.defaultPackageType,
-      feePackage:          acc.feePackage,
-      defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage:   acc.defaultFeePackage,
-      documentUrl:         docUrl,
-      feeAmount:           acc.feeAmount,
-      exceptionAmount:     acc.exceptionAmount ?? null
-    }));
-
-    result.documentUrl = docUrl;
-    return Result.ok(result);
-  }
-}
+Lembrando....mesma coisa agora, insere o que for necessario, mas não modifica nada do que ja temos...pois esta TOP já
