@@ -1,99 +1,33 @@
-import { Fee } from '#src/models/entities/Fees.js';
-import Result from '#features/shared/result.js';
-import CustomerFees from '#src/models/CustomerFees.js';
-import BankAccountFee from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import { Field } from '#src/models/entities/Fields.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure,
-} from '#core/data/mssql/index.js';
+Da procedure Exception o Amount de acordo com seu FeeCode 
+
+sp_get_exception_fees_bypackage
+
+FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription	FeeType
+JH001	Account Maintenance Fee	98	0.00	NULL	Customer Fees
+JH006	FX Outgoing Wire Fee	114	50.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	96	0.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	97	0.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	123	50.00	NULL	Bank Account Fees
+JH008	USD/FX Outgoing Wire Fee	133	45.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	134	0.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	135	10.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	136	20.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	137	25.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	138	30.00	NULL	Investment Fees
 
 
-export default class FeeGetByCifUseCase {
-  // --------------------------------------------------
+E o Standard o FeeAmount de acordo com seu FeeType
 
-  async execute({ customerAccount }) {
-    /* 1. Tabela‑padrão (Mongo) -------------------------------------------- */
-    const fees = await this.#getFeeStandard([
-      { feeType: 'Customer Fees' },
-      { feeType: 'Bank Account Fees' },
-      { feeType: 'Investment Account Fees' },
-    ]);
-  
-    /* 2. Dados complementares de Package (única ida ao SQL) --------------- */
-    const conn     = await connectToFeeMgmtDb();           // 1 pool só
-    const pkgData  = await this.#getPackageDataFromSQL(conn, customerAccount[0].cifno);
-  
-    /*‑‑ mescla pkgData em cada conta (branch, package…) */
-    customerAccount.forEach(acc => Object.assign(acc, pkgData));
-    console.log(customerAccount)
-  
-    /* 3. Builders --------------------------------------------------------- */
-    const result = { fees: [] };
-  
-    const [customer, bank, investment] = [
-      new CustomerFees      (fees, customerAccount),
-      new BankAccountFee    (fees, customerAccount),
-      new InvestimentAccountFee(
-            fees, customerAccount, await Field.findOne({ code: 7 }))
-    ];
-  
-    [customer, bank, investment]
-      .filter(f => f.fee && f.fee.feeGroups?.length)
-      .forEach(f => result.fees.push(f.fee));
-  
-    /* 4. Casos ativos ------------------------------------------------------ */
-    const feesActives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: { $nin: ['DONE', 'REJECTED'] },
-      caseNumber: { $exists: true },
-    });
-  
-    result.feesActives = feesActives.map(({ caseNumber, id }) => ({ caseNumber, id }));
-  
-    /* 5. Accounts detalhados p/ Conductor --------------------------------- */
-    const docUrl = this.#getDocumentUrl(pkgData.defaultFeePackageId);
-    result.accounts = customerAccount.map(acc => ({
-      cifno:               acc.cifno,
-      ddaNumber:           acc.ddaNumber,
-      branchCity:          acc.branchCity,
-      branchState:         acc.branchState,
-      branchType:          acc.branchType,
-      defaultPackageType:  acc.defaultPackageType,
-      feePackage:          acc.feePackage,
-      defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage:   acc.defaultFeePackage,
-      documentUrl:         docUrl,
-    }));
-  
-    result.documentUrl = docUrl;
-    return Result.ok(result);
-  }
-  
-  /*--------------- helpers -------------*/
-  async #getPackageDataFromSQL(conn, cifno) {
-    const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
-    if (!row) return {};
-    return {
-      defaultFeePackageId: row['Default Fee Package Id'] ?? null,
-      branchCity:          row['Branch City']?.trim()      || '',
-      branchState:         row['Branch State']?.trim()     || '',
-      branchType:          row['Branch Type']?.trim()      || '',
-      defaultPackageType:  row['Default Package Type']?.trim() || '',
-      feePackage:          row['Default Fee Package']?.trim()  || '',
-    };
-  }
-  
-  #getDocumentUrl(id) {
-    const key  = ({ 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' })[id];
-    return key ? (global.environment.scheduleUrls?.[key] || '') : '';
-  }
-  
-  async #getFeeStandard(filter) {
-    return Fee.find({ $or: filter })
-              .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-              .lean();                                 // já devolve POJO
-  }
-}
+sp_get_standard_fees_bypackage
+
+FeePackageDescription	FeeAmount	IsStandard	FeeShortDescription	FeeType	FeeDescription
+PB International	1200.00	1	AccountMaintenance	1	AccountMaintenance
+PB International	600.00	1	HoldMail	2	HoldMail
+PB International	75.00	1	USD/FXOutgoingWire	4	USD/FXOutgoingWire
+PB International	0.00	1	USD/FXIncomingWire	3	USD/FXIncomingWire
+
+Então resumindo....assim como no caso do Client Current Fees onde eu mantenho a estrutura baseada no mongo e o valor utilizo esse do sql, assim serão as outras duas....
+
+Deu pra entender?
+
+Me mande o codigo completo com as alterações pra começarmos os testes
