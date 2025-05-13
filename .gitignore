@@ -136,3 +136,19 @@ export default class FeeGetByCifUseCase {
     return DOC_URL_KEYS[pkgId] ? (global.environment.scheduleUrls?.[DOC_URL_KEYS[pkgId]] ?? '') : '';
   }
 }
+
+
+
+
+
+[21:01:24.979] INFO (17540): Starting configuration for env: Local
+[21:01:24.980] INFO (17540): Loading env using file H:\workspace\fee-management-backend\.env
+[21:02:40.537] ERROR (17540): Unhandled Promise Rejection: err: 
+[21:02:40.538] ERROR (17540): Error: Global connection already exists. Call sql.close() first.
+    at Object.connect (H:\workspace\fee-management-backend\node_modules\mssql\lib\base.js:1723:31)
+    at connectToFeeMgmtDb (file:///H:/workspace/fee-management-backend/src/core/data/mssql/index.js:15:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async #getPackageDataFromCurrentSQL (file:///H:/workspace/fee-management-backend/src/features/feeGetByCif/feeGetByCifUseCase.js:69:19)      
+    at async Promise.all (index 2)
+    at async FeeGetByCifUseCase.execute (file:///H:/workspace/fee-management-backend/src/features/feeGetByCif/feeGetByCifUseCase.js:23:55)
+    at async feeGetByCifEndpoint (file:///H:/workspace/fee-management-backend/src/features/feeGetByCif/feeGetByCifEndpoint.js:6:18)
