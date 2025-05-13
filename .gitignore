@@ -1,58 +1,64 @@
-/* eslint‑disable no-console */
-import { Fee }   from '#src/models/entities/Fees.js';
-import Result    from '#features/shared/result.js';
-import CustomerFees          from '#src/models/CustomerFees.js';
-import BankAccountFee        from '#src/models/BankAccountFee.js';
+import { Fee }            from '#src/models/entities/Fees.js';
+import Result             from '#features/shared/result.js';
+import CustomerFees       from '#src/models/CustomerFees.js';
+import BankAccountFee     from '#src/models/BankAccountFee.js';
 import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import { Field   } from '#src/models/entities/Fields.js';
-
+import { FeeCase }        from '#src/models/entities/FeeCase.js';
+import { Field }          from '#src/models/entities/Fields.js';
 import {
   connectToFeeMgmtDb,
   executeStoreProcedure,
 } from '#core/data/mssql/index.js';
 
-/* ──────────────────────────────────────────────────────────────────── */
-
 export default class FeeGetByCifUseCase {
 
-  /* ================================================================= */
+  /* ================================================================ */
+  /* MAIN                                                             */
+  /* ================================================================ */
   async execute({ customerAccount }) {
 
-    /* 1. modelo‑padrão Mongo --------------------------------------- */
-    const modelFees = await this.#getFeeStandard([
+    /* 1 ─ modelo‑padrão (Mongo) ------------------------------------ */
+    const fees = await this.#getFeeStandard([
       { feeType: 'Customer Fees' },
       { feeType: 'Bank Account Fees' },
       { feeType: 'Investment Account Fees' },
     ]);
 
-    /* 2. única conexão SQL ----------------------------------------- */
-    const conn = await connectToFeeMgmtDb();
+    /* 2 ─ dados de package (SQL) ----------------------------------- */
+    const conn           = await connectToFeeMgmtDb();          // 1ª conexão
+    const pkgData        = await this.#getPackageDataFromSQL(conn, customerAccount[0].cifno);
+    await conn.close();                                         // libera pool
 
-    /*‑‑ descobre o PackageId (pode vir null em DEV) */
-    const [{ 'Default Fee Package Id': pkgIdFromDb } = {}] =
-      await executeStoreProcedure(conn, 'sp_get_fees_byCIF',
-                                  { cifno: customerAccount[0].cifno });
+    /* packageId pode vir nulo → por enquanto fixamos 1 -------------- */
+    const pkgId = pkgData.defaultFeePackageId ?? 1;
 
-    const pkgId = pkgIdFromDb || 1;          // << fallback para testes
+    /* 3 ─ fees Standard / Exception em paralelo  (opção B) ---------- */
+    const [connStd, connExc] = await Promise.all([
+      connectToFeeMgmtDb(), connectToFeeMgmtDb()
+    ]);
 
-    /* injeta Standard/Exception no modelo Mongo */
-    await this.#mergePackageData(conn, modelFees, pkgId);
+    const [stdRows, excRows] = await Promise.all([
+      executeStoreProcedure(connStd, 'sp_get_standard_fees_bypackage',  { FeePackageId: pkgId }),
+      executeStoreProcedure(connExc,'sp_get_exception_fees_bypackage', { FeePackageId: pkgId }),
+    ]);
 
-    /* branch / package info --------------------------------------- */
-    const pkgData = await this.#extractPkgInfo(conn, customerAccount[0].cifno);
+    await Promise.all([connStd.close(), connExc.close()]);
+
+    /* apenas log para teste ----------------------------------------- */
+    console.log('STD rows →', stdRows);
+    console.log('EXC rows →', excRows);
+
+    /* 4 ─ mescla pkgData em cada conta ------------------------------ */
     customerAccount.forEach(acc => Object.assign(acc, pkgData));
 
-    /* monta builders ------------------------------------------------ */
+    /* 5 ─ constrói objetos já usados pelo front --------------------- */
     const result = { fees: [] };
 
     const [customer, bank, investment] = [
-      new CustomerFees(modelFees, customerAccount),
-      new BankAccountFee(modelFees, customerAccount),
+      new CustomerFees      (fees, customerAccount),
+      new BankAccountFee    (fees, customerAccount),
       new InvestimentAccountFee(
-        modelFees,
-        customerAccount,
-        await Field.findOne({ code: 7 }),
+        fees, customerAccount, await Field.findOne({ code: 7 })
       ),
     ];
 
@@ -60,18 +66,17 @@ export default class FeeGetByCifUseCase {
       .filter(f => f.fee && f.fee.feeGroups?.length)
       .forEach(f => result.fees.push(f.fee));
 
-    /* casos ativos -------------------------------------------------- */
-    const openCases = await FeeCase.find({
+    /* 6 ─ casos ativos ---------------------------------------------- */
+    const feesActives = await FeeCase.find({
       cif: customerAccount[0].cifno,
       status: { $nin: ['DONE', 'REJECTED'] },
       caseNumber: { $exists: true },
     });
 
-    result.feesActives = openCases.map(({ caseNumber, id }) => ({ caseNumber, id }));
+    result.feesActives = feesActives.map(({ caseNumber, id }) => ({ caseNumber, id }));
 
-    /* accounts detalhados ------------------------------------------ */
+    /* 7 ─ accounts detalhados p/ Conductor -------------------------- */
     const docUrl = this.#getDocumentUrl(pkgData.defaultFeePackageId);
-
     result.accounts = customerAccount.map(acc => ({
       cifno:               acc.cifno,
       ddaNumber:           acc.ddaNumber,
@@ -87,68 +92,18 @@ export default class FeeGetByCifUseCase {
 
     result.documentUrl = docUrl;
 
-    await conn.close();
     return Result.ok(result);
   }
 
-  /* ================================================================= */
-  /*                       helpers                                     */
-  /* ================================================================= */
+  /* ================================================================ */
+  /* HELPERS                                                          */
+  /* ================================================================ */
 
-  /** traz Standard + Exception para o package selecionado */
-  async #mergePackageData(conn, fees, feePackageId) {
-
-    const [stdRows, excRows] = await Promise.all([
-      executeStoreProcedure(conn, 'sp_get_standard_fees_bypackage',
-                            { FeePackageId: feePackageId }),
-      executeStoreProcedure(conn, 'sp_get_exception_fees_bypackage',
-                            { FeePackageId: feePackageId }),
-    ]);
-
-    console.log('♦ STANDARD rows:', stdRows.length);
-    console.log('♦ EXCEPTION rows:', excRows.length);
-
-    /* ---------- STANDARD: defaultValue ---------------------------- */
-    for (const r of stdRows) {
-      const norm = this.#norm(r.FeeShortDescription);
-      this.#walkFields(fees, field => {
-        if (!field.isException && this.#norm(field.name) === norm) {
-          field.defaultValue = String(r.FeeAmount ?? field.defaultValue);
-        }
-      });
-    }
-
-    /* ---------- EXCEPTION: opções --------------------------------- */
-    for (const r of excRows) {
-      const codeToField = this.#feeCodeToFieldCode(r.FeeCode);
-      if (!codeToField) continue;
-
-      this.#walkFields(fees, field => {
-        if (field.isException && field.code === codeToField) {
-          const value = String(r.Amount ?? '');
-          if (!field.exceptionOptions.some(o => o.value === value)) {
-            field.exceptionOptions.push({
-              value,
-              text:  this.#formatMoney(value),
-              visible: true,
-              retired: false,
-            });
-          }
-        }
-      });
-    }
-  }
-
-  /* percorre todas as fields uma vez só */
-  #walkFields(fees, cb) {
-    for (const fee of fees)
-      for (const grp of fee.feeGroups)
-        for (const fld of grp.fields) cb(fld);
-  }
-
-  async #extractPkgInfo(conn, cifno) {
+  /* dados do package/cif ------------------------------------------- */
+  async #getPackageDataFromSQL(conn, cifno) {
     const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
     if (!row) return {};
+
     return {
       defaultFeePackageId: row['Default Fee Package Id'] ?? null,
       branchCity:          row['Branch City']?.trim()      || '',
@@ -159,35 +114,17 @@ export default class FeeGetByCifUseCase {
     };
   }
 
-  /* ───────── utilidades ───────── */
-
-  #norm(str = '') {
-    return str.toLowerCase().replace(/[\s\-\/]/g, '');
-  }
-
-  #formatMoney(v) {
-    const n = Number(v);
-    return isFinite(n) ? n.toLocaleString('en-US',{style:'currency',currency:'USD'}) : v;
-  }
-
-  #feeCodeToFieldCode(code) {
-    const map = {
-      JH001:1, JH002:2, JH010:3,
-      JH009:4, JH006:4, JH007:4,      // outgoing wires
-      A053 :6,                       // custody
-    };
-    return map[code] ?? null;
-  }
-
+  /* traduz id → URL do PDF ----------------------------------------- */
   #getDocumentUrl(id) {
-    const urls = global.environment.scheduleUrls || {};
-    const key  = { 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' }[id];
-    return key ? urls[key] || '' : '';
+    const keyMap = { 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' };
+    const key    = keyMap[id];
+    return key ? (global.environment.scheduleUrls?.[key] || '') : '';
   }
 
+  /* pega modelo default no Mongo ----------------------------------- */
   async #getFeeStandard(filter) {
     return Fee.find({ $or: filter })
-              .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-              .lean();
+              .select({ feeType: 1, feeGroups: { name: 1, fields: 1, code: 1 } })
+              .lean();          // já devolve objeto puro (sem hydrate)
   }
 }
