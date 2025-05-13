@@ -1,27 +1,5 @@
-FeeAmount =
-1200
-FeeDescription =
-'AccountMaintenance'
-FeePackageDescription =
-'PB International'
-FeeShortDescription =
-'AccountMaintenance'
-FeeType =
-1
-IsStandard =
-true
-
-
-REsultado do 
-   console.log(stdRows) que eu coloquei
-
-Vc ve que nele vem um FeeType....Eu gostaria que vc usasse esse feeAmount que vem nesse stdRow
-no lugar do defaultValue de Standard, de acordo com seu feeType
-
-O codigo que esta funcionando corretamente ainda sem esse ajuste é esse:
-
 /* src/features/feeGetByCif/feeGetByCifUseCase.js
-   — versão single‑connection‑per‑call
+   — apenas Standard ajustado
 ------------------------------------------------------------------- */
 import { Fee }               from '#src/models/entities/Fees.js';
 import Result                from '#features/shared/result.js';
@@ -35,113 +13,108 @@ import {
   executeStoreProcedure
 } from '#core/data/mssql/index.js';
 
-/* helpers ‑‑—————————————————————————————————————————————— */
+/* helpers SQL ---------------------------------------------------- */
 async function getPackageData(cifno) {
   const conn = await connectToFeeMgmtDb();
-  const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
-  if (!row) return {};
-  return {
+  const [row] = await executeStoreProcedure(conn,'sp_get_fees_byCIF',{ cifno });
+  return row ? {
     defaultFeePackageId: row['Default Fee Package Id'] ?? null,
     branchCity:          row['Branch City']?.trim()         || '',
     branchState:         row['Branch State']?.trim()        || '',
     branchType:          row['Branch Type']?.trim()         || '',
     defaultPackageType:  row['Default Package Type']?.trim()|| '',
-    feePackage:          row['Default Fee Package']?.trim() || '',
-  };
+    feePackage:          row['Default Fee Package']?.trim() || ''
+  } : {};
 }
 
-async function getStandardFees(packageId) {
-  const conn  = await connectToFeeMgmtDb();
-  const rows  = await executeStoreProcedure(
-                 conn,'sp_get_standard_fees_bypackage',
-                 { FeePackageId: packageId });
-  console.log('STD‑rows', rows?.length);           // <‑‑ debug
-  return rows ?? [];
+const getStandardFees  = async id =>
+  executeStoreProcedure(await connectToFeeMgmtDb(),
+                        'sp_get_standard_fees_bypackage',
+                        { FeePackageId:id });
+
+const getExceptionFees = async id =>
+  executeStoreProcedure(await connectToFeeMgmtDb(),
+                        'sp_get_exception_fees_bypackage',
+                        { FeePackageId:id });
+
+/* aplica FeeAmount → defaultValue no grupo “Standard Fees” */
+function applyStandardAmounts(fees, stdRows){
+  const amountByType = new Map(
+        stdRows.map(r => [ Number(r.FeeType), Number(r.FeeAmount) ]));
+
+  fees.forEach(fee=>{
+    const stdGrp = fee.feeGroups?.find(g => g.name === 'Standard Fees');
+    if(!stdGrp) return;
+
+    stdGrp.fields.forEach(field=>{
+      const amt = amountByType.get(field.code);
+      if(amt !== undefined) field.defaultValue = amt.toString();
+    });
+  });
 }
 
-async function getExceptionFees(packageId) {
-  const conn  = await connectToFeeMgmtDb();
-  const rows  = await executeStoreProcedure(
-                 conn,'sp_get_exception_fees_bypackage',
-                 { FeePackageId: packageId });
-  console.log('EXC‑rows', rows?.length);           // <‑‑ debug
-  return rows ?? [];
-}
-
-function getDocumentUrl(id) {
+const getDocumentUrl = id =>{
   const urls = global.environment.scheduleUrls || {};
-  const key  = ({ 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' })[id];
-  return key ? urls[key] || '' : '';
-}
+  const key  = ({1:'intlPB3',2:'uSPBIndividual3',3:'uSPBCorporation3'})[id];
+  return key ? urls[key]||'' : '';
+};
 
-/* Mongo helper (inalterado) */
-async function getFeeStandard(filter) {
-  return Fee.find({ $or: filter })
-            .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-            .lean();
-}
+const getFeeStandard = filter =>
+  Fee.find({ $or:filter })
+     .select({ feeType:1, feeGroups:{name:1,fields:1,code:1} })
+     .lean();
 
-/* ================================================================== */
-export default class FeeGetByCifUseCase {
-
-  async execute({ customerAccount }) {
-    /* 1) modelo‑padrão Mongo */
+/* ================================================================= */
+export default class FeeGetByCifUseCase{
+  async execute({ customerAccount }){
+    /* 1. Mongo (estrutura) */
     const fees = await getFeeStandard([
-      { feeType:'Customer Fees'     },
-      { feeType:'Bank Account Fees' },
-      { feeType:'Investment Account Fees' }
+      {feeType:'Customer Fees'},
+      {feeType:'Bank Account Fees'},
+      {feeType:'Investment Account Fees'}
     ]);
 
-
-    /* 2) dados de Package (SQL) */
+    /* 2. SQL: package + listas */
     const pkgData   = await getPackageData(customerAccount[0].cifno);
-    const packageId = pkgData.defaultFeePackageId ?? 1; // fallback
+    const packageId = pkgData.defaultFeePackageId ?? 1;
 
-    /* 3) valores Standard / Exception (SQL)            */
-    const stdRows = await getStandardFees  (packageId);
-    const excRows = await getExceptionFees (packageId);
+    const [stdRows, excRows] = await Promise.all([
+      getStandardFees (packageId),
+      getExceptionFees(packageId)
+    ]);
+    /* ——> insere feeAmount padrão no objeto fees */
+    applyStandardAmounts(fees, stdRows);
 
-    console.log(stdRows)
-    console.log(excRows)
-
-    /* 4) mescla pkgData + valores vindos do SQL na lista de contas */
-    customerAccount.forEach(acc => {
+    /* 3. mescla dados de package + exceptions na lista de contas */
+    customerAccount.forEach(acc=>{
       Object.assign(acc, pkgData);
 
-      /* procura valor (Standard) que combine com feeType */
-      const std = stdRows.find(r => Number(r.FeeType) === acc.feeType);
-      if (std) acc.feeAmount = Number(std.FeeAmount);
-
-      /* procura exception específica pelo FeeCode        */
       const exc = excRows.find(e => e.FeeCode === acc.feeCode);
-      if (exc) acc.exceptionAmount = Number(exc.Amount);
+      if(exc) acc.exceptionAmount = Number(exc.Amount);
     });
 
-    /* 5) construtores já existentes */
-    const result   = { fees: [] };
-    const [customer, bank, investment] = [
-      new CustomerFees      (fees, customerAccount),
-      new BankAccountFee    (fees, customerAccount),
+    /* 4. builders já existentes */
+    const result = { fees:[] };
+    const [cust,bank,inv] = [
+      new CustomerFees(fees,customerAccount),
+      new BankAccountFee(fees,customerAccount),
       new InvestimentAccountFee(
-        fees, customerAccount, await Field.findOne({ code:7 }))
+        fees,customerAccount, await Field.findOne({code:7}))
     ];
-
-    [customer, bank, investment]
-      .filter(f => f.fee && f.fee.feeGroups?.length)
-      .forEach(f => result.fees.push(f.fee));
+    [cust,bank,inv].filter(f=>f.fee?.feeGroups?.length)
+                   .forEach(f=>result.fees.push(f.fee));
 
     /* casos ativos */
     const actives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: { $nin:['DONE','REJECTED'] },
-      caseNumber: { $exists:true }
+      cif:customerAccount[0].cifno,
+      status:{$nin:['DONE','REJECTED']},
+      caseNumber:{$exists:true}
     });
-
-    result.feesActives = actives.map(({ caseNumber,id })=>({ caseNumber,id }));
+    result.feesActives = actives.map(({caseNumber,id})=>({caseNumber,id}));
 
     /* contas detalhadas */
     const docUrl = getDocumentUrl(packageId);
-    result.accounts = customerAccount.map(acc => ({
+    result.accounts = customerAccount.map(acc=>({
       cifno:               acc.cifno,
       ddaNumber:           acc.ddaNumber,
       branchCity:          acc.branchCity,
@@ -152,14 +125,10 @@ export default class FeeGetByCifUseCase {
       defaultFeePackageId: acc.defaultFeePackageId,
       defaultFeePackage:   acc.defaultFeePackage,
       documentUrl:         docUrl,
-      feeAmount:           acc.feeAmount,
       exceptionAmount:     acc.exceptionAmount ?? null
     }));
-
     result.documentUrl = docUrl;
+
     return Result.ok(result);
   }
 }
-
-
-Por enquanto vamos mexer no Standard, que o feeType vem com numero mesmo
