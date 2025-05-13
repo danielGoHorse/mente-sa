@@ -1,136 +1,129 @@
-/* src/features/feeGetByCif/feeGetByCifUseCase.js
-   — versão single‑connection‑per‑call
-------------------------------------------------------------------- */
-import { Fee }               from '#src/models/entities/Fees.js';
-import Result                from '#features/shared/result.js';
-import CustomerFees          from '#src/models/CustomerFees.js';
-import BankAccountFee        from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
-import { FeeCase }           from '#src/models/entities/FeeCase.js';
-import { Field }             from '#src/models/entities/Fields.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js';
+STD‑rows 4
+EXC‑rows 16
 
-/* helpers ‑‑—————————————————————————————————————————————— */
-async function getPackageData(cifno) {
-  const conn = await connectToFeeMgmtDb();
-  const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
-  if (!row) return {};
-  return {
-    defaultFeePackageId: row['Default Fee Package Id'] ?? null,
-    branchCity:          row['Branch City']?.trim()         || '',
-    branchState:         row['Branch State']?.trim()        || '',
-    branchType:          row['Branch Type']?.trim()         || '',
-    defaultPackageType:  row['Default Package Type']?.trim()|| '',
-    feePackage:          row['Default Fee Package']?.trim() || '',
-  };
-}
+Blz Chat, agora sim....
 
-async function getStandardFees(packageId) {
-  const conn  = await connectToFeeMgmtDb();
-  const rows  = await executeStoreProcedure(
-                 conn,'sp_get_standard_fees_bypackage',
-                 { FeePackageId: packageId });
-  console.log('STD‑rows', rows?.length);           // <‑‑ debug
-  return rows ?? [];
-}
+Vamos aos proximos passos....Vamos focar primeiro no Standard
 
-async function getExceptionFees(packageId) {
-  const conn  = await connectToFeeMgmtDb();
-  const rows  = await executeStoreProcedure(
-                 conn,'sp_get_exception_fees_bypackage',
-                 { FeePackageId: packageId });
-  console.log('EXC‑rows', rows?.length);           // <‑‑ debug
-  return rows ?? [];
-}
+o customerAccount
 
-function getDocumentUrl(id) {
-  const urls = global.environment.scheduleUrls || {};
-  const key  = ({ 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' })[id];
-  return key ? urls[key] || '' : '';
-}
+tras
 
-/* Mongo helper (inalterado) */
-async function getFeeStandard(filter) {
-  return Fee.find({ $or: filter })
-            .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-            .lean();
-}
+Process exited with code 1
+C:\Program Files\nodejs\node.exe .\src\app\api\index.js
 
-/* ================================================================== */
-export default class FeeGetByCifUseCase {
+0: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '', feeType: 1, feeDescription: 'AccountMaintenance', …}
+bpsAcctNumber: ''
+bpsFeeTypeCode: ''
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 1200
+feeCode: 'JH001'
+feeDescription: 'AccountMaintenance'
+feeGroup: 1
+feeType: 1
+isFeesStandard: 'Yes'
+kycMailingStatus: null
+source: 'JHA'
+[[Prototype]]: Object
+1: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '', feeType: 2, feeDescription: 'HoldMail', …}
+bpsAcctNumber: ''
+bpsFeeTypeCode: ''
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 600
+feeCode: 'JH002'
+feeDescription: 'HoldMail'
+feeGroup: 1
+feeType: 2
+isFeesStandard: 'Yes'
+kycMailingStatus: 'Hold Mail'
+source: 'JHA'
+[[Prototype]]: Object
+2: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '', feeType: 3, feeDescription: 'USD/FXIncomingWire', …}
+bpsAcctNumber: ''
+bpsFeeTypeCode: ''
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 0
+feeCode: 'JH010'
+feeDescription: 'USD/FXIncomingWire'
+feeGroup: 2
+feeType: 3
+isFeesStandard: 'Yes'
+kycMailingStatus: null
+source: 'JHA'
+[[Prototype]]: Object
+3: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '', feeType: 4, feeDescription: 'USD/FXOutgoingWire', …}
+bpsAcctNumber: ''
+bpsFeeTypeCode: ''
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 75
+feeCode: 'JH008'
+feeDescription: 'USD/FXOutgoingWire'
+feeGroup: 2
+feeType: 4
+isFeesStandard: 'Yes'
+kycMailingStatus: null
+source: 'JHA'
+[[Prototype]]: Object
+4: {cifno: 'NAA0010', ddaNumber: 17226444, bpsAcctNumber: '20002089', feeType: 6, feeDescription: 'SafekeepingCustody', …}
+bpsAcctNumber: '20002089'
+bpsFeeTypeCode: 'C'
+cifno: 'NAA0010'
+ddaNumber: 17226444
+entity: 'SNB/284'
+feeAmount: 375
+feeCode: 'A053'
+feeDescription: 'SafekeepingCustody'
+feeGroup: 3
+feeType: 6
+isFeesStandard: 'Yes'
+kycMailingStatus: null
+source: 'BPS'
+[[Prototype]]: Object
+length: 5
+[[Prototype]]: Array(0)
+[[Prototype]]: Object
 
-  async execute({ customerAccount }) {
-    /* 1) modelo‑padrão Mongo */
-    const fees = await getFeeStandard([
-      { feeType:'Customer Fees'     },
-      { feeType:'Bank Account Fees' },
-      { feeType:'Investment Account Fees' }
-    ]);
+E nós ja conseguimos utilizar os valores feeAmount baseados no feeGroup e feeType
 
-    /* 2) dados de Package (SQL) */
-    const pkgData   = await getPackageData(customerAccount[0].cifno);
-    const packageId = pkgData.defaultFeePackageId ?? 1; // fallback
+Agora com as informações do standard e da exception passando o feePackageId, vc tras os dados assim no Standard:
 
-    /* 3) valores Standard / Exception (SQL)            */
-    const stdRows = await getStandardFees  (packageId);
-    const excRows = await getExceptionFees (packageId);
+FeePackageDescription	FeeAmount	IsStandard	FeeShortDescription	FeeType	FeeDescription
+PB International	1200.00	1	AccountMaintenance	1	AccountMaintenance
+PB International	600.00	1	HoldMail	2	HoldMail
+PB International	75.00	1	USD/FXOutgoingWire	4	USD/FXOutgoingWire
+PB International	0.00	1	USD/FXIncomingWire	3	USD/FXIncomingWire
 
-    /* 4) mescla pkgData + valores vindos do SQL na lista de contas */
-    customerAccount.forEach(acc => {
-      Object.assign(acc, pkgData);
+Nesse ex eu usei um id 1...e ele trouxe o PB International
 
-      /* procura valor (Standard) que combine com feeType */
-      const std = stdRows.find(r => Number(r.FeeType) === acc.feeType);
-      if (std) acc.feeAmount = Number(std.FeeAmount);
+Quando eu chamo o feebycif que nós pegamos o id ele esta na tabela assim:
 
-      /* procura exception específica pelo FeeCode        */
-      const exc = excRows.find(e => e.FeeCode === acc.feeCode);
-      if (exc) acc.exceptionAmount = Number(exc.Amount);
-    });
+CustomerName	CustomerShortName	CustomerAddress	CIFNO	ACCTNO	EntityType	FeeDescription	FeeShortDescription	FeeCode	Istransactional	FeeType	FeeAmount	Frequency	Branch City	Branch State	Branch Type	OfficerId	Officer	StandardException	Default Fee Package Id	Default Fee Package	Default Package Type	Default Fee Amount	Default Frequency
+OOO OOOOOOO O.O.                        	OOO OOOOOOO O.O.    	OOOOOOO 111-OOO 111                      OOOOOOOOOO OOOOOOO  11111               	NAA0010	17226444	NULL	Account Maintenance Fee	AccountMaintenance	JH001	0	Client Fees	1200.00	Annual - Charged Semi-Annual	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	1200.00	Annual - Charged Semi-Annual
 
-    /* 5) construtores já existentes */
-    const result   = { fees: [] };
-    const [customer, bank, investment] = [
-      new CustomerFees      (fees, customerAccount),
-      new BankAccountFee    (fees, customerAccount),
-      new InvestimentAccountFee(
-        fees, customerAccount, await Field.findOne({ code:7 }))
-    ];
 
-    [customer, bank, investment]
-      .filter(f => f.fee && f.fee.feeGroups?.length)
-      .forEach(f => result.fees.push(f.fee));
+Qual é a ideia
 
-    /* casos ativos */
-    const actives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: { $nin:['DONE','REJECTED'] },
-      caseNumber: { $exists:true }
-    });
+Baseado nesse de para:
 
-    result.feesActives = actives.map(({ caseNumber,id })=>({ caseNumber,id }));
+FeePackageId	FeePackageDescription
+1	PB International
+2	Domestic Individual
+3	Domestic Corporation
+4	EFRA
+5	ERA
 
-    /* contas detalhadas */
-    const docUrl = getDocumentUrl(packageId);
-    result.accounts = customerAccount.map(acc => ({
-      cifno:               acc.cifno,
-      ddaNumber:           acc.ddaNumber,
-      branchCity:          acc.branchCity,
-      branchState:         acc.branchState,
-      branchType:          acc.branchType,
-      defaultPackageType:  acc.defaultPackageType,
-      feePackage:          acc.feePackage,
-      defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage:   acc.defaultFeePackage,
-      documentUrl:         docUrl,
-      feeAmount:           acc.feeAmount,
-      exceptionAmount:     acc.exceptionAmount ?? null
-    }));
+Precisamos garantir que os valores sejam utilizados dessa procedure nova do standard cruzando os dados de feeType, FeeGroup, Package...
 
-    result.documentUrl = docUrl;
-    return Result.ok(result);
-  }
-}
+Sera que deu pra entender? pois é o mesmo que fazemos mas com os dados que ja vem do customer account
+
+
+
+
