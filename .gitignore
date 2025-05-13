@@ -1,76 +1,472 @@
-import mssql from 'mssql'
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure
+} from '#core/data/mssql/index.js'
 
-export async function connectToFeeMgmtDb() {
-  const { ...props } = global.environment.sqlserver
+
+export async function getAllFeePackage() {
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_feepackage',
+    {}
+  )
+
+  const listPackages = recordset.map((record) => {
+    const id = record.FeePackageId === undefined ? null : record.FeePackageId
+    const description = record.FeePackageDescription === undefined ? null : record.FeePackageDescription
+    const type = record.FeePackageType === undefined ? null : record.FeePackageType
+    const coverage = record.FeePackageCoverage === undefined ? null : record.FeePackageCoverage
+
+    return {
+      id,
+      description,
+      type,
+      coverage
+    }
+  })
+
+  return listPackages.filter(
+    (item, index, self) => index === self.findIndex((x) => x.id === item.id)
+  )
+}
+
+
+export async function getFeegroupById(id) {
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_feegroup_info',
+    { GroupId: id }
+  )
+ 
+
+  const listFeegroupInfo = recordset.map((record) => {
+    const groupId = record.GroupId
+    const groupName = record.GroupName === undefined ? null : record.GroupName
+    const businessPackageId = record.BusinessPackageId === undefined ? null : record.BusinessPackageId
+    const businessPackage = record.BusinessPackage === undefined ? null : record.BusinessPackage
+    const individualPackageId = record.IndividualPackageId
+    const individualPackage = record.IndividualPackage
+
+    return {
+      groupId,
+      groupName,
+      businessPackageId,
+      businessPackage,
+      individualPackageId,
+      individualPackage
+    }
+  })
+
+  return listFeegroupInfo
+}
+
+export async function getFeegroupAll() {
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_feegroup',
+    {}
+  )
+
+  const listFeegroupInfo = recordset.map((record) => {
+    const groupId = record.FeeGroupId === undefined ? null : record.FeeGroupId
+    const groupName = record.FeeGroupName === undefined ? null : record.FeeGroupName
+
+    return {
+      groupId,
+      groupName
+    }
+  })
+
+  return listFeegroupInfo
+}
+
+export async function getFeegroupinfoAll() {
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_feegroup_info',
+    {}
+  )
+
+  const listFeegroupInfo = recordset.map((record) => {
+    const groupId = record.GroupId === undefined ? null : record.GroupId 
+    const groupName = record.GroupName === undefined ? null : record.GroupName
+    const packageId = record.PackageId === undefined ? null : record.PackageId
+    const feeGroupPackageId = record.FeeGroupPackageId === undefined ? 0 : record.FeeGroupPackageId
+    const packageDescription = record.PackageDescription === undefined ? null : record.PackageDescription
+    const packageType = record.PackageType === undefined ? null : record.PackageType
+
+
+    return {
+      groupId,
+      groupName,
+      packageId,
+      feeGroupPackageId,
+      packageDescription,
+      packageType
+    }
+  })
+
+ return listFeegroupInfo
+}
+
+export async function getOfficerPackageByBranch(id) {
+  const connection = await connectToFeeMgmtDb()
+
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_officerpackage_bybranch',
+    { branch_code: id }
+  )
+
+  const listOfficerPackage = recordset.map((record) => {
+    const officerId = record.OfficerId
+    const officerName = record.OfficerName
+    const branchName = record.BranchName
+    const officerPackage = record.OfficerPackage
+
+    return {
+      officerId,
+      officerName,
+      branchName,
+      officerPackage
+    }
+  })
+
+  return listOfficerPackage
+}
+
+// export async function getOfficerPackageByGroupId(id) {
+//   const connectionGroup = await connectToFeeMgmtDb()
+//   const recordsetGroup = await executeStoreProcedure(
+//     connectionGroup,
+//     'sp_get_feegroup_info',
+//     { GroupId: id }
+//   )
+
+//   const listFeeGroupInfo = recordsetGroup.map((record) => {
+//     const groupId = record.GroupId
+//     const groupName = record.GroupName === undefined ? null : record.GroupName
+//     const businessPackageId =  record.BusinessPackageId === undefined ? null : record.BusinessPackageId
+//     const businessPackage = record.BusinessPackage === undefined ? null : record.BusinessPackage
+//     const individualPackageId = record.IndividualPackageId
+//     const individualPackage = record.IndividualPackage
+
+//     return {
+//       groupId,
+//       groupName,
+//       businessPackageId,
+//       businessPackage,
+//       individualPackageId,
+//       individualPackage
+//     }
+//   })
+
+//   return listFeeGroupInfo
+// }
+
+export async function getOfficerPackageGetByBranchId(id) {
+
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(connection,'sp_get_officerpackage_bybranch',{ branch_code: id })
+
+  const connectionGroup = await connectToFeeMgmtDb()
+  const recordsetGroup = await executeStoreProcedure(connectionGroup,'sp_get_feegroup',{ })
+
+
+
+  const listOfficerPackage = recordset.map((record) => {
+    const officerId = record.OfficerId === undefined ? null : record.OfficerId
+    const officerName = record.OfficerName === undefined ? null : record.OfficerName
+    const branchName = record.BranchName === undefined ? null : record.BranchName
+    const feeGroupId = record.FeeGroupId === undefined ? null : record.FeeGroupId
+    const feeGroup = record.FeeGroup === undefined ? null : record.FeeGroup
+    const officerBusPkgId = record.OfficerBusPkgGroupId === undefined ? null : record.OfficerBusPkgGroupId
+    const officerBusPkg = record.OfficerBusPkg === undefined ? null : record.OfficerBusPkg
+    const officerIndPackageId = record.OfficerIndPkgGroupId === undefined ? null : record.OfficerIndPkgGroupId
+    const officerIndPackage = record.OfficerIndPkg === undefined ? null : record.OfficerIndPkg
+
+    const listGroup = recordsetGroup.map((element) => ({
+      id: element.FeeGroupId === undefined ? null: element.FeeGroupId,
+      name: element.FeeGroupName === undefined ? null : element.FeeGroupName,
+     }))
+
+    return {
+      officerId,
+      officerName,
+      branchName,
+      feeGroupId,
+      feeGroup,
+      officerBusPkgId,
+      officerBusPkg,
+      officerIndPackageId,
+      officerIndPackage,
+      listGroup
+    }
+  })
+
+  return listOfficerPackage
+}
+
+export async function getOfficerPackageGetAll() {
+  const connection = await connectToFeeMgmtDb()
+
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_officerpackage_bybranch',
+    {}
+  )
+
+  const listOfficerPackage = recordset.map((record) => {
+    const officerId = record.OfficerId === undefined ? null : record.OfficerId
+    const officerName = record.OfficerName === undefined ? null : record.OfficerName
+    const branchName = record.BranchName === undefined ? null : record.BranchName
+    const feeGroupId = record.FeeGroupId === undefined ? null : record.FeeGroupId
+    const feeGroup = record.FeeGroup === undefined ? null : record.FeeGroup
+    const officerBusPkgId = record.OfficerBusPkgGroupId === undefined ? null : record.OfficerBusPkgGroupId
+    const officerBusPkg = record.OfficerBusPkg === undefined ? null : record.OfficerBusPkg
+    const officerIndPackageId = record.OfficerIndPkgGroupId === undefined ? null : record.OfficerIndPkgGroupId
+    const officerIndPackage = record.OfficerIndPkg === undefined ? null : record.OfficerIndPkg
+
+    const listGroup = recordsetGroup.map((element) => ({
+      id: element.FeeGroupId === undefined ? null: element.FeeGroupId,
+      name: element.FeeGroupName === undefined ? null : element.FeeGroupName,
+     }))
+
+    return {
+      officerId,
+      officerName,
+      branchName,
+      feeGroupId,
+      feeGroup,
+      officerBusPkgId,
+      officerBusPkg,
+      officerIndPackageId,
+      officerIndPackage,
+      listGroup
+    }
+  })
+
+  return listOfficerPackage
+}
+
+export async function getOfficerPackageAll() {
+  const connection = await connectToFeeMgmtDb()
+
+  //Primeiro select
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_officerpackage_bybranch',
+    {}
+  )
+
+  const listOfficerPackage = recordset.map((record) => {
+    const officerId = record.OfficerId
+    const officerName = record.OfficerName
+    const branchName = record.BranchName
+    const officerPackage = record.OfficerPkg
+
+    return {
+      officerId,
+      officerName,
+      branchName,
+      officerPackage
+    }
+  })
+
+  //captura informações de get_feegroupInfo
+  const connectionGroup = await connectToFeeMgmtDb()
+  const recordsetGroup = await executeStoreProcedure(
+    connectionGroup,
+    'sp_get_feegroup_info',
+    {}
+  )
+
+  const listFeeGroupInfo = recordset.map((recordsetGroup) => {
+    const groupId = recordsetGroup.GroupId
+    const groupName = recordsetGroup.GroupName === undefined ? null : recordsetGroup.GroupName
+    const businessPackageId = recordsetGroup.BusinessPackageId === undefined
+        ? null
+        : recordsetGroup.BusinessPackageId
+    const businessPackage = recordsetGroup.BusinessPackage === undefined
+        ? null
+        : recordsetGroup.BusinessPackage
+    const individualPackageId = recordsetGroup.IndividualPackageId
+    const individualPackage = recordsetGroup.IndividualPackage
+
+    return {
+      groupId,
+      groupName,
+      businessPackageId,
+      businessPackage,
+      individualPackageId,
+      individualPackage
+    }
+  })
+
+
+  return listOfficerPackage
+}
+
+export async function getFeegroup() {
+  const connection = await connectToFeeMgmtDb()
+
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_feegroupinfo',
+    {}
+  )
+
+  const listOfficerPackage = recordset.map((record) => {
+    const officerId = record.OfficerId
+    const officerName = record.OfficerName
+    const branchName = record.BranchName
+    const officerPackage = record.OfficerPackage
+
+    return {
+      officerId,
+      officerName,
+      branchName,
+      officerPackage
+    }
+  })
+
+  return listOfficerPackage
+}
+
+
+
+export async function getBranchPackageOfficeById(id) {
+  const connection = await connectToFeeMgmtDb()
+
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_branch_feepackage_info_offr',
+    { branch_code: id }
+  )
+
+  const listOfficerPackage = recordset.map((record) => {
+    const branchId = record.branch_id
+    const branchType = record.branch_type
+    const bussinessPackage = record.business_package
+    const bussinessPackageDescription = record.business_package_description
+    const city = record.city
+    const director = record.director.trim()
+    const individualPackage = record.individual_package
+    const individualPackageDescription = record.individual_package_description
+    const offPackage = record.off_package
+    const officerName = record.state
+
+
+    return {
+      branchId,
+      branchType,
+      bussinessPackage,
+      bussinessPackageDescription,
+      city,
+      director,
+      individualPackage,
+      individualPackageDescription,
+      offPackage,
+      officerName
+     }
+  })
+
+  return listOfficerPackage
+}
+
+export async function getBranchPackageOffice() {
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_branch_feepackage_info_offr',
+    {}
+  )
+
+  const listOfficerPackage = recordset.map((record) => {
+    const branchId = record.branch_id
+    const branchType = record.branch_type
+    const bussinessPackage = record.business_package
+    const bussinessPackageDescription = record.business_package_description
+    const city = record.city
+    const director = record.director.trim()
+    const individualPackage = record.individual_package
+    const individualPackageDescription = record.individual_package_description
+    const offPackage = record.off_package
+    const officerName = record.state
+
+
+    return {
+      branchId,
+      branchType,
+      bussinessPackage,
+      bussinessPackageDescription,
+      city,
+      director,
+      individualPackage,
+      individualPackageDescription,
+      offPackage,
+      officerName
+    }
+  })
+
+  return listOfficerPackage
+}
+
+export async function getFeePackageById(id) {
+  const connection = await connectToFeeMgmtDb()
+  const recordset = await executeStoreProcedure(
+    connection,
+    'sp_get_feepackagedetails',
+    { FeePackageId: id }
+  )
+ 
+  if (!recordset) {
+    return undefined
+  }
+
+  if (recordset.length === 0) {
+    return []
+  }
+
+  const groups = recordset.reduce((newList, current) => {
+    const feeGroupExisting = newList.find(
+      (fee) => fee.title === current.FeeGroup
+    )
   
-  const config = {
-    ...props,
-    options: {
-      encrypt: false,
-      trustServerCertificate: true
-    }
-  }
-  await mssql.close()
-
-  return mssql.connect(config)
-}
-
-export async function executeStoreProcedure(connection, query, parameters = {}) {
-  try {
-    const request = connection.request();
-
-    for (const key of Object.keys(parameters)) {
-      request.input(key, parameters[key]);
-    }
-
-    //global.logger.info(`Executando procedure ${query} com parâmetros: ${JSON.stringify(parameters)}`);
-
-    const result = await request.execute(query);
-    //global.logger.info(`Resultado da procedure ${query}: ${JSON.stringify(result)}`);
-
-    await mssql.close();
-
-    if (!result.recordset || result.recordset.length === 0) {
-      return { success: true };
+    if (feeGroupExisting) {
+      feeGroupExisting.fees.push({
+        key: current.FeeDescription,
+        value: current.Amount,
+        tooltip: current.Tooltip
+      })
+    } else {
+      newList.push({
+        id: current.FeeGroupId,
+        title: current.FeeGroup,
+        fees: [
+          {
+            key: current.FeeDescription,
+            value: current.Amount,
+            tooltip: current.Tooltip
+          }
+        ]
+      })
     }
 
-    return result.recordset;
-  } catch (error) {
-    global.logger.error(`Erro na execução da procedure ${query}: ${error.message}`, error);
-    throw error;
+    return newList
+  }, [])
+
+  const packageResult = {
+    id: recordset[0]?.FeePackageID,
+    packageName: recordset[0]?.FeePackage,
+    accountType: recordset[0]?.PackageType,
+    feeType: recordset[0]?.PackageCoverage,
+    groups
   }
+
+  return packageResult
 }
-
-
-
-
->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-
-
-const conn = await connectToFeeMgmtDb();
-let pkgData = {};
-let stdRows  = [];
-let excRows  = [];
-
-try {
-  /* pacote / dados de agência */
-  [pkgData] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', {
-    cifno: customerAccount[0].cifno
-  });
-
-  const packageId = pkgData?.['Default Fee Package Id'];
-  if (packageId) {
-    stdRows = await executeStoreProcedure(
-      conn, 'sp_get_standard_fees_bypackage', { FeePackageId: packageId }
-    );
-    excRows = await executeStoreProcedure(
-      conn, 'sp_get_exception_fees_bypackage', { FeePackageId: packageId }
-    );
-    console.log('STD rows', stdRows);
-    console.log('EXC rows', excRows);
-  }
-} finally {
-  await conn.close();        // fecha UMA única vez
-}
-
