@@ -1,33 +1,125 @@
-Agora foi top...valeu...espero que não esteja bravo
+/* src/features/feeGetByCif/feeGetByCifUseCase.js
+   (apenas add applyExceptionAmounts + chamada; resto intacto) */
+import { Fee }               from '#src/models/entities/Fees.js';
+import Result                from '#features/shared/result.js';
+import CustomerFees          from '#src/models/CustomerFees.js';
+import BankAccountFee        from '#src/models/BankAccountFee.js';
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
+import { FeeCase }           from '#src/models/entities/FeeCase.js';
+import { Field }             from '#src/models/entities/Fields.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure
+} from '#core/data/mssql/index.js';
+import numberToCurrency      from '#src/core/helpers/currency.js';   // ✔
 
+/* helpers ‑‑—————————————————————————————————————————————— */
+async function getPackageData(cifno) { /* … (mantido) … */ }
 
-Vamos para o proximo e ultimo passso
+async function getStandardFees(packageId) { /* … (mantido) … */ }
 
-Vou te mostrar como vem o exception.....e pra ele, vamos ter que fazer um de/para do FeeType, que utilizamos aqui o numero, mas na exception ele vem o nome, na mesma variavel....assim:
+async function getExceptionFees(packageId) { /* … (mantido) … */ }
 
-Amount =
-'0.00'
-FeeCode =
-'JH001'
-FeeDescription =
-'Account Maintenance Fee'
-FeeParameterOptionId =
-98
-FeeType =
-'Customer Fees'
-FreqDescription =
-null
+function getDocumentUrl(id) { /* … (mantido) … */ }
 
-Veja que o FeeCode vem o codigo JH001 e o FeeType que utilizamos para identificar aqui:
+async function getFeeStandard(filter) { /* … (mantido) … */ }
 
-  const fees = await getFeeStandard([
-         { feeType:'Customer Fees'     },
-         { feeType:'Bank Account Fees' },
-         { feeType:'Investment Account Fees' }
-       ]);
+/* ---------- NOVO: aplica Amounts vindos de Exceptions ------------------- */
+function applyExceptionAmounts(mongoFees, excRows) {
+  /* FeeType (Mongo) ⇄ FeeCode (SQL) – inclua mais se precisar */
+  const codeByField = { 1:'JH001', 2:'JH002', 3:'JH010', 4:'JH008' };
 
-Esta com suadescrição...então vai ter que identificar e codifica-lo da forma necessaria....sao 1, 2 e 3 os codigos deles se não me engano...
+  const byCode = excRows.reduce((acc, r) => {
+    (acc[r.FeeCode] ??= []).push(r);
+    return acc;
+  }, {});
 
-Lembrando....mesma coisa agora, insere o que for necessario, mas não modifica nada do que ja temos...pois esta TOP já
+  mongoFees.forEach(fee => {
+    const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
+    if (!excGrp) return;
 
-Só queremos utilizar o Amount dele 
+    excGrp.fields.forEach(field => {
+      const feeCode = codeByField[field.code];
+      const rows    = feeCode ? byCode[feeCode] : undefined;
+      if (!rows?.length) return;
+
+      /* monta options 100 % vindas do SQL */
+      field.exceptionOptions = rows.map(r => ({
+        value:  Number(r.Amount).toString(),
+        text:   numberToCurrency(r.Amount),
+        visible:true,
+        retired:false
+      }));
+
+      /* primeiro valor vira default */
+      field.defaultValue = field.exceptionOptions[0].value;
+      field.labelValue   = field.exceptionOptions[0].text;
+    });
+  });
+}
+
+/* ---------- já existente: aplica Standard nos defaultValue -------------- */
+function applyStandardAmounts(mongoFees, stdRows){ /* … (mantido) … */ }
+
+/* ================================================================== */
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    /* 1) modelo‑padrão Mongo */
+    const fees = await getFeeStandard([
+      { feeType:'Customer Fees'     },
+      { feeType:'Bank Account Fees' },
+      { feeType:'Investment Account Fees' }
+    ]);
+
+    /* 2) Package + IDs */
+    const pkgData   = await getPackageData(customerAccount[0].cifno);
+    const packageId = pkgData.defaultFeePackageId ?? 1;
+
+    /* 3) SQL */
+    const stdRows = await getStandardFees (packageId);
+    const excRows = await getExceptionFees(packageId);
+
+    /* 3a) injeta valores nos modelos Mongo */
+    applyStandardAmounts (fees, stdRows);
+    applyExceptionAmounts(fees, excRows);      // << nova chamada
+
+    /* 4‑5) ~~ reste do arquivo inalterado ~~ */
+    customerAccount.forEach(acc => {
+      Object.assign(acc, pkgData);
+      const std = stdRows.find(r => Number(r.FeeType) === acc.feeType);
+      if (std) acc.feeAmount = Number(std.FeeAmount);
+      const exc = excRows.find(e => e.FeeCode === acc.feeCode);
+      if (exc) acc.exceptionAmount = Number(exc.Amount);
+    });
+
+    const result = { fees: [] };
+    const [customer, bank, investment] = [
+      new CustomerFees      (fees, customerAccount),
+      new BankAccountFee    (fees, customerAccount),
+      new InvestimentAccountFee(
+        fees, customerAccount, await Field.findOne({ code:7 }))
+    ];
+    [customer, bank, investment]
+      .filter(f => f.fee && f.fee.feeGroups?.length)
+      .forEach(f => result.fees.push(f.fee));
+
+    const actives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status:{ $nin:['DONE','REJECTED'] },
+      caseNumber:{ $exists:true }
+    });
+    result.feesActives = actives.map(({ caseNumber,id })=>({ caseNumber,id }));
+
+    const docUrl = getDocumentUrl(packageId);
+    result.accounts = customerAccount.map(acc => ({
+      cifno: acc.cifno, ddaNumber: acc.ddaNumber,
+      branchCity: acc.branchCity, branchState: acc.branchState,
+      branchType: acc.branchType, defaultPackageType: acc.defaultPackageType,
+      feePackage: acc.feePackage, defaultFeePackageId: acc.defaultFeePackageId,
+      defaultFeePackage: acc.defaultFeePackage, documentUrl: docUrl,
+      feeAmount: acc.feeAmount,   exceptionAmount: acc.exceptionAmount ?? null
+    }));
+    result.documentUrl = docUrl;
+    return Result.ok(result);
+  }
+}
