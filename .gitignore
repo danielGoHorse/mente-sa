@@ -1,12 +1,1 @@
-function sqlToFeeType({ FeeCode, BPSFeeTypeCode }){
-  const byFeeCode = { JH001:1, JH002:2, JH010:3, JH008:4, BPS002:6, BPS003:6, BPS004:6, BPS005:6 };
-  const byBpsCode = { S:5, C:6, E:7, O:7 };   // se ainda precisar
-  if (FeeCode && byFeeCode[FeeCode])       return byFeeCode[FeeCode];
-  if (BPSFeeTypeCode && byBpsCode[BPSFeeTypeCode]) return byBpsCode[BPSFeeTypeCode];
-  return 0;
-}
-
-
-
-const fieldCode = sqlToFeeType(r);   // r é a row da procedure
-(acc[fieldCode] ??= []).push(r);
+https://teams.microsoft.com/v2/?meetingjoin=true#/l/meetup-join/19:meeting_MWI4N2IzNDMtODQwMC00NzhjLWE4MzQtZTdhNGE0YWIyNjE1@thread.v2/0?context=%7b%22Tid%22%3a%228f0133fa-8efb-40b1-8ac6-37c78469f445%22%2c%22Oid%22%3a%2249efe1f2-63d5-434c-aece-714bcd04b3d1%22%7d&anon=true&deeplinkId=0c202e4a-772c-4dde-a892-ca9864d30e98
