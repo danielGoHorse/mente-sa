@@ -1,4 +1,4 @@
-/* eslint‑disable no‑console */
+/* eslint‑disable max‑lines */
 import { Fee }               from '#src/models/entities/Fees.js';
 import Result                from '#features/shared/result.js';
 import CustomerFees          from '#src/models/CustomerFees.js';
@@ -12,48 +12,48 @@ import {
   executeStoreProcedure,
 } from '#core/data/mssql/index.js';
 
-/* ───────────── helpers SQL ───────────── */
+/* ───────────────── helpers SQL ───────────────── */
 
 async function getPackageData(cifno) {
-  const conn = await connectToFeeMgmtDb();
+  const conn  = await connectToFeeMgmtDb();
   const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
   if (!row) return {};
 
   return {
     defaultFeePackageId: row['Default Fee Package Id'] ?? null,
-    branchCity:          row['Branch City']?.trim()          || '',
-    branchState:         row['Branch State']?.trim()         || '',
-    branchType:          row['Branch Type']?.trim()          || '',
-    defaultPackageType:  row['Default Package Type']?.trim() || '',
-    feePackage:          row['Default Fee Package']?.trim()  || '',
+    branchCity         : row['Branch City']?.trim()          || '',
+    branchState        : row['Branch State']?.trim()         || '',
+    branchType         : row['Branch Type']?.trim()          || '',
+    defaultPackageType : row['Default Package Type']?.trim() || '',
+    feePackage         : row['Default Fee Package']?.trim()  || '',
   };
 }
 
 async function getStandardFees(packageId) {
   const conn = await connectToFeeMgmtDb();
-  return (
-    await executeStoreProcedure(conn, 'sp_get_standard_fees_bypackage', {
-      FeePackageId: packageId,
-    })
-  ) ?? [];
+  const rows = await executeStoreProcedure(
+    conn, 'sp_get_standard_fees_bypackage',
+    { FeePackageId: packageId },
+  );
+  return rows ?? [];
 }
 
 async function getExceptionFees(packageId) {
   const conn = await connectToFeeMgmtDb();
-  return (
-    await executeStoreProcedure(conn, 'sp_get_exception_fees_bypackage', {
-      FeePackageId: packageId,
-    })
-  ) ?? [];
+  const rows = await executeStoreProcedure(
+    conn, 'sp_get_exception_fees_bypackage',
+    { FeePackageId: packageId },
+  );
+  return rows ?? [];
 }
 
 function getDocumentUrl(id) {
   const urls = global.environment.scheduleUrls || {};
-  const key  = { 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' }[id];
+  const key  = ({ 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' })[id];
   return key ? urls[key] || '' : '';
 }
 
-/* ───────────── helpers Mongo/array ───────────── */
+/* ───────────── helpers domínio ───────────── */
 
 async function getFeeStandard(filter) {
   return Fee.find({ $or: filter })
@@ -65,32 +65,16 @@ function findGroup(fee, name) {
   return fee?.feeGroups?.find((g) => g.name === name);
 }
 
-/* mapas para localizar campos */
+/* mapa FeeCode → field.code usado nos forms */
 const feeCodeMap = {
-  JH001: 1,
-  JH002: 2,
-  JH010: 3,
-  JH008: 4,
-  BPS002: 6,
-  BPS003: 5,
-  BPS004: 7,
-  BPS005: 7,
+  JH001: 1, JH002: 2, JH010: 3, JH008: 4,     // JHA
+  BPS002: 6, BPS003: 5, BPS004: 7, BPS005: 7, // BPS
 };
 
-/* Busca descrição humana (texto longo) para um código A0xx */
-function lookupCustodyDesc(code, rows) {
-  return rows.find((x) => x.Amount === code)?.FreqDescription?.trim() || '';
-}
-
-/* ---------- Standard ---------- */
+/* ---------- Standard Fees ---------- */
 function applyStandardAmounts(mongoFees, stdRows) {
-  /* cria mapa A0xx -> descrição */
-  const custodyMap = {};
-  stdRows
-    .filter((r) => r.FeeCode?.startsWith('BPS'))
-    .forEach((r) => {
-      custodyMap[r.Amount] = (r.FreqDescription || '').trim();
-    });
+  /* devolve pequeno índice code→tooltip para Custody */
+  const custodyTooltip = {};
 
   mongoFees.forEach((fee) => {
     const stdGrp = findGroup(fee, 'Standard Fees');
@@ -100,29 +84,22 @@ function applyStandardAmounts(mongoFees, stdRows) {
       const row = stdRows.find((r) => parseInt(r.FeeType, 10) === field.code);
       if (!row) return;
 
-      /* Safekeeping/Custody (código 6) usa texto/código */
-      if (field.code === 6) {
-        field.defaultValue = row.Amount;                            // A021...
-        field.labelValue   = custodyMap[row.Amount] ||
-                             row.FreqDescription?.trim() ||
-                             row.Amount;
-        field.tooltip      = field.labelValue;
-        return;
-      }
+      const amt = Number(row.FeeAmount);
+      field.defaultValue = amt.toString();
+      field.labelValue   = numberToCurrency(amt);
+      field.tooltip      = row.FreqDescription?.trim() || field.tooltip;
 
-      /* demais valores numéricos */
-      const amt           = Number(row.FeeAmount);
-      field.defaultValue  = amt.toString();
-      field.labelValue    = numberToCurrency(amt);
-      field.tooltip       = row.FreqDescription?.trim() || field.tooltip;
+      if (field.code === 6) {                          // Custody
+        custodyTooltip[row.FeeCode] = field.tooltip;   // ex.: A021
+      }
     });
   });
 
-  return custodyMap;          // devolvo p/ usar nos Current
+  return custodyTooltip; // usado depois em Custody Current / Exception
 }
 
-/* ---------- Exception ---------- */
-function applyExceptionAmounts(mongoFees, excRows) {
+/* ---------- Exception Fees ---------- */
+function applyExceptionAmounts(mongoFees, excRows, custodyToolTips) {
   const byCode = excRows.reduce((acc, r) => {
     (acc[r.FeeCode] ??= []).push(r);
     return acc;
@@ -133,13 +110,16 @@ function applyExceptionAmounts(mongoFees, excRows) {
     if (!excGrp) return;
 
     excGrp.fields.forEach((field) => {
-      const code = Object.entries(feeCodeMap).find(([, c]) => c === field.code)?.[0];
+      const code = Object.entries(feeCodeMap)
+        .find(([, c]) => c === field.code)?.[0];
       const rows = code ? byCode[code] : null;
       if (!rows?.length) return;
 
       field.exceptionOptions = rows.map((r) => ({
-        value:   Number(r.Amount).toString(),
-        text:    numberToCurrency(r.Amount),
+        value  : Number(r.Amount).toString(),
+        text   : field.code === 6       // Custody usa descrição longa
+          ? (custodyToolTips[r.FeeCode] || r.FreqDescription || r.Amount)
+          : numberToCurrency(r.Amount),
         visible: true,
         retired: false,
       }));
@@ -150,7 +130,41 @@ function applyExceptionAmounts(mongoFees, excRows) {
   });
 }
 
-/* ---------- preenche rótulos em Exception ---------- */
+/* ---------- Custody – preenche Client Current ---------- */
+function fillCustodyCurrentLabels(
+  mongoFees, custodyToolTips, sqlRows, custAccounts,
+) {
+  mongoFees.forEach((fee) => {
+    const curGrp = findGroup(fee, 'Client Current Fees');
+    if (!curGrp) return;
+
+    curGrp.fields.forEach((f) => {
+      if (f.code !== 6) return;                 // só Custody
+
+      /* tenta 1) valor numérico vindo do customerAccount */
+      const acc = custAccounts.find(
+        (a) => a.feeType === 6
+          && String(a.bpsAcctNumber || '') === String(fee.accountNumber || ''),
+      );
+
+      if (acc?.feeAmount) {
+        f.defaultValue = acc.feeAmount.toString();      // 375
+        f.labelValue   = numberToCurrency(acc.feeAmount);
+        f.tooltip      = f.labelValue;
+        return;
+      }
+
+      /* 2) tenta mapear código A0xx → descrição tooltip */
+      const desc = custodyToolTips[f.defaultValue];
+      if (desc) {
+        f.labelValue = desc;
+        f.tooltip    = desc;
+      }
+    });
+  });
+}
+
+/* ---------- Exception labels fallback ---------- */
 function syncExceptionLabels(feesArr) {
   feesArr.forEach((fee) => {
     const exc = findGroup(fee, 'Exception Request');
@@ -162,99 +176,80 @@ function syncExceptionLabels(feesArr) {
   });
 }
 
-/* ---------- completa Current Fees de Custody ---------- */
-function fillCustodyCurrentLabels(fees, custodyMap, sqlRows) {
-  fees.forEach((fee) => {
-    const curGrp = findGroup(fee, 'Client Current Fees');
-    const excGrp = findGroup(fee, 'Exception Request');
-    if (!curGrp) return;
-
-    curGrp.fields.forEach((f) => {
-      if (f.code !== 6 || f.labelValue) return;
-
-      const code = f.defaultValue;                   // A032 …
-      /* tenta nos mapas em ordem */
-      f.labelValue =
-        custodyMap[code] ||
-        lookupCustodyDesc(code, sqlRows) ||
-        excGrp?.fields
-          ?.find((e) => e.code === 6)
-          ?.exceptionOptions?.find((opt) => opt.value === code)?.text ||
-        code;
-
-      f.tooltip = f.labelValue;
-    });
-  });
-}
-
 /* ───────────── Use‑case ───────────── */
 
 export default class FeeGetByCifUseCase {
   async execute({ customerAccount }) {
-    /* 1. modelo Mongo */
+    /* 1) modelo Mongo */
     const fees = await getFeeStandard([
       { feeType: 'Customer Fees' },
       { feeType: 'Bank Account Fees' },
       { feeType: 'Investment Account Fees' },
     ]);
 
-    /* 2. dados do pacote */
+    /* 2) dados do pacote + procedures SQL */
     const pkgData   = await getPackageData(customerAccount[0].cifno);
     const packageId = pkgData.defaultFeePackageId;
 
     const stdRows = await getStandardFees(packageId);
     const excRows = await getExceptionFees(packageId);
 
-    /* 3. aplica valores */
-    const custodyMap = applyStandardAmounts(fees, stdRows);
-    applyExceptionAmounts(fees, excRows);
-    fillCustodyCurrentLabels(fees, custodyMap, [...stdRows, ...excRows]);
+    /* 3) aplica SQL nos grupos */
+    const custodyToolTips = applyStandardAmounts(fees, stdRows);
+    applyExceptionAmounts(fees, excRows, custodyToolTips);
+    fillCustodyCurrentLabels(
+      fees,
+      custodyToolTips,
+      [...stdRows, ...excRows],
+      customerAccount,
+    );
 
-    /* 4. customerAccount + exceções */
+    /* 4) adiciona metadados SQL às contas */
     customerAccount.forEach((acc) => {
       Object.assign(acc, pkgData);
+
       const exc = excRows.find((e) => e.FeeCode === acc.feeCode);
       if (exc) acc.exceptionAmount = Number(exc.Amount);
     });
 
-    /* 5. monta resposta */
+    /* 5) monta retorno */
     const result = { fees: [] };
+
     const [customer, bank, investment] = [
       new CustomerFees(fees, customerAccount),
       new BankAccountFee(fees, customerAccount),
       new InvestimentAccountFee(
         fees,
         customerAccount,
-        await Field.findOne({ code: 7 })
+        await Field.findOne({ code: 7 }),
       ),
     ];
+
     [customer, bank, investment]
       .filter((f) => f.fee && f.fee.feeGroups?.length)
       .forEach((f) => result.fees.push(f.fee));
 
-    /* casos ativos */
     const actives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status: { $nin: ['DONE', 'REJECTED'] },
+      cif       : customerAccount[0].cifno,
+      status    : { $nin: ['DONE', 'REJECTED'] },
       caseNumber: { $exists: true },
     });
     result.feesActives = actives.map(({ caseNumber, id }) => ({ caseNumber, id }));
 
-    /* contas + PDF */
     const docUrl = getDocumentUrl(packageId);
     result.accounts = customerAccount.map((acc) => ({
-      cifno: acc.cifno,
-      ddaNumber: acc.ddaNumber,
-      branchCity: acc.branchCity,
-      branchState: acc.branchState,
-      branchType: acc.branchType,
-      defaultPackageType: acc.defaultPackageType,
-      feePackage: acc.feePackage,
+      cifno              : acc.cifno,
+      ddaNumber          : acc.ddaNumber,
+      branchCity         : acc.branchCity,
+      branchState        : acc.branchState,
+      branchType         : acc.branchType,
+      defaultPackageType : acc.defaultPackageType,
+      feePackage         : acc.feePackage,
       defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage: acc.defaultFeePackage,
-      documentUrl: docUrl,
-      feeAmount: acc.feeAmount,
-      exceptionAmount: acc.exceptionAmount ?? null,
+      defaultFeePackage  : acc.defaultFeePackage,
+      documentUrl        : docUrl,
+      feeAmount          : acc.feeAmount,
+      exceptionAmount    : acc.exceptionAmount ?? null,
     }));
     result.documentUrl = docUrl;
 
