@@ -1,12 +1,3 @@
-CIFNO	DDANumber	BPSAcctNumber	FeeType	FeeDescription	FeeCode	BPSFeeTypeCode	FeeAmount	Source	Entity	IsFeesStandard
-NAA0010	17226444		1	AccountMaintenance	JH001		0.000000000	JHA	SNB/284	No
-NAA0010	17226444		2	HoldMail	JH002		0.000000000	JHA	SNB/284	No
-NAA0010	17226444		3	USD/FXIncomingWire	JH010		0.000000000	JHA	SNB/284	Yes
-NAA0010	17226444		4	USD/FXOutgoingWire	JH008		75.000000000	JHA	SNB/284	Yes
-NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/284	Yes
-
-
-
 {
     "code": 200,
     "data": {
@@ -83,14 +74,14 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                 "code": 2,
                                 "isException": false,
                                 "name": "Hold mail",
-                                "defaultValue": "0",
+                                "defaultValue": "600",
                                 "exceptionOptions": [],
                                 "_id": "6468f46eff51aa9d77d849dd",
                                 "createdAt": "2023-05-20T16:25:31.436Z",
                                 "updatedAt": "2023-05-20T16:25:31.436Z",
                                 "isCurrentClient": true,
                                 "isStandard": false,
-                                "labelValue": "$0.00"
+                                "labelValue": "$600.00"
                             }
                         ],
                         "cif": "NAA0010",
@@ -106,6 +97,12 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                 "name": "Account Maintenance",
                                 "defaultValue": "",
                                 "exceptionOptions": [
+                                    {
+                                        "value": "1500",
+                                        "text": "$1,500.00",
+                                        "visible": true,
+                                        "retired": false
+                                    },
                                     {
                                         "value": "0",
                                         "text": "$0.00",
@@ -130,17 +127,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "value": "600",
                                         "text": "$600.00",
                                         "visible": true,
-                                        "retired": false,
-                                        "_id": "6468f46eff51aa9d77d849e5",
-                                        "parameterOptionId": 13
-                                    },
-                                    {
-                                        "value": "0",
-                                        "text": "$0.00",
-                                        "visible": true,
-                                        "retired": false,
-                                        "_id": "6468f46eff51aa9d77d849e6",
-                                        "parameterOptionId": 14
+                                        "retired": false
                                     }
                                 ],
                                 "_id": "6468f46eff51aa9d77d849e4",
@@ -199,7 +186,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6824a815dbe86db6587d5fd0"
+                        "_id": "6824d57047400002f400eb52"
                     },
                     {
                         "name": "Client Current Fees",
@@ -238,7 +225,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6824a815dbe86db6587d5fd3"
+                        "_id": "6824d57047400002f400eb55"
                     },
                     {
                         "name": "Exception Request",
@@ -251,29 +238,21 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                 "isException": true,
                                 "name": "Incoming Wire",
                                 "defaultValue": "",
+                                "labelValue": "$0.00",
                                 "hasChanged": false,
                                 "exceptionOptions": [
-                                    {
-                                        "value": "10",
-                                        "text": "$10.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "6468f46eff51aa9d77d84a07"
-                                    },
                                     {
                                         "value": "0",
                                         "text": "$0.00",
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6468f46eff51aa9d77d84a08"
+                                        "_id": "6824d57047400002f400eb5a"
                                     }
                                 ],
                                 "_id": "6468f46eff51aa9d77d84a06",
                                 "createdAt": "2023-05-20T16:25:31.437Z",
-                                "updatedAt": "2023-05-20T16:25:31.437Z",
-                                "labelValue": "$0.00"
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
                             },
                             {
                                 "code": 4,
@@ -286,12 +265,20 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                 "hasChanged": false,
                                 "exceptionOptions": [
                                     {
+                                        "value": "75",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824d57047400002f400eb5c"
+                                    },
+                                    {
                                         "value": "45",
                                         "text": "$45.00",
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fdb"
+                                        "_id": "6824d57047400002f400eb5d"
                                     },
                                     {
                                         "value": "0",
@@ -299,7 +286,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fdc"
+                                        "_id": "6824d57047400002f400eb5e"
                                     },
                                     {
                                         "value": "10",
@@ -307,7 +294,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fdd"
+                                        "_id": "6824d57047400002f400eb5f"
                                     },
                                     {
                                         "value": "20",
@@ -315,7 +302,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fde"
+                                        "_id": "6824d57047400002f400eb60"
                                     },
                                     {
                                         "value": "25",
@@ -323,7 +310,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fdf"
+                                        "_id": "6824d57047400002f400eb61"
                                     },
                                     {
                                         "value": "30",
@@ -331,7 +318,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fe0"
+                                        "_id": "6824d57047400002f400eb62"
                                     },
                                     {
                                         "value": "35",
@@ -339,7 +326,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fe1"
+                                        "_id": "6824d57047400002f400eb63"
                                     },
                                     {
                                         "value": "40",
@@ -347,7 +334,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fe2"
+                                        "_id": "6824d57047400002f400eb64"
                                     },
                                     {
                                         "value": "50",
@@ -355,7 +342,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fe3"
+                                        "_id": "6824d57047400002f400eb65"
                                     },
                                     {
                                         "value": "60",
@@ -363,7 +350,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "6824a815dbe86db6587d5fe4"
+                                        "_id": "6824d57047400002f400eb66"
                                     }
                                 ],
                                 "_id": "6468f46eff51aa9d77d84a09",
@@ -375,7 +362,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6824a815dbe86db6587d5fd6"
+                        "_id": "6824d57047400002f400eb58"
                     }
                 ]
             },
@@ -408,7 +395,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6824a815dbe86db6587d6002"
+                        "_id": "6824d57047400002f400eb84"
                     },
                     {
                         "name": "Client Current Fees",
@@ -434,7 +421,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6824a815dbe86db6587d6004"
+                        "_id": "6824d57047400002f400eb86"
                     },
                     {
                         "name": "Exception Request",
@@ -455,7 +442,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6008"
+                                        "_id": "6824d57047400002f400eb8a"
                                     },
                                     {
                                         "value": "A101",
@@ -463,7 +450,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6009"
+                                        "_id": "6824d57047400002f400eb8b"
                                     },
                                     {
                                         "value": "A102",
@@ -471,7 +458,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d600a"
+                                        "_id": "6824d57047400002f400eb8c"
                                     },
                                     {
                                         "value": "A031",
@@ -479,7 +466,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d600b"
+                                        "_id": "6824d57047400002f400eb8d"
                                     },
                                     {
                                         "value": "A103",
@@ -487,7 +474,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d600c"
+                                        "_id": "6824d57047400002f400eb8e"
                                     },
                                     {
                                         "value": "A104",
@@ -495,7 +482,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d600d"
+                                        "_id": "6824d57047400002f400eb8f"
                                     },
                                     {
                                         "value": "A030",
@@ -503,7 +490,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d600e"
+                                        "_id": "6824d57047400002f400eb90"
                                     },
                                     {
                                         "value": "A105",
@@ -511,7 +498,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d600f"
+                                        "_id": "6824d57047400002f400eb91"
                                     },
                                     {
                                         "value": "A106",
@@ -519,7 +506,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6010"
+                                        "_id": "6824d57047400002f400eb92"
                                     },
                                     {
                                         "value": "A021",
@@ -527,7 +514,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6011"
+                                        "_id": "6824d57047400002f400eb93"
                                     },
                                     {
                                         "value": "A107",
@@ -535,7 +522,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6012"
+                                        "_id": "6824d57047400002f400eb94"
                                     },
                                     {
                                         "value": "A108",
@@ -543,7 +530,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6013"
+                                        "_id": "6824d57047400002f400eb95"
                                     },
                                     {
                                         "value": "A001",
@@ -551,7 +538,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6014"
+                                        "_id": "6824d57047400002f400eb96"
                                     },
                                     {
                                         "value": "A109",
@@ -559,7 +546,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6015"
+                                        "_id": "6824d57047400002f400eb97"
                                     },
                                     {
                                         "value": "A110",
@@ -567,7 +554,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6016"
+                                        "_id": "6824d57047400002f400eb98"
                                     },
                                     {
                                         "value": "A022",
@@ -575,7 +562,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6017"
+                                        "_id": "6824d57047400002f400eb99"
                                     },
                                     {
                                         "value": "A068",
@@ -583,7 +570,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6018"
+                                        "_id": "6824d57047400002f400eb9a"
                                     },
                                     {
                                         "value": "A088",
@@ -591,7 +578,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6019"
+                                        "_id": "6824d57047400002f400eb9b"
                                     },
                                     {
                                         "value": "A053",
@@ -599,7 +586,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d601a"
+                                        "_id": "6824d57047400002f400eb9c"
                                     },
                                     {
                                         "value": "A070",
@@ -607,7 +594,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d601b"
+                                        "_id": "6824d57047400002f400eb9d"
                                     },
                                     {
                                         "value": "A111",
@@ -615,7 +602,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d601c"
+                                        "_id": "6824d57047400002f400eb9e"
                                     },
                                     {
                                         "value": "A089",
@@ -623,7 +610,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d601d"
+                                        "_id": "6824d57047400002f400eb9f"
                                     },
                                     {
                                         "value": "A012",
@@ -631,7 +618,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d601e"
+                                        "_id": "6824d57047400002f400eba0"
                                     },
                                     {
                                         "value": "A073",
@@ -639,7 +626,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d601f"
+                                        "_id": "6824d57047400002f400eba1"
                                     },
                                     {
                                         "value": "A071",
@@ -647,7 +634,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6020"
+                                        "_id": "6824d57047400002f400eba2"
                                     },
                                     {
                                         "value": "A008",
@@ -655,7 +642,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6021"
+                                        "_id": "6824d57047400002f400eba3"
                                     },
                                     {
                                         "value": "A112",
@@ -663,7 +650,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6824a815dbe86db6587d6022"
+                                        "_id": "6824d57047400002f400eba4"
                                     },
                                     {
                                         "value": "F100",
@@ -671,7 +658,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": false,
-                                        "_id": "6824a815dbe86db6587d6023"
+                                        "_id": "6824d57047400002f400eba5"
                                     }
                                 ],
                                 "_id": "6468f46eff51aa9d77d84a3b",
@@ -685,7 +672,7 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6824a815dbe86db6587d6006"
+                        "_id": "6824d57047400002f400eb88"
                     }
                 ]
             }
@@ -749,3 +736,47 @@ NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/
         ]
     }
 }
+
+
+Veja os dados do exception do investiment estão ainda mostrando as opções do mongo...
+
+Esse é o resultado da procedure para o pacote que estamos testando
+
+
+FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription	FeeType
+BPS002	Safekeeping of Securities	56	0.35% /YR min $375.00/QTR	0.35% /YR min $375.00/QTR	Investment Fees
+BPS003	SSL Account Maintanance Fee	57	375.00	Quarterly on Day 1	Investment Fees
+BPS004	US Equities Commission	76	$0.10 per share, min charge of $150 per trade	$0.10 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	58	$0.05 per share, min charge of $150 per trade	$0.05 per share, min charge of $150 per trade	Investment Fees
+JH001	Account Maintenance Fee	51	1500.00	Annual - Charged Semi-Annual	Customer Fees
+JH001	Account Maintenance Fee	98	0.00	NULL	Customer Fees
+JH002	Hold Mail Fee	52	600.00	Annual - Charged Annual	Customer Fees
+JH006	FX Outgoing Wire Fee	53	75.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	96	0.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	114	50.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	123	50.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	97	0.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	54	75.00	NULL	Bank Account Fees
+JH008	USD/FX Outgoing Wire Fee	132	75.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	133	45.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	134	0.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	135	10.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	136	20.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	137	25.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	138	30.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	139	35.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	140	40.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	141	50.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	142	60.00	NULL	Investment Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	187	25.00	NULL	Investment Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	188	15.00	NULL	Investment Fees
+JH010	USD/FX Incoming Wire Fee	197	0.00	NULL	Investment Fees
+
+
+
+
+E na standard usa no tooltip o valor que vem como frequencyDescription
+
+FeePackageDescription	FeeAmount	IsStandard	FeeShortDescription	FeeType	FeeDescription	FrequencyDescription
+PB International	1500.00	1	AccountMaintenance	1	AccountMaintenance	Annual - Charged Semi-Annual
+PB International	600.00	1	HoldMail	2	HoldMail	Annual - Charged Annual
