@@ -1,8 +1,5 @@
 function applyExceptionAmounts(mongoFees, excRows) {
-  const map = {
-    JH001: 1, JH002: 2, JH010: 3,
-    JH008: 4, JH006: 4, JH007: 4, JH009: 4
-  };
+  const map = { JH001:1, JH002:2, JH010:3, JH008:4, JH006:4, JH007:4, JH009:4 };
 
   const byCode = excRows.reduce((acc, r) => {
     (acc[r.FeeCode] ??= []).push(r);
@@ -14,7 +11,7 @@ function applyExceptionAmounts(mongoFees, excRows) {
     if (!excGrp) return;
 
     excGrp.fields.forEach(field => {
-      const code = Object.entries(map).find(([, c]) => c === field.code)?.[0];
+      const code = Object.entries(map).find(([,c]) => c === field.code)?.[0];
       const rows = code ? byCode[code] : null;
       if (!rows?.length) return;
 
@@ -25,15 +22,11 @@ function applyExceptionAmounts(mongoFees, excRows) {
         retired: false
       }));
 
--     /* não mexíamos no labelValue — ele ficava com o valor antigo */
-+     // ajuste de exibição:
-+     //   • se quiser começar “em branco”, use ''
-+     //   • se quiser mostrar o menor Amount disponível, use o Math.min…
-+     const min = Math.min(...rows.map(r => Number(r.Amount)));
-+     field.labelValue = numberToCurrency(min);   // fica “$0.00” para JH001
-+
-+     // se não quiser pré‑selecionar nada:
-+     // field.labelValue = '';
+      /* ▶ AQUI: usa o menor Amount como valor “padrão” do Exception */
+      const min = Math.min(...rows.map(r => Number(r.Amount)));
+
+      field.defaultValue = min.toString();            // <-  altera o que o
+      field.labelValue   = numberToCurrency(min);     //    builder vai usar
     });
   });
 }
