@@ -1,10 +1,193 @@
-CustomerName	CustomerShortName	CustomerAddress	CIFNO	ACCTNO	EntityType	FeeDescription	FeeShortDescription	FeeCode	Istransactional	FeeType	FeeAmount	Frequency	Branch City	Branch State	Branch Type	OfficerId	Officer	StandardException	Default Fee Package Id	Default Fee Package	Default Package Type	Default Fee Amount	Default Frequency
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	17226444	NULL	Account Maintenance Fee	AccountMaintenance	JH001	0	Client Fees	0.00	NULL	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Exception	1	PB International	Individual	1500.00	Annual - Charged Semi-Annual
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	17226444	NULL	FX Outgoing Wire (SafraLink) Fee	NULL	JH007	1	Bank Account Fees	75.00	NULL	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	75.00	NULL
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	17226444	NULL	FX Outgoing Wire Fee	NULL	JH006	1	Bank Account Fees	75.00	NULL	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	75.00	NULL
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	17226444	NULL	Hold Mail Fee	HoldMail	JH002	0	Client Fees	600.00	NULL	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	600.00	Annual - Charged Annual
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	17226444	NULL	USD Outgoing Wire (SafraLink) Fee	NULL	JH009	1	Bank Account Fees	25.00	NULL	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	25.00	NULL
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	17226444	NULL	USD/FX Incoming Wire Fee	USD/FXIncomingWire	JH010	1	Bank Account Fees	0.00	NULL	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	0.00	NULL
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	17226444	NULL	USD/FX Outgoing Wire Fee	USD/FXOutgoingWire	JH008	1	Bank Account Fees	75.00	NULL	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	75.00	NULL
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	20002089	0284	US Equities and Options Commission	US Equities and Options Commission	NULL	1	Investment Fees	$0.05 per share, min charge of $150 per trade;$0.05 per share, min charge of $150 per trade;$0.10 per share, min charge of $150 per trade;$0.10 per share, min charge of $150 per trade	$0.05 per share, min charge of $150 per trade;$0.05 per share, min charge of $150 per trade;$0.10 per share, min charge of $150 per trade;$0.10 per share, min charge of $150 per trade	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	$0.05 per share, min charge of $150 per trade;$0.05 per share, min charge of $150 per trade;$0.10 per share, min charge of $150 per trade;$0.10 per share, min charge of $150 per trade	$0.05 per share, min charge of $150 per trade;$0.05 per share, min charge of $150 per trade;$0.10 per share, min charge of $150 per trade;$0.10 per share, min charge of $150 per trade
-UUU UUUUUUU U.U.                        	UUU UUUUUUU U.U.    	UUUUUUU 000-UUU 000                      UUUUUUUUUU UUUUUUU  00000               	NAA0010	20103939	0189	US Equities and Options Commission	US Equities and Options Commission	NULL	1	Investment Fees	$0.10 per share, min charge of $150 per trade;$0.05 per share, min charge of $150 per trade	$0.10 per share, min charge of $150 per trade;$0.05 per share, min charge of $150 per trade	New York	NY	International	571   	Marcelo Fontanelli       BR 30	Standard	1	PB International	Individual	$0.10 per share, min charge of $150 per trade;$0.05 per share, min charge of $150 per trade	$0.10 per share, min charge of $150 per trade;$0.05 per share, min charge of $150 per trade
+/* src/features/feeGetByCif/feeGetByCifUseCase.js
+   ──────────────────────────────────────────────────────────────── */
+import { Fee }                     from '#src/models/entities/Fees.js';
+import Result                      from '#features/shared/result.js';
+import CustomerFees                from '#src/models/CustomerFees.js';
+import BankAccountFee              from '#src/models/BankAccountFee.js';
+import InvestimentAccountFee       from '#src/models/InvestimentAccountFee.js';
+import { FeeCase }                 from '#src/models/entities/FeeCase.js';
+import { Field }                   from '#src/models/entities/Fields.js';
+import numberToCurrency            from '#core/helpers/currency.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure
+} from '#core/data/mssql/index.js';
+
+/* ───────────── SQL helpers ───────────── */
+
+async function getPackageData(cifno){
+  const conn  = await connectToFeeMgmtDb();
+  const [row] = await executeStoreProcedure(conn,'sp_get_fees_byCIF',{ cifno });
+  if(!row) return {};
+  return {
+    defaultFeePackageId : row['Default Fee Package Id'] ?? null,
+    branchCity          : row['Branch City']?.trim()         || '',
+    branchState         : row['Branch State']?.trim()        || '',
+    branchType          : row['Branch Type']?.trim()         || '',
+    defaultPackageType  : row['Default Package Type']?.trim()|| '',
+    feePackage          : row['Default Fee Package']?.trim() || '',
+  };
+}
+
+const getStandardFees  = async id => await executeStoreProcedure(
+  await connectToFeeMgmtDb(),'sp_get_standard_fees_bypackage',{ FeePackageId:id });
+
+const getExceptionFees = async id => await executeStoreProcedure(
+  await connectToFeeMgmtDb(),'sp_get_exception_fees_bypackage',{ FeePackageId:id });
+
+function getDocumentUrl(id){
+  const urls = global.environment.scheduleUrls||{};
+  const key  = ({1:'intlPB3',2:'uSPBIndividual3',3:'uSPBCorporation3'})[id];
+  return key ? urls[key]||'' : '';
+}
+
+/* ───────────── Mongo/UI helpers ───────────── */
+
+async function getFeeStandard(filter){
+  return Fee.find({ $or:filter })
+            .select({ feeType:1, feeGroups:{name:1,fields:1,code:1} })
+            .lean();
+}
+const findGroup = (fee,name)=>fee?.feeGroups?.find(g=>g.name===name);
+
+/* FeeCode ↔ field.code (customer/bank/investment) */
+const feeCodeMap={
+  /* Customer / Bank */
+  JH001:1, JH002:2, JH010:3, JH008:4,
+  /* Investment (Safekeeping / SSL / Commissions) */
+  BPS002:6, BPS003:6, BPS004:6, BPS005:6
+};
+
+/* ---------- STANDARD FEES ---------- */
+function applyStandardAmounts(mongoFees,stdRows){
+  mongoFees.forEach(fee=>{
+    const grpStd = findGroup(fee,'Standard Fees');
+    const grpCur = findGroup(fee,'Client Current Fees');
+    if(!grpStd||!grpCur) return;
+
+    grpStd.fields.forEach(field=>{
+      const row=stdRows.find(r=>Number(r.FeeType)===field.code);
+      if(!row) return;
+
+      const amt  = Number(row.FeeAmount);
+      field.defaultValue = amt.toString();
+      field.labelValue   = numberToCurrency(amt);
+      /* tooltip do SQL */
+      if(row.FrequencyDescription) field.tooltip=row.FrequencyDescription;
+
+      /* mantém Client Current Fees INALTERADO */
+      const curField = grpCur.fields.find(f=>f.code===field.code);
+      if(curField && curField.defaultValue){
+        curField.labelValue = numberToCurrency(Number(curField.defaultValue));
+      }
+    });
+  });
+}
+
+/* ---------- EXCEPTION REQUEST ---------- */
+function applyExceptionAmounts(mongoFees,excRows){
+  const byCode = excRows.reduce((acc,r)=>{
+    (acc[r.FeeCode]??=[]).push(r); return acc;
+  },{});
+
+  mongoFees.forEach(fee=>{
+    const grpExc = findGroup(fee,'Exception Request');
+    if(!grpExc) return;
+
+    grpExc.fields.forEach(field=>{
+      const feeCode = Object.entries(feeCodeMap)
+                            .find(([,c])=>c===field.code)?.[0];
+      const rows = feeCode ? byCode[feeCode] : null;
+      if(!rows?.length) return;
+
+      field.exceptionOptions = rows.map(r=>({
+        value  : Number(r.Amount).toString(),
+        text   : numberToCurrency(r.Amount),
+        visible: true,
+        retired: false
+      }));
+      field.defaultValue = '';   // limpo
+      field.labelValue   = '$0.00';
+    });
+  });
+}
+
+function syncExceptionLabels(feesArr){
+  feesArr.forEach(fee=>{
+    const grp=findGroup(fee,'Exception Request');
+    if(!grp) return;
+    grp.fields.forEach(f=>{
+      f.labelValue = f.defaultValue
+        ? numberToCurrency(Number(f.defaultValue))
+        : '$0.00';
+    });
+  });
+}
+
+/* ───────────── USE‑CASE ───────────── */
+
+export default class FeeGetByCifUseCase{
+  async execute({ customerAccount }){
+    /* 1) modelo Mongo */
+    const fees = await getFeeStandard([
+      { feeType:'Customer Fees' },
+      { feeType:'Bank Account Fees' },
+      { feeType:'Investment Account Fees' }
+    ]);
+
+    /* 2) SQL */
+    const pkgData   = await getPackageData(customerAccount[0].cifno);
+    const packageId = pkgData.defaultFeePackageId;
+    const [stdRows,excRows] = await Promise.all([
+      getStandardFees(packageId),
+      getExceptionFees(packageId)
+    ]);
+
+    applyStandardAmounts (fees,stdRows);
+    applyExceptionAmounts(fees ,excRows);
+
+    /* 3) enriquece contas */
+    customerAccount.forEach(acc=>Object.assign(acc,pkgData));
+
+    /* 4) builders */
+    const result = { fees:[] };
+    const [customer,bank,investment]=[
+      new CustomerFees      (fees,customerAccount),
+      new BankAccountFee    (fees,customerAccount),
+      new InvestimentAccountFee(
+        fees,customerAccount,await Field.findOne({code:7}))
+    ];
+    [customer,bank,investment]
+      .filter(f=>f.fee && f.fee.feeGroups?.length)
+      .forEach(f=>result.fees.push(f.fee));
+
+    /* 5) casos ativos */
+    const actives = await FeeCase.find({
+      cif:customerAccount[0].cifno,
+      status:{ $nin:['DONE','REJECTED'] },
+      caseNumber:{ $exists:true }
+    });
+    result.feesActives = actives.map(({caseNumber,id})=>({caseNumber,id}));
+
+    /* 6) contas detalhadas */
+    const docUrl = getDocumentUrl(packageId);
+    result.accounts = customerAccount.map(acc=>({
+      cifno              : acc.cifno,
+      ddaNumber          : acc.ddaNumber,
+      branchCity         : acc.branchCity,
+      branchState        : acc.branchState,
+      branchType         : acc.branchType,
+      defaultPackageType : acc.defaultPackageType,
+      feePackage         : acc.feePackage,
+      defaultFeePackageId: acc.defaultFeePackageId,
+      defaultFeePackage  : acc.defaultFeePackage,
+      documentUrl        : docUrl
+    }));
+    result.documentUrl = docUrl;
+
+    /* 7) sincronia final */
+    syncExceptionLabels(result.fees);
+
+    return Result.ok(result);
+  }
+}
