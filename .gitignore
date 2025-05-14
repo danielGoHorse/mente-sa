@@ -1,203 +1,751 @@
-import { Fee }                     from '#src/models/entities/Fees.js';
-import Result                      from '#features/shared/result.js';
-import CustomerFees                from '#src/models/CustomerFees.js';
-import BankAccountFee              from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee       from '#src/models/InvestimentAccountFee.js';
-import { FeeCase }                 from '#src/models/entities/FeeCase.js';
-import { Field }                   from '#src/models/entities/Fields.js';
-import numberToCurrency            from '#core/helpers/currency.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js';
+CIFNO	DDANumber	BPSAcctNumber	FeeType	FeeDescription	FeeCode	BPSFeeTypeCode	FeeAmount	Source	Entity	IsFeesStandard
+NAA0010	17226444		1	AccountMaintenance	JH001		0.000000000	JHA	SNB/284	No
+NAA0010	17226444		2	HoldMail	JH002		0.000000000	JHA	SNB/284	No
+NAA0010	17226444		3	USD/FXIncomingWire	JH010		0.000000000	JHA	SNB/284	Yes
+NAA0010	17226444		4	USD/FXOutgoingWire	JH008		75.000000000	JHA	SNB/284	Yes
+NAA0010	17226444    	20002089	6	SafekeepingCustody	A032	C	375.000000000	BPS	SNB/284	Yes
 
-/* ───────────────────────── helpers SQL ─────────────────────────── */
 
-async function getPackageData(cifno) {
-  const conn   = await connectToFeeMgmtDb();
-  const [row]  = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
-  if (!row) return {};
 
-  return {
-    defaultFeePackageId : row['Default Fee Package Id'] ?? null,
-    branchCity          : row['Branch City']?.trim()         || '',
-    branchState         : row['Branch State']?.trim()        || '',
-    branchType          : row['Branch Type']?.trim()         || '',
-    defaultPackageType  : row['Default Package Type']?.trim()|| '',
-    feePackage          : row['Default Fee Package']?.trim() || '',
-  };
-}
-
-async function getStandardFees(packageId) {
-  const conn = await connectToFeeMgmtDb();
-  const rows = await executeStoreProcedure(
-                conn, 'sp_get_standard_fees_bypackage',
-                { FeePackageId: packageId });
-  console.log('STD‑rows', rows?.length);
-  return rows ?? [];
-}
-
-async function getExceptionFees(packageId) {
-  const conn = await connectToFeeMgmtDb();
-  const rows = await executeStoreProcedure(
-                conn, 'sp_get_exception_fees_bypackage',
-                { FeePackageId: packageId });
-  console.log('EXC‑rows', rows?.length);
-  return rows ?? [];
-}
-
-function getDocumentUrl(id) {
-  const urls = global.environment.scheduleUrls || {};
-  const key  = ({ 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' })[id];
-  return key ? urls[key] || '' : '';
-}
-
-/* ───────────────────────── helpers Mongo/UI ────────────────────── */
-
-async function getFeeStandard(filter) {
-  return Fee.find({ $or: filter })
-            .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-            .lean();
-}
-
-function findGroup(fee, name){ return fee?.feeGroups?.find(g => g.name === name); }
-
-/* código ↔ FeeCode usado para Exceptions */
-const feeCodeMap = { JH001:1, JH002:2, JH010:3, JH008:4 };
-
-/* ---- Standard Fees – exibe valores da procedure ----------------- */
-function applyStandardAmounts(mongoFees, stdRows){
-  mongoFees.forEach(fee => {
-    const stdGrp = findGroup(fee, 'Standard Fees');
-    if (!stdGrp) return;
-
-    stdGrp.fields.forEach(field => {
-      const row = stdRows.find(r => parseInt(r.FeeType,10) === field.code);
-      if (!row) return;
-
-      const amt = Number(row.FeeAmount);
-      field.defaultValue = amt.toString();          // valor padrão
-      field.labelValue   = numberToCurrency(amt);   // “$1,200.00”
-    });
-  });
-}
-
-/* ---- Exception Request – popula dropdowns ----------------------- */
-function applyExceptionAmounts(mongoFees, excRows){
-  /* indexa por FeeCode para lookup rápido */
-  const byCode = excRows.reduce((acc,r)=>{
-    (acc[r.FeeCode] ??= []).push(r); return acc;
-  },{});
-
-  mongoFees.forEach(fee => {
-    const excGrp = findGroup(fee, 'Exception Request');
-    if (!excGrp) return;
-
-    excGrp.fields.forEach(field => {
-      const code = Object.entries(feeCodeMap)
-                         .find(([,c])=>c===field.code)?.[0];
-      const rows = code ? byCode[code] : null;
-      if (!rows?.length) return;
-
-      field.exceptionOptions = rows.map(r => ({
-        value  : Number(r.Amount).toString(),
-        text   : numberToCurrency(r.Amount),
-        visible: true,
-        retired: false
-      }));
-
-      /* deixa defaultValue/labelValue vazios */
-      field.defaultValue = '';
-      field.labelValue   = '';
-    });
-  });
-}
-
-/* se defaultValue for setado depois (user picks), mantém label sync */
-function syncExceptionLabels(feesArr){
-  feesArr.forEach(fee=>{
-    const exc = findGroup(fee,'Exception Request');
-    if(!exc) return;
-    exc.fields.forEach(f=>{
-      const val = f.defaultValue;
-      f.labelValue = val ? numberToCurrency(Number(val)) : '$0.00';
-    });
-  });
-}
-
-/* ────────────────────────────── USE‑CASE ───────────────────────── */
-
-export default class FeeGetByCifUseCase {
-
-  async execute({ customerAccount }){
-    /* 1) carrega modelo Mongo */
-    const fees = await getFeeStandard([
-      { feeType:'Customer Fees'     },
-      { feeType:'Bank Account Fees' },
-      { feeType:'Investment Account Fees' }
-    ]);
-
-    /* 2) dados complementares + valores SQL */
-    const pkgData   = await getPackageData(customerAccount[0].cifno);
-    const packageId = pkgData.defaultFeePackageId;          // sempre virá da 1ª proc.
-
-    const stdRows = await getStandardFees (packageId);
-    const excRows = await getExceptionFees(packageId);
-
-    applyStandardAmounts (fees, stdRows);
-    applyExceptionAmounts(fees, excRows);
-
-    /* 3) enriquece lista de contas (NÃO sobrescreve feeAmount!) */
-    customerAccount.forEach(acc=>{
-      Object.assign(acc, pkgData);
-
-      /* apenas guarda possível exceptionAmount */
-      const exc = excRows.find(e => e.FeeCode === acc.feeCode);
-      if (exc) acc.exceptionAmount = Number(exc.Amount);
-    });
-
-    /* 4) builders já existentes */
-    const result = { fees: [] };
-    const [customer, bank, investment] = [
-      new CustomerFees      (fees, customerAccount),
-      new BankAccountFee    (fees, customerAccount),
-      new InvestimentAccountFee(
-        fees, customerAccount, await Field.findOne({ code:7 }))
-    ];
-
-    [customer, bank, investment]
-      .filter(f => f.fee && f.fee.feeGroups?.length)
-      .forEach(f => result.fees.push(f.fee));
-
-    /* 5) casos ativos */
-    const actives = await FeeCase.find({
-      cif       : customerAccount[0].cifno,
-      status    : { $nin:['DONE','REJECTED'] },
-      caseNumber: { $exists:true }
-    });
-    result.feesActives = actives.map(({caseNumber,id})=>({caseNumber,id}));
-
-    /* 6) contas detalhadas p/ Conductor */
-    const docUrl = getDocumentUrl(packageId);
-    result.accounts = customerAccount.map(acc=>({
-      cifno              : acc.cifno,
-      ddaNumber          : acc.ddaNumber,
-      branchCity         : acc.branchCity,
-      branchState        : acc.branchState,
-      branchType         : acc.branchType,
-      defaultPackageType : acc.defaultPackageType,
-      feePackage         : acc.feePackage,
-      defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage  : acc.defaultFeePackage,
-      documentUrl        : docUrl,
-      feeAmount          : acc.feeAmount,
-      exceptionAmount    : acc.exceptionAmount ?? null
-    }));
-    result.documentUrl = docUrl;
-
-    /* 7) sincronia final de labels em Exception Request           */
-    syncExceptionLabels(result.fees);
-
-    return Result.ok(result);
-  }
+{
+    "code": 200,
+    "data": {
+        "customerName": "NPK TRADING S.A.",
+        "customerAddress": "NPK TRADING S.A. SARANDI 690-ESC 105 MONTEVIDEO URUGUAY  11100",
+        "customerAccountOfficer": "571 Marcelo Fontanelli       BR 30",
+        "cif": "NAA0010",
+        "branchCity": "New York",
+        "branchState": "NY",
+        "branchType": "International",
+        "packageType": "Individual",
+        "packageName": "PB International",
+        "defaultFeePackageId": 1,
+        "fees": [
+            {
+                "_id": "6468f46eff51aa9d77d849ee",
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isException": false,
+                                "name": "Account Maintenance",
+                                "tooltip": "Charged: Semiannual",
+                                "defaultValue": "1500",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d849d7",
+                                "createdAt": "2023-05-20T16:25:31.435Z",
+                                "updatedAt": "2023-05-20T16:25:31.435Z",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "labelValue": "$1,500.00"
+                            },
+                            {
+                                "code": 2,
+                                "isException": false,
+                                "name": "Hold Mail",
+                                "defaultValue": "600",
+                                "tooltip": "Charged: Annually",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d849d8",
+                                "createdAt": "2023-05-20T16:25:31.435Z",
+                                "updatedAt": "2023-05-20T16:25:31.435Z",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "labelValue": "$600.00"
+                            }
+                        ],
+                        "kycMailingStatus": "Hold Mail",
+                        "cif": "NAA0010",
+                        "accountNumber": 17226444
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isException": false,
+                                "name": "Account Maintenance",
+                                "defaultValue": "0",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d849dc",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": true,
+                                "isStandard": false,
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 2,
+                                "isException": false,
+                                "name": "Hold mail",
+                                "defaultValue": "0",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d849dd",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": true,
+                                "isStandard": false,
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": 17226444
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "code": 1,
+                                "isException": true,
+                                "name": "Account Maintenance",
+                                "defaultValue": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false
+                                    }
+                                ],
+                                "_id": "6468f46eff51aa9d77d849e1",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 2,
+                                "isException": true,
+                                "name": "Hold mail",
+                                "defaultValue": "",
+                                "exceptionOptions": [
+                                    {
+                                        "value": "600",
+                                        "text": "$600.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e5",
+                                        "parameterOptionId": 13
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e6",
+                                        "parameterOptionId": 14
+                                    }
+                                ],
+                                "_id": "6468f46eff51aa9d77d849e4",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": 17226444
+                    }
+                ]
+            },
+            {
+                "_id": "6468f46eff51aa9d77d84a1b",
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Incoming Wire",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Transaction",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d849fc",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "75",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Transaction",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d849fd",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "labelValue": "$75.00"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "17226444",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6824a815dbe86db6587d5fd0"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Incoming Wire",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a01",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "75",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a02",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$75.00"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "17226444",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6824a815dbe86db6587d5fd3"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Incoming Wire",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "10",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a07"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a08"
+                                    }
+                                ],
+                                "_id": "6468f46eff51aa9d77d84a06",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "",
+                                "labelValue": "$0.00",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "45",
+                                        "text": "$45.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fdb"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fdc"
+                                    },
+                                    {
+                                        "value": "10",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fdd"
+                                    },
+                                    {
+                                        "value": "20",
+                                        "text": "$20.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fde"
+                                    },
+                                    {
+                                        "value": "25",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fdf"
+                                    },
+                                    {
+                                        "value": "30",
+                                        "text": "$30.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fe0"
+                                    },
+                                    {
+                                        "value": "35",
+                                        "text": "$35.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fe1"
+                                    },
+                                    {
+                                        "value": "40",
+                                        "text": "$40.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fe2"
+                                    },
+                                    {
+                                        "value": "50",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fe3"
+                                    },
+                                    {
+                                        "value": "60",
+                                        "text": "$60.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6824a815dbe86db6587d5fe4"
+                                    }
+                                ],
+                                "_id": "6468f46eff51aa9d77d84a09",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "17226444",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6824a815dbe86db6587d5fd6"
+                    }
+                ]
+            },
+            {
+                "_id": "6468f46eff51aa9d77d84a56",
+                "feeType": "Investment Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 6,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping-Custody",
+                                "defaultValue": "A021",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Quarterly",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a2d",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "A021 - 0.35% per year with a minimum of $375.00 per quarter"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20002089",
+                        "entityCode": "SNB/284",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6824a815dbe86db6587d6002"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Safekeeping-Custody",
+                                "defaultValue": "A032",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a34",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "A032 - 0.50% per year with a minimum of $375.00 per quarter"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20002089",
+                        "entityCode": "SNB/284",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6824a815dbe86db6587d6004"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping-Custody",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "A032",
+                                        "text": "A032 - 0.50% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6008"
+                                    },
+                                    {
+                                        "value": "A101",
+                                        "text": "A101 - 0.50% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6009"
+                                    },
+                                    {
+                                        "value": "A102",
+                                        "text": "A102 - 0.50% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d600a"
+                                    },
+                                    {
+                                        "value": "A031",
+                                        "text": "A031 - 0.45% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d600b"
+                                    },
+                                    {
+                                        "value": "A103",
+                                        "text": "A103 - 0.45% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d600c"
+                                    },
+                                    {
+                                        "value": "A104",
+                                        "text": "A104 - 0.45% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d600d"
+                                    },
+                                    {
+                                        "value": "A030",
+                                        "text": "A030 - 0.40% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d600e"
+                                    },
+                                    {
+                                        "value": "A105",
+                                        "text": "A105 - 0.40% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d600f"
+                                    },
+                                    {
+                                        "value": "A106",
+                                        "text": "A106 - 0.40% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6010"
+                                    },
+                                    {
+                                        "value": "A021",
+                                        "text": "A021 - 0.35% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6011"
+                                    },
+                                    {
+                                        "value": "A107",
+                                        "text": "A107 - 0.35% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6012"
+                                    },
+                                    {
+                                        "value": "A108",
+                                        "text": "A108 - 0.35% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6013"
+                                    },
+                                    {
+                                        "value": "A001",
+                                        "text": "A001 - 0.30% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6014"
+                                    },
+                                    {
+                                        "value": "A109",
+                                        "text": "A109 - 0.30% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6015"
+                                    },
+                                    {
+                                        "value": "A110",
+                                        "text": "A110 - 0.30% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6016"
+                                    },
+                                    {
+                                        "value": "A022",
+                                        "text": "A022 - 0.25% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6017"
+                                    },
+                                    {
+                                        "value": "A068",
+                                        "text": "A068 - 0.25% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6018"
+                                    },
+                                    {
+                                        "value": "A088",
+                                        "text": "A088 - 0.25% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6019"
+                                    },
+                                    {
+                                        "value": "A053",
+                                        "text": "A053 - 0.20% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d601a"
+                                    },
+                                    {
+                                        "value": "A070",
+                                        "text": "A070 - 0.20% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d601b"
+                                    },
+                                    {
+                                        "value": "A111",
+                                        "text": "A111 - 0.20% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d601c"
+                                    },
+                                    {
+                                        "value": "A089",
+                                        "text": "A089 - 0.15% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d601d"
+                                    },
+                                    {
+                                        "value": "A012",
+                                        "text": "A012 - 0.15% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d601e"
+                                    },
+                                    {
+                                        "value": "A073",
+                                        "text": "A073 - 0.15% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d601f"
+                                    },
+                                    {
+                                        "value": "A071",
+                                        "text": "A071 - 0.10% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6020"
+                                    },
+                                    {
+                                        "value": "A008",
+                                        "text": "A008 - 0.10% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6021"
+                                    },
+                                    {
+                                        "value": "A112",
+                                        "text": "A112 - 0.10% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6824a815dbe86db6587d6022"
+                                    },
+                                    {
+                                        "value": "F100",
+                                        "text": "F100 - Waived Custody Fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": false,
+                                        "_id": "6824a815dbe86db6587d6023"
+                                    }
+                                ],
+                                "_id": "6468f46eff51aa9d77d84a3b",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "$0.00"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20002089",
+                        "entityCode": "SNB/284",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6824a815dbe86db6587d6006"
+                    }
+                ]
+            }
+        ],
+        "feesActives": [
+            {
+                "caseNumber": "FEE1078",
+                "id": "659c7c6a07059445c666fffc"
+            },
+            {
+                "caseNumber": "FEE2697",
+                "id": "66463531e0cfba0a5156a06f"
+            },
+            {
+                "caseNumber": "FEE2799",
+                "id": "6654eeffe0cfba0a5156b063"
+            }
+        ],
+        "documentUrl": "",
+        "currentFees": [
+            {
+                "feeDescription": "$0.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee $1500.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "Hold Mail Fee $600.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee $375.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "USD Outgoing Wire Fee $20.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "Custody/A053 0.20% /YR min $375.00/QTR",
+                "feeCode": "SNBNY custody 20002089"
+            },
+            {
+                "feeDescription": "Equity Comm/E3 $0.10 per share, min charge of $150 per trade",
+                "feeCode": "SNBNY custody 20002089"
+            },
+            {
+                "feeDescription": "Option Comm/E3 $0.05 per share, min charge of $150 per trade",
+                "feeCode": "SNBNY custody 20002089"
+            },
+            {
+                "feeDescription": "Equity Comm/E3 $0.10 per share, min charge of $150 per trade",
+                "feeCode": "SSL retail 20103939"
+            },
+            {
+                "feeDescription": "Option Comm/E3 $0.05 per share, min charge of $150 per trade",
+                "feeCode": "SSL retail 20103939"
+            }
+        ]
+    }
 }
