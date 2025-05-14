@@ -1,17 +1,26 @@
-{
-  cifno: "NAA0010",
-  ddaNumber: 17226444,
-  bpsAcctNumber: "20002089",
-  feeType: 6,
-  feeDescription: "SafekeepingCustody",
-  feeCode: "A032",
-  bpsFeeTypeCode: "C",
-  source: "BPS",
-  entity: "SNB/284",
-  feeAmount: 375,
-  isFeesStandard: "Yes",
-  kycMailingStatus: null,
-  feeGroup: 3,
-}
-
-
+ {
+                        "name": "Client Current Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Safekeeping-Custody",
+                                "defaultValue": "A032",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a34",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20002089",
+                        "entityCode": "SNB/284",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "682504c8a1a1005e4ab3d840"
+                    },
