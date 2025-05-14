@@ -1,40 +1,3 @@
-Procedure de Exception
-
-FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription	FeeType
-JH001	Account Maintenance Fee	98	0.00	NULL	Customer Fees
-JH006	FX Outgoing Wire Fee	114	50.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	96	0.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	97	0.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	123	50.00	NULL	Bank Account Fees
-JH008	USD/FX Outgoing Wire Fee	133	45.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	134	0.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	135	10.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	136	20.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	137	25.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	138	30.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	139	35.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	140	40.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	141	50.00	NULL	Investment Fees
-JH008	USD/FX Outgoing Wire Fee	142	60.00	NULL	Investment Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	188	15.00	NULL	Investment Fees
-
-Procedure de Standards
-
-FeePackageDescription	FeeAmount	IsStandard	FeeShortDescription	FeeType	FeeDescription
-PB International	1200.00	1	AccountMaintenance	1	AccountMaintenance
-PB International	600.00	1	HoldMail	2	HoldMail
-PB International	75.00	1	USD/FXOutgoingWire	4	USD/FXOutgoingWire
-PB International	0.00	1	USD/FXIncomingWire	3	USD/FXIncomingWire
-
-customerAccount
-CIFNO	DDANumber	BPSAcctNumber	FeeType	FeeDescription	FeeCode	BPSFeeTypeCode	FeeAmount	Source	Entity	IsFeesStandard
-NAA0010	17226444		1	AccountMaintenance	JH001		1200.000000000	JHA	SNB/284	Yes
-NAA0010	17226444		2	HoldMail	JH002		600.000000000	JHA	SNB/284	Yes
-NAA0010	17226444		3	USD/FXIncomingWire	JH010		0.000000000	JHA	SNB/284	Yes
-NAA0010	17226444		4	USD/FXOutgoingWire	JH008		75.000000000	JHA	SNB/284	Yes
-NAA0010	17226444    	20002089	6	SafekeepingCustody	A053	C	375.000000000	BPS	SNB/284	Yes
-
-Resultado obtido
 {
     "code": 200,
     "data": {
@@ -227,7 +190,7 @@ Resultado obtido
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6823b2ab79534939544c4957"
+                        "_id": "6824918d36e4967427a701b1"
                     },
                     {
                         "name": "Client Current Fees",
@@ -266,7 +229,7 @@ Resultado obtido
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6823b2ab79534939544c495a"
+                        "_id": "6824918d36e4967427a701b4"
                     },
                     {
                         "name": "Exception Request",
@@ -379,7 +342,7 @@ Resultado obtido
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6823b2ab79534939544c495d"
+                        "_id": "6824918d36e4967427a701b7"
                     }
                 ]
             },
@@ -412,7 +375,7 @@ Resultado obtido
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6823b2ab79534939544c4986"
+                        "_id": "6824918d36e4967427a701e0"
                     },
                     {
                         "name": "Client Current Fees",
@@ -438,7 +401,7 @@ Resultado obtido
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6823b2ab79534939544c4988"
+                        "_id": "6824918d36e4967427a701e2"
                     },
                     {
                         "name": "Exception Request",
@@ -459,7 +422,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c498c"
+                                        "_id": "6824918d36e4967427a701e6"
                                     },
                                     {
                                         "value": "A101",
@@ -467,7 +430,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c498d"
+                                        "_id": "6824918d36e4967427a701e7"
                                     },
                                     {
                                         "value": "A102",
@@ -475,7 +438,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c498e"
+                                        "_id": "6824918d36e4967427a701e8"
                                     },
                                     {
                                         "value": "A031",
@@ -483,7 +446,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c498f"
+                                        "_id": "6824918d36e4967427a701e9"
                                     },
                                     {
                                         "value": "A103",
@@ -491,7 +454,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4990"
+                                        "_id": "6824918d36e4967427a701ea"
                                     },
                                     {
                                         "value": "A104",
@@ -499,7 +462,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4991"
+                                        "_id": "6824918d36e4967427a701eb"
                                     },
                                     {
                                         "value": "A030",
@@ -507,7 +470,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4992"
+                                        "_id": "6824918d36e4967427a701ec"
                                     },
                                     {
                                         "value": "A105",
@@ -515,7 +478,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4993"
+                                        "_id": "6824918d36e4967427a701ed"
                                     },
                                     {
                                         "value": "A106",
@@ -523,7 +486,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4994"
+                                        "_id": "6824918d36e4967427a701ee"
                                     },
                                     {
                                         "value": "A021",
@@ -531,7 +494,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4995"
+                                        "_id": "6824918d36e4967427a701ef"
                                     },
                                     {
                                         "value": "A107",
@@ -539,7 +502,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4996"
+                                        "_id": "6824918d36e4967427a701f0"
                                     },
                                     {
                                         "value": "A108",
@@ -547,7 +510,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4997"
+                                        "_id": "6824918d36e4967427a701f1"
                                     },
                                     {
                                         "value": "A001",
@@ -555,7 +518,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4998"
+                                        "_id": "6824918d36e4967427a701f2"
                                     },
                                     {
                                         "value": "A109",
@@ -563,7 +526,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c4999"
+                                        "_id": "6824918d36e4967427a701f3"
                                     },
                                     {
                                         "value": "A110",
@@ -571,7 +534,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c499a"
+                                        "_id": "6824918d36e4967427a701f4"
                                     },
                                     {
                                         "value": "A022",
@@ -579,7 +542,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c499b"
+                                        "_id": "6824918d36e4967427a701f5"
                                     },
                                     {
                                         "value": "A068",
@@ -587,7 +550,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c499c"
+                                        "_id": "6824918d36e4967427a701f6"
                                     },
                                     {
                                         "value": "A088",
@@ -595,7 +558,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c499d"
+                                        "_id": "6824918d36e4967427a701f7"
                                     },
                                     {
                                         "value": "A053",
@@ -603,7 +566,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c499e"
+                                        "_id": "6824918d36e4967427a701f8"
                                     },
                                     {
                                         "value": "A070",
@@ -611,7 +574,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c499f"
+                                        "_id": "6824918d36e4967427a701f9"
                                     },
                                     {
                                         "value": "A111",
@@ -619,7 +582,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c49a0"
+                                        "_id": "6824918d36e4967427a701fa"
                                     },
                                     {
                                         "value": "A089",
@@ -627,7 +590,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c49a1"
+                                        "_id": "6824918d36e4967427a701fb"
                                     },
                                     {
                                         "value": "A012",
@@ -635,7 +598,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c49a2"
+                                        "_id": "6824918d36e4967427a701fc"
                                     },
                                     {
                                         "value": "A073",
@@ -643,7 +606,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c49a3"
+                                        "_id": "6824918d36e4967427a701fd"
                                     },
                                     {
                                         "value": "A071",
@@ -651,7 +614,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c49a4"
+                                        "_id": "6824918d36e4967427a701fe"
                                     },
                                     {
                                         "value": "A008",
@@ -659,7 +622,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c49a5"
+                                        "_id": "6824918d36e4967427a701ff"
                                     },
                                     {
                                         "value": "A112",
@@ -667,7 +630,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": true,
-                                        "_id": "6823b2ab79534939544c49a6"
+                                        "_id": "6824918d36e4967427a70200"
                                     },
                                     {
                                         "value": "F100",
@@ -675,7 +638,7 @@ Resultado obtido
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": false,
-                                        "_id": "6823b2ab79534939544c49a7"
+                                        "_id": "6824918d36e4967427a70201"
                                     }
                                 ],
                                 "_id": "6468f46eff51aa9d77d84a3b",
@@ -689,7 +652,7 @@ Resultado obtido
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "6823b2ab79534939544c498a"
+                        "_id": "6824918d36e4967427a701e4"
                     }
                 ]
             }
@@ -757,3 +720,24 @@ Resultado obtido
         ]
     }
 }
+
+FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription	FeeType
+JH001	Account Maintenance Fee	98	0.00	NULL	Customer Fees
+JH006	FX Outgoing Wire Fee	114	50.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	96	0.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	97	0.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	123	50.00	NULL	Bank Account Fees
+JH008	USD/FX Outgoing Wire Fee	133	45.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	134	0.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	135	10.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	136	20.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	137	25.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	138	30.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	139	35.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	140	40.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	141	50.00	NULL	Investment Fees
+JH008	USD/FX Outgoing Wire Fee	142	60.00	NULL	Investment Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	188	15.00	NULL	Investment Fees
+
+
+
