@@ -1,66 +1,33 @@
-function applyStandardAmounts(mongoFees, stdRows) {
-  mongoFees.forEach(fee => {
-    const stdGrp = findGroup(fee, 'Standard Fees');
-    if (!stdGrp) return;
+/** @type {import('next').NextConfig} */
+const Dotenv = require("dotenv-webpack");
 
-    stdGrp.fields.forEach(field => {
-      const row = stdRows.find(r => Number(r.FeeType) === field.code);
-      if (!row) return;
+const nextConfig = {
+  reactStrictMode: true,
+  pageExtensions: ["tsx"],
+  compiler: {
+    styledComponents:
+      true | { ssr: true, displayName: true, preprocess: false },
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/login",
+        permanent: true,
+      },
+    ];
+  },
+  webpack: (config) => {
+    config.plugins.push(new Dotenv({ silent: true }));
+    return config;
+  },
+  output: "standalone",
+};
 
-      const num = Number(row.FeeAmount);
-
-      if (Number.isNaN(num)) {                        // ← Custody / códigos A0xx
-        field.defaultValue = row.FeeAmount;          // "A021"
-        field.labelValue   = row.FreqDescription?.trim() || ''; // "0.35% /YR…"
-      } else {
-        field.defaultValue = num.toString();         // "1500", "75"…
-        field.labelValue   = numberToCurrency(num);  // "$1,500.00"
-      }
-
-      field.tooltip = field.labelValue;              // garante tooltip correto
-    });
-  });
-}
-
-
-function applyExceptionAmounts(mongoFees, excRows) {
-  const byCode = excRows.reduce((acc, r) => {
-    (acc[r.FeeCode] ??= []).push(r);
-    return acc;
-  }, {});
-
-  mongoFees.forEach(fee => {
-    const excGrp = findGroup(fee, 'Exception Request');
-    if (!excGrp) return;
-
-    excGrp.fields.forEach(field => {
-      const code = Object.entries(feeCodeMap)
-                         .find(([, c]) => c === field.code)?.[0];
-      const rows = code ? byCode[code] : null;
-      if (!rows?.length) return;
-
-      /* ❶ separa numéricos e texto ❷ ordena ❸ concatena */
-      const nums = rows.filter(r => !Number.isNaN(Number(r.Amount)))
-                       .sort((a, b) => Number(a.Amount) - Number(b.Amount));
-      const alpha = rows.filter(r => Number.isNaN(Number(r.Amount)))
-                        .sort((a, b) => a.Amount.localeCompare(b.Amount));
-
-      field.exceptionOptions = [...nums, ...alpha].map(r => ({
-        value  : r.Amount,
-        text   : Number.isNaN(Number(r.Amount))
-                   ? (r.FreqDescription?.trim() || r.Amount)
-                   : numberToCurrency(Number(r.Amount)),
-        visible: true,
-        retired: false
-      }));
-
-      field.defaultValue = '';
-      field.labelValue   = '';
-    });
-  });
-}
-
-
-
-
-
+module.exports = nextConfig;
