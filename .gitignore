@@ -1,138 +1,63 @@
-/* eslint-disable no-console */
-import { Fee }                     from '#src/models/entities/Fees.js';
-import Result                      from '#features/shared/result.js';
-import CustomerFees                from '#src/models/CustomerFees.js';
-import BankAccountFee              from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee       from '#src/models/InvestimentAccountFee.js';
-import { FeeCase }                 from '#src/models/entities/FeeCase.js';
-import { Field }                   from '#src/models/entities/Fields.js';
-import numberToCurrency            from '#core/helpers/currency.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure
-} from '#core/data/mssql/index.js';
+/* (…) importações e helpers que você já tinha … */
 
-/* ───────────── helpers SQL ───────────── */
+/* --------- Standard Fees ---------- */
+function applyStandardAmounts(mongoFees, stdRows) {
+  mongoFees.forEach(fee => {
+    const stdGrp = findGroup(fee, 'Standard Fees');
+    if (!stdGrp) return;
 
-async function getPackageData(cifno) {
-  const conn  = await connectToFeeMgmtDb();
-  const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
-  if (!row) return {};
-
-  return {
-    defaultFeePackageId : row['Default Fee Package Id'] ?? null,
-    branchCity          : row['Branch City']?.trim()          || '',
-    branchState         : row['Branch State']?.trim()         || '',
-    branchType          : row['Branch Type']?.trim()          || '',
-    defaultPackageType  : row['Default Package Type']?.trim() || '',
-    feePackage          : row['Default Fee Package']?.trim()  || '',
-  };
-}
-
-async function getStandardFees(packageId) {
-  const conn = await connectToFeeMgmtDb();
-  return (await executeStoreProcedure(
-            conn, 'sp_get_standard_fees_bypackage',
-            { FeePackageId: packageId })) ?? [];
-}
-
-async function getExceptionFees(packageId) {
-  const conn = await connectToFeeMgmtDb();
-  return (await executeStoreProcedure(
-            conn, 'sp_get_exception_fees_bypackage',
-            { FeePackageId: packageId })) ?? [];
-}
-
-function getDocumentUrl(id) {
-  const urls = global.environment.scheduleUrls || {};
-  const key  = ({ 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' })[id];
-  return key ? urls[key] || '' : '';
-}
-
-/* ───────────── Mongo helpers ─────────── */
-
-async function getFeeStandard(filter){
-  return Fee.find({ $or: filter })
-            .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-            .lean();
-}
-function findGroup(fee,name){ return fee?.feeGroups?.find(g=>g.name===name); }
-
-/* feeCode → field.code */
-const feeCodeMap = {
-  /* Customer / Bank */
-  JH001:1, JH002:2, JH010:3, JH008:4,
-  /* Investment – BPS */
-  BPS003:5,           // SSL maintenance
-  BPS002:6,           // Custody
-  BPS004:7, BPS005:7  // Equity / Options
-};
-
-/* ───────────── Standard Fees ─────────── */
-
-function applyStandardAmounts(mongoFees,stdRows){
-  mongoFees.forEach(fee=>{
-    const stdGrp = findGroup(fee,'Standard Fees');
-    if(!stdGrp) return;
-
-    stdGrp.fields.forEach(field=>{
-      const row = stdRows.find(r=>Number(r.FeeType)===field.code);
-      if(!row) return;
+    stdGrp.fields.forEach(field => {
+      const row = stdRows.find(r => Number(r.FeeType) === field.code);
+      if (!row) return;
 
       const num = Number(row.FeeAmount);
-      field.defaultValue = num.toString();
-      field.labelValue   = numberToCurrency(num);
-      field.tooltip      = row.FrequencyDescription?.trim() || "";
+
+      /* numérico → moeda | alfanumérico → descrição */
+      if (!Number.isNaN(num)) {
+        field.defaultValue = num.toString();
+        field.labelValue   = numberToCurrency(num);
+      } else {
+        field.defaultValue = row.FeeAmount;                       // ex.: "A021"
+        field.labelValue   = row.FrequencyDescription?.trim()
+                         || row.FeeAmount;                        // fallback
+      }
+      field.tooltip = row.FrequencyDescription?.trim() || '';
     });
   });
 }
 
-/* ───────────── Exception Fees ────────── */
+/* --------- Exception Fees ---------- */
+function applyExceptionAmounts(mongoFees, excRows) {
+  const byCode = excRows.reduce((acc, r) => {
+    (acc[r.FeeCode] ??= []).push(r);
+    return acc;
+  }, {});
 
-function applyExceptionAmounts(mongoFees,excRows){
-  const byCode = excRows.reduce((acc,r)=>{
-    (acc[r.FeeCode] ??= []).push(r); return acc;
-  },{});
+  mongoFees.forEach(fee => {
+    const excGrp = findGroup(fee, 'Exception Request');
+    if (!excGrp) return;
 
-  mongoFees.forEach(fee=>{
-    const excGrp = findGroup(fee,'Exception Request');
-    if(!excGrp) return;
-
-    excGrp.fields.forEach(field=>{
+    excGrp.fields.forEach(field => {
       const codes = Object.entries(feeCodeMap)
-                          .filter(([,c])=>c===field.code)
-                          .map(([k])=>k);
+                          .filter(([, c]) => c === field.code)
+                          .map(([k]) => k);
+      const rows  = codes.flatMap(c => byCode[c] || []);
+      if (!rows.length) return;
 
-      const rows  = codes.flatMap(c=>byCode[c] || []);
-      if(!rows.length) return;
+      /* ordena – numéricos ↑  depois alfanumérico ↑ */
+      const nums  = rows.filter(r => !Number.isNaN(Number(r.Amount)))
+                        .sort((a, b) => Number(a.Amount) - Number(b.Amount));
+      const alpha = rows.filter(r => Number.isNaN(Number(r.Amount)))
+                        .sort((a, b) => a.Amount.localeCompare(b.Amount));
 
-      /* field 7 (Equity + Options) → item único combinado */
-      if(field.code===7){
-        const tag = rows.reduce((acc,r)=>{
-          const t = r.BPSFeeTypeCode==='O' ? 'Option' : 'Equity';
-          acc[t] = r.FreqDescription?.trim() || r.Amount; return acc;},{});
-        field.exceptionOptions=[{
-          value  : '',
-          text   : `Equity: ${tag.Equity ?? '–'}; Option: ${tag.Option ?? '–'}`,
-          visible: true,
-          retired: false
-        }];
-      }else{
-        /* ordena: numérico crescente, depois alfanumérico */
-        const nums  = rows.filter(r=>!Number.isNaN(Number(r.Amount)))
-                          .sort((a,b)=>Number(a.Amount)-Number(b.Amount));
-        const alpha = rows.filter(r=>Number.isNaN(Number(r.Amount)))
-                          .sort((a,b)=>a.Amount.localeCompare(b.Amount));
-
-        field.exceptionOptions = [...nums,...alpha].map(r=>({
-          value  : r.Amount,
-          text   : Number.isNaN(Number(r.Amount))
-                     ? (r.FreqDescription?.trim() || r.Amount)
-                     : numberToCurrency(Number(r.Amount)),
-          visible: true,
-          retired: false
-        }));
-      }
+      field.exceptionOptions = [...nums, ...alpha].map(r => ({
+        value  : r.Amount,
+        text   : Number.isNaN(Number(r.Amount))
+                   ? (r.FreqDescription?.trim() || r.Amount)
+                   : numberToCurrency(Number(r.Amount)),
+        visible: true,
+        retired: false
+      }));
 
       field.defaultValue = '';
       field.labelValue   = '';
@@ -140,106 +65,37 @@ function applyExceptionAmounts(mongoFees,excRows){
   });
 }
 
-function syncExceptionLabels(fees){
-  fees.forEach(fee=>{
-    const exc=findGroup(fee,'Exception Request');
-    if(!exc) return;
-    exc.fields.forEach(f=>{
-      const v=f.defaultValue;
-      f.labelValue = v && !Number.isNaN(Number(v)) ? numberToCurrency(Number(v)) : '';
-    });
-  });
-}
+/* --------- patch p/ Client-Current (custody + equity/options) ---------- */
+function patchClientCurrent(customerAccount, resultFees) {
+  const invFee  = resultFees.find(f => f.feeType === 'Investment Account Fees');
+  if (!invFee) return;
 
-/* ───────────── Main use-case ─────────── */
+  const currGrp = findGroup(invFee, 'Client Current Fees');
+  if (!currGrp) return;
 
-export default class FeeGetByCifUseCase{
-  async execute({ customerAccount }){
-
-    const fees = await getFeeStandard([
-      { feeType:'Customer Fees'     },
-      { feeType:'Bank Account Fees' },
-      { feeType:'Investment Account Fees' }
-    ]);
-
-    const pkgData   = await getPackageData(customerAccount[0].cifno);
-    const packageId = pkgData.defaultFeePackageId;
-
-    const [stdRows,excRows] = await Promise.all([
-      getStandardFees (packageId),
-      getExceptionFees(packageId)
-    ]);
-
-    applyStandardAmounts (fees,stdRows);
-    applyExceptionAmounts(fees ,excRows);
-
-    /* merge dados de package em cada conta */
-    customerAccount.forEach(acc=>Object.assign(acc,pkgData));
-
-    /* ------------ patch Custody (code 6) e Equity/Options (7) ------------- */
-    const invFee   = fees.find(f=>f.feeType==='Investment Account Fees');
-    const currGrp  = findGroup(invFee,'Client Current Fees');
-
-    /* Custody */
-    const custodyAcc = customerAccount.find(a=>a.feeType===6);
-    if(custodyAcc){
-      const fld = currGrp?.fields?.find(f=>f.code===6);
-      if(fld){
-        fld.defaultValue = custodyAcc.feeCode;
-        fld.labelValue   = numberToCurrency(custodyAcc.feeAmount);
-      }
+  /* custody (code 6) */
+  const custodyAcc = customerAccount.find(a => a.feeType === 6);
+  if (custodyAcc) {
+    const fld = currGrp.fields.find(f => f.code === 6);
+    if (fld) {
+      fld.defaultValue = custodyAcc.feeCode;
+      fld.labelValue   = numberToCurrency(custodyAcc.feeAmount);
     }
-    /* Equity / Options */
-    const equityAcc  = customerAccount.find(a=>a.bpsFeeTypeCode==='E');
-    const optionsAcc = customerAccount.find(a=>a.bpsFeeTypeCode==='O');
-    if(equityAcc && optionsAcc){
-      const fld = currGrp?.fields?.find(f=>f.code===7);
-      if(fld){
-        fld.defaultValue = '';      // permanece vazio – usuário escolherá
-        fld.labelValue   =
-          `Equity: ${equityAcc.feeAmount}; Option: ${optionsAcc.feeAmount}`;
-      }
-    }
+  }
 
-    /* ------------ builders existentes ---------------- */
-    const result = { fees: [] };
-    const [customer,bank,investment] = [
-      new CustomerFees      (fees,customerAccount),
-      new BankAccountFee    (fees,customerAccount),
-      new InvestimentAccountFee(fees,customerAccount,
-                                await Field.findOne({ code:7 }))
-    ];
+  /* equity / options (code 7) */
+  const equityAcc  = customerAccount.find(a => a.bpsFeeTypeCode === 'E');
+  const optionsAcc = customerAccount.find(a => a.bpsFeeTypeCode === 'O');
+  const fld7       = currGrp.fields.find(f => f.code === 7);
 
-    [customer,bank,investment]
-      .filter(f=>f.fee && f.fee.feeGroups?.length)
-      .forEach(f=>result.fees.push(f.fee));
-
-    const actives = await FeeCase.find({
-      cif       : customerAccount[0].cifno,
-      status    : { $nin:['DONE','REJECTED'] },
-      caseNumber: { $exists:true }
-    });
-    result.feesActives = actives.map(({caseNumber,id})=>({caseNumber,id}));
-
-    const docUrl = getDocumentUrl(packageId);
-    result.accounts = customerAccount.map(acc=>({
-      cifno              : acc.cifno,
-      ddaNumber          : acc.ddaNumber,
-      branchCity         : acc.branchCity,
-      branchState        : acc.branchState,
-      branchType         : acc.branchType,
-      defaultPackageType : acc.defaultPackageType,
-      feePackage         : acc.feePackage,
-      defaultFeePackageId: acc.defaultFeePackageId,
-      defaultFeePackage  : acc.defaultFeePackage,
-      documentUrl        : docUrl,
-      feeAmount          : acc.feeAmount,
-      exceptionAmount    : acc.exceptionAmount ?? null
-    }));
-    result.documentUrl = docUrl;
-
-    syncExceptionLabels(result.fees);
-
-    return Result.ok(result);
+  if (fld7 && equityAcc && optionsAcc) {
+    fld7.defaultValue = '';   // usuário escolhe
+    fld7.labelValue   =
+      `Equity: ${equityAcc.feeAmount}; Option: ${optionsAcc.feeAmount}`;
   }
 }
+
+/* --------- no restante do arquivo mantenha igual --------- */
+/* dentro de execute(), depois de montar result.fees */
+patchClientCurrent(customerAccount, result.fees);
+syncExceptionLabels(result.fees);
