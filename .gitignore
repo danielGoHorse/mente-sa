@@ -1,29 +1,27 @@
-/* helper p/ Equity + Option  ───────────── */
-function mergeEquityOption(rows) {
-  /*
-   * 1) agrupa pelo próprio código (Amount) – “A1”, “B6”…;
-   * 2) junta a descrição de Equity e/ou Option que existir;
-   * 3) mantém a ordem alfabética.
-   */
-  const bucket = {};
-  for (const r of rows) {
-    const code = r.Amount;                       // chave = código
-    (bucket[code] ??= { E: null, O: null });
-    if (r.BPSFeeTypeCode === 'E') bucket[code].E = r;
-    if (r.BPSFeeTypeCode === 'O') bucket[code].O = r;
+/* ───────────── Ajuste Client-Current (custody + equity/option) ────────── */
+function patchClientCurrent(customerAccount, feesArr) {
+  const invFee = feesArr.find(f => f.feeType === 'Investment Account Fees');
+  if (!invFee) return;
+
+  const currGrp = invFee.feeGroups?.find(g => g.name === 'Client Current Fees');
+  const stdGrp  = invFee.feeGroups?.find(g => g.name === 'Standard Fees');
+  if (!currGrp || !stdGrp) return;
+
+  /* ---------- custody (code 6) ---------------------------------------- */
+  const custodyAcc = customerAccount.find(a => a.feeType === 6);
+  if (custodyAcc) {
+    const fldCurr6 = currGrp.fields.find(f => f.code === 6);
+    if (fldCurr6) {
+      fldCurr6.defaultValue = custodyAcc.feeCode;               // A053 …
+      fldCurr6.labelValue   = numberToCurrency(custodyAcc.feeAmount);
+    }
   }
 
-  return Object.keys(bucket)
-    .sort((a, b) => a.localeCompare(b))
-    .map(code => {
-      const { E, O } = bucket[code];
-      return {
-        value  : code,                           // “A1”, “B6”…
-        text   : `${code} - ` +
-                 `Equity:${E ? E.FreqDescription : '-' }; ` +
-                 `Option:${O ? O.FreqDescription : '-'}`,
-        visible: true,
-        retired: false
-      };
-    });
+  /* ---------- equity / option (code 7) -------------------------------- */
+  const fldStd7  = stdGrp.fields .find(f => f.code === 7);      // texto completo
+  const fldCurr7 = currGrp.fields.find(f => f.code === 7);
+  if (fldStd7 && fldCurr7 && !fldCurr7.labelValue) {            // só se vazio
+    fldCurr7.defaultValue = fldStd7.defaultValue;               // “E3”, “B6” …
+    fldCurr7.labelValue   = fldStd7.labelValue;                 // “E3 – Equity:…”
+  }
 }
