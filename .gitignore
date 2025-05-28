@@ -1,34 +1,17 @@
-function mergeEquityOption(rows) {
--  const byId = {};
--  rows.forEach(r=>{
--    const id = r.FeeParameterOptionId;
--    (byId[id] ??= {E:null,O:null});
--    if (r.BPSFeeTypeCode==='E') byId[id].E = r;
--    if (r.BPSFeeTypeCode==='O') byId[id].O = r;
--  });
--  return Object.values(byId)
--    .filter(({E,O}) => E && O)    // só quando há par E/O
--    .map(({E,O}) => ({
--      value : E.Amount.toString(),
--      text  : `${E.Amount} - Equity:${E.FreqDescription}; `
--            + `Option:${O.FreqDescription}`,
--      visible:true, retired:false
--    }));
-+  const bucket = {};
-+  for (const r of rows) {
-+    const id = r.FeeParameterOptionId;
-+    (bucket[id] ??= { E: null, O: null });
-+    if (r.BPSFeeTypeCode === 'E') bucket[id].E = r;
-+    if (r.BPSFeeTypeCode === 'O') bucket[id].O = r;
-+  }
+/* equity / option – code 7 ----------------------------------- */
+-const equityAcc  = customerAccount.find(a => a.bpsFeeTypeCode === 'E');
+-const optionsAcc = customerAccount.find(a => a.bpsFeeTypeCode === 'O');
+-const fld7       = currGrp.fields.find(f => f.code === 7);
+-
+-if (fld7 && equityAcc && optionsAcc) {
+-  fld7.defaultValue = '';
+-  fld7.labelValue   =
+-    `Equity: ${equityAcc.feeAmount}; Option: ${optionsAcc.feeAmount}`;
+-}
++const first7 = customerAccount.find(a => a.feeType === 7);
++const fld7   = currGrp.fields.find(f => f.code === 7);
 +
-+  return Object.values(bucket)
-+    .filter(x => x.E && x.O)                        // exige par completo
-+    .map(({ E, O }) => ({
-+      value  : E.Amount.toString(),                 // “E3”, “B6” …
-+      text   : `${E.Amount} - Equity:${E.FreqDescription}; `
-+             + `Option:${O.FreqDescription}`,
-+      visible: true,
-+      retired: false
-+    }));
-}
++if (fld7 && first7) {
++  fld7.defaultValue = first7.feeAmount.toString();      // "0" hoje
++  fld7.labelValue   = numberToCurrency(first7.feeAmount); // "$0.00"
++}
