@@ -1,30 +1,108 @@
-Essxes são os dados que o customerAccount tras....
-
-Faz um mock, no proprio codigo, pra eu testar a chamada com esses dados do banco de QA que passei abaixo
-(Pode fazer so o trecho que eu devo colocar no inicio de customerAccount recebendo esses dados e eu rodar aqui a app corretamente
-
-{
-  cifno: "NAA0010",
-  ddaNumber: 17226444,
-  bpsAcctNumber: "20002089",
-  feeType: 6,
-  feeDescription: "SafekeepingCustody",
-  feeCode: "A032",
-  bpsFeeTypeCode: "C",
-  source: "BPS",
-  entity: "SNB/284",
-  feeAmount: 375,
-  isFeesStandard: "Yes",
-  kycMailingStatus: null,
-  feeGroup: 3,
+// ───────────────────  MOCK - QA  ───────────────────
+// remova ou comente depois de testar!
+if (!customerAccount || customerAccount.length === 0) {
+  customerAccount = [
+    {
+      cifno           : 'NAA0010',
+      ddaNumber       : 17226444,
+      bpsAcctNumber   : '',           // DDA “puro”
+      feeType         : 1,
+      feeDescription  : 'AccountMaintenance',
+      feeCode         : 'JH001',
+      bpsFeeTypeCode  : '',
+      feeAmount       : 1500,
+      source          : 'JHA',
+      entity          : 'SNB/284',
+      isFeesStandard  : 'Yes',
+      kycMailingStatus: null,
+      feeGroup        : 1,
+    },
+    {
+      cifno           : 'NAA0010',
+      ddaNumber       : 17226444,
+      bpsAcctNumber   : '',
+      feeType         : 2,
+      feeDescription  : 'HoldMail',
+      feeCode         : 'JH002',
+      bpsFeeTypeCode  : '',
+      feeAmount       : 600,
+      source          : 'JHA',
+      entity          : 'SNB/284',
+      isFeesStandard  : 'Yes',
+      kycMailingStatus: null,
+      feeGroup        : 1,
+    },
+    {
+      cifno          : 'NAA0010',
+      ddaNumber      : 17226444,
+      bpsAcctNumber  : '',
+      feeType        : 4,
+      feeDescription : 'USD/FXOutgoingWire',
+      feeCode        : 'JH008',
+      bpsFeeTypeCode : '',
+      feeAmount      : 20,
+      source         : 'JHA',
+      entity         : 'SNB/284',
+      isFeesStandard : 'No',
+      feeGroup       : 2,
+    },
+    {
+      cifno          : 'NAA0010',
+      ddaNumber      : 17226444,
+      bpsAcctNumber  : '20103939',
+      feeType        : 5,
+      feeDescription : 'SSLMaintenanace',
+      feeCode        : 'BPS003',
+      bpsFeeTypeCode : 'S',
+      feeAmount      : 0,
+      source         : 'BPS',
+      entity         : 'SSL/189',
+      isFeesStandard : 'No',
+      feeGroup       : 3,
+    },
+    {
+      cifno          : 'NAA0010',
+      ddaNumber      : 17226444,
+      bpsAcctNumber  : '20002089',
+      feeType        : 6,
+      feeDescription : 'SafekeepingCustody',
+      feeCode        : 'BPS002',
+      bpsFeeTypeCode : 'C',
+      feeAmount      : 375,
+      source         : 'BPS',
+      entity         : 'SNB/284',
+      isFeesStandard : 'Yes',
+      kycMailingStatus: null,
+      feeGroup       : 3,
+    },
+    {
+      cifno          : 'NAA0010',
+      ddaNumber      : 17226444,
+      bpsAcctNumber  : '20103939',
+      feeType        : 7,
+      feeDescription : 'EquityCommissions',
+      feeCode        : 'BPS004',
+      bpsFeeTypeCode : 'E',
+      feeAmount      : 0,
+      source         : 'BPS',
+      entity         : 'SSL/189',
+      isFeesStandard : 'Yes',
+      feeGroup       : 3,
+    },
+    {
+      cifno          : 'NAA0010',
+      ddaNumber      : 17226444,
+      bpsAcctNumber  : '20103939',
+      feeType        : 7,
+      feeDescription : 'OptionsCommissions',
+      feeCode        : 'BPS005',
+      bpsFeeTypeCode : 'O',
+      feeAmount      : 0,
+      source         : 'BPS',
+      entity         : 'SSL/189',
+      isFeesStandard : 'Yes',
+      feeGroup       : 3,
+    },
+  ];
 }
-
-
-CIFNO	DDANumber	BPSAcctNumber	FeeType	FeeDescription	FeeCode	BPSFeeTypeCode	FeeAmount	Source	Entity	IsFeesStandard
-NAA0010	17226444		1	AccountMaintenance	JH001		1500.000000000	JHA	SNB/284	Yes
-NAA0010	17226444		2	HoldMail	JH002		600.000000000	JHA	SNB/284	Yes
-NAA0010	17226444		4	USD/FXOutgoingWire	JH008		20.000000000	JHA	SNB/284	No
-NAA0010	17226444    	20103939	5	SSLMaintenanace	BPS003	S	0.000000000	BPS	SSL/189	No
-NAA0010	17226444    	20002089	6	SafekeepingCustody	BPS002	C	375.000000000	BPS	SNB/284	Yes
-NAA0010	17226444    	20103939	7	EquityCommissions	BPS004	E	0.000000000	BPS	SSL/189	Yes
-NAA0010	17226444    	20103939	7	OptionsCommissions	BPS005	O	0.000000000	BPS	SSL/189	Yes
+// ────────────────────────────────────────────────────
