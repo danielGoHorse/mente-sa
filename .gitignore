@@ -1,3 +1,8 @@
+Essxes são os dados que o customerAccount tras....
+
+Faz um mock, no proprio codigo, pra eu testar a chamada com esses dados do banco de QA que passei abaixo
+(Pode fazer so o trecho que eu devo colocar no inicio de customerAccount recebendo esses dados e eu rodar aqui a app corretamente
+
 {
   cifno: "NAA0010",
   ddaNumber: 17226444,
@@ -13,3 +18,13 @@
   kycMailingStatus: null,
   feeGroup: 3,
 }
+
+
+CIFNO	DDANumber	BPSAcctNumber	FeeType	FeeDescription	FeeCode	BPSFeeTypeCode	FeeAmount	Source	Entity	IsFeesStandard
+NAA0010	17226444		1	AccountMaintenance	JH001		1500.000000000	JHA	SNB/284	Yes
+NAA0010	17226444		2	HoldMail	JH002		600.000000000	JHA	SNB/284	Yes
+NAA0010	17226444		4	USD/FXOutgoingWire	JH008		20.000000000	JHA	SNB/284	No
+NAA0010	17226444    	20103939	5	SSLMaintenanace	BPS003	S	0.000000000	BPS	SSL/189	No
+NAA0010	17226444    	20002089	6	SafekeepingCustody	BPS002	C	375.000000000	BPS	SNB/284	Yes
+NAA0010	17226444    	20103939	7	EquityCommissions	BPS004	E	0.000000000	BPS	SSL/189	Yes
+NAA0010	17226444    	20103939	7	OptionsCommissions	BPS005	O	0.000000000	BPS	SSL/189	Yes
