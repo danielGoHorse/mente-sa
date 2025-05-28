@@ -1,48 +1,16 @@
-// === Helper para montar TODAS as opções possíveis de Equity/Options ===
-function mergeEquityOptionAll(excRows) {
-  // Pegue todos os códigos possíveis de Equity e Option
-  const equities = excRows.filter(r => r.FeeCode === "BPS004");
-  const options  = excRows.filter(r => r.FeeCode === "BPS005");
-  const allCodes = Array.from(
-    new Set([...equities, ...options].map(r => r.Amount))
-  );
-  return allCodes.sort().map(code => {
-    const equity = equities.find(r => r.Amount === code);
-    const option = options .find(r => r.Amount === code);
-    return {
-      value: code,
-      text:
-        `${code} - ` +
-        `Equity:${equity && equity.FreqDescription ? equity.FreqDescription.trim() : '-'}` +
-        `; Option:${option && option.FreqDescription ? option.FreqDescription.trim() : '-'}`,
-      visible: true,
-      retired: false,
-    };
-  });
-}
+applyStandardAmounts(fees, stdRows);
+applyExceptionAmounts(fees, excRows);
 
-// === Aplica opções nas Exception Request (campo 7 — Equity/Options) ===
-function applyEquityOptionException(field, excRows) {
-  if (field.code === 7) {
-    field.exceptionOptions = mergeEquityOptionAll(excRows); // <- agora sempre popula
-    field.defaultValue = '';
-    field.labelValue = '';
-  }
-}
-
-// ==== No seu bloco principal, aplique assim ====
-
+// Ajuste labelValue dos campos Equity/Options:
 fees.forEach(fee => {
-  // Preenche Exception Request de todos os campos
-  const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
-  if (excGrp) {
-    excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
+  const stdGrp = findGroup(fee, 'Standard Fees');
+  const currGrp = findGroup(fee, 'Client Current Fees');
+  if (stdGrp) {
+    const fld = stdGrp.fields.find(f => f.code === 7);
+    setEquityOptionLabel(fld, excRows);
   }
-  // Ajusta o label dos campos 7 (Equity/Option) em Standard/Current
-  ['Standard Fees', 'Client Current Fees'].forEach(groupName => {
-    const group = fee.feeGroups?.find(g => g.name === groupName);
-    if (group) {
-      group.fields.forEach(field => setEquityOptionLabelValue(field, excRows));
-    }
-  });
+  if (currGrp) {
+    const fld = currGrp.fields.find(f => f.code === 7);
+    setEquityOptionLabel(fld, excRows);
+  }
 });
