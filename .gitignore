@@ -1,1 +1,65 @@
-      "labelValue": "E3 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade"
+// Auxiliar para juntar todas combinações de Equity/Option do banco
+function mergeEquityOptionAll(excRows) {
+  const equities = excRows.filter(r => r.FeeCode === "BPS004");
+  const options  = excRows.filter(r => r.FeeCode === "BPS005");
+  const allCodes = Array.from(
+    new Set([...equities, ...options].map(r => r.Amount))
+  );
+  return allCodes.sort().map(code => {
+    const equity = equities.find(r => r.Amount === code);
+    const option = options .find(r => r.Amount === code);
+    return {
+      value: code,
+      text:
+        `${code} - ` +
+        `Equity:${equity && equity.FreqDescription ? equity.FreqDescription.trim() : '-'}` +
+        `; Option:${option && option.FreqDescription ? option.FreqDescription.trim() : '-'}`,
+      visible: true,
+      retired: false,
+    };
+  });
+}
+
+// Aplica opções para Exception Request do campo 7 (Equity/Option)
+function applyEquityOptionException(field, excRows) {
+  if (field.code === 7) {
+    field.exceptionOptions = mergeEquityOptionAll(excRows);
+    field.defaultValue = '';
+    field.labelValue = '';
+  }
+}
+
+// Aplica labelValue para Standard/Current Fees do campo 7 (Equity/Option)
+function setEquityOptionLabelValue(field, excRows) {
+  if (field && field.code === 7 && field.defaultValue) {
+    const code = field.defaultValue;
+    const equities = excRows.filter(r => r.FeeCode === "BPS004");
+    const options  = excRows.filter(r => r.FeeCode === "BPS005");
+    const equity = equities.find(r => r.Amount === code);
+    const option = options .find(r => r.Amount === code);
+    field.labelValue =
+      `${code} - ` +
+      `Equity:${equity && equity.FreqDescription ? equity.FreqDescription.trim() : '-'}` +
+      `; Option:${option && option.FreqDescription ? option.FreqDescription.trim() : '-'}`;
+  }
+}
+
+// -------------- INÍCIO DO PROCESSO PRINCIPAL ----------------------
+// fees: seu array principal (que monta o JSON final)
+// excRows: seu array de todas as opções possíveis (Equity/Option do banco)
+
+fees.forEach(fee => {
+  // Popula Exception Request com TODAS as opções do banco para Equity/Option
+  const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
+  if (excGrp) {
+    excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
+  }
+
+  // Atualiza o labelValue de Standard/Current Fees, campo 7, para o texto completo (Equity+Option)
+  ['Standard Fees', 'Client Current Fees'].forEach(groupName => {
+    const group = fee.feeGroups?.find(g => g.name === groupName);
+    if (group) {
+      group.fields.forEach(field => setEquityOptionLabelValue(field, excRows));
+    }
+  });
+});
