@@ -1,49 +1,45 @@
-import Result from '#features/shared/result.js'
+/* ─────────── Ajuste “Client Current” (custody & equity/options) ─────────── */
+function patchClientCurrent(customerAccount, feesArr) {
+  const invFee = feesArr.find(f => f.feeType === 'Investment Account Fees');
+  if (!invFee) return;
 
-export default class FeeCaseGetByCifUseCase {
-  async execute({ cif }, feeManagementModel, customerModel) {
-    //global.logger.info(`customerModel.getCustomerDetailsByCif(${cif})`)
-    const [errCustomer, responseCustomer] =
-      await customerModel.getCustomerDetailsByCif(cif)
+  /* agrupa feeGroups por accountNumber+entityCode */
+  const key = g => `${g.accountNumber ?? ''}::${g.entityCode ?? ''}`;
 
-    if (errCustomer) {
-      return Result.fail({ message: "It's not possible to get address cif" })
+  const stdMap  = new Map();   // Standard  por conta
+  const currMap = new Map();   // Current   por conta
+
+  invFee.feeGroups.forEach(g => {
+    if (g.name === 'Standard Fees')       stdMap.set(key(g), g);
+    if (g.name === 'Client Current Fees') currMap.set(key(g), g);
+  });
+
+  /* ------------ percorre cada conta que possua Client Current ------------ */
+  for (const [k, currGrp] of currMap.entries()) {
+    const stdGrp = stdMap.get(k);
+    if (!stdGrp) continue;                     // não deveria acontecer
+
+    /* -------- custody (code 6) -------- */
+    const custodyAcc = customerAccount
+      .find(a => a.feeType === 6 &&
+                 `${a.bpsAcctNumber ?? ''}::${a.entity}` === k);
+
+    if (custodyAcc) {
+      const fld6 = currGrp.fields.find(f => f.code === 6);
+      if (fld6) {
+        fld6.defaultValue = custodyAcc.feeCode;               // A053…
+        fld6.labelValue   = numberToCurrency(custodyAcc.feeAmount);
+      }
     }
-    //global.logger.info('feeManagementModel.getFeeByAccount')
-    const [errFee, responseFee] = await feeManagementModel.getFeeByAccount(
-      responseCustomer.data.customer
-    )
 
-    console.log(responseFee)
+    /* -------- equity + option (code 7) -------- */
+    const fldCurr7 = currGrp.fields.find(f => f.code === 7);
+    const fldStd7  = stdGrp .fields.find(f => f.code === 7);
 
-    if (errFee) {
-      return Result.fail({ message: "Its's not possible get fee values" })
+    if (fldCurr7 && fldStd7) {
+      // usa exatamente o valor/descrição já montados no grupo Standard
+      fldCurr7.defaultValue = fldStd7.defaultValue;   // “E3”, “B6” …
+      fldCurr7.labelValue   = fldStd7.labelValue;     // “E3 – Equity: …; Option: …”
     }
-
-    const currentFees =
-      responseCustomer?.data?.customer?.customerCurrentFees?.map((x) => ({
-        feeDescription: x.feeDescription,
-        feeCode: x.feeCode
-      }))
-
-    const result = {
-      customerName: responseCustomer.data.customer.customerAddress.name,
-      customerAddress: responseCustomer.data.customer.customerAddress.address,
-      customerAccountOfficer:
-        responseCustomer.data.customer.customerAddress.officer,
-      cif: responseCustomer.data.customer.customerAddress.cif,
-      branchCity: responseFee.data.accounts[0].branchCity,
-      branchState: responseFee.data.accounts[0].branchState,
-      branchType: responseFee.data.accounts[0].branchType,
-      packageType: responseFee.data.accounts[0].defaultPackageType,
-      packageName: responseFee.data.accounts[0].feePackage,
-      defaultFeePackageId: responseFee.data.accounts[0].defaultFeePackageId,
-      fees: responseFee.data.fees,
-      feesActives: responseFee.data.feesActives,
-      documentUrl: responseFee.data.accounts[0].documentUrl,
-      currentFees
-    }
-    //global.logger.info('End process')
-    return Result.ok(result)
   }
 }
