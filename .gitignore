@@ -1,16 +1,18 @@
 applyStandardAmounts(fees, stdRows);
 applyExceptionAmounts(fees, excRows);
 
-// Ajuste labelValue dos campos Equity/Options:
+// === CHAME O BLOCO FINAL QUE AJUSTA EQUITY/OPTION EM EXCEPTIONS ===
 fees.forEach(fee => {
-  const stdGrp = findGroup(fee, 'Standard Fees');
-  const currGrp = findGroup(fee, 'Client Current Fees');
-  if (stdGrp) {
-    const fld = stdGrp.fields.find(f => f.code === 7);
-    setEquityOptionLabel(fld, excRows);
+  // Preenche Exception Request de todos os campos 7
+  const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
+  if (excGrp) {
+    excGrp.fields.forEach(field => applyEquityOptionException(field, excRows)); // <-- É AQUI
   }
-  if (currGrp) {
-    const fld = currGrp.fields.find(f => f.code === 7);
-    setEquityOptionLabel(fld, excRows);
-  }
+  // Ajusta o label dos campos 7 (Equity/Option) em Standard/Current
+  ['Standard Fees', 'Client Current Fees'].forEach(groupName => {
+    const group = fee.feeGroups?.find(g => g.name === groupName);
+    if (group) {
+      group.fields.forEach(field => setEquityOptionLabelValue(field, excRows));
+    }
+  });
 });
