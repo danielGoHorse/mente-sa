@@ -1,242 +1,98 @@
-/* eslint-disable no-console */
-import { Fee }                     from '#src/models/entities/Fees.js';
-import Result                      from '#features/shared/result.js';
-import CustomerFees                from '#src/models/CustomerFees.js';
-import BankAccountFee              from '#src/models/BankAccountFee.js';
-import InvestimentAccountFee       from '#src/models/InvestimentAccountFee.js';
-import { FeeCase }                 from '#src/models/entities/FeeCase.js';
-import { Field }                   from '#src/models/entities/Fields.js';
-import numberToCurrency            from '#core/helpers/currency.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure,
-} from '#core/data/mssql/index.js';
+Chat, eu tenho nesses dois trechos um ponto onde eu indico os dados do banco de dados que eu vou buscar...e eu quero buscar do banco de QA...
 
-/* ───────────────────────── helpers SQL ─────────────────────────── */
+Porem na conexao do banco eu só preciso indicar o server...que esta correto com o codigo....no caso do que, no lugar de user e pass esta indicando Windows Authentication
 
-async function getPackageData(cifno) {
-  const conn  = await connectToFeeMgmtDb();
-  const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
+E no user desabilitado aparece SNB\DanielG
 
-  if (!row) return {};
-  return {
-    defaultFeePackageId : row['Default Fee Package Id'] ?? null,
-    branchCity          : row['Branch City']?.trim()          || '',
-    branchState         : row['Branch State']?.trim()         || '',
-    branchType          : row['Branch Type']?.trim()          || '',
-    defaultPackageType  : row['Default Package Type']?.trim() || '',
-    feePackage          : row['Default Fee Package']?.trim()  || '',
-  };
-}
 
-async function getStandardFees(packageId) {
-  const conn = await connectToFeeMgmtDb();
-  return executeStoreProcedure(conn, 'sp_get_standard_fees_bypackage',
-                               { FeePackageId: packageId })
-         .catch(() => []);   // se faltar permissão não quebra
-}
+O que eu preciso fazzer nesses codigo para que ele utilize realmente o banco de QA?
 
-async function getExceptionFees(packageId) {
-  const conn = await connectToFeeMgmtDb();
-  return executeStoreProcedure(conn, 'sp_get_exception_fees_bypackage',
-                               { FeePackageId: packageId })
-         .catch(() => []);
-}
 
-function getDocumentUrl(id) {
-  const urls = global.environment.scheduleUrls || {};
-  const key  = ({ 1:'intlPB3', 2:'uSPBIndividual3', 3:'uSPBCorporation3' })[id];
-  return key ? urls[key] || '' : '';
-}
-
-/* ───────────────────────── helpers Mongo/format ───────────────── */
-
-async function getFeeStandard(filter) {
-  return Fee.find({ $or: filter })
-            .select({ feeType:1, feeGroups:{ name:1, fields:1, code:1 } })
-            .lean();
-}
-function findGroup(fee, name){ return fee?.feeGroups?.find(g => g.name === name); }
-
-/* Mapeia FeeCode SQL  →  code no Mongo */
-const feeCodeMap = {
-  /* Customer / Bank */
-  JH001:1, JH002:2, JH010:3, JH008:4,
-  /* Investment */
-  BPS003:5,         // SSL Maint
-  BPS002:6,         // Custody
-  BPS004:7, BPS005:7, // Equity & Option
-};
-
-/* ═══════════ 1. STANDARD ═══════════ */
-
-function applyStandardAmounts(mongoFees, stdRows){
-  mongoFees.forEach(fee=>{
-    const std = findGroup(fee,'Standard Fees');
-    if(!std) return;
-
-    std.fields.forEach(fld=>{
-      const r = stdRows.find(x=>Number(x.FeeType)===fld.code);
-      if(!r) return;
-
-      const num = Number(r.FeeAmount);
-      fld.defaultValue = num.toString();
-      fld.labelValue   = numberToCurrency(num);
-      fld.tooltip      = r.FrequencyDescription?.trim() || '';
-    });
-  });
-}
-
-/* ═══════════ 2. EXCEPTION ═══════════ */
-
-function buildEquityOptionOptions(rows){
-  /* Agrupa Equity (E) e Option (O) pelo mesmo FeeParameterOptionId */
-  const byId = {};
-  rows.forEach(r=>{
-    (byId[r.FeeParameterOptionId] ??= {E:null,O:null});
-    if(r.BPSFeeTypeCode==='E') byId[r.FeeParameterOptionId].E = r;
-    if(r.BPSFeeTypeCode==='O') byId[r.FeeParameterOptionId].O = r;
-  });
-
-  return Object.values(byId).map(({E,O})=>({
-    value : E?.Amount || O?.Amount,
-    text  : `Equity: ${E?.FreqDescription ?? '-'};  Option: ${O?.FreqDescription ?? '-'}`,
-  }));
-}
-
-function applyExceptionAmounts(mongoFees, excRows){
-
-  /* Filtra 600 que veio como JH001 por engano (é Hold-Mail) */
-  excRows = excRows.filter(r => !(r.FeeCode==='JH001' && r.Amount==='600.00'));
-
-  const byCode = excRows.reduce((acc,r)=>{
-    (acc[r.FeeCode] ??= []).push(r);
-    return acc;
-  },{});
-
-  mongoFees.forEach(fee=>{
-    const excGrp = findGroup(fee,'Exception Request');
-    if(!excGrp) return;
-
-    excGrp.fields.forEach(fld=>{
-      const code = Object.entries(feeCodeMap)
-                         .find(([,c])=>c===fld.code)?.[0];
-
-      let rows = code ? byCode[code] : null;
-      if(!rows?.length) return;
-
-      /* Tratamento especial Equity/Options (code 7) */
-      if(fld.code===7){                             // Equity & Option
-        fld.exceptionOptions = buildEquityOptionOptions(rows);
-      }else{
-        /* separe números / textos e ordene */
-        const nums  = rows.filter(r=>!Number.isNaN(Number(r.Amount)))
-                          .sort((a,b)=>Number(a.Amount)-Number(b.Amount));
-        const alpha = rows.filter(r=>Number.isNaN(Number(r.Amount)))
-                          .sort((a,b)=>a.Amount.localeCompare(b.Amount));
-
-        fld.exceptionOptions = [...nums,...alpha].map(r=>({
-          value : r.Amount,
-          text  : Number.isNaN(Number(r.Amount))
-                  ? (r.FreqDescription?.trim()||r.Amount)
-                  : numberToCurrency(Number(r.Amount)),
-          visible:true, retired:false
-        }));
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Api",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/src/app/api/index.js",
+      "env": {
+        "NODE_ENV": "Local",
+        "APP_NAME": "snb-fee-management",
+        "CONFIG_SERVER_APP_NAME": "snb-fee-management",
+        "CONFIG_SERVER_URL": "https://config.dev.k8s.safra.int",
+        "CONFIG_SERVER_USER": "safraconfigserver",
+        "CONFIG_SERVER_PASSWORD": "Sc$7@gfwertrlM22",
+        "SERVER_PORT": "3333",
+        "MONGODB_URI": "mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb",
+        // "SQLSERVER_SERVER": "nydev01.snb.safra.int",
+        "SQLSERVER_SERVER": "NYQA01",
+        "SQLSERVER_USER": "userFeeMgmtConductor",
+        "SQLSERVER_PASSWORD": "userF33MgmtCond",
+        "SQLSERVER_DATABASE": "FeeMgmt"
       }
-      fld.defaultValue = '';
-      fld.labelValue   = '';
-    });
-  });
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Worker",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/src/app/worker/index.js",
+      "args": [
+        "relative path inside src/worker/namePathWorker/nameFileWorker.js"
+      ],
+      "env": {
+        "NODE_ENV": "Local",
+        "CONFIG_SERVER_APP_NAME": "config-server-app-name",
+        "CONFIG_SERVER_URL": "https://config.dev.k8s.safra.int",
+        "CONFIG_SERVER_USER": "safraconfigserver",
+        "CONFIG_SERVER_PASSWORD": "Sc$7@gfwertrlM22"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Seed",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/src/core/data/seeds/run.js",
+      "env": {
+        "NODE_ENV": "Local"
+      }
+    }
+  ]
 }
 
-/* ═══════════ 3. LABEL de Exceptions ═══════════ */
+NODE_ENV = 'Local'
+APP_NAME = 'snb-fee-management'
+CONFIG_SERVER_APP_NAME = 'snb-fee-management'
+CONFIG_SERVER_URL = 'https://config.dev.k8s.safra.int'
+CONFIG_SERVER_USER = 'safraconfigserver'
+CONFIG_SERVER_PASSWORD = 'Sc$7@gfwertrlM22'
+SERVER_PORT = '3333'
+MONGODB_URI = 'mongodb://mongodbsnb:rstNze28W6@dash.dev.k8s.safra.int:27017/snb'
+# SQLSERVER_SERVER = 'nydev01.snb.safra.int'
+SQLSERVER_SERVER = 'NYQA01'
+SQLSERVER_USER = 'userFeeMgmtConductor'
+SQLSERVER_PASSWORD = 'userF33MgmtCond'
+SQLSERVER_DATABASE = 'FeeMgmt'
 
-function syncExceptionLabels(feesArr){
-  feesArr.forEach(fee=>{
-    const exc = findGroup(fee,'Exception Request');
-    if(!exc) return;
-    exc.fields.forEach(f=>{
-      const val = f.defaultValue;
-      f.labelValue = val && !Number.isNaN(Number(val))
-        ? numberToCurrency(Number(val))
-        : '';
-    });
-  });
-}
 
-/* ══════════════════════════════════════════════ */
 
-export default class FeeGetByCifUseCase {
-  async execute({ customerAccount }) {
 
-    /* 1) Modelo base do Mongo */
-    const fees = await getFeeStandard([
-      { feeType:'Customer Fees' },
-      { feeType:'Bank Account Fees' },
-      { feeType:'Investment Account Fees' },
-    ]);
+CASE_URL= http://casemanagement-backend-http-host.safra-applications-dev
+CONDUCTOR_URL= http://customersearch-backend-http-host.safra-applications-dev
+USER_URL= http://usermanagement-backend-http-host.safra-applications-dev
+FEE_URL= http://feemanagement-backend-http-host.safra-applications-dev
+CONDUCTOR_URL= http://conductor-ui.safra-applications-dev/api/workflow
+JACK_URL= http://jackhenry-backend-http-host.safra-applications-dev
 
-    /* 2) Dados de pacote + tabelas SQL */
-    const pkgData   = await getPackageData(customerAccount[0].cifno);
-    const packageId = pkgData.defaultFeePackageId;
-
-    const [stdRows, excRows] = await Promise.all([
-      getStandardFees(packageId),
-      getExceptionFees(packageId),
-    ]);
-
-    applyStandardAmounts (fees, stdRows);
-    applyExceptionAmounts(fees, excRows);
-
-    /* 3) Enriquecer contas */
-    customerAccount.forEach(acc => Object.assign(acc, pkgData));
-
-    /* --- Custody: mantém label numérico; não sobre-escreve defaultValue --- */
-    (function patchCustodyCurrent(){
-      const custodyAcc = customerAccount.find(a=>a.feeType===6);
-      if(!custodyAcc) return;
-
-      const invFee   = fees.find(f=>f.feeType==='Investment Account Fees');
-      const currGrp  = findGroup(invFee,'Client Current Fees');
-      const custodyF = currGrp?.fields?.find(fl=>Number(fl.code)===6);
-      if(!custodyF) return;
-
-      custodyF.labelValue = numberToCurrency(custodyAcc.feeAmount);
-    })();
-
-    /* 4) Monta resposta */
-    const result = { fees: [] };
-
-    const blocks = [
-      new CustomerFees(fees, customerAccount),
-      new BankAccountFee(fees, customerAccount),
-      new InvestimentAccountFee(
-        fees, customerAccount, await Field.findOne({ code:7 })),
-    ];
-
-    blocks.filter(b=>b.fee?.feeGroups?.length).forEach(b=>result.fees.push(b.fee));
-
-    /* Casos ativos */
-    const actives = await FeeCase.find({
-      cif: customerAccount[0].cifno,
-      status:{ $nin:['DONE','REJECTED'] },
-      caseNumber:{ $exists:true },
-    });
-    result.feesActives = actives.map(({caseNumber,id})=>({caseNumber,id}));
-
-    /* Accounts + schedule PDF */
-    const docUrl = getDocumentUrl(packageId);
-    result.accounts = customerAccount.map(acc=>({
-      cifno:acc.cifno, ddaNumber:acc.ddaNumber,
-      branchCity:acc.branchCity, branchState:acc.branchState,
-      branchType:acc.branchType, defaultPackageType:acc.defaultPackageType,
-      feePackage:acc.feePackage, defaultFeePackageId:acc.defaultFeePackageId,
-      defaultFeePackage:acc.defaultFeePackage, documentUrl:docUrl,
-      feeAmount:acc.feeAmount, exceptionAmount:acc.exceptionAmount ?? null,
-    }));
-    result.documentUrl = docUrl;
-
-    syncExceptionLabels(result.fees);
-    return Result.ok(result);
-  }
-}
