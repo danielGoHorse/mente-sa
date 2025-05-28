@@ -1,72 +1,15 @@
- function applyExceptionAmounts(mongoFees, excRows) {
-   const byCode = excRows.reduce((acc, r) => {
-     (acc[r.FeeCode] ??= []).push(r);
-     return acc;
-   }, {});
-
-+  /* helper p/ Equity + Option  ───────────── */
-+  function mergeEquityOption(rows) {
-+    const byId = {};
-+    rows.forEach(r => {
-+      const id = r.FeeParameterOptionId;
-+      (byId[id] ??= {E:null,O:null});
-+      if (r.BPSFeeTypeCode === 'E') byId[id].E = r;
-+      if (r.BPSFeeTypeCode === 'O') byId[id].O = r;
-+    });
-+    return Object.values(byId).map(({E,O}) => ({
-+      value : (E?.Amount || O?.Amount)?.toString(),
-+      text  : `Equity: ${E?.FreqDescription ?? '-'}; Option: ${O?.FreqDescription ?? '-'}`,
-+      visible: true, retired: false
-+    }));
-+  }
-
-   mongoFees.forEach(fee => {
-     const excGrp = findGroup(fee, 'Exception Request');
-     if (!excGrp) return;
-
-     excGrp.fields.forEach(field => {
-       const code = Object.entries(feeCodeMap)
-                          .find(([, c]) => c === field.code)?.[0];
-       let rows = code ? byCode[code] : null;
-       if (!rows?.length) return;
-
--      /* ordena numéricos primeiro */
--      const nums  = rows.filter(r => !Number.isNaN(Number(r.Amount)))
--                        .sort((a,b)=>Number(a.Amount)-Number(b.Amount));
--      const alpha = rows.filter(r =>  Number.isNaN(Number(r.Amount)))
--                        .sort((a,b)=>a.Amount.localeCompare(b.Amount));
--
--      field.exceptionOptions = [...nums, ...alpha].map(r => ({
--        value  : r.Amount,
--        text   : Number.isNaN(Number(r.Amount))
--                   ? (r.FreqDescription?.trim() || r.Amount)
--                   : numberToCurrency(Number(r.Amount)),
--        visible: true,
--        retired: false
--      }));
-+      /* ---------- Equity / Option (code 7) ---------- */
-+      if (field.code === 7) {
-+        field.exceptionOptions = mergeEquityOption(rows);
-+      } else {
-+        /* ordena numéricos primeiro */
-+        const nums  = rows.filter(r => !Number.isNaN(Number(r.Amount)))
-+                          .sort((a,b)=>Number(a.Amount)-Number(b.Amount));
-+        const alpha = rows.filter(r =>  Number.isNaN(Number(r.Amount)))
-+                          .sort((a,b)=>a.Amount.localeCompare(b.Amount));
-+
-+        field.exceptionOptions = [...nums, ...alpha].map(r => ({
-+          value  : r.Amount.toString(),
-+          text   : Number.isNaN(Number(r.Amount))
-+                     ? (r.FreqDescription?.trim() || r.Amount)
-+                     : numberToCurrency(Number(r.Amount)),
-+          visible: true,
-+          retired: false
-+        }));
-+      }
-
-       field.defaultValue = '';
-       field.labelValue   = '';
-     });
-   });
- }
-
+{
+  cifno: "NAA0010",
+  ddaNumber: 17226444,
+  bpsAcctNumber: "20002089",
+  feeType: 6,
+  feeDescription: "SafekeepingCustody",
+  feeCode: "A032",
+  bpsFeeTypeCode: "C",
+  source: "BPS",
+  entity: "SNB/284",
+  feeAmount: 375,
+  isFeesStandard: "Yes",
+  kycMailingStatus: null,
+  feeGroup: 3,
+}
