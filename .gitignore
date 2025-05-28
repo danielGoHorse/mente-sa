@@ -1,458 +1,1053 @@
-FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription	FeeType
-BPS002	Safekeeping of Securities	557	A001	0.30% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	558	A008	0.10% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	559	A009	0.05% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	560	A012	0.15% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	561	A014 	Cust Fee/YR 0.2% $0 min                	Investment Fees
-BPS002	Safekeeping of Securities	562	A019 	Cust Fee/YR 0.075% $250 min            	Investment Fees
-BPS002	Safekeeping of Securities	563	A021	0.35% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	564	A022	0.25% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	565	A023	0.10% /YR min $100.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	566	A025	0.15% /YR min $100.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	567	A028 	Cust Fee/YR 0.04% $0 min               	Investment Fees
-BPS002	Safekeeping of Securities	568	A030	0.40% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	569	A031	0.45% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	570	A053	0.20% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	571	A068	0.25% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	572	A070	0.20% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	573	A071	0.10% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	574	A073	0.15% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	575	A075 	0.05%/Yr $0 min                        	Investment Fees
-BPS002	Safekeeping of Securities	576	A080 	Cust Fee/YR 0.15% $0 min               	Investment Fees
-BPS002	Safekeeping of Securities	577	A088	0.25% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	578	A089	0.15% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	579	A091 	Custody Rate .1%  No Min                	Investment Fees
-BPS002	Safekeeping of Securities	580	A096 	Cust Fee .35%, No Min                   	Investment Fees
-BPS002	Safekeeping of Securities	581	A099 	Custody Rate 0.0625% No min             	Investment Fees
-BPS002	Safekeeping of Securities	582	A101	0.50% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	583	A102	0.50% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	584	A103	0.45% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	585	A104	0.45% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	586	A105	0.40% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	587	A106	0.40% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	588	A107	0.35% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	589	A108	0.35% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	590	A109	0.30% /YR min $250.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	591	A110	0.30% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	592	A111	0.20% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	593	A112	0.10% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	594	A113	0.05% /YR min $375.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	595	A114	0.05% /YR min $125.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	596	A115	0.50% /YR min $100.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	597	A116	0.45% /YR min $100.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	598	A117	0.30% /YR min $100.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	599	A118	0.25% /YR min $100.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	600	A119	0.20% /YR min $100.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	601	A120	0.05% /YR min $100.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	602	A121	0.50% /YR min $75.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	603	A122	0.45% /YR min $75.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	604	A123	0.30% /YR min $75.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	605	A124	0.25% /YR min $75.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	606	A125	0.20% /YR min $75.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	607	A126	0.15% /YR min $75.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	608	A127	0.10% /YR min $75.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	609	A128	0.05% /YR min $75.00/QTR	Investment Fees
-BPS002	Safekeeping of Securities	610	A130 	TRUST ACCT FEE 1.00% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	611	A131 	TRUST ACCT FEE 0.90% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	612	A132 	TRUST ACCT FEE 0.80% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	613	A133 	TRUST ACCT FEE 0.75% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	614	A134 	TRUST ACCT FEE 0.70% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	615	A135 	TRUST ACCT FEE 0.65% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	616	A136 	TRUST ACCT FEE 0.60% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	617	A137 	TRUST ACCT FEE 0.50% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	618	A138 	TRUST ACCT FEE 0.45% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	619	A139 	TRUST ACCT FEE 0.40% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	620	A140 	TRUST ACCT FEE 0.38% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	621	A141 	TRUST ACCT FEE 0.35% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	622	A142 	TRUST ACCT FEE 0.30% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	623	A143 	TRUST ACCT FEE 0.26% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	624	A144 	TRUST ACCT FEE 0.25% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	625	A145 	TRUST ACCT FEE 0.20% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	626	A146 	TRUST ACCT FEE 0.18% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	627	A147 	TRUST ACCT FEE 0.15% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	628	A148 	TRUST ACCT FEE 0.13% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	629	A149 	TRUST ACCT FEE 0.05% $0 MIN             	Investment Fees
-BPS002	Safekeeping of Securities	630	A150	0	Investment Fees
-BPS002	Safekeeping of Securities	631	F002	Flat Quarterly Custody Fee $ 500	Investment Fees
-BPS002	Safekeeping of Securities	632	F004	Flat Fee $600 /Yr                       	Investment Fees
-BPS002	Safekeeping of Securities	633	F009	Flat Quarterly Custody Fee $ 1000	Investment Fees
-BPS002	Safekeeping of Securities	634	F017	Flat Quarterly Custody Fee $ 2500	Investment Fees
-BPS002	Safekeeping of Securities	635	F100	Waived Custody Fee	Investment Fees
-BPS002	Safekeeping of Securities	636	F105 	Flat Fee  $1500/Yr                     	Investment Fees
-BPS002	Safekeeping of Securities	637	F108	Flat Quarterly Custody Fee $ 1500	Investment Fees
-BPS002	Safekeeping of Securities	56	A032	0.50% /YR min $375.00/QTR	Investment Fees
-BPS003	SSL Account Maintanance Fee	57	375.00	Quarterly on Day 1	Investment Fees
-BPS004	US Equities Commission	76	E3	$0.10 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1309	A1	$0.00 per share, with NO min charge per trade	Investment Fees
-BPS004	US Equities Commission	1310	A2	$50 flat charge per trade	Investment Fees
-BPS004	US Equities Commission	1311	A3	$100 flat charge per trade	Investment Fees
-BPS004	US Equities Commission	1312	A4	$0.01 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1313	A5	$0.01 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1314	A6	$0.02 per share, min charge of $50 per trade	Investment Fees
-BPS004	US Equities Commission	1315	A7	$0.02 per share, min charge of $75 per trade	Investment Fees
-BPS004	US Equities Commission	1316	A8	$0.02 per share, min charge of $ 80 per trade	Investment Fees
-BPS004	US Equities Commission	1317	A9	$0.02 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1318	B1	$0.02 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1319	B2	$0.02 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1320	B3	$0.03 per share, min charge of $75 per trade	Investment Fees
-BPS004	US Equities Commission	1321	B4	$0.03 per share, min charge of $100 per trade	Investment Fees
-BPS004	US Equities Commission	1322	B5	$0.03 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1323	B6	$0.03 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1324	B7	$0.03 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1325	B8	$0.03 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1326	C1	$0.04 per share, min charge of $50 per trade	Investment Fees
-BPS004	US Equities Commission	1327	C2	$0.04 per share, min charge of $75 per trade	Investment Fees
-BPS004	US Equities Commission	1328	C4	$0.04 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1329	C5	$0.04 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1330	C8	$0.05 per share, min charge of $100 per trade	Investment Fees
-BPS004	US Equities Commission	1331	C9	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1332	D1	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1333	D2	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1334	D6	$0.07 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1335	D7	$0.07 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1336	D8	$0.10 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1337	D9	$0.03 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1338	E1	$0.10 per share, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1339	E4	$0.02 per share, min charge of $80 per trade	Investment Fees
-BPS004	US Equities Commission	1340	H8	Equity Comm Fee	Investment Fees
-BPS004	US Equities Commission	1341	I1	$0.0075 per share, with NO minimum charge	Investment Fees
-BPS004	US Equities Commission	1342	I2	$0.05 min $150	Investment Fees
-BPS004	US Equities Commission	1343	I3	100 basis points, min charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1344	I6	100 basis points, with a minimum charge of $150 per trade	Investment Fees
-BPS004	US Equities Commission	1345	I7	Equities $0.05 per share, min charge of $50 per trade	Investment Fees
-BPS004	US Equities Commission	1346	I8	$0.03 per share, min charge of $100 per trade	Investment Fees
-BPS004	US Equities Commission	1347	I9	2c min $30	Investment Fees
-BPS004	US Equities Commission	1348	J1	$0.01 min $75	Investment Fees
-BPS004	US Equities Commission	1349	J2	J2	Investment Fees
-BPS004	US Equities Commission	1350	J3	$0.02 per share, with a minimum charge of $100 per trade	Investment Fees
-BPS004	US Equities Commission	1351	J4	$25 flat charge per trade	Investment Fees
-BPS004	US Equities Commission	1352	J5	$15 flat charge per trade	Investment Fees
-BPS004	US Equities Commission	1353	J6	$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more	Investment Fees
-BPS004	US Equities Commission	1354	J7	10 cents per share plus $25 pass-along broker fee  	Investment Fees
-BPS004	US Equities Commission	1355	J8	$0.06 per share, with a minimum charge of $150 per trade  	Investment Fees
-BPS004	US Equities Commission	1356	J9	$0.035 per share plus $25 pass-along broker fee  	Investment Fees
-BPS004	US Equities Commission	1357	K0		Investment Fees
-BPS004	US Equities Commission	1358	K1	Stocks $0.06 per share Minimum of $100	Investment Fees
-BPS004	US Equities Commission	1359	K2		Investment Fees
-BPS004	US Equities Commission	1360	Z1	$0.10 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1621	A1	$0.00 per share, with NO min charge per trade	Investment Fees
-BPS005	Options Commission	1622	A2	$50 flat charge per trade	Investment Fees
-BPS005	Options Commission	1623	A3	$50 flat charge per trade	Investment Fees
-BPS005	Options Commission	1624	A4	$0.01 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1625	A5	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1626	A6	$0.02 per share, min charge of $ 50 per trade	Investment Fees
-BPS005	Options Commission	1627	A7	$0.02 per share, min charge of $75 per trade	Investment Fees
-BPS005	Options Commission	1628	A8	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1629	A9	$0.006 per share, with NO min charge per trade	Investment Fees
-BPS005	Options Commission	1630	B1	$0.02 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1631	B2	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1632	B3	$0.03 per share, min charge of $75 per trade	Investment Fees
-BPS005	Options Commission	1633	B4	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1634	B5	$0.02 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1635	B6	$0.03 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1636	B7	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1637	B8	$0.07 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1638	C1	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1639	C2	$0.04 per share, min charge of $75 per trade	Investment Fees
-BPS005	Options Commission	1640	C4	$0.04 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1641	C5	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1642	C8	$0.05 per share, min charge of $100 per trade	Investment Fees
-BPS005	Options Commission	1643	C9	$0.00 per share, with NO min charge per trade	Investment Fees
-BPS005	Options Commission	1644	D1	$0.03 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1645	D2	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1646	D6	$0.07 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1647	D7	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1648	D8	$0.00 per share, with NO min charge per trade	Investment Fees
-BPS005	Options Commission	1649	D9	$150 flat charge per trade	Investment Fees
-BPS005	Options Commission	1650	E1	$0.02 per share, min charge of $75 per trade	Investment Fees
-BPS005	Options Commission	1651	E3	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1652	E4	$0.02 per share, min charge of $80 per trade	Investment Fees
-BPS005	Options Commission	1653	H8	Equity Comm Fee	Investment Fees
-BPS005	Options Commission	1654	I1	$0.01 per share, with NO minimum charge	Investment Fees
-BPS005	Options Commission	1655	I2	100 basis points min $80	Investment Fees
-BPS005	Options Commission	1656	I3	100 basis points, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1657	I6	$0.05 per share, with a minimum charge of $150 per trade	Investment Fees
-BPS005	Options Commission	1658	I7	Options $0.05 per share, min charge of $50 per trade	Investment Fees
-BPS005	Options Commission	1659	I8	$0.03 per share, min charge of $100 per trade	Investment Fees
-BPS005	Options Commission	1660	I9	2c min $30	Investment Fees
-BPS005	Options Commission	1661	J1	$0.01 min $75	Investment Fees
-BPS005	Options Commission	1662	J2	J2	Investment Fees
-BPS005	Options Commission	1663	J3	$0.02 per share, with a minimum charge of $100 per trade	Investment Fees
-BPS005	Options Commission	1664	J4	$25 flat charge per trade	Investment Fees
-BPS005	Options Commission	1665	J5	$15 flat charge per trade	Investment Fees
-BPS005	Options Commission	1666	J6	$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more	Investment Fees
-BPS005	Options Commission	1667	J7	$10 per contract plus $25 pass-along broker fee  	Investment Fees
-BPS005	Options Commission	1668	J8	$0.06 per share, with a minimum charge of $150 per trade  	Investment Fees
-BPS005	Options Commission	1669	J9	$3.50 per contract plus $25 pass-along broker fee  	Investment Fees
-BPS005	Options Commission	1670	K0		Investment Fees
-BPS005	Options Commission	1671	K1	Options $6.00 per contract Minimum of $100	Investment Fees
-BPS005	Options Commission	1672	K2		Investment Fees
-BPS005	Options Commission	1673	Z1	$0.05 per share, min charge of $150 per trade	Investment Fees
-BPS005	Options Commission	58	Z2	$10 per share, min charge of $150 per trade	Investment Fees
-JH001	Account Maintenance Fee	51	1500.00	Annual - Charged Semi-Annual	Customer Fees
-JH001	Account Maintenance Fee	98	0.00	NULL	Customer Fees
-JH001	Account Maintenance Fee	372	600.00	Annual - Charged Semi-Annual	Customer Fees
-JH002	Hold Mail Fee	373	0.00	Annual - Charged Annual	Customer Fees
-JH002	Hold Mail Fee	52	600.00	Annual - Charged Annual	Customer Fees
-JH006	FX Outgoing Wire Fee	53	75.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	96	0.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	114	50.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	374	60.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	375	40.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	376	35.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	377	30.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	378	25.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	379	20.00	NULL	Bank Account Fees
-JH006	FX Outgoing Wire Fee	380	10.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	381	60.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	382	40.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	383	35.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	384	30.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	385	25.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	386	20.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	387	10.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	123	50.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	97	0.00	NULL	Bank Account Fees
-JH007	FX Outgoing Wire (SafraLink) Fee	54	75.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	132	75.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	134	0.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	135	10.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	136	20.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	137	25.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	138	30.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	139	35.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	140	40.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	141	50.00	NULL	Bank Account Fees
-JH008	USD Outgoing Wire Fee	142	60.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	187	75.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	388	60.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	389	50.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	390	40.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	391	35.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	392	30.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	393	25.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	394	20.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	395	10.00	NULL	Bank Account Fees
-JH009	USD Outgoing Wire (SafraLink) Fee	396	0.00	NULL	Bank Account Fees
-JH010	USD/FX Incoming Wire Fee	197	0.00	NULL	Bank Account Fees
-
-
-
-[
-  {
-    FeeCode: "BPS002",
-    FeeDescription: "Safekeeping of Securities",
-    FeeParameterOptionId: 56,
-    Amount: "A021",
-    FreqDescription: "0.35% /YR min $375.00/QTR",
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "BPS003",
-    FeeDescription: "SSL Account Maintanance Fee",
-    FeeParameterOptionId: 57,
-    Amount: "375.00",
-    FreqDescription: "Quarterly on Day 1",
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "BPS004",
-    FeeDescription: "US Equities Commission",
-    FeeParameterOptionId: 76,
-    Amount: "E3",
-    FreqDescription: "$0.10 per share, min charge of $150 per trade",
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "BPS005",
-    FeeDescription: "Options Commission",
-    FeeParameterOptionId: 58,
-    Amount: "E3",
-    FreqDescription: "$0.05 per share, min charge of $150 per trade",
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH001",
-    FeeDescription: "Account Maintenance Fee",
-    FeeParameterOptionId: 51,
-    Amount: "1500.00",
-    FreqDescription: "Annual - Charged Semi-Annual",
-    FeeType: "Customer Fees",
-  },
-  {
-    FeeCode: "JH001",
-    FeeDescription: "Account Maintenance Fee",
-    FeeParameterOptionId: 98,
-    Amount: "0.00",
-    FreqDescription: null,
-    FeeType: "Customer Fees",
-  },
-  {
-    FeeCode: "JH002",
-    FeeDescription: "Hold Mail Fee",
-    FeeParameterOptionId: 52,
-    Amount: "600.00",
-    FreqDescription: "Annual - Charged Annual",
-    FeeType: "Customer Fees",
-  },
-  {
-    FeeCode: "JH006",
-    FeeDescription: "FX Outgoing Wire Fee",
-    FeeParameterOptionId: 53,
-    Amount: "75.00",
-    FreqDescription: null,
-    FeeType: "Bank Account Fees",
-  },
-  {
-    FeeCode: "JH006",
-    FeeDescription: "FX Outgoing Wire Fee",
-    FeeParameterOptionId: 96,
-    Amount: "0.00",
-    FreqDescription: null,
-    FeeType: "Bank Account Fees",
-  },
-  {
-    FeeCode: "JH006",
-    FeeDescription: "FX Outgoing Wire Fee",
-    FeeParameterOptionId: 114,
-    Amount: "50.00",
-    FreqDescription: null,
-    FeeType: "Bank Account Fees",
-  },
-  {
-    FeeCode: "JH007",
-    FeeDescription: "FX Outgoing Wire (SafraLink) Fee",
-    FeeParameterOptionId: 123,
-    Amount: "50.00",
-    FreqDescription: null,
-    FeeType: "Bank Account Fees",
-  },
-  {
-    FeeCode: "JH007",
-    FeeDescription: "FX Outgoing Wire (SafraLink) Fee",
-    FeeParameterOptionId: 97,
-    Amount: "0.00",
-    FreqDescription: null,
-    FeeType: "Bank Account Fees",
-  },
-  {
-    FeeCode: "JH007",
-    FeeDescription: "FX Outgoing Wire (SafraLink) Fee",
-    FeeParameterOptionId: 54,
-    Amount: "75.00",
-    FreqDescription: null,
-    FeeType: "Bank Account Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 132,
-    Amount: "75.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 133,
-    Amount: "45.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 134,
-    Amount: "0.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 135,
-    Amount: "10.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 136,
-    Amount: "20.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 137,
-    Amount: "25.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 138,
-    Amount: "30.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 139,
-    Amount: "35.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 140,
-    Amount: "40.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 141,
-    Amount: "50.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH008",
-    FeeDescription: "USD/FX Outgoing Wire Fee",
-    FeeParameterOptionId: 142,
-    Amount: "60.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH009",
-    FeeDescription: "USD Outgoing Wire (SafraLink) Fee",
-    FeeParameterOptionId: 187,
-    Amount: "25.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH009",
-    FeeDescription: "USD Outgoing Wire (SafraLink) Fee",
-    FeeParameterOptionId: 188,
-    Amount: "15.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-  {
-    FeeCode: "JH010",
-    FeeDescription: "USD/FX Incoming Wire Fee",
-    FeeParameterOptionId: 197,
-    Amount: "0.00",
-    FreqDescription: null,
-    FeeType: "Investment Fees",
-  },
-]
+{
+    "code": 200,
+    "data": {
+        "customerName": "NPK TRADING S.A.",
+        "customerAddress": "NPK TRADING S.A. SARANDI 690-ESC 105 MONTEVIDEO URUGUAY  11100",
+        "customerAccountOfficer": "571 Marcelo Fontanelli       BR 30",
+        "cif": "NAA0010",
+        "fees": [
+            {
+                "feeType": "Customer Fees",
+                "feeGroups": [
+                    {
+                        "visible": true,
+                        "kycMailingStatus": "Hold Mail",
+                        "name": "Standard Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": false,
+                                "name": "Account Maintenance",
+                                "tooltip": "Charged: Semiannual",
+                                "defaultValue": "600",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.435Z",
+                                "updatedAt": "2023-05-20T16:25:31.435Z",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "6468f46eff51aa9d77d849d7",
+                                "labelValue": "$600.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": false,
+                                "name": "Hold Mail",
+                                "defaultValue": "600",
+                                "tooltip": "Charged: Annually",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.435Z",
+                                "updatedAt": "2023-05-20T16:25:31.435Z",
+                                "isCurrentClient": false,
+                                "isStandard": true,
+                                "id": "6468f46eff51aa9d77d849d8",
+                                "labelValue": "$600.00"
+                            }
+                        ],
+                        "id": "6837669637aa50232d9378e9",
+                        "cif": "NAA0010",
+                        "accountNumber": 17226444
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Client Current Fees",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": false,
+                                "name": "Account Maintenance",
+                                "defaultValue": "1500",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": true,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849dc",
+                                "labelValue": "$1,500.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": false,
+                                "name": "Hold mail",
+                                "defaultValue": "600",
+                                "exceptionOptions": [],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": true,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849dd",
+                                "labelValue": "$600.00"
+                            }
+                        ],
+                        "id": "6837669637aa50232d9378ec",
+                        "cif": "NAA0010",
+                        "accountNumber": 17226444
+                    },
+                    {
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "name": "Exception Request",
+                        "code": 1,
+                        "fields": [
+                            {
+                                "hasChanged": false,
+                                "code": 1,
+                                "isException": true,
+                                "name": "Account Maintenance",
+                                "defaultValue": "",
+                                "exceptionOptions": [
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "600",
+                                        "text": "$600.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e2",
+                                        "parameterOptionId": 11
+                                    },
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e3",
+                                        "parameterOptionId": 12
+                                    }
+                                ],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849e1",
+                                "labelValue": "$1,500.00"
+                            },
+                            {
+                                "hasChanged": false,
+                                "code": 2,
+                                "isException": true,
+                                "name": "Hold mail",
+                                "defaultValue": "",
+                                "exceptionOptions": [
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "600",
+                                        "text": "$600.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e5",
+                                        "parameterOptionId": 13
+                                    },
+                                    {
+                                        "approvedByDoubleA": null,
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false,
+                                        "_id": "6468f46eff51aa9d77d849e6",
+                                        "parameterOptionId": 14
+                                    }
+                                ],
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "isCurrentClient": false,
+                                "isStandard": false,
+                                "id": "6468f46eff51aa9d77d849e4",
+                                "labelValue": "$600.00"
+                            }
+                        ],
+                        "id": "6837669637aa50232d9378ef",
+                        "cif": "NAA0010",
+                        "accountNumber": 17226444
+                    }
+                ],
+                "id": "6468f46eff51aa9d77d849ee"
+            },
+            {
+                "feeType": "Bank Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Incoming Wire",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Transaction",
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d9379e5",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "75",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Transaction",
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d9379e6",
+                                "createdAt": "2023-05-20T16:25:31.436Z",
+                                "updatedAt": "2023-05-20T16:25:31.436Z",
+                                "labelValue": "$75.00"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "17226444",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d9379e4"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Incoming Wire",
+                                "defaultValue": "10",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d9379e8",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "20",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d9379e9",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$20.00"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "17226444",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d9379e7"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 2,
+                        "fields": [
+                            {
+                                "code": 3,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Incoming Wire",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "10",
+                                        "text": "$10.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a07"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a08"
+                                    }
+                                ],
+                                "_id": "6837669637aa50232d9379eb",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
+                            },
+                            {
+                                "code": 4,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Outgoing Wire",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "75",
+                                        "text": "$75.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0a"
+                                    },
+                                    {
+                                        "value": "60",
+                                        "text": "$60.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0b"
+                                    },
+                                    {
+                                        "value": "50",
+                                        "text": "$50.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0c"
+                                    },
+                                    {
+                                        "value": "40",
+                                        "text": "$40.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "9468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "35",
+                                        "text": "$35.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "8468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "30",
+                                        "text": "$30.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "25",
+                                        "text": "$25.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "7468f46eff51aa9d77d84a0d"
+                                    },
+                                    {
+                                        "value": "20",
+                                        "text": "$20.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a0e"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "Waived",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6837669637aa50232d93790a"
+                                    }
+                                ],
+                                "_id": "6837669637aa50232d9379ee",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$20.00"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "17226444",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d9379ea"
+                    }
+                ],
+                "id": "6468f46eff51aa9d77d84a1b"
+            },
+            {
+                "feeType": "Investment Account Fees",
+                "feeGroups": [
+                    {
+                        "name": "Standard Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 6,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Safekeeping-Custody",
+                                "defaultValue": "A021",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Quarterly",
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d937a18",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "A021 - 0.35% per year with a minimum of $375.00 per quarter"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20002089",
+                        "entityCode": "SNB/284",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d937a17"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Safekeeping-Custody",
+                                "defaultValue": "A053",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d937a1d",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "A053 - 0.20% per year with a minimum of $375.00 per quarter"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20002089",
+                        "entityCode": "SNB/284",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d937a1c"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 6,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Safekeeping-Custody",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "A032",
+                                        "text": "A032 - 0.50% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937915"
+                                    },
+                                    {
+                                        "value": "A101",
+                                        "text": "A101 - 0.50% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937916"
+                                    },
+                                    {
+                                        "value": "A102",
+                                        "text": "A102 - 0.50% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937917"
+                                    },
+                                    {
+                                        "value": "A031",
+                                        "text": "A031 - 0.45% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937918"
+                                    },
+                                    {
+                                        "value": "A103",
+                                        "text": "A103 - 0.45% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937919"
+                                    },
+                                    {
+                                        "value": "A104",
+                                        "text": "A104 - 0.45% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93791a"
+                                    },
+                                    {
+                                        "value": "A030",
+                                        "text": "A030 - 0.40% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93791b"
+                                    },
+                                    {
+                                        "value": "A105",
+                                        "text": "A105 - 0.40% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93791c"
+                                    },
+                                    {
+                                        "value": "A106",
+                                        "text": "A106 - 0.40% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93791d"
+                                    },
+                                    {
+                                        "value": "A021",
+                                        "text": "A021 - 0.35% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93791e"
+                                    },
+                                    {
+                                        "value": "A107",
+                                        "text": "A107 - 0.35% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93791f"
+                                    },
+                                    {
+                                        "value": "A108",
+                                        "text": "A108 - 0.35% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937920"
+                                    },
+                                    {
+                                        "value": "A001",
+                                        "text": "A001 - 0.30% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937921"
+                                    },
+                                    {
+                                        "value": "A109",
+                                        "text": "A109 - 0.30% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937922"
+                                    },
+                                    {
+                                        "value": "A110",
+                                        "text": "A110 - 0.30% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937923"
+                                    },
+                                    {
+                                        "value": "A022",
+                                        "text": "A022 - 0.25% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937924"
+                                    },
+                                    {
+                                        "value": "A068",
+                                        "text": "A068 - 0.25% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937925"
+                                    },
+                                    {
+                                        "value": "A088",
+                                        "text": "A088 - 0.25% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937926"
+                                    },
+                                    {
+                                        "value": "A053",
+                                        "text": "A053 - 0.20% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937927"
+                                    },
+                                    {
+                                        "value": "A070",
+                                        "text": "A070 - 0.20% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937928"
+                                    },
+                                    {
+                                        "value": "A111",
+                                        "text": "A111 - 0.20% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d937929"
+                                    },
+                                    {
+                                        "value": "A089",
+                                        "text": "A089 - 0.15% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93792a"
+                                    },
+                                    {
+                                        "value": "A012",
+                                        "text": "A012 - 0.15% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93792b"
+                                    },
+                                    {
+                                        "value": "A073",
+                                        "text": "A073 - 0.15% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93792c"
+                                    },
+                                    {
+                                        "value": "A071",
+                                        "text": "A071 - 0.10% per year with a minimum of $375.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93792d"
+                                    },
+                                    {
+                                        "value": "A008",
+                                        "text": "A008 - 0.10% per year with a minimum of $250.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93792e"
+                                    },
+                                    {
+                                        "value": "A112",
+                                        "text": "A112 - 0.10% per year with a minimum of $125.00 per quarter",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": true,
+                                        "_id": "6837669637aa50232d93792f"
+                                    },
+                                    {
+                                        "value": "F100",
+                                        "text": "F100 - Waived Custody Fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": false,
+                                        "_id": "6837669637aa50232d937943"
+                                    },
+                                    {
+                                        "value": "A154",
+                                        "text": "A154 - 0.075% /YR min $125",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": false,
+                                        "_id": "6837669637aa50232d93798d"
+                                    }
+                                ],
+                                "_id": "6837669637aa50232d937a25",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2024-04-04T18:20:51.136Z",
+                                "labelValue": "A053 - 0.20% per year with a minimum of $375.00 per quarter"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20002089",
+                        "entityCode": "SNB/284",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d937a24"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintenance",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Quarterly",
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d937a16",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$375.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "E3",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Trade",
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d937a19",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "E3 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20103939",
+                        "entityCode": "SSL/189",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d937a15"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "SSL Account Maintenance",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d937a1b",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "E3",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6837669637aa50232d937a1e",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "E3 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20103939",
+                        "entityCode": "SSL/189",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d937a1a"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintenance",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a3e"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "text": "$0.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a3f"
+                                    },
+                                    {
+                                        "value": "A54",
+                                        "text": "A154 - 0.075% /YR min $125",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": false,
+                                        "_id": "6837669637aa50232d937991"
+                                    }
+                                ],
+                                "_id": "6837669637aa50232d937a20",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "B6",
+                                        "text": "B6 - Equity:$0.03 per share, with a minimum charge of $150 per trade; Option:$0.03 per share, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a41"
+                                    },
+                                    {
+                                        "value": "C8",
+                                        "text": "C8 - Equity:$0.05 per share, with a minimum charge of $100 per trade; Option:$0.05 per share, with a minimum charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a42"
+                                    },
+                                    {
+                                        "value": "D2",
+                                        "text": "D2 - Equity:$0.05 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a43"
+                                    },
+                                    {
+                                        "value": "D7",
+                                        "text": "D7 - Equity:$0.07 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a44"
+                                    },
+                                    {
+                                        "value": "E3",
+                                        "text": "E3 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a45"
+                                    },
+                                    {
+                                        "value": "I3",
+                                        "text": "I3 - Equity:100 basis points, with a minimum charge of $150 per trade; Option:100 basis points, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a46"
+                                    },
+                                    {
+                                        "value": "I8",
+                                        "text": "I8 - Equity:$0.03 per share, with a minimum charge of $100 per trade; Option:$0.03 per share, with a minimum charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6468f46eff51aa9d77d84a47"
+                                    },
+                                    {
+                                        "value": "J6",
+                                        "text": "J6 - Equity:$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more; Option:$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6837669637aa50232d93799a"
+                                    },
+                                    {
+                                        "value": "K1",
+                                        "text": "K1 - Equity:$0.06 per share Minimum of $100; Option:$6.00 per contract Minimum of $100",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6837669637aa50232d93799b"
+                                    },
+                                    {
+                                        "value": "K5",
+                                        "text": "K5 - Equity:$0.75 per share, with a minimum charge of $75 per trade; Option:$0.75 per share, with a minimum charge of $75 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6837669637aa50232d93799c"
+                                    },
+                                    {
+                                        "value": "",
+                                        "text": "Other",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "6837669637aa50232d9379cc"
+                                    }
+                                ],
+                                "_id": "6837669637aa50232d937a43",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2024-04-04T18:20:51.137Z",
+                                "labelValue": "E3 - Equity:$0.10 per share, with a minimum charge of $150 per trade; Option:$0.05 per share, with a minimum charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20103939",
+                        "entityCode": "SSL/189",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "6837669637aa50232d937a1f"
+                    }
+                ],
+                "id": "660eef75736ad689c62b7d8c"
+            }
+        ],
+        "feesActives": [
+            {
+                "caseNumber": "FEE015",
+                "id": "64cc18584b214b0c1fcf0c23"
+            },
+            {
+                "caseNumber": "FEE029",
+                "id": "64d4ffa37503d6da1e966b03"
+            },
+            {
+                "caseNumber": "FEE053",
+                "id": "64e4c66085c9aa31acf7824a"
+            },
+            {
+                "caseNumber": "FEE055",
+                "id": "64ee3d420a383141b6f08647"
+            },
+            {
+                "caseNumber": "FEE056",
+                "id": "64ee3d7d0a383141b6f09696"
+            },
+            {
+                "caseNumber": "FEE107",
+                "id": "64f22aec0177d517b8b6aac5"
+            },
+            {
+                "caseNumber": "FEE120",
+                "id": "650c66636c532a2b22c1cda9"
+            },
+            {
+                "caseNumber": "FEE122",
+                "id": "6511b12b6c532a2b22c20976"
+            },
+            {
+                "caseNumber": "FEE125",
+                "id": "651451806c532a2b22c244ae"
+            },
+            {
+                "caseNumber": "FEE126",
+                "id": "651456b26c532a2b22c2597b"
+            },
+            {
+                "caseNumber": "FEE128",
+                "id": "6516e10e6c532a2b22c2acfa"
+            },
+            {
+                "caseNumber": "FEE134",
+                "id": "652ef7f96e249d916b8b4f41"
+            },
+            {
+                "caseNumber": "FEE149",
+                "id": "65564bc58ef9000b3281dc9e"
+            },
+            {
+                "caseNumber": "FEE277",
+                "id": "669ab2f46f67a454b173f21d"
+            },
+            {
+                "caseNumber": "FEE287",
+                "id": "66d0e6d14b6ebca29d7561c4"
+            },
+            {
+                "caseNumber": "FEE288",
+                "id": "66d0e7484b6ebca29d7568a8"
+            },
+            {
+                "caseNumber": "FEE401",
+                "id": "676220b65b9a0228b7692c7b"
+            }
+        ],
+        "documentUrl": "https://minio-ui.dev.k8s.safra.int/api/v1/buckets/jarvis-public/objects/download?preview=true&prefix=U2NoZWR1bGVPZkZlZXMucGRm",
+        "currentFees": [
+            {
+                "feeDescription": "$0.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "Account Maintenance Fee $1500.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "Hold Mail Fee $600.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "SSL Account Maintanance Fee $375.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "USD Outgoing Wire Fee $20.00",
+                "feeCode": " Corporate Checking F 17226444"
+            },
+            {
+                "feeDescription": "Custody/A053 0.20% /YR min $375.00/QTR",
+                "feeCode": "SNBNY custody 20002089"
+            },
+            {
+                "feeDescription": "Equity Comm/E3 $0.10 per share, min charge of $150 per trade",
+                "feeCode": "SNBNY custody 20002089"
+            },
+            {
+                "feeDescription": "Option Comm/E3 $0.05 per share, min charge of $150 per trade",
+                "feeCode": "SNBNY custody 20002089"
+            },
+            {
+                "feeDescription": "Equity Comm/E3 $0.10 per share, min charge of $150 per trade",
+                "feeCode": "SSL retail 20103939"
+            },
+            {
+                "feeDescription": "Option Comm/E3 $0.05 per share, min charge of $150 per trade",
+                "feeCode": "SSL retail 20103939"
+            }
+        ]
+    }
+}
