@@ -1,42 +1,93 @@
-#addCurrentClientValue(equityField) {
-  const exceptionsOptions = Array.from(this.#allExceptions);
-  for (const [feeGroupIndex, feeGroup] of this.#investiment.feeGroups.entries()) {
-    feeGroup.cif = this.#accounts[0].cifno;
+function mergeEquityOption(rows) {
+  const bucket = {};
+  for (const r of rows) {
+    const code = r.Amount;
+    (bucket[code] ??= { eq: null, op: null });
+    if (r.BPSFeeTypeCode === 'E') bucket[code].eq = r;
+    if (r.BPSFeeTypeCode === 'O') bucket[code].op = r;
+  }
 
-    for (const [fieldIndex, field] of feeGroup.fields.entries()) {
-      if (field.isException) {
-        field.labelValue =
-          this.#investiment.feeGroups[feeGroupIndex - 1].fields[fieldIndex].labelValue;
+  return Object.keys(bucket)
+    .sort((a, b) => a.localeCompare(b))
+    .map(code => {
+      const { eq, op } = bucket[code];
+      return {
+        value: code,
+        text: `${code} - Equity:${eq ? eq.FreqDescription : '-'}; Option:${op ? op.FreqDescription : '-'}`,
+        visible: true,
+        retired: false
+      };
+    });
+}
+
+function applyExceptionAmounts(mongoFees, excRows) {
+  const byCode = excRows.reduce((acc, r) => {
+    (acc[r.FeeCode] ??= []).push(r);
+    return acc;
+  }, {});
+
+  const allEquityOptionRows = Object.values(byCode)
+    .flat()
+    .filter(r => r.BPSFeeTypeCode === 'E' || r.BPSFeeTypeCode === 'O');
+
+  mongoFees.forEach(fee => {
+    const excGrp = findGroup(fee, 'Exception Request');
+    if (!excGrp) return;
+
+    excGrp.fields.forEach(field => {
+      const code = Object.entries(feeCodeMap)
+        .find(([, c]) => c === field.code)?.[0];
+      let rows = code ? byCode[code] : null;
+      if (!rows?.length) return;
+
+      if (field.code === 7) {
+        field.exceptionOptions = mergeEquityOption(allEquityOptionRows);
       } else {
-        for (const account of this.#accounts) {
-          if (field.code === account.feeType && feeGroup.accountNumber === account.bpsAcctNumber) {
-            if (field.code === 5) {
-              field.defaultValue = field.isStandard
-                ? field.defaultValue
-                : account.feeAmount.toString();
-              field.labelValue = numberToCurrency(field.defaultValue);
-            } else if (field.code === 7) {
-              const equityRow = exceptionsOptions.find(x => x.value === account.feeCode && x.text.includes('Equity'));
-              if (equityRow) {
-                field.defaultValue = equityRow.value;
-                field.labelValue = equityRow.text;
-              }
-            } else {
-              if (field.labelValue !== 'Other') {
-                if (field.isCurrentClient) {
-                  field.defaultValue = account.feeCode.toString();
-                }
-                let exception = exceptionsOptions.find(x => x.value === field.defaultValue);
-                if (!exception) {
-                  exception = equityField.exceptionOptions.find(e => e.value === field.defaultValue) || { text: '' };
-                }
-                field.labelValue = exception.text;
-              }
-            }
-          }
-        }
+        const nums = rows.filter(r => !Number.isNaN(Number(r.Amount)))
+          .sort((a, b) => Number(a.Amount) - Number(b.Amount));
+        const alpha = rows.filter(r => Number.isNaN(Number(r.Amount)))
+          .sort((a, b) => a.Amount.localeCompare(b.Amount));
+        field.exceptionOptions = [...nums, ...alpha].map(r => ({
+          value: r.Amount.toString(),
+          text: Number.isNaN(Number(r.Amount))
+            ? (r.FreqDescription?.trim() || r.Amount)
+            : numberToCurrency(Number(r.Amount)),
+          visible: true,
+          retired: false
+        }));
       }
+
+      field.defaultValue = '';
+      field.labelValue = '';
+    });
+  });
+}
+
+
+
+
+
+function patchClientCurrent(customerAccount, feesArr) {
+  const invFee = feesArr.find(f => f.feeType === 'Investment Account Fees');
+  if (!invFee) return;
+
+  const currGrp = invFee.feeGroups?.find(g => g.name === 'Client Current Fees');
+  const stdGrp  = invFee.feeGroups?.find(g => g.name === 'Standard Fees');
+  if (!currGrp || !stdGrp) return;
+
+  const custodyAcc = customerAccount.find(a => a.feeType === 6);
+  if (custodyAcc) {
+    const fldCurr6 = currGrp.fields.find(f => f.code === 6);
+    if (fldCurr6) {
+      fldCurr6.defaultValue = custodyAcc.feeCode;
+      fldCurr6.labelValue   = numberToCurrency(custodyAcc.feeAmount);
     }
   }
-  this.#clearMemory();
+
+  const fldStd7  = stdGrp.fields .find(f => f.code === 7);
+  const fldCurr7 = currGrp.fields.find(f => f.code === 7);
+  if (fldStd7 && fldCurr7 && !fldCurr7.labelValue) {
+    fldCurr7.defaultValue = fldStd7.defaultValue;
+    fldCurr7.labelValue   = fldStd7.labelValue;
+  }
 }
