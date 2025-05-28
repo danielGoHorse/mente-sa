@@ -1,3 +1,7 @@
+Chat, boa noite...Vamos la
+
+Esse foi o resultado apresentado no ultimo codigo que me enviou...
+
 {
     "code": 200,
     "data": {
@@ -61,14 +65,14 @@
                                 "code": 1,
                                 "isException": false,
                                 "name": "Account Maintenance",
-                                "defaultValue": "0",
+                                "defaultValue": "1500",
                                 "exceptionOptions": [],
                                 "_id": "6468f46eff51aa9d77d849dc",
                                 "createdAt": "2023-05-20T16:25:31.436Z",
                                 "updatedAt": "2023-05-20T16:25:31.436Z",
                                 "isCurrentClient": true,
                                 "isStandard": false,
-                                "labelValue": "$0.00"
+                                "labelValue": "$1,500.00"
                             },
                             {
                                 "code": 2,
@@ -104,6 +108,12 @@
                                         "retired": false
                                     },
                                     {
+                                        "value": "600.00",
+                                        "text": "$600.00",
+                                        "visible": true,
+                                        "retired": false
+                                    },
+                                    {
                                         "value": "1500.00",
                                         "text": "$1,500.00",
                                         "visible": true,
@@ -123,6 +133,12 @@
                                 "name": "Hold mail",
                                 "defaultValue": "",
                                 "exceptionOptions": [
+                                    {
+                                        "value": "0.00",
+                                        "text": "$0.00",
+                                        "visible": true,
+                                        "retired": false
+                                    },
                                     {
                                         "value": "600.00",
                                         "text": "$600.00",
@@ -163,8 +179,7 @@
                                 "exceptionOptions": [],
                                 "_id": "6468f46eff51aa9d77d849fc",
                                 "createdAt": "2023-05-20T16:25:31.436Z",
-                                "updatedAt": "2023-05-20T16:25:31.436Z",
-                                "labelValue": "$0.00"
+                                "updatedAt": "2023-05-20T16:25:31.436Z"
                             },
                             {
                                 "code": 4,
@@ -186,7 +201,7 @@
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "68308afff5392be28f89417c"
+                        "_id": "68366bf7efdabac1db22512a"
                     },
                     {
                         "name": "Client Current Fees",
@@ -198,13 +213,12 @@
                                 "isCurrentClient": true,
                                 "isException": false,
                                 "name": "Incoming Wire",
-                                "defaultValue": "0",
+                                "defaultValue": "10",
                                 "hasChanged": false,
                                 "exceptionOptions": [],
                                 "_id": "6468f46eff51aa9d77d84a01",
                                 "createdAt": "2023-05-20T16:25:31.437Z",
-                                "updatedAt": "2023-05-20T16:25:31.437Z",
-                                "labelValue": "$0.00"
+                                "updatedAt": "2023-05-20T16:25:31.437Z"
                             },
                             {
                                 "code": 4,
@@ -212,20 +226,20 @@
                                 "isCurrentClient": true,
                                 "isException": false,
                                 "name": "Outgoing Wire",
-                                "defaultValue": "75",
+                                "defaultValue": "20",
                                 "hasChanged": false,
                                 "exceptionOptions": [],
                                 "_id": "6468f46eff51aa9d77d84a02",
                                 "createdAt": "2023-05-20T16:25:31.437Z",
                                 "updatedAt": "2023-05-20T16:25:31.437Z",
-                                "labelValue": "$75.00"
+                                "labelValue": "$20.00"
                             }
                         ],
                         "cif": "NAA0010",
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "68308afff5392be28f89417f"
+                        "_id": "68366bf7efdabac1db22512d"
                     },
                     {
                         "name": "Exception Request",
@@ -247,7 +261,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f894184"
+                                        "_id": "68366bf7efdabac1db225132"
                                     }
                                 ],
                                 "_id": "6468f46eff51aa9d77d84a06",
@@ -270,7 +284,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f894186"
+                                        "_id": "68366bf7efdabac1db225134"
                                     },
                                     {
                                         "value": "10.00",
@@ -278,7 +292,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f894187"
+                                        "_id": "68366bf7efdabac1db225135"
                                     },
                                     {
                                         "value": "20.00",
@@ -286,7 +300,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f894188"
+                                        "_id": "68366bf7efdabac1db225136"
                                     },
                                     {
                                         "value": "25.00",
@@ -294,7 +308,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f894189"
+                                        "_id": "68366bf7efdabac1db225137"
                                     },
                                     {
                                         "value": "30.00",
@@ -302,7 +316,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f89418a"
+                                        "_id": "68366bf7efdabac1db225138"
                                     },
                                     {
                                         "value": "35.00",
@@ -310,7 +324,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f89418b"
+                                        "_id": "68366bf7efdabac1db225139"
                                     },
                                     {
                                         "value": "40.00",
@@ -318,15 +332,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f89418c"
-                                    },
-                                    {
-                                        "value": "45.00",
-                                        "text": "$45.00",
-                                        "retired": false,
-                                        "visible": true,
-                                        "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f89418d"
+                                        "_id": "68366bf7efdabac1db22513a"
                                     },
                                     {
                                         "value": "50.00",
@@ -334,7 +340,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f89418e"
+                                        "_id": "68366bf7efdabac1db22513b"
                                     },
                                     {
                                         "value": "60.00",
@@ -342,7 +348,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f89418f"
+                                        "_id": "68366bf7efdabac1db22513c"
                                     },
                                     {
                                         "value": "75.00",
@@ -350,7 +356,7 @@
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f894190"
+                                        "_id": "68366bf7efdabac1db22513d"
                                     }
                                 ],
                                 "_id": "6468f46eff51aa9d77d84a09",
@@ -362,12 +368,12 @@
                         "accountNumber": "17226444",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "68308afff5392be28f894182"
+                        "_id": "68366bf7efdabac1db225130"
                     }
                 ]
             },
             {
-                "_id": "6468f46eff51aa9d77d84a56",
+                "_id": "660eef75736ad689c62b7d8c",
                 "feeType": "Investment Account Fees",
                 "feeGroups": [
                     {
@@ -395,7 +401,7 @@
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "68308afff5392be28f8941ae"
+                        "_id": "68366bf7efdabac1db22515d"
                     },
                     {
                         "name": "Client Current Fees",
@@ -407,7 +413,7 @@
                                 "isCurrentClient": true,
                                 "isException": false,
                                 "name": "Safekeeping-Custody",
-                                "defaultValue": "A032",
+                                "defaultValue": "BPS002",
                                 "hasChanged": false,
                                 "exceptionOptions": [],
                                 "_id": "6468f46eff51aa9d77d84a34",
@@ -421,7 +427,7 @@
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "68308afff5392be28f8941b0"
+                        "_id": "68366bf7efdabac1db225162"
                     },
                     {
                         "name": "Exception Request",
@@ -438,17 +444,665 @@
                                 "hasChanged": false,
                                 "exceptionOptions": [
                                     {
+                                        "value": "A001",
+                                        "text": "0.30% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22516a"
+                                    },
+                                    {
+                                        "value": "A008",
+                                        "text": "0.10% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22516b"
+                                    },
+                                    {
+                                        "value": "A009",
+                                        "text": "0.05% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22516c"
+                                    },
+                                    {
+                                        "value": "A012",
+                                        "text": "0.15% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22516d"
+                                    },
+                                    {
+                                        "value": "A014 ",
+                                        "text": "Cust Fee/YR 0.2% $0 min",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22516e"
+                                    },
+                                    {
+                                        "value": "A019 ",
+                                        "text": "Cust Fee/YR 0.075% $250 min",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22516f"
+                                    },
+                                    {
                                         "value": "A021",
                                         "text": "0.35% /YR min $375.00/QTR",
                                         "retired": false,
                                         "visible": true,
                                         "approvedByDoubleA": null,
-                                        "_id": "68308afff5392be28f8941b4"
+                                        "_id": "68366bf7efdabac1db225170"
+                                    },
+                                    {
+                                        "value": "A022",
+                                        "text": "0.25% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225171"
+                                    },
+                                    {
+                                        "value": "A023",
+                                        "text": "0.10% /YR min $100.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225172"
+                                    },
+                                    {
+                                        "value": "A025",
+                                        "text": "0.15% /YR min $100.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225173"
+                                    },
+                                    {
+                                        "value": "A028 ",
+                                        "text": "Cust Fee/YR 0.04% $0 min",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225174"
+                                    },
+                                    {
+                                        "value": "A030",
+                                        "text": "0.40% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225175"
+                                    },
+                                    {
+                                        "value": "A031",
+                                        "text": "0.45% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225176"
+                                    },
+                                    {
+                                        "value": "A032",
+                                        "text": "0.50% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225177"
+                                    },
+                                    {
+                                        "value": "A053",
+                                        "text": "0.20% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225178"
+                                    },
+                                    {
+                                        "value": "A068",
+                                        "text": "0.25% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225179"
+                                    },
+                                    {
+                                        "value": "A070",
+                                        "text": "0.20% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22517a"
+                                    },
+                                    {
+                                        "value": "A071",
+                                        "text": "0.10% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22517b"
+                                    },
+                                    {
+                                        "value": "A073",
+                                        "text": "0.15% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22517c"
+                                    },
+                                    {
+                                        "value": "A075 ",
+                                        "text": "0.05%/Yr $0 min",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22517d"
+                                    },
+                                    {
+                                        "value": "A080 ",
+                                        "text": "Cust Fee/YR 0.15% $0 min",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22517e"
+                                    },
+                                    {
+                                        "value": "A088",
+                                        "text": "0.25% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22517f"
+                                    },
+                                    {
+                                        "value": "A089",
+                                        "text": "0.15% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225180"
+                                    },
+                                    {
+                                        "value": "A091 ",
+                                        "text": "Custody Rate .1%  No Min",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225181"
+                                    },
+                                    {
+                                        "value": "A096 ",
+                                        "text": "Cust Fee .35%, No Min",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225182"
+                                    },
+                                    {
+                                        "value": "A099 ",
+                                        "text": "Custody Rate 0.0625% No min",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225183"
+                                    },
+                                    {
+                                        "value": "A101",
+                                        "text": "0.50% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225184"
+                                    },
+                                    {
+                                        "value": "A102",
+                                        "text": "0.50% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225185"
+                                    },
+                                    {
+                                        "value": "A103",
+                                        "text": "0.45% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225186"
+                                    },
+                                    {
+                                        "value": "A104",
+                                        "text": "0.45% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225187"
+                                    },
+                                    {
+                                        "value": "A105",
+                                        "text": "0.40% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225188"
+                                    },
+                                    {
+                                        "value": "A106",
+                                        "text": "0.40% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225189"
+                                    },
+                                    {
+                                        "value": "A107",
+                                        "text": "0.35% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22518a"
+                                    },
+                                    {
+                                        "value": "A108",
+                                        "text": "0.35% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22518b"
+                                    },
+                                    {
+                                        "value": "A109",
+                                        "text": "0.30% /YR min $250.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22518c"
+                                    },
+                                    {
+                                        "value": "A110",
+                                        "text": "0.30% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22518d"
+                                    },
+                                    {
+                                        "value": "A111",
+                                        "text": "0.20% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22518e"
+                                    },
+                                    {
+                                        "value": "A112",
+                                        "text": "0.10% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22518f"
+                                    },
+                                    {
+                                        "value": "A113",
+                                        "text": "0.05% /YR min $375.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225190"
+                                    },
+                                    {
+                                        "value": "A114",
+                                        "text": "0.05% /YR min $125.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225191"
+                                    },
+                                    {
+                                        "value": "A115",
+                                        "text": "0.50% /YR min $100.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225192"
+                                    },
+                                    {
+                                        "value": "A116",
+                                        "text": "0.45% /YR min $100.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225193"
+                                    },
+                                    {
+                                        "value": "A117",
+                                        "text": "0.30% /YR min $100.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225194"
+                                    },
+                                    {
+                                        "value": "A118",
+                                        "text": "0.25% /YR min $100.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225195"
+                                    },
+                                    {
+                                        "value": "A119",
+                                        "text": "0.20% /YR min $100.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225196"
+                                    },
+                                    {
+                                        "value": "A120",
+                                        "text": "0.05% /YR min $100.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225197"
+                                    },
+                                    {
+                                        "value": "A121",
+                                        "text": "0.50% /YR min $75.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225198"
+                                    },
+                                    {
+                                        "value": "A122",
+                                        "text": "0.45% /YR min $75.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225199"
+                                    },
+                                    {
+                                        "value": "A123",
+                                        "text": "0.30% /YR min $75.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22519a"
+                                    },
+                                    {
+                                        "value": "A124",
+                                        "text": "0.25% /YR min $75.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22519b"
+                                    },
+                                    {
+                                        "value": "A125",
+                                        "text": "0.20% /YR min $75.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22519c"
+                                    },
+                                    {
+                                        "value": "A126",
+                                        "text": "0.15% /YR min $75.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22519d"
+                                    },
+                                    {
+                                        "value": "A127",
+                                        "text": "0.10% /YR min $75.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22519e"
+                                    },
+                                    {
+                                        "value": "A128",
+                                        "text": "0.05% /YR min $75.00/QTR",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22519f"
+                                    },
+                                    {
+                                        "value": "A130 ",
+                                        "text": "TRUST ACCT FEE 1.00% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a0"
+                                    },
+                                    {
+                                        "value": "A131 ",
+                                        "text": "TRUST ACCT FEE 0.90% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a1"
+                                    },
+                                    {
+                                        "value": "A132 ",
+                                        "text": "TRUST ACCT FEE 0.80% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a2"
+                                    },
+                                    {
+                                        "value": "A133 ",
+                                        "text": "TRUST ACCT FEE 0.75% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a3"
+                                    },
+                                    {
+                                        "value": "A134 ",
+                                        "text": "TRUST ACCT FEE 0.70% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a4"
+                                    },
+                                    {
+                                        "value": "A135 ",
+                                        "text": "TRUST ACCT FEE 0.65% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a5"
+                                    },
+                                    {
+                                        "value": "A136 ",
+                                        "text": "TRUST ACCT FEE 0.60% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a6"
+                                    },
+                                    {
+                                        "value": "A137 ",
+                                        "text": "TRUST ACCT FEE 0.50% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a7"
+                                    },
+                                    {
+                                        "value": "A138 ",
+                                        "text": "TRUST ACCT FEE 0.45% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a8"
+                                    },
+                                    {
+                                        "value": "A139 ",
+                                        "text": "TRUST ACCT FEE 0.40% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251a9"
+                                    },
+                                    {
+                                        "value": "A140 ",
+                                        "text": "TRUST ACCT FEE 0.38% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251aa"
+                                    },
+                                    {
+                                        "value": "A141 ",
+                                        "text": "TRUST ACCT FEE 0.35% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ab"
+                                    },
+                                    {
+                                        "value": "A142 ",
+                                        "text": "TRUST ACCT FEE 0.30% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ac"
+                                    },
+                                    {
+                                        "value": "A143 ",
+                                        "text": "TRUST ACCT FEE 0.26% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ad"
+                                    },
+                                    {
+                                        "value": "A144 ",
+                                        "text": "TRUST ACCT FEE 0.25% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ae"
+                                    },
+                                    {
+                                        "value": "A145 ",
+                                        "text": "TRUST ACCT FEE 0.20% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251af"
+                                    },
+                                    {
+                                        "value": "A146 ",
+                                        "text": "TRUST ACCT FEE 0.18% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b0"
+                                    },
+                                    {
+                                        "value": "A147 ",
+                                        "text": "TRUST ACCT FEE 0.15% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b1"
+                                    },
+                                    {
+                                        "value": "A148 ",
+                                        "text": "TRUST ACCT FEE 0.13% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b2"
+                                    },
+                                    {
+                                        "value": "A149 ",
+                                        "text": "TRUST ACCT FEE 0.05% $0 MIN",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b3"
+                                    },
+                                    {
+                                        "value": "A150",
+                                        "text": "0",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b4"
+                                    },
+                                    {
+                                        "value": "F002",
+                                        "text": "Flat Quarterly Custody Fee $ 500",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b5"
+                                    },
+                                    {
+                                        "value": "F004",
+                                        "text": "Flat Fee $600 /Yr",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b6"
+                                    },
+                                    {
+                                        "value": "F009",
+                                        "text": "Flat Quarterly Custody Fee $ 1000",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b7"
+                                    },
+                                    {
+                                        "value": "F017",
+                                        "text": "Flat Quarterly Custody Fee $ 2500",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b8"
+                                    },
+                                    {
+                                        "value": "F100",
+                                        "text": "Waived Custody Fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251b9"
+                                    },
+                                    {
+                                        "value": "F105 ",
+                                        "text": "Flat Fee  $1500/Yr",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ba"
+                                    },
+                                    {
+                                        "value": "F108",
+                                        "text": "Flat Quarterly Custody Fee $ 1500",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251bb"
                                     }
                                 ],
                                 "_id": "6468f46eff51aa9d77d84a3b",
                                 "createdAt": "2023-05-20T16:25:31.438Z",
-                                "updatedAt": "2023-05-20T16:25:31.438Z"
+                                "updatedAt": "2024-04-04T18:20:51.136Z"
                             }
                         ],
                         "cif": "NAA0010",
@@ -456,26 +1110,1070 @@
                         "entityCode": "SNB/284",
                         "visible": true,
                         "kycMailingStatus": null,
-                        "_id": "68308afff5392be28f8941b2"
+                        "_id": "68366bf7efdabac1db225168"
+                    },
+                    {
+                        "name": "Standard Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "SSL Account Maintenance",
+                                "defaultValue": "375",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Quarterly",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a2e",
+                                "createdAt": "2023-05-20T16:25:31.437Z",
+                                "updatedAt": "2023-05-20T16:25:31.437Z",
+                                "labelValue": "$375.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": true,
+                                "isCurrentClient": false,
+                                "isException": false,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "E3",
+                                "hasChanged": false,
+                                "tooltip": "Charged: Per Trade",
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a2f",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "$0.10 per share, min charge of $150 per trade"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20103939",
+                        "entityCode": "SSL/189",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "68366bf7efdabac1db22515b"
+                    },
+                    {
+                        "name": "Client Current Fees",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "SSL Account Maintenance",
+                                "defaultValue": "0",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a35",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": "$0.00"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": true,
+                                "isException": false,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "BPS005",
+                                "hasChanged": false,
+                                "exceptionOptions": [],
+                                "_id": "6468f46eff51aa9d77d84a36",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z",
+                                "labelValue": ""
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20103939",
+                        "entityCode": "SSL/189",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "68366bf7efdabac1db225160"
+                    },
+                    {
+                        "name": "Exception Request",
+                        "code": 3,
+                        "fields": [
+                            {
+                                "code": 5,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "SSL Account Maintenance",
+                                "defaultValue": "",
+                                "labelValue": "$0.00",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "375.00",
+                                        "text": "$375.00",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225167"
+                                    }
+                                ],
+                                "_id": "6468f46eff51aa9d77d84a3d",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2023-05-20T16:25:31.438Z"
+                            },
+                            {
+                                "code": 7,
+                                "isStandard": false,
+                                "isCurrentClient": false,
+                                "isException": true,
+                                "name": "Equity and Options Commission",
+                                "defaultValue": "",
+                                "labelValue": "",
+                                "hasChanged": false,
+                                "exceptionOptions": [
+                                    {
+                                        "value": "A1",
+                                        "text": "$0.00 per share, with NO min charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251bd"
+                                    },
+                                    {
+                                        "value": "A1",
+                                        "text": "$0.00 per share, with NO min charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251be"
+                                    },
+                                    {
+                                        "value": "A2",
+                                        "text": "$50 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251bf"
+                                    },
+                                    {
+                                        "value": "A2",
+                                        "text": "$50 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c0"
+                                    },
+                                    {
+                                        "value": "A3",
+                                        "text": "$100 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c1"
+                                    },
+                                    {
+                                        "value": "A3",
+                                        "text": "$50 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c2"
+                                    },
+                                    {
+                                        "value": "A4",
+                                        "text": "$0.01 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c3"
+                                    },
+                                    {
+                                        "value": "A4",
+                                        "text": "$0.01 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c4"
+                                    },
+                                    {
+                                        "value": "A5",
+                                        "text": "$0.01 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c5"
+                                    },
+                                    {
+                                        "value": "A5",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c6"
+                                    },
+                                    {
+                                        "value": "A6",
+                                        "text": "$0.02 per share, min charge of $50 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c7"
+                                    },
+                                    {
+                                        "value": "A6",
+                                        "text": "$0.02 per share, min charge of $ 50 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c8"
+                                    },
+                                    {
+                                        "value": "A7",
+                                        "text": "$0.02 per share, min charge of $75 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251c9"
+                                    },
+                                    {
+                                        "value": "A7",
+                                        "text": "$0.02 per share, min charge of $75 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ca"
+                                    },
+                                    {
+                                        "value": "A8",
+                                        "text": "$0.02 per share, min charge of $ 80 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251cb"
+                                    },
+                                    {
+                                        "value": "A8",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251cc"
+                                    },
+                                    {
+                                        "value": "A9",
+                                        "text": "$0.02 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251cd"
+                                    },
+                                    {
+                                        "value": "A9",
+                                        "text": "$0.006 per share, with NO min charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ce"
+                                    },
+                                    {
+                                        "value": "B1",
+                                        "text": "$0.02 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251cf"
+                                    },
+                                    {
+                                        "value": "B1",
+                                        "text": "$0.02 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d0"
+                                    },
+                                    {
+                                        "value": "B2",
+                                        "text": "$0.02 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d1"
+                                    },
+                                    {
+                                        "value": "B2",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d2"
+                                    },
+                                    {
+                                        "value": "B3",
+                                        "text": "$0.03 per share, min charge of $75 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d3"
+                                    },
+                                    {
+                                        "value": "B3",
+                                        "text": "$0.03 per share, min charge of $75 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d4"
+                                    },
+                                    {
+                                        "value": "B4",
+                                        "text": "$0.03 per share, min charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d5"
+                                    },
+                                    {
+                                        "value": "B4",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d6"
+                                    },
+                                    {
+                                        "value": "B5",
+                                        "text": "$0.03 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d7"
+                                    },
+                                    {
+                                        "value": "B5",
+                                        "text": "$0.02 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d8"
+                                    },
+                                    {
+                                        "value": "B6",
+                                        "text": "$0.03 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251d9"
+                                    },
+                                    {
+                                        "value": "B6",
+                                        "text": "$0.03 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251da"
+                                    },
+                                    {
+                                        "value": "B7",
+                                        "text": "$0.03 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251db"
+                                    },
+                                    {
+                                        "value": "B7",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251dc"
+                                    },
+                                    {
+                                        "value": "B8",
+                                        "text": "$0.03 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251dd"
+                                    },
+                                    {
+                                        "value": "B8",
+                                        "text": "$0.07 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251de"
+                                    },
+                                    {
+                                        "value": "C1",
+                                        "text": "$0.04 per share, min charge of $50 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251df"
+                                    },
+                                    {
+                                        "value": "C1",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e0"
+                                    },
+                                    {
+                                        "value": "C2",
+                                        "text": "$0.04 per share, min charge of $75 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e1"
+                                    },
+                                    {
+                                        "value": "C2",
+                                        "text": "$0.04 per share, min charge of $75 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e2"
+                                    },
+                                    {
+                                        "value": "C4",
+                                        "text": "$0.04 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e3"
+                                    },
+                                    {
+                                        "value": "C4",
+                                        "text": "$0.04 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e4"
+                                    },
+                                    {
+                                        "value": "C5",
+                                        "text": "$0.04 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e5"
+                                    },
+                                    {
+                                        "value": "C5",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e6"
+                                    },
+                                    {
+                                        "value": "C8",
+                                        "text": "$0.05 per share, min charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e7"
+                                    },
+                                    {
+                                        "value": "C8",
+                                        "text": "$0.05 per share, min charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e8"
+                                    },
+                                    {
+                                        "value": "C9",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251e9"
+                                    },
+                                    {
+                                        "value": "C9",
+                                        "text": "$0.00 per share, with NO min charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ea"
+                                    },
+                                    {
+                                        "value": "D1",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251eb"
+                                    },
+                                    {
+                                        "value": "D1",
+                                        "text": "$0.03 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ec"
+                                    },
+                                    {
+                                        "value": "D2",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ed"
+                                    },
+                                    {
+                                        "value": "D2",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ee"
+                                    },
+                                    {
+                                        "value": "D6",
+                                        "text": "$0.07 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ef"
+                                    },
+                                    {
+                                        "value": "D6",
+                                        "text": "$0.07 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f0"
+                                    },
+                                    {
+                                        "value": "D7",
+                                        "text": "$0.07 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f1"
+                                    },
+                                    {
+                                        "value": "D7",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f2"
+                                    },
+                                    {
+                                        "value": "D8",
+                                        "text": "$0.10 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f3"
+                                    },
+                                    {
+                                        "value": "D8",
+                                        "text": "$0.00 per share, with NO min charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f4"
+                                    },
+                                    {
+                                        "value": "D9",
+                                        "text": "$0.03 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f5"
+                                    },
+                                    {
+                                        "value": "D9",
+                                        "text": "$150 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f6"
+                                    },
+                                    {
+                                        "value": "E1",
+                                        "text": "$0.10 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f7"
+                                    },
+                                    {
+                                        "value": "E1",
+                                        "text": "$0.02 per share, min charge of $75 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f8"
+                                    },
+                                    {
+                                        "value": "E3",
+                                        "text": "$0.10 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251f9"
+                                    },
+                                    {
+                                        "value": "E3",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251fa"
+                                    },
+                                    {
+                                        "value": "E4",
+                                        "text": "$0.02 per share, min charge of $80 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251fb"
+                                    },
+                                    {
+                                        "value": "E4",
+                                        "text": "$0.02 per share, min charge of $80 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251fc"
+                                    },
+                                    {
+                                        "value": "H8",
+                                        "text": "Equity Comm Fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251fd"
+                                    },
+                                    {
+                                        "value": "H8",
+                                        "text": "Equity Comm Fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251fe"
+                                    },
+                                    {
+                                        "value": "I1",
+                                        "text": "$0.0075 per share, with NO minimum charge",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db2251ff"
+                                    },
+                                    {
+                                        "value": "I1",
+                                        "text": "$0.01 per share, with NO minimum charge",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225200"
+                                    },
+                                    {
+                                        "value": "I2",
+                                        "text": "$0.05 min $150",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225201"
+                                    },
+                                    {
+                                        "value": "I2",
+                                        "text": "100 basis points min $80",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225202"
+                                    },
+                                    {
+                                        "value": "I3",
+                                        "text": "100 basis points, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225203"
+                                    },
+                                    {
+                                        "value": "I3",
+                                        "text": "100 basis points, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225204"
+                                    },
+                                    {
+                                        "value": "I6",
+                                        "text": "100 basis points, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225205"
+                                    },
+                                    {
+                                        "value": "I6",
+                                        "text": "$0.05 per share, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225206"
+                                    },
+                                    {
+                                        "value": "I7",
+                                        "text": "Equities $0.05 per share, min charge of $50 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225207"
+                                    },
+                                    {
+                                        "value": "I7",
+                                        "text": "Options $0.05 per share, min charge of $50 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225208"
+                                    },
+                                    {
+                                        "value": "I8",
+                                        "text": "$0.03 per share, min charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225209"
+                                    },
+                                    {
+                                        "value": "I8",
+                                        "text": "$0.03 per share, min charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22520a"
+                                    },
+                                    {
+                                        "value": "I9",
+                                        "text": "2c min $30",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22520b"
+                                    },
+                                    {
+                                        "value": "I9",
+                                        "text": "2c min $30",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22520c"
+                                    },
+                                    {
+                                        "value": "J1",
+                                        "text": "$0.01 min $75",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22520d"
+                                    },
+                                    {
+                                        "value": "J1",
+                                        "text": "$0.01 min $75",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22520e"
+                                    },
+                                    {
+                                        "value": "J2",
+                                        "text": "J2",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22520f"
+                                    },
+                                    {
+                                        "value": "J2",
+                                        "text": "J2",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225210"
+                                    },
+                                    {
+                                        "value": "J3",
+                                        "text": "$0.02 per share, with a minimum charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225211"
+                                    },
+                                    {
+                                        "value": "J3",
+                                        "text": "$0.02 per share, with a minimum charge of $100 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225212"
+                                    },
+                                    {
+                                        "value": "J4",
+                                        "text": "$25 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225213"
+                                    },
+                                    {
+                                        "value": "J4",
+                                        "text": "$25 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225214"
+                                    },
+                                    {
+                                        "value": "J5",
+                                        "text": "$15 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225215"
+                                    },
+                                    {
+                                        "value": "J5",
+                                        "text": "$15 flat charge per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225216"
+                                    },
+                                    {
+                                        "value": "J6",
+                                        "text": "$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225217"
+                                    },
+                                    {
+                                        "value": "J6",
+                                        "text": "$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225218"
+                                    },
+                                    {
+                                        "value": "J7",
+                                        "text": "10 cents per share plus $25 pass-along broker fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225219"
+                                    },
+                                    {
+                                        "value": "J7",
+                                        "text": "$10 per contract plus $25 pass-along broker fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22521a"
+                                    },
+                                    {
+                                        "value": "J8",
+                                        "text": "$0.06 per share, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22521b"
+                                    },
+                                    {
+                                        "value": "J8",
+                                        "text": "$0.06 per share, with a minimum charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22521c"
+                                    },
+                                    {
+                                        "value": "J9",
+                                        "text": "$0.035 per share plus $25 pass-along broker fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22521d"
+                                    },
+                                    {
+                                        "value": "J9",
+                                        "text": "$3.50 per contract plus $25 pass-along broker fee",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22521e"
+                                    },
+                                    {
+                                        "value": "K0",
+                                        "text": "K0",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db22521f"
+                                    },
+                                    {
+                                        "value": "K0",
+                                        "text": "K0",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225220"
+                                    },
+                                    {
+                                        "value": "K1",
+                                        "text": "Stocks $0.06 per share Minimum of $100",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225221"
+                                    },
+                                    {
+                                        "value": "K1",
+                                        "text": "Options $6.00 per contract Minimum of $100",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225222"
+                                    },
+                                    {
+                                        "value": "K2",
+                                        "text": "K2",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225223"
+                                    },
+                                    {
+                                        "value": "K2",
+                                        "text": "K2",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225224"
+                                    },
+                                    {
+                                        "value": "Z1",
+                                        "text": "$0.10 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225225"
+                                    },
+                                    {
+                                        "value": "Z1",
+                                        "text": "$0.05 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225226"
+                                    },
+                                    {
+                                        "value": "Z2",
+                                        "text": "$10 per share, min charge of $150 per trade",
+                                        "retired": false,
+                                        "visible": true,
+                                        "approvedByDoubleA": null,
+                                        "_id": "68366bf7efdabac1db225227"
+                                    }
+                                ],
+                                "_id": "6468f46eff51aa9d77d84a40",
+                                "createdAt": "2023-05-20T16:25:31.438Z",
+                                "updatedAt": "2024-04-04T18:20:51.137Z"
+                            }
+                        ],
+                        "cif": "NAA0010",
+                        "accountNumber": "20103939",
+                        "entityCode": "SSL/189",
+                        "visible": true,
+                        "kycMailingStatus": null,
+                        "_id": "68366bf7efdabac1db225165"
                     }
                 ]
             }
         ],
         "feesActives": [
             {
-                "caseNumber": "FEE1078",
-                "id": "659c7c6a07059445c666fffc"
+                "caseNumber": "FEE015",
+                "id": "64cc18584b214b0c1fcf0c23"
             },
             {
-                "caseNumber": "FEE2697",
-                "id": "66463531e0cfba0a5156a06f"
+                "caseNumber": "FEE029",
+                "id": "64d4ffa37503d6da1e966b03"
             },
             {
-                "caseNumber": "FEE2799",
-                "id": "6654eeffe0cfba0a5156b063"
+                "caseNumber": "FEE053",
+                "id": "64e4c66085c9aa31acf7824a"
+            },
+            {
+                "caseNumber": "FEE055",
+                "id": "64ee3d420a383141b6f08647"
+            },
+            {
+                "caseNumber": "FEE056",
+                "id": "64ee3d7d0a383141b6f09696"
+            },
+            {
+                "caseNumber": "FEE107",
+                "id": "64f22aec0177d517b8b6aac5"
+            },
+            {
+                "caseNumber": "FEE120",
+                "id": "650c66636c532a2b22c1cda9"
+            },
+            {
+                "caseNumber": "FEE122",
+                "id": "6511b12b6c532a2b22c20976"
+            },
+            {
+                "caseNumber": "FEE125",
+                "id": "651451806c532a2b22c244ae"
+            },
+            {
+                "caseNumber": "FEE126",
+                "id": "651456b26c532a2b22c2597b"
+            },
+            {
+                "caseNumber": "FEE128",
+                "id": "6516e10e6c532a2b22c2acfa"
+            },
+            {
+                "caseNumber": "FEE134",
+                "id": "652ef7f96e249d916b8b4f41"
+            },
+            {
+                "caseNumber": "FEE149",
+                "id": "65564bc58ef9000b3281dc9e"
+            },
+            {
+                "caseNumber": "FEE277",
+                "id": "669ab2f46f67a454b173f21d"
+            },
+            {
+                "caseNumber": "FEE287",
+                "id": "66d0e6d14b6ebca29d7561c4"
+            },
+            {
+                "caseNumber": "FEE288",
+                "id": "66d0e7484b6ebca29d7568a8"
+            },
+            {
+                "caseNumber": "FEE401",
+                "id": "676220b65b9a0228b7692c7b"
             }
         ],
-        "documentUrl": "",
+        "documentUrl": "https://minio-ui.qa.k8s.safra.int/api/v1/buckets/conductor-public/objects/download?preview=true&prefix=U2NoZWR1bGVvZkZlZXNJbnRsUEIzLlBERg==&version_id=null",
         "currentFees": [
             {
                 "feeDescription": "$0.00",
@@ -520,3 +2218,260 @@
         ]
     }
 }
+
+O Banco de current esta assim:
+CIFNO	DDANumber	BPSAcctNumber	FeeType	FeeDescription	FeeCode	BPSFeeTypeCode	FeeAmount	Source	Entity	IsFeesStandard
+NAA0010	17226444		1	AccountMaintenance	JH001		1500.000000000	JHA	SNB/284	Yes
+NAA0010	17226444		2	HoldMail	JH002		600.000000000	JHA	SNB/284	Yes
+NAA0010	17226444		4	USD/FXOutgoingWire	JH008		20.000000000	JHA	SNB/284	No
+NAA0010	17226444    	20103939	5	SSLMaintenanace	BPS003	S	0.000000000	BPS	SSL/189	No
+NAA0010	17226444    	20002089	6	SafekeepingCustody	BPS002	C	375.000000000	BPS	SNB/284	Yes
+NAA0010	17226444    	20103939	7	EquityCommissions	BPS004	E	0.000000000	BPS	SSL/189	Yes
+NAA0010	17226444    	20103939	7	OptionsCommissions	BPS005	O	0.000000000	BPS	SSL/189	Yes
+
+O Da Standards assim:
+
+FeePackageDescription	FeeAmount	IsStandard	FeeShortDescription	FeeType	FeeDescription	FrequencyDescription
+PB International	1500.00	1	Account Maintenance Fee	1	AccountMaintenance	Annual - Charged Semi-Annual
+PB International	600.00	1	NULL	2	HoldMail	Annual - Charged Annual
+
+E o das exceptions assim:
+
+BPS002	Safekeeping of Securities	557	A001	0.30% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	558	A008	0.10% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	559	A009	0.05% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	560	A012	0.15% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	561	A014 	Cust Fee/YR 0.2% $0 min                	Investment Fees
+BPS002	Safekeeping of Securities	562	A019 	Cust Fee/YR 0.075% $250 min            	Investment Fees
+BPS002	Safekeeping of Securities	563	A021	0.35% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	564	A022	0.25% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	565	A023	0.10% /YR min $100.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	566	A025	0.15% /YR min $100.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	567	A028 	Cust Fee/YR 0.04% $0 min               	Investment Fees
+BPS002	Safekeeping of Securities	568	A030	0.40% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	569	A031	0.45% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	570	A053	0.20% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	571	A068	0.25% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	572	A070	0.20% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	573	A071	0.10% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	574	A073	0.15% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	575	A075 	0.05%/Yr $0 min                        	Investment Fees
+BPS002	Safekeeping of Securities	576	A080 	Cust Fee/YR 0.15% $0 min               	Investment Fees
+BPS002	Safekeeping of Securities	577	A088	0.25% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	578	A089	0.15% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	579	A091 	Custody Rate .1%  No Min                	Investment Fees
+BPS002	Safekeeping of Securities	580	A096 	Cust Fee .35%, No Min                   	Investment Fees
+BPS002	Safekeeping of Securities	581	A099 	Custody Rate 0.0625% No min             	Investment Fees
+BPS002	Safekeeping of Securities	582	A101	0.50% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	583	A102	0.50% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	584	A103	0.45% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	585	A104	0.45% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	586	A105	0.40% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	587	A106	0.40% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	588	A107	0.35% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	589	A108	0.35% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	590	A109	0.30% /YR min $250.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	591	A110	0.30% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	592	A111	0.20% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	593	A112	0.10% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	594	A113	0.05% /YR min $375.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	595	A114	0.05% /YR min $125.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	596	A115	0.50% /YR min $100.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	597	A116	0.45% /YR min $100.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	598	A117	0.30% /YR min $100.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	599	A118	0.25% /YR min $100.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	600	A119	0.20% /YR min $100.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	601	A120	0.05% /YR min $100.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	602	A121	0.50% /YR min $75.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	603	A122	0.45% /YR min $75.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	604	A123	0.30% /YR min $75.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	605	A124	0.25% /YR min $75.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	606	A125	0.20% /YR min $75.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	607	A126	0.15% /YR min $75.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	608	A127	0.10% /YR min $75.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	609	A128	0.05% /YR min $75.00/QTR	Investment Fees
+BPS002	Safekeeping of Securities	610	A130 	TRUST ACCT FEE 1.00% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	611	A131 	TRUST ACCT FEE 0.90% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	612	A132 	TRUST ACCT FEE 0.80% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	613	A133 	TRUST ACCT FEE 0.75% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	614	A134 	TRUST ACCT FEE 0.70% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	615	A135 	TRUST ACCT FEE 0.65% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	616	A136 	TRUST ACCT FEE 0.60% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	617	A137 	TRUST ACCT FEE 0.50% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	618	A138 	TRUST ACCT FEE 0.45% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	619	A139 	TRUST ACCT FEE 0.40% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	620	A140 	TRUST ACCT FEE 0.38% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	621	A141 	TRUST ACCT FEE 0.35% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	622	A142 	TRUST ACCT FEE 0.30% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	623	A143 	TRUST ACCT FEE 0.26% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	624	A144 	TRUST ACCT FEE 0.25% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	625	A145 	TRUST ACCT FEE 0.20% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	626	A146 	TRUST ACCT FEE 0.18% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	627	A147 	TRUST ACCT FEE 0.15% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	628	A148 	TRUST ACCT FEE 0.13% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	629	A149 	TRUST ACCT FEE 0.05% $0 MIN             	Investment Fees
+BPS002	Safekeeping of Securities	630	A150	0	Investment Fees
+BPS002	Safekeeping of Securities	631	F002	Flat Quarterly Custody Fee $ 500	Investment Fees
+BPS002	Safekeeping of Securities	632	F004	Flat Fee $600 /Yr                       	Investment Fees
+BPS002	Safekeeping of Securities	633	F009	Flat Quarterly Custody Fee $ 1000	Investment Fees
+BPS002	Safekeeping of Securities	634	F017	Flat Quarterly Custody Fee $ 2500	Investment Fees
+BPS002	Safekeeping of Securities	635	F100	Waived Custody Fee	Investment Fees
+BPS002	Safekeeping of Securities	636	F105 	Flat Fee  $1500/Yr                     	Investment Fees
+BPS002	Safekeeping of Securities	637	F108	Flat Quarterly Custody Fee $ 1500	Investment Fees
+BPS002	Safekeeping of Securities	56	A032	0.50% /YR min $375.00/QTR	Investment Fees
+BPS003	SSL Account Maintanance Fee	57	375.00	Quarterly on Day 1	Investment Fees
+BPS004	US Equities Commission	76	E3	$0.10 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1309	A1	$0.00 per share, with NO min charge per trade	Investment Fees
+BPS004	US Equities Commission	1310	A2	$50 flat charge per trade	Investment Fees
+BPS004	US Equities Commission	1311	A3	$100 flat charge per trade	Investment Fees
+BPS004	US Equities Commission	1312	A4	$0.01 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1313	A5	$0.01 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1314	A6	$0.02 per share, min charge of $50 per trade	Investment Fees
+BPS004	US Equities Commission	1315	A7	$0.02 per share, min charge of $75 per trade	Investment Fees
+BPS004	US Equities Commission	1316	A8	$0.02 per share, min charge of $ 80 per trade	Investment Fees
+BPS004	US Equities Commission	1317	A9	$0.02 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1318	B1	$0.02 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1319	B2	$0.02 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1320	B3	$0.03 per share, min charge of $75 per trade	Investment Fees
+BPS004	US Equities Commission	1321	B4	$0.03 per share, min charge of $100 per trade	Investment Fees
+BPS004	US Equities Commission	1322	B5	$0.03 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1323	B6	$0.03 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1324	B7	$0.03 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1325	B8	$0.03 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1326	C1	$0.04 per share, min charge of $50 per trade	Investment Fees
+BPS004	US Equities Commission	1327	C2	$0.04 per share, min charge of $75 per trade	Investment Fees
+BPS004	US Equities Commission	1328	C4	$0.04 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1329	C5	$0.04 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1330	C8	$0.05 per share, min charge of $100 per trade	Investment Fees
+BPS004	US Equities Commission	1331	C9	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1332	D1	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1333	D2	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1334	D6	$0.07 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1335	D7	$0.07 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1336	D8	$0.10 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1337	D9	$0.03 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1338	E1	$0.10 per share, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1339	E4	$0.02 per share, min charge of $80 per trade	Investment Fees
+BPS004	US Equities Commission	1340	H8	Equity Comm Fee	Investment Fees
+BPS004	US Equities Commission	1341	I1	$0.0075 per share, with NO minimum charge	Investment Fees
+BPS004	US Equities Commission	1342	I2	$0.05 min $150	Investment Fees
+BPS004	US Equities Commission	1343	I3	100 basis points, min charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1344	I6	100 basis points, with a minimum charge of $150 per trade	Investment Fees
+BPS004	US Equities Commission	1345	I7	Equities $0.05 per share, min charge of $50 per trade	Investment Fees
+BPS004	US Equities Commission	1346	I8	$0.03 per share, min charge of $100 per trade	Investment Fees
+BPS004	US Equities Commission	1347	I9	2c min $30	Investment Fees
+BPS004	US Equities Commission	1348	J1	$0.01 min $75	Investment Fees
+BPS004	US Equities Commission	1349	J2	J2	Investment Fees
+BPS004	US Equities Commission	1350	J3	$0.02 per share, with a minimum charge of $100 per trade	Investment Fees
+BPS004	US Equities Commission	1351	J4	$25 flat charge per trade	Investment Fees
+BPS004	US Equities Commission	1352	J5	$15 flat charge per trade	Investment Fees
+BPS004	US Equities Commission	1353	J6	$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more	Investment Fees
+BPS004	US Equities Commission	1354	J7	10 cents per share plus $25 pass-along broker fee  	Investment Fees
+BPS004	US Equities Commission	1355	J8	$0.06 per share, with a minimum charge of $150 per trade  	Investment Fees
+BPS004	US Equities Commission	1356	J9	$0.035 per share plus $25 pass-along broker fee  	Investment Fees
+BPS004	US Equities Commission	1357	K0		Investment Fees
+BPS004	US Equities Commission	1358	K1	Stocks $0.06 per share Minimum of $100	Investment Fees
+BPS004	US Equities Commission	1359	K2		Investment Fees
+BPS004	US Equities Commission	1360	Z1	$0.10 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1621	A1	$0.00 per share, with NO min charge per trade	Investment Fees
+BPS005	Options Commission	1622	A2	$50 flat charge per trade	Investment Fees
+BPS005	Options Commission	1623	A3	$50 flat charge per trade	Investment Fees
+BPS005	Options Commission	1624	A4	$0.01 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1625	A5	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1626	A6	$0.02 per share, min charge of $ 50 per trade	Investment Fees
+BPS005	Options Commission	1627	A7	$0.02 per share, min charge of $75 per trade	Investment Fees
+BPS005	Options Commission	1628	A8	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1629	A9	$0.006 per share, with NO min charge per trade	Investment Fees
+BPS005	Options Commission	1630	B1	$0.02 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1631	B2	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1632	B3	$0.03 per share, min charge of $75 per trade	Investment Fees
+BPS005	Options Commission	1633	B4	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1634	B5	$0.02 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1635	B6	$0.03 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1636	B7	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1637	B8	$0.07 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1638	C1	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1639	C2	$0.04 per share, min charge of $75 per trade	Investment Fees
+BPS005	Options Commission	1640	C4	$0.04 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1641	C5	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1642	C8	$0.05 per share, min charge of $100 per trade	Investment Fees
+BPS005	Options Commission	1643	C9	$0.00 per share, with NO min charge per trade	Investment Fees
+BPS005	Options Commission	1644	D1	$0.03 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1645	D2	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1646	D6	$0.07 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1647	D7	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1648	D8	$0.00 per share, with NO min charge per trade	Investment Fees
+BPS005	Options Commission	1649	D9	$150 flat charge per trade	Investment Fees
+BPS005	Options Commission	1650	E1	$0.02 per share, min charge of $75 per trade	Investment Fees
+BPS005	Options Commission	1651	E3	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1652	E4	$0.02 per share, min charge of $80 per trade	Investment Fees
+BPS005	Options Commission	1653	H8	Equity Comm Fee	Investment Fees
+BPS005	Options Commission	1654	I1	$0.01 per share, with NO minimum charge	Investment Fees
+BPS005	Options Commission	1655	I2	100 basis points min $80	Investment Fees
+BPS005	Options Commission	1656	I3	100 basis points, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1657	I6	$0.05 per share, with a minimum charge of $150 per trade	Investment Fees
+BPS005	Options Commission	1658	I7	Options $0.05 per share, min charge of $50 per trade	Investment Fees
+BPS005	Options Commission	1659	I8	$0.03 per share, min charge of $100 per trade	Investment Fees
+BPS005	Options Commission	1660	I9	2c min $30	Investment Fees
+BPS005	Options Commission	1661	J1	$0.01 min $75	Investment Fees
+BPS005	Options Commission	1662	J2	J2	Investment Fees
+BPS005	Options Commission	1663	J3	$0.02 per share, with a minimum charge of $100 per trade	Investment Fees
+BPS005	Options Commission	1664	J4	$25 flat charge per trade	Investment Fees
+BPS005	Options Commission	1665	J5	$15 flat charge per trade	Investment Fees
+BPS005	Options Commission	1666	J6	$0.00 on trade values below $1,000, $25 on trades up to $9,999 and $50 on trades $10,000 and more	Investment Fees
+BPS005	Options Commission	1667	J7	$10 per contract plus $25 pass-along broker fee  	Investment Fees
+BPS005	Options Commission	1668	J8	$0.06 per share, with a minimum charge of $150 per trade  	Investment Fees
+BPS005	Options Commission	1669	J9	$3.50 per contract plus $25 pass-along broker fee  	Investment Fees
+BPS005	Options Commission	1670	K0		Investment Fees
+BPS005	Options Commission	1671	K1	Options $6.00 per contract Minimum of $100	Investment Fees
+BPS005	Options Commission	1672	K2		Investment Fees
+BPS005	Options Commission	1673	Z1	$0.05 per share, min charge of $150 per trade	Investment Fees
+BPS005	Options Commission	58	Z2	$10 per share, min charge of $150 per trade	Investment Fees
+JH001	Account Maintenance Fee	51	1500.00	Annual - Charged Semi-Annual	Customer Fees
+JH001	Account Maintenance Fee	98	0.00	NULL	Customer Fees
+JH001	Account Maintenance Fee	372	600.00	Annual - Charged Semi-Annual	Customer Fees
+JH002	Hold Mail Fee	373	0.00	Annual - Charged Annual	Customer Fees
+JH002	Hold Mail Fee	52	600.00	Annual - Charged Annual	Customer Fees
+JH006	FX Outgoing Wire Fee	53	75.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	96	0.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	114	50.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	374	60.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	375	40.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	376	35.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	377	30.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	378	25.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	379	20.00	NULL	Bank Account Fees
+JH006	FX Outgoing Wire Fee	380	10.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	381	60.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	382	40.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	383	35.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	384	30.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	385	25.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	386	20.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	387	10.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	123	50.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	97	0.00	NULL	Bank Account Fees
+JH007	FX Outgoing Wire (SafraLink) Fee	54	75.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	132	75.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	134	0.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	135	10.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	136	20.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	137	25.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	138	30.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	139	35.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	140	40.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	141	50.00	NULL	Bank Account Fees
+JH008	USD Outgoing Wire Fee	142	60.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	187	75.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	388	60.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	389	50.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	390	40.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	391	35.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	392	30.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	393	25.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	394	20.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	395	10.00	NULL	Bank Account Fees
+JH009	USD Outgoing Wire (SafraLink) Fee	396	0.00	NULL	Bank Account Fees
+JH010	USD/FX Incoming Wire Fee	197	0.00	NULL	Bank Account Fees
+
+Anexo uma imagem de como ficou na tela....tanto os campos quando o modal que abre com as opções dos equitys nas exceptions
