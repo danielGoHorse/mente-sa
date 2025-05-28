@@ -1,4 +1,4 @@
-// Auxiliar para juntar todas combinações de Equity/Option do banco
+// ========== Função Auxiliar: Junta todas as opções Equity/Option do banco ==========
 function mergeEquityOptionAll(excRows) {
   const equities = excRows.filter(r => r.FeeCode === "BPS004");
   const options  = excRows.filter(r => r.FeeCode === "BPS005");
@@ -20,7 +20,7 @@ function mergeEquityOptionAll(excRows) {
   });
 }
 
-// Aplica opções para Exception Request do campo 7 (Equity/Option)
+// ========== Aplica opções nas Exception Requests do campo 7 (Equity/Option) ==========
 function applyEquityOptionException(field, excRows) {
   if (field.code === 7) {
     field.exceptionOptions = mergeEquityOptionAll(excRows);
@@ -29,7 +29,7 @@ function applyEquityOptionException(field, excRows) {
   }
 }
 
-// Aplica labelValue para Standard/Current Fees do campo 7 (Equity/Option)
+// ========== Aplica labelValue no Standard/Current Fees do campo 7 (Equity/Option) ==========
 function setEquityOptionLabelValue(field, excRows) {
   if (field && field.code === 7 && field.defaultValue) {
     const code = field.defaultValue;
@@ -44,22 +44,32 @@ function setEquityOptionLabelValue(field, excRows) {
   }
 }
 
-// -------------- INÍCIO DO PROCESSO PRINCIPAL ----------------------
-// fees: seu array principal (que monta o JSON final)
-// excRows: seu array de todas as opções possíveis (Equity/Option do banco)
-
-fees.forEach(fee => {
-  // Popula Exception Request com TODAS as opções do banco para Equity/Option
-  const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
-  if (excGrp) {
-    excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
-  }
-
-  // Atualiza o labelValue de Standard/Current Fees, campo 7, para o texto completo (Equity+Option)
-  ['Standard Fees', 'Client Current Fees'].forEach(groupName => {
-    const group = fee.feeGroups?.find(g => g.name === groupName);
-    if (group) {
-      group.fields.forEach(field => setEquityOptionLabelValue(field, excRows));
+// ================== PROCESSO PRINCIPAL: Ajusta todo o array fees ==================
+function updateFeesWithEquityOptionData(fees, excRows) {
+  fees.forEach(fee => {
+    // Atualiza Exception Request: todas opções Equity/Option possíveis
+    const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
+    if (excGrp) {
+      excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
     }
+    // Atualiza o labelValue de Standard/Current Fees, campo 7, para o texto completo (Equity+Option)
+    ['Standard Fees', 'Client Current Fees'].forEach(groupName => {
+      const group = fee.feeGroups?.find(g => g.name === groupName);
+      if (group) {
+        group.fields.forEach(field => setEquityOptionLabelValue(field, excRows));
+      }
+    });
   });
-});
+}
+
+// ========== USO ==========
+/*
+  fees: seu array principal vindo do banco/processamento, 
+        já no formato esperado pelo frontend (com feeGroups, fields, etc)
+  excRows: array de todas as linhas de Equity/Option da tabela (FeeCode = BPS004 ou BPS005)
+*/
+
+// Chame essa função após montar/popular seu array 'fees':
+updateFeesWithEquityOptionData(fees, excRows);
+
+// Agora o array 'fees' está pronto para ir para o frontend!
