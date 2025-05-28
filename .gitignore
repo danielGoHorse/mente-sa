@@ -1,45 +1,29 @@
-/* ─────────── Ajuste “Client Current” (custody & equity/options) ─────────── */
-function patchClientCurrent(customerAccount, feesArr) {
-  const invFee = feesArr.find(f => f.feeType === 'Investment Account Fees');
-  if (!invFee) return;
-
-  /* agrupa feeGroups por accountNumber+entityCode */
-  const key = g => `${g.accountNumber ?? ''}::${g.entityCode ?? ''}`;
-
-  const stdMap  = new Map();   // Standard  por conta
-  const currMap = new Map();   // Current   por conta
-
-  invFee.feeGroups.forEach(g => {
-    if (g.name === 'Standard Fees')       stdMap.set(key(g), g);
-    if (g.name === 'Client Current Fees') currMap.set(key(g), g);
-  });
-
-  /* ------------ percorre cada conta que possua Client Current ------------ */
-  for (const [k, currGrp] of currMap.entries()) {
-    const stdGrp = stdMap.get(k);
-    if (!stdGrp) continue;                     // não deveria acontecer
-
-    /* -------- custody (code 6) -------- */
-    const custodyAcc = customerAccount
-      .find(a => a.feeType === 6 &&
-                 `${a.bpsAcctNumber ?? ''}::${a.entity}` === k);
-
-    if (custodyAcc) {
-      const fld6 = currGrp.fields.find(f => f.code === 6);
-      if (fld6) {
-        fld6.defaultValue = custodyAcc.feeCode;               // A053…
-        fld6.labelValue   = numberToCurrency(custodyAcc.feeAmount);
-      }
-    }
-
-    /* -------- equity + option (code 7) -------- */
-    const fldCurr7 = currGrp.fields.find(f => f.code === 7);
-    const fldStd7  = stdGrp .fields.find(f => f.code === 7);
-
-    if (fldCurr7 && fldStd7) {
-      // usa exatamente o valor/descrição já montados no grupo Standard
-      fldCurr7.defaultValue = fldStd7.defaultValue;   // “E3”, “B6” …
-      fldCurr7.labelValue   = fldStd7.labelValue;     // “E3 – Equity: …; Option: …”
-    }
+/* helper p/ Equity + Option  ───────────── */
+function mergeEquityOption(rows) {
+  /*
+   * 1) agrupa pelo próprio código (Amount) – “A1”, “B6”…;
+   * 2) junta a descrição de Equity e/ou Option que existir;
+   * 3) mantém a ordem alfabética.
+   */
+  const bucket = {};
+  for (const r of rows) {
+    const code = r.Amount;                       // chave = código
+    (bucket[code] ??= { E: null, O: null });
+    if (r.BPSFeeTypeCode === 'E') bucket[code].E = r;
+    if (r.BPSFeeTypeCode === 'O') bucket[code].O = r;
   }
+
+  return Object.keys(bucket)
+    .sort((a, b) => a.localeCompare(b))
+    .map(code => {
+      const { E, O } = bucket[code];
+      return {
+        value  : code,                           // “A1”, “B6”…
+        text   : `${code} - ` +
+                 `Equity:${E ? E.FreqDescription : '-' }; ` +
+                 `Option:${O ? O.FreqDescription : '-'}`,
+        visible: true,
+        retired: false
+      };
+    });
 }
