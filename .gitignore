@@ -1,14 +1,94 @@
-FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription	FeeType
-BPS002	Safekeeping of Securities	56	A021	0.35% /YR min $375.00/QTR	Investment Fees
+function applyExceptionAmounts(mongoFees, excRows) {
+  const byCode = excRows.reduce((acc, r) => {
+    (acc[r.FeeCode] ??= []).push(r);
+    return acc;
+  }, {});
 
-Chat, no caso do FeeCode BPS002 ue no mapeamento é 6, tbm tenho no lugar do Amount um codigo no ex que temos no banco A021
+  mongoFees.forEach(fee => {
+    const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
+    if (excGrp) {
+      excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
+    }
+    if (!excGrp) return;
+    excGrp.fields.forEach(field => {
+      if (field.code === 7) {
+        field.exceptionOptions = mergeEquityOptionAll(excRows);
+        field.defaultValue = '';
+        field.labelValue = '';
+        return;
+      }
+      const codes = Object.entries(feeCodeMap)
+        .filter(([, c]) => c === field.code)
+        .map(([k]) => k);
+      const rows = codes.flatMap(c => byCode[c] || []);
+      if (!rows.length) return;
 
-No caso ele não é um Equity nem Option, e sim um Safekeeping of Securities
+      field.exceptionOptions = rows.map(r => {
+        // Caso code 6 ou 7 e Amount alfanumérico
+        if ((field.code === 6 || field.code === 7) && r.Amount && isNaN(Number(r.Amount))) {
+          return {
+            value: r.Amount,
+            text: `${r.Amount} - ${r.FreqDescription?.trim() || ''}`,
+            visible: true,
+            retired: false,
+          };
+        }
+        return {
+          value: r.Amount,
+          text: Number.isNaN(Number(r.Amount))
+            ? (r.FreqDescription?.trim() || r.Amount)
+            : numberToCurrency(Number(r.Amount)),
+          visible: true,
+          retired: false,
+        };
+      });
 
-Porem eu preciso que ele seja apresentado tal qual o Equity:
-"A021 - 0.35% /YR min $375.00/QTR"
+      field.defaultValue = '';
+      field.labelValue = '';
+    });
+  });
+}
 
-Ou seja, codigo + freqDescription
 
-Pode me ajudar?
 
+
+
+function syncExceptionLabels(feesArr) {
+  feesArr.forEach(fee => {
+    const exc = findGroup(fee, 'Exception Request');
+    if (!exc) return;
+    exc.fields.forEach(f => {
+      const val = f.defaultValue;
+      // Caso code 6/7 e valor default alfanumérico (ex: "A021")
+      if ((f.code === 6 || f.code === 7) && val && isNaN(Number(val))) {
+        // Procura a opção correspondente no exceptionOptions
+        const opt = f.exceptionOptions?.find(o => o.value === val);
+        f.labelValue = opt ? opt.text : `${val}`;
+      } else {
+        f.labelValue = val ? numberToCurrency(Number(val)) : '';
+      }
+    });
+  });
+}
+
+
+
+
+
+function syncExceptionLabels(feesArr) {
+  feesArr.forEach(fee => {
+    const exc = findGroup(fee, 'Exception Request');
+    if (!exc) return;
+    exc.fields.forEach(f => {
+      const val = f.defaultValue;
+      // Caso code 6/7 e valor default alfanumérico (ex: "A021")
+      if ((f.code === 6 || f.code === 7) && val && isNaN(Number(val))) {
+        // Procura a opção correspondente no exceptionOptions
+        const opt = f.exceptionOptions?.find(o => o.value === val);
+        f.labelValue = opt ? opt.text : `${val}`;
+      } else {
+        f.labelValue = val ? numberToCurrency(Number(val)) : '';
+      }
+    });
+  });
+}
