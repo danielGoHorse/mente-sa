@@ -1,46 +1,47 @@
-function mergeEquityOptionAll(excRows) {
-  // Filtra apenas os que têm Amount e FreqDescription válidos
-  const equities = excRows.filter(r => r.FeeCode === "BPS004" && r.Amount && r.FreqDescription);
-  const options  = excRows.filter(r => r.FeeCode === "BPS005" && r.Amount && r.FreqDescription);
-  const allCodes = Array.from(new Set([...equities, ...options].map(r => r.Amount)));
-  
-  const result = allCodes.sort().map(code => {
-    const equity = equities.find(r => r.Amount === code);
-    const option = options .find(r => r.Amount === code);
-    return {
-      value: code,
-      text:
-        `${code} - ` +
-        `Equity:${equity && equity.FreqDescription ? equity.FreqDescription.trim() : '-'}` +
-        `; Option:${option && option.FreqDescription ? option.FreqDescription.trim() : '-'}`,
-      visible: true,
-      retired: false,
-    };
-  });
-
-  // Adiciona a opção Other ao final
-  result.push({
-    value: "",
-    text: "Other",
-    visible: true,
-    retired: false,
-  });
-
-  return result;
-}
-
-
-
-if (field.code === 6) {
-  field.exceptionOptions = rows
-    .filter(r => !!r.Amount && !!r.FreqDescription) // Só quem tem ambos!
-    .map(r => ({
-      value: r.Amount,
-      text: `${r.Amount} - ${r.FreqDescription?.trim()}`,
-      visible: true,
-      retired: false,
-    }));
-  field.defaultValue = '';
-  field.labelValue = '';
-  return;
+{
+  "@timestamp": [
+    "2025-05-29T20:48:03.186Z"
+  ],
+  "agent.ephemeral_id": [
+    "7779c944-b30e-496f-beb8-841ad5fc6286"
+  ],
+  "agent.hostname": [
+    "conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6"
+  ],
+  "agent.id": [
+    "fb740d85-0bbc-422f-921f-0accbd054942"
+  ],
+  "agent.name": [
+    "conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6"
+  ],
+  "agent.type": [
+    "filebeat"
+  ],
+  "agent.version": [
+    "8.17.0"
+  ],
+  "ecs.version": [
+    "8.0.0"
+  ],
+  "host.name": [
+    "conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6"
+  ],
+  "input.type": [
+    "log"
+  ],
+  "log.file.path": [
+    "/var/log/http.log"
+  ],
+  "log.flags": [
+    "multiline"
+  ],
+  "log.offset": [
+    749418
+  ],
+  "message": [
+    "{\"level\":\"INFO\",\"time\":\"2025-05-29T20:48:00.639Z\",\"pid\":1,\"hostname\":\"conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6\",\"msg\":\"customerModel.getCustomerDetailsByCif(NAA0010)\"}\n{\"level\":\"INFO\",\"time\":\"2025-05-29T20:48:02.942Z\",\"pid\":1,\"hostname\":\"conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6\",\"msg\":\"feeManagementModel.getFeeByAccount\"}\n{\"level\":\"INFO\",\"time\":\"2025-05-29T20:48:03.523Z\",\"pid\":1,\"hostname\":\"conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6\",\"msg\":\"End process\"}\n{\"level\":\"INFO\",\"time\":\"2025-05-29T20:48:03.524Z\",\"pid\":1,\"hostname\":\"conductorfeemanagement-backend-http-host-6d8b574bbc-gcjq6\",\"req\":{\"id\":\"977dcc8a42d83a8f5dd3bbdc\",\"method\":\"GET\",\"url\":\"/v1/conductor/fee/NAA0010\",\"query\":{},\"params\":{},\"headers\":{\"host\":\"conductorfeemanagement-backend-http-host.safra-applications-dev\",\"connection\":\"keep-alive\",\"x-forwarded-for\":\"10.255.245.0, 10.255.245.84\",\"x-forwarded-proto\":\"http\",\"x-forwarded-host\":\"api.dev.k8s.safra.int\",\"x-forwarded-port\":\"80\",\"x-forwarded-path\":\"/v1/conductor/fee/NAA0010\",\"x-real-ip\":\"10.255.245.84\",\"x-kong-request-id\":\"5417987a1a1bd3616aa2ee3e094c1918\",\"user-agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36 Edg/136.0.0.0\",\"accept\":\"application/json, text/plain, */*\",\"accept-encoding\":\"gzip, deflate, br, zstd\",\"accept-language\":\"en-US,en;q=0.9\",\"access-control-allow-origin\":\"*\",\"authorization\":\"Bearer \\\"eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJvQUpNRVNmckJFaWpyYmxaZ1Y5Tl91ME9RZFc5YWdOQXI0Y2czWmdlYlRBIn0.eyJleHAiOjE3NDg0NzE1MDksImlhdCI6MTc0ODQ3MTIwOSwianRpIjoiNmUzNTA3NjgtNjZiZC00ZjZiLThiNjMtZTc1NDUzOGJkNWQ2IiwiaXNzIjoiaHR0cDovL2tleWNsb2FrLnNhZnJhLXNlY3VyaXR5LnN2Yy5jbHVzdGVyLmxvY2FsL3JlYWxtcy9TTkItSW50ZXJuYWwiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiOTljN2ZhMTUtZThiZi00MGUzLTgwOTItOTdlYTkyYTk3ZmJkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoidXNlci1tYW5hZ2VtZW50LWFwaSIsInNlc3Npb25fc3RhdGUiOiI1YjIwZjE0MS1iZDE0LTRjOTQtYmUwNC1kY2FkMGE1MmMxOWQiLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJkZWZhdWx0LXJvbGVzLXNuYi1pbnRlcm5hbCJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJzaWQiOiI1YjIwZjE0MS1iZDE0LTRjOTQtYmUwNC1kY2FkMGE1MmMxOWQiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJEYW5pZWwgR290YXJkbyIsInByZWZlcnJlZF91c2VybmFtZSI6ImRhbmllbGciLCJnaXZlbl9uYW1lIjoiRGFuaWVsIiwiZmFtaWx5X25hbWUiOiJHb3RhcmRvIiwiZW1haWwiOiJkYW5pZWwuZ290YXJkb0BzYWZyYS5jb20ifQ.DyRJwRaSpn0lzsBfMO2KX1O5WR1GVDRd0cYVlbUYaQcHudk8rbeeCbFOCcwDyCrckx0dzphCyq7sYeP2llF1RNJ5fAaYtpdZf4vV-WUJRo07x5nJyIqjU8ClGXOj8bq2-CminaZ1EKm_uxiVRU_JejlXwEnpV2ihxvySPkG38M6sISu6haQQANA2cbeuppddXR7X1z9X5WiKYvrEs1w_9vQcVQIBCqMaJu9CopvFc_c7_mWiokMXrKgif6RGWCGNQJwTzxeumhhzKHRKkkJVFnpvIXWrPnmqZT0BBmIYG6r36e2--P3bfICg4Hk3WKIV6hcCEfwvduk3tW39iOjurQ\\\"\",\"content-security-policy\":\"upgrade-insecure-requests\",\"if-none-match\":\"W/\\\"702f-myLc4EQYd/UGf2qxRUGjAcS2dZc\\\"\",\"origin\":\"https://feemanagement.dev.k8s.safra.int\",\"priority\":\"u=1, i\",\"referer\":\"https://feemanagement.dev.k8s.safra.int/\",\"sec-ch-ua\":\"\\\"Chromium\\\";v=\\\"136\\\", \\\"Microsoft Edge\\\";v=\\\"136\\\", \\\"Not.A/Brand\\\";v=\\\"99\\\"\",\"sec-ch-ua-mobile\":\"?0\",\"sec-ch-ua-platform\":\"\\\"Windows\\\"\",\"sec-fetch-dest\":\"empty\",\"sec-fetch-mode\":\"cors\",\"sec-fetch-site\":\"same-site\",\"x-auth-profile\":\"employee\",\"x-auth-realm\":\"SNB-Internal\",\"x-forwarded-server\":\"traefik-5689f67f64-xb28n\",\"x-correlationid\":\"d92abc6f-118e-4383-8798-51b0feea9d70\"},\"remoteAddress\":\"10.255.252.141\",\"remotePort\":38284},\"res\":{\"statusCode\":200,\"headers\":{\"cross-origin-embedder-policy\":\"require-corp\",\"cross-origin-opener-policy\":\"same-origin\",\"cross-origin-resource-policy\":\"same-origin\",\"x-dns-prefetch-control\":\"off\",\"x-frame-options\":\"SAMEORIGIN\",\"strict-transport-security\":\"max-age=15552000; includeSubDomains\",\"x-download-options\":\"noopen\",\"x-content-type-options\":\"nosniff\",\"origin-agent-cluster\":\"?1\",\"x-permitted-cross-domain-policies\":\"none\",\"referrer-policy\":\"no-referrer\",\"x-xss-protection\":\"0\",\"access-control-allow-origin\":\"*\",\"x-request-id\":\"977dcc8a42d83a8f5dd3bbdc\",\"x-correlation-id\":\"977dcc8a42d83a8f5dd3bbdc\",\"content-type\":\"application/json; charset=utf-8\",\"content-length\":\"28719\",\"etag\":\"W/\\\"702f-4ELIWN65O0sVOyfNeUDVVaJo58g\\\"\"}},\"responseTime\":2885,\"msg\":\"request completed\"}"
+  ],
+  "_id": "uj_NHZcBhNBjJU-9isr_",
+  "_index": ".ds-conductorfeemanagement-backend-http-host-dev-2025.05.14-000043",
+  "_score": null
 }
