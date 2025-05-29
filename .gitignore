@@ -1,24 +1,14 @@
-const excRows = [
-  // --- EQUITIES (BPS004) ---
-  { FeeCode: "BPS004", Amount: "E3", FreqDescription: "$0.10 per share, min charge of $150 per trade", BPSFeeTypeCode: "E" },
-  { FeeCode: "BPS004", Amount: "A1", FreqDescription: "$0.00 per share, with NO min charge per trade", BPSFeeTypeCode: "E" },
-  { FeeCode: "BPS004", Amount: "A2", FreqDescription: "$50 flat charge per trade", BPSFeeTypeCode: "E" },
-  { FeeCode: "BPS004", Amount: "A3", FreqDescription: "$100 flat charge per trade", BPSFeeTypeCode: "E" },
-  { FeeCode: "BPS004", Amount: "A4", FreqDescription: "$0.01 per share, min charge of $150 per trade", BPSFeeTypeCode: "E" },
-  { FeeCode: "BPS004", Amount: "B6", FreqDescription: "$0.03 per share, min charge of $150 per trade", BPSFeeTypeCode: "E" },
+FeeCode	FeeDescription	FeeParameterOptionId	Amount	FreqDescription	FeeType
+BPS002	Safekeeping of Securities	56	A021	0.35% /YR min $375.00/QTR	Investment Fees
 
-  // --- OPTIONS (BPS005) ---
-  { FeeCode: "BPS005", Amount: "E3", FreqDescription: "$0.05 per share, min charge of $150 per trade", BPSFeeTypeCode: "O" },
-  { FeeCode: "BPS005", Amount: "A1", FreqDescription: "$0.00 per share, with NO min charge per trade", BPSFeeTypeCode: "O" },
-  { FeeCode: "BPS005", Amount: "A2", FreqDescription: "$50 flat charge per trade", BPSFeeTypeCode: "O" },
-  { FeeCode: "BPS005", Amount: "A3", FreqDescription: "$50 flat charge per trade", BPSFeeTypeCode: "O" },
-  { FeeCode: "BPS005", Amount: "A4", FreqDescription: "$0.01 per share, min charge of $150 per trade", BPSFeeTypeCode: "O" },
-  { FeeCode: "BPS005", Amount: "B6", FreqDescription: "$0.03 per share, min charge of $150 per trade", BPSFeeTypeCode: "O" },
+Chat, no caso do FeeCode BPS002 ue no mapeamento é 6, tbm tenho no lugar do Amount um codigo no ex que temos no banco A021
 
-  // --- OUTROS EXEMPLOS (opcional) ---
-  { FeeCode: "BPS002", Amount: "A021", FreqDescription: "0.35% /YR min $375.00/QTR", BPSFeeTypeCode: "C" },
-  { FeeCode: "BPS003", Amount: "375.00", FreqDescription: "Quarterly on Day 1", BPSFeeTypeCode: "S" },
-  { FeeCode: "JH001", Amount: "1500.00", FreqDescription: "Annual - Charged Semi-Annual", BPSFeeTypeCode: "" },
-  { FeeCode: "JH001", Amount: "0.00", FreqDescription: null, BPSFeeTypeCode: "" },
-  // Adicione outras linhas conforme quiser simular outros campos/códigos
-];
+No caso ele não é um Equity nem Option, e sim um Safekeeping of Securities
+
+Porem eu preciso que ele seja apresentado tal qual o Equity:
+"A021 - 0.35% /YR min $375.00/QTR"
+
+Ou seja, codigo + freqDescription
+
+Pode me ajudar?
+
