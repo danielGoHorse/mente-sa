@@ -1,94 +1,28 @@
-function applyExceptionAmounts(mongoFees, excRows) {
-  const byCode = excRows.reduce((acc, r) => {
-    (acc[r.FeeCode] ??= []).push(r);
-    return acc;
-  }, {});
-
+function applyStandardAmounts(mongoFees, stdRows) {
   mongoFees.forEach(fee => {
-    const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
-    if (excGrp) {
-      excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
-    }
-    if (!excGrp) return;
-    excGrp.fields.forEach(field => {
-      if (field.code === 7) {
-        field.exceptionOptions = mergeEquityOptionAll(excRows);
-        field.defaultValue = '';
-        field.labelValue = '';
-        return;
-      }
-      const codes = Object.entries(feeCodeMap)
-        .filter(([, c]) => c === field.code)
-        .map(([k]) => k);
-      const rows = codes.flatMap(c => byCode[c] || []);
-      if (!rows.length) return;
+    const stdGrp = findGroup(fee, 'Standard Fees');
+    if (!stdGrp) return;
 
-      field.exceptionOptions = rows.map(r => {
-        // Caso code 6 ou 7 e Amount alfanumérico
-        if ((field.code === 6 || field.code === 7) && r.Amount && isNaN(Number(r.Amount))) {
-          return {
-            value: r.Amount,
-            text: `${r.Amount} - ${r.FreqDescription?.trim() || ''}`,
-            visible: true,
-            retired: false,
-          };
+    stdGrp.fields.forEach(field => {
+      const row = stdRows.find(r => Number(r.FeeType) === field.code);
+      if (!row) return;
+
+      // Se for Custody/Safekeeping (code 6) ou Equity/Option (code 7)
+      if ((field.code === 6 || field.code === 7) && row.Amount && isNaN(Number(row.Amount))) {
+        field.defaultValue = row.Amount;
+        field.labelValue = `${row.Amount} - ${row.FreqDescription?.trim() || ''}`;
+      } else {
+        const num = Number(row.FeeAmount);
+        if (!Number.isNaN(num)) {
+          field.defaultValue = num.toString();
+          field.labelValue = numberToCurrency(num);
+        } else {
+          field.defaultValue = row.FeeAmount;
+          field.labelValue = row.FrequencyDescription?.trim() || row.FeeAmount;
         }
-        return {
-          value: r.Amount,
-          text: Number.isNaN(Number(r.Amount))
-            ? (r.FreqDescription?.trim() || r.Amount)
-            : numberToCurrency(Number(r.Amount)),
-          visible: true,
-          retired: false,
-        };
-      });
-
-      field.defaultValue = '';
-      field.labelValue = '';
-    });
-  });
-}
-
-
-
-
-
-function syncExceptionLabels(feesArr) {
-  feesArr.forEach(fee => {
-    const exc = findGroup(fee, 'Exception Request');
-    if (!exc) return;
-    exc.fields.forEach(f => {
-      const val = f.defaultValue;
-      // Caso code 6/7 e valor default alfanumérico (ex: "A021")
-      if ((f.code === 6 || f.code === 7) && val && isNaN(Number(val))) {
-        // Procura a opção correspondente no exceptionOptions
-        const opt = f.exceptionOptions?.find(o => o.value === val);
-        f.labelValue = opt ? opt.text : `${val}`;
-      } else {
-        f.labelValue = val ? numberToCurrency(Number(val)) : '';
       }
-    });
-  });
-}
 
-
-
-
-
-function syncExceptionLabels(feesArr) {
-  feesArr.forEach(fee => {
-    const exc = findGroup(fee, 'Exception Request');
-    if (!exc) return;
-    exc.fields.forEach(f => {
-      const val = f.defaultValue;
-      // Caso code 6/7 e valor default alfanumérico (ex: "A021")
-      if ((f.code === 6 || f.code === 7) && val && isNaN(Number(val))) {
-        // Procura a opção correspondente no exceptionOptions
-        const opt = f.exceptionOptions?.find(o => o.value === val);
-        f.labelValue = opt ? opt.text : `${val}`;
-      } else {
-        f.labelValue = val ? numberToCurrency(Number(val)) : '';
-      }
+      field.tooltip = row.FreqDescription?.trim() || row.FrequencyDescription?.trim() || '';
     });
   });
 }
