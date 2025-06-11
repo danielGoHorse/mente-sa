@@ -1,160 +1,105 @@
-import { FeeGroup } from './entities/FeeGroups.js'
-import numberToCurrency from '../core/helpers/currency.js'
+/* ---------------------------------------------------------------------------
+ * Helpers
+ * -------------------------------------------------------------------------*/
+const bitToBool = v => !!v;      // 1 → true | 0 / null → false
 
-export default class InvestimentAccountFee {
-  #feeName = 'Investment Account Fees'
-  #investiment = {}
-  #accounts = []
-  #accountsDDA = []
-  #allExceptions = new Set()
-  constructor(fees, accounts, equityField) {
-    this.#investiment = fees.filter((x) => x.feeType === this.#feeName)[0]
-    const feeGroupCode = this.#investiment.feeGroups[0].code
+/* ---------------------------------------------------------------------------
+ * 1. Gera Equity / Options (campo 7)
+ * -------------------------------------------------------------------------*/
+function mergeEquityOptionAll(excRows) {
+  const equities  = excRows.filter(r => r.FeeCode === 'BPS004' && r.Amount && r.FreqDescription);
+  const options   = excRows.filter(r => r.FeeCode === 'BPS005' && r.Amount && r.FreqDescription);
+  const allCodes  = Array.from(new Set([...equities, ...options].map(r => r.Amount)));
 
-    this.#accounts = accounts.filter(
-      (x) => x.feeGroup === this.#investiment.feeGroups[0].code
-    )
+  const result = allCodes.sort().map(code => {
+    const equity = equities.find(r => r.Amount === code);
+    const option = options .find(r => r.Amount === code);
 
-    if (this.#accounts && this.#accounts.length < 1) {
-      this.#investiment = {}
-      return
+    return {
+      value  : code,
+      text   :
+        `${code} - ` +
+        `Equity:${equity?.FreqDescription?.trim() ?? '-'}` +
+        `; Option:${option?.FreqDescription?.trim() ?? '-'}`,
+      visible: !!(equity?.Visible ?? option?.Visible),        // true / false
+      retired: bitToBool(equity?.Retired ?? option?.Retired), // true / false
+    };
+  });
+
+  // Entrada “Other” nunca é aposentada
+  result.push({
+    value  : '',
+    text   : 'Other',
+    visible: true,
+    retired: false,
+  });
+
+  return result;
+}
+
+/* ---------------------------------------------------------------------------
+ * 2. Aplica exceções a todos os grupos
+ * -------------------------------------------------------------------------*/
+function applyExceptionAmounts(mongoFees, excRows) {
+  const byCode = excRows.reduce((acc, r) => {
+    (acc[r.FeeCode] ??= []).push(r);
+    return acc;
+  }, {});
+
+  mongoFees.forEach(fee => {
+    const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
+    if (excGrp) {
+      excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
     }
+    if (!excGrp) return;
 
-    this.#accountsDDA = new Set(
-      accounts
-        .filter((x) => x.feeGroup === feeGroupCode && x.bpsFeeTypeCode !== 'O')
-        .map((x) => ({
-          number: x.bpsAcctNumber,
-          code: x.feeType,
-          entity: x.entity
-        }))
-    )
-
-    this.#addMultiplesAccount(this.#accounts[0].cifno)
-    this.#addCurrentClientValue(equityField)
-  }
-
-  get fee() {
-    return this.#investiment
-  }
-
-  #addMultiplesAccount(cif) {
-    const result = {}
-
-    for (const feeGroup of this.#investiment.feeGroups) {
-      for (const account of this.#accountsDDA) {
-        if (!result[account.number]) {
-          result[account.number] = {}
-        }
-
-        const fields = feeGroup.fields.filter((x) => x.code === account.code)
-
-        if (fields.length === 0) continue
-
-        if (!result[account.number][feeGroup.name]) {
-          result[account.number][feeGroup.name] = []
-
-          feeGroup.fields?.forEach((item) => {
-            item.exceptionOptions.forEach(
-              this.#allExceptions.add,
-              this.#allExceptions
-            )
-            item.exceptionOptions = item.exceptionOptions.filter(
-              (x) => !x.retired
-            )
-          })
-
-          const newFeeGroup = new FeeGroup({
-            name: feeGroup.name,
-            fields,
-            cif,
-            accountNumber: account.number,
-            visible: feeGroup.visible,
-            code: feeGroup.code,
-            entityCode: account.entity
-          })
-          result[account.number][feeGroup.name].push(newFeeGroup)
-          continue
-        }
-
-        const feeGroupToAddFields = result[account.number][feeGroup.name][0]
-        feeGroupToAddFields.fields = [...feeGroupToAddFields.fields, ...fields]
+    excGrp.fields.forEach(field => {
+      /* ---------- Equity / Options ---------- */
+      if (field.code === 7) {
+        field.exceptionOptions = mergeEquityOptionAll(excRows);
+        field.defaultValue = '';
+        field.labelValue   = '';
+        return;
       }
-    }
 
-    const feeGroupsByAccount = Object.keys(result).reduce((acc, item) => {
-      Object.keys(result[item]).forEach((element) => {
-        acc.push(result[item][element])
-      })
-      return acc
-    }, [])
-    this.#investiment.feeGroups = []
-    for (const feeGroups of feeGroupsByAccount) {
-      for (const feeGroup of feeGroups) {
-        this.#investiment.feeGroups.push(feeGroup)
+      /* ---------- Demais códigos ------------ */
+      const codes = Object.entries(feeCodeMap)
+        .filter(([, c]) => c === field.code)
+        .map(([k]) => k);
+      const rows = codes.flatMap(c => byCode[c] || []);
+      if (!rows.length) return;
+
+      /* -------- Custody (code 6) ------------ */
+      if (field.code === 6) {
+        field.exceptionOptions = rows
+          .filter(r => r.Amount && r.FreqDescription)
+          .map(r => ({
+            value  : r.Amount,
+            text   : `${r.Amount} - ${r.FreqDescription.trim()}`,
+            visible: !!r.Visible,
+            retired: bitToBool(r.Retired),
+          }));
+        field.defaultValue = '';
+        field.labelValue   = '';
+        return;
       }
-    }
-  }
 
-  #addCurrentClientValue(equityField) {
-    const exceptionsOptions = Array.from(this.#allExceptions)
-    for (const [
-      feeGroupIndex,
-      feeGroup
-    ] of this.#investiment.feeGroups.entries()) {
-      feeGroup.cif = this.#accounts[0].cifno
-      for (const [fieldIndex, field] of feeGroup.fields.entries()) {
-        if (field.isException) {
-          field.labelValue =
-            this.#investiment.feeGroups[feeGroupIndex - 1].fields[
-              fieldIndex
-            ].labelValue
-        } else {
-          for (const account of this.#accounts) {
-            if (
-              field.code === account.feeType &&
-              feeGroup.accountNumber === account.bpsAcctNumber
-            ) {
-              if (field.code === 5) {
-                field.defaultValue = field.isStandard
-                  ? field.defaultValue
-                  : account.feeAmount.toString()
-                field.labelValue = numberToCurrency(field.defaultValue)
-              } else {
-                if (field.labelValue !== 'Other') {
-                  if (field.isCurrentClient) {
-                    field.defaultValue = account.feeCode.toString()
-                  }
+      /* ---------- Restante ------------------ */
+      const nums  = rows.filter(r => !Number.isNaN(Number(r.Amount)))
+                        .sort((a, b) => Number(a.Amount) - Number(b.Amount));
+      const alpha = rows.filter(r =>  Number.isNaN(Number(r.Amount)))
+                        .sort((a, b) => a.Amount.localeCompare(b.Amount));
 
-                  let exception = exceptionsOptions.find(
-                    (x) => x.value === field.defaultValue
-                  )
-
-                  if (!exception) {
-                    exception = equityField.exceptionOptions.filter(
-                      (e) => e.value === field.defaultValue
-                    )[0]
-
-                    if (!exception) {
-                      exception = { text: '' }
-                    }
-                  }
-
-                  field.labelValue = exception.text
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    this.#clearMemory()
-  }
-
-  #clearMemory() {
-    this.#accounts = []
-    this.#accountsDDA = []
-    this.#allExceptions = new Set()
-  }
+      field.exceptionOptions = [...nums, ...alpha].map(r => ({
+        value  : r.Amount,
+        text   : Number.isNaN(Number(r.Amount))
+          ? (r.FreqDescription?.trim() || r.Amount)
+          : numberToCurrency(Number(r.Amount)),
+        visible: !!r.Visible,
+        retired: bitToBool(r.Retired),
+      }));
+      field.defaultValue = '';
+      field.labelValue   = '';
+    });
+  });
 }
