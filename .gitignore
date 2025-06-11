@@ -1,56 +1,41 @@
-function applyExceptionAmounts(mongoFees, excRows) {
-  const byCode = excRows.reduce((acc, r) => {
-    (acc[r.FeeCode] ??= []).push(r);
-    return acc;
-  }, {});
+/* ---------------------------------------------------------------------------
+ *  Gera todas as opções de Equity / Options  (campo 7)
+ * -------------------------------------------------------------------------*/
+function mergeEquityOptionAll(excRows) {
+  // 1. mantém SOMENTE as linhas visíveis e não aposentadas
+  const equities = excRows.filter(
+    r => r.FeeCode === 'BPS004' && r.Visible === true  && r.Retired === false
+  );
+  const options  = excRows.filter(
+    r => r.FeeCode === 'BPS005' && r.Visible === true  && r.Retired === false
+  );
 
-  mongoFees.forEach(fee => {
-    const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
-    if (excGrp) excGrp.fields.forEach(f => applyEquityOptionException(f, excRows));
-    if (!excGrp) return;
+  // 2. códigos (Amount) distintos que restaram
+  const allCodes = Array.from(new Set([...equities, ...options].map(r => r.Amount)));
 
-    excGrp.fields.forEach(field => {
-      /* ---------- Equity / Options (7) ---------- */
-      if (field.code === 7) {
-        field.exceptionOptions = mergeEquityOptionAll(excRows);   // já traz retired correto
-        field.defaultValue = '';
-        field.labelValue   = '';
-        return;
-      }
+  // 3. monta a lista combinada
+  const result = allCodes.sort().map(code => {
+    const equity = equities.find(r => r.Amount === code);
+    const option = options .find(r => r.Amount === code);
 
-      /* ---------- Demais códigos ---------------- */
-      const codes = Object.entries(feeCodeMap)
-        .filter(([, c]) => c === field.code)
-        .map(([k]) => k);
-      const rows = codes.flatMap(c => byCode[c] || []);
-      if (!rows.length) return;
-
-      if (field.code === 6) {                   // Custody
-        field.exceptionOptions = rows
-          .filter(r => r.Amount && r.FreqDescription)
-          .map(r => ({
-            value  : r.Amount,
-            text   : `${r.Amount} - ${r.FreqDescription.trim()}`,
-            visible: !!r.Visible,
-            retired: false,                     // Custody nunca filtrado
-          }));
-      } else {
-        const nums  = rows.filter(r => !Number.isNaN(Number(r.Amount)))
-                          .sort((a,b)=>Number(a.Amount)-Number(b.Amount));
-        const alpha = rows.filter(r =>  Number.isNaN(Number(r.Amount)))
-                          .sort((a,b)=>a.Amount.localeCompare(b.Amount));
-
-        field.exceptionOptions = [...nums, ...alpha].map(r => ({
-          value  : r.Amount,
-          text   : Number.isNaN(Number(r.Amount))
-            ? (r.FreqDescription?.trim() || r.Amount)
-            : numberToCurrency(Number(r.Amount)),
-          visible: !!r.Visible,
-          retired: false,                       // outros nunca filtrados
-        }));
-      }
-      field.defaultValue = '';
-      field.labelValue   = '';
-    });
+    return {
+      value  : code,
+      text   :
+        `${code} - ` +
+        `Equity:${equity?.FreqDescription?.trim() ?? '-'}` +
+        `; Option:${option?.FreqDescription?.trim() ?? '-'}`,
+      visible: true,   // já garantimos que é visível
+      retired: false,  // já garantimos que NÃO está aposentado
+    };
   });
+
+  // 4. entrada “Other” (sempre disponível)
+  result.push({
+    value  : '',
+    text   : 'Other',
+    visible: true,
+    retired: false,
+  });
+
+  return result;
 }
