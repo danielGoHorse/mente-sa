@@ -1,8 +1,8 @@
-import Result from '#features/shared/result.js';
+import Result      from '#features/shared/result.js';
 import numberToCurrency from '#core/helpers/currency.js';
 import { FeeCase } from '#src/models/entities/FeeCase.js';
-import { Field } from '#src/models/entities/Fields.js';
-import { Fee } from '#src/models/entities/Fees.js';
+import { Field }   from '#src/models/entities/Fields.js';
+import { Fee }     from '#src/models/entities/Fees.js';
 import {
   connectToFeeMgmtDb,
   executeStoreProcedure,
@@ -13,10 +13,10 @@ const { logger } = global;
 /* ---------------------------------------------------------------------------
  * Helpers
  * -------------------------------------------------------------------------*/
-const bitToBool = v => !!v; // 1 → true | 0/null → false
+const bitToBool = v => !!v; // 1 → true | 0 / null → false
 
-/* Equity / Options → traz TODAS as linhas com Retired = 0
- * (não filtra por Visible; o front usa o flag)                       */
+/* Gera TODAS as opções de Equity / Options (campo 7) onde Retired = 0.
+ * O campo 'visible' é repassado como true/false para o front decidir. */
 function mergeEquityOptionAll(excRows) {
   const equities = excRows.filter(
     r => r.FeeCode === 'BPS004' && r.Retired === false
@@ -24,6 +24,7 @@ function mergeEquityOptionAll(excRows) {
   const options  = excRows.filter(
     r => r.FeeCode === 'BPS005' && r.Retired === false
   );
+
   const allCodes = Array.from(new Set([...equities, ...options].map(r => r.Amount)));
 
   const result = allCodes.sort().map(code => {
@@ -40,6 +41,7 @@ function mergeEquityOptionAll(excRows) {
     };
   });
 
+  // Entrada "Other"
   result.push({ value: '', text: 'Other', visible: true, retired: false });
   return result;
 }
@@ -62,27 +64,27 @@ async function getExceptionFees(packageId) {
 }
 
 /* ---------------------------------------------------------------------------
- * MAIN USE-CASE
+ * Main use-case
  * -------------------------------------------------------------------------*/
 export default class FeeCaseCreateUseCase {
   async execute(feeTicketRequest) {
     logger.info('FeeCaseCreateUseCase()');
 
-    /* 1. recupera o packageId necessário para chamar as procedures */
+    /* 1. ID do pacote padrão (vem da tela) ----------------------- */
     const packageId = feeTicketRequest.defaultFeePackageId; // ajuste se vier noutro campo
     if (!packageId) return Result.fail('defaultFeePackageId not informed.');
 
-    /* 2. Estrutura (Mongo) */
+    /* 2. Estrutura (Mongo) --------------------------------------- */
     const fieldsDataBase = await this.#getFeeStandard([
       { feeType: 'Customer Fees' },
       { feeType: 'Bank Account Fees' },
       { feeType: 'Investment Account Fees' },
     ]);
 
-    /* 3. Dados de exceção (SQL) */
+    /* 3. Exceções do pacote (SQL) -------------------------------- */
     const excRows = await getExceptionFees(packageId);
 
-    /* 4. Injeta lista Equity/Options filtrada por Retired apenas */
+    /* 4. Injeta apenas o campo 7 (Equity / Options) -------------- */
     fieldsDataBase.forEach(fee => {
       const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
       if (!excGrp) return;
@@ -95,26 +97,29 @@ export default class FeeCaseCreateUseCase {
 
     const allExceptions = this.#returnAllExceptions(fieldsDataBase);
 
-    /* ---------------- resto do fluxo original ------------------ */
+    /* ---------------- lógica existente -------------------------- */
     const feeTicket = new FeeCase(feeTicketRequest);
-    const validate = feeTicket.validateSync();
+    const validate  = feeTicket.validateSync();
     if (validate?.errors) return Result.fail(validate.errors);
 
     let hasAnyChange = false;
     for (const fee of feeTicket.fees) {
       for (const [gIdx, group] of fee.feeGroups.entries()) {
         for (const [fIdx, field] of group.fields.entries()) {
+
+          /* ----- se é Exception (terceira coluna) ---------------- */
           if (field.isException) {
-            const newValue =
+            const newValue  =
               field.defaultValue !== fee.feeGroups[gIdx - 1].fields[fIdx].defaultValue;
             const validValue = !!field.defaultValue && field.defaultValue !== 'NOT APPLICABLE';
             field.hasChanged = newValue && validValue;
 
             if (field.hasChanged) {
               hasAnyChange = true;
-              fee.hasAnyChange = group.hasAnyChange =
-                fee.feeGroups[gIdx - 1].hasAnyChange =
-                fee.feeGroups[gIdx - 2].hasAnyChange = true;
+              fee.hasAnyChange                 = true;
+              group.hasAnyChange               = true;
+              fee.feeGroups[gIdx - 1].hasAnyChange = true;
+              fee.feeGroups[gIdx - 2].hasAnyChange = true;
             }
 
             if (!field.hasChanged) {
@@ -122,15 +127,20 @@ export default class FeeCaseCreateUseCase {
             }
           }
 
+          /* ----- se defaultValue é numérico, formata ------------- */
           if (/^\d+$/.test(field.defaultValue)) {
             field.labelValue = numberToCurrency(field.defaultValue);
             continue;
           }
 
+          /* ----- Safekeeping / Equity: “Other” ------------------- */
           if (field.labelValue === 'Other') {
             const other = field.exceptionOptions.find(x => x.text === 'Other');
-            const fieldEquities = (await Field.find({ code: 7, isException: true }))[0];
+            const fieldEquities =
+              (await Field.find({ code: 7, isException: true }))[0];
             field.exceptionOptions = [...fieldEquities.exceptionOptions, other];
+
+          /* ----- Procura label pelo valor ------------------------ */
           } else if (!field.labelValue || !field.labelValue.includes(field.defaultValue)) {
             const exception = allExceptions.find(e => e.value === field.defaultValue) || { text: '' };
             field.labelValue = exception.text;
@@ -139,13 +149,17 @@ export default class FeeCaseCreateUseCase {
       }
     }
 
-    if (!hasAnyChange) return Result.fail('Cannot create Fee Case without any change.');
+    if (!hasAnyChange) {
+      return Result.fail('Cannot create Fee Case without any change.');
+    }
 
+    /* remove taxas sem alteração */
     feeTicket.fees = feeTicket.fees.filter(x => x.hasAnyChange);
     feeTicket.fees.forEach(item => {
       item.feeGroups = item.feeGroups.filter(x => x.hasAnyChange);
     });
 
+    /* salva ------------------------------------------------------- */
     try {
       const model = await feeTicket.save();
       return Result.ok(model.toObject());
