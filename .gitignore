@@ -1,45 +1,3 @@
-/* ---------------------------------------------------------------------------
- * Helpers
- * -------------------------------------------------------------------------*/
-const bitToBool = v => !!v;      // 1 → true | 0 / null → false
-
-/* ---------------------------------------------------------------------------
- * 1. Gera Equity / Options (campo 7)
- * -------------------------------------------------------------------------*/
-function mergeEquityOptionAll(excRows) {
-  const equities  = excRows.filter(r => r.FeeCode === 'BPS004' && r.Amount && r.FreqDescription);
-  const options   = excRows.filter(r => r.FeeCode === 'BPS005' && r.Amount && r.FreqDescription);
-  const allCodes  = Array.from(new Set([...equities, ...options].map(r => r.Amount)));
-
-  const result = allCodes.sort().map(code => {
-    const equity = equities.find(r => r.Amount === code);
-    const option = options .find(r => r.Amount === code);
-
-    return {
-      value  : code,
-      text   :
-        `${code} - ` +
-        `Equity:${equity?.FreqDescription?.trim() ?? '-'}` +
-        `; Option:${option?.FreqDescription?.trim() ?? '-'}`,
-      visible: !!(equity?.Visible ?? option?.Visible),        // true / false
-      retired: bitToBool(equity?.Retired ?? option?.Retired), // true / false
-    };
-  });
-
-  // Entrada “Other” nunca é aposentada
-  result.push({
-    value  : '',
-    text   : 'Other',
-    visible: true,
-    retired: false,
-  });
-
-  return result;
-}
-
-/* ---------------------------------------------------------------------------
- * 2. Aplica exceções a todos os grupos
- * -------------------------------------------------------------------------*/
 function applyExceptionAmounts(mongoFees, excRows) {
   const byCode = excRows.reduce((acc, r) => {
     (acc[r.FeeCode] ??= []).push(r);
@@ -48,56 +6,49 @@ function applyExceptionAmounts(mongoFees, excRows) {
 
   mongoFees.forEach(fee => {
     const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
-    if (excGrp) {
-      excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
-    }
+    if (excGrp) excGrp.fields.forEach(f => applyEquityOptionException(f, excRows));
     if (!excGrp) return;
 
     excGrp.fields.forEach(field => {
-      /* ---------- Equity / Options ---------- */
+      /* ---------- Equity / Options (7) ---------- */
       if (field.code === 7) {
-        field.exceptionOptions = mergeEquityOptionAll(excRows);
+        field.exceptionOptions = mergeEquityOptionAll(excRows);   // já traz retired correto
         field.defaultValue = '';
         field.labelValue   = '';
         return;
       }
 
-      /* ---------- Demais códigos ------------ */
+      /* ---------- Demais códigos ---------------- */
       const codes = Object.entries(feeCodeMap)
         .filter(([, c]) => c === field.code)
         .map(([k]) => k);
       const rows = codes.flatMap(c => byCode[c] || []);
       if (!rows.length) return;
 
-      /* -------- Custody (code 6) ------------ */
-      if (field.code === 6) {
+      if (field.code === 6) {                   // Custody
         field.exceptionOptions = rows
           .filter(r => r.Amount && r.FreqDescription)
           .map(r => ({
             value  : r.Amount,
             text   : `${r.Amount} - ${r.FreqDescription.trim()}`,
             visible: !!r.Visible,
-            retired: bitToBool(r.Retired),
+            retired: false,                     // Custody nunca filtrado
           }));
-        field.defaultValue = '';
-        field.labelValue   = '';
-        return;
+      } else {
+        const nums  = rows.filter(r => !Number.isNaN(Number(r.Amount)))
+                          .sort((a,b)=>Number(a.Amount)-Number(b.Amount));
+        const alpha = rows.filter(r =>  Number.isNaN(Number(r.Amount)))
+                          .sort((a,b)=>a.Amount.localeCompare(b.Amount));
+
+        field.exceptionOptions = [...nums, ...alpha].map(r => ({
+          value  : r.Amount,
+          text   : Number.isNaN(Number(r.Amount))
+            ? (r.FreqDescription?.trim() || r.Amount)
+            : numberToCurrency(Number(r.Amount)),
+          visible: !!r.Visible,
+          retired: false,                       // outros nunca filtrados
+        }));
       }
-
-      /* ---------- Restante ------------------ */
-      const nums  = rows.filter(r => !Number.isNaN(Number(r.Amount)))
-                        .sort((a, b) => Number(a.Amount) - Number(b.Amount));
-      const alpha = rows.filter(r =>  Number.isNaN(Number(r.Amount)))
-                        .sort((a, b) => a.Amount.localeCompare(b.Amount));
-
-      field.exceptionOptions = [...nums, ...alpha].map(r => ({
-        value  : r.Amount,
-        text   : Number.isNaN(Number(r.Amount))
-          ? (r.FreqDescription?.trim() || r.Amount)
-          : numberToCurrency(Number(r.Amount)),
-        visible: !!r.Visible,
-        retired: bitToBool(r.Retired),
-      }));
       field.defaultValue = '';
       field.labelValue   = '';
     });
