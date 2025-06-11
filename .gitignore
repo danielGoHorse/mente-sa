@@ -1,1 +1,350 @@
- {"level":"INFO","time":"2025-05-29T20:48:03.249Z","pid":1,"hostname":"feemanagement-backend-http-host-d7565cc4f-tdwwn","msg":"addMultiplesAccount()"} {"level":"INFO","time":"2025-05-29T20:48:03.262Z","pid":1,"hostname":"feemanagement-backend-http-host-d7565cc4f-tdwwn","msg":"addCurrentClientValue()"} {"level":"INFO","time":"2025-05-29T20:48:03.442Z","pid":1,"hostname":"feemanagement-backend-http-host-d7565cc4f-tdwwn","msg":"Result=true"} {"level":"INFO","time":"2025-05-29T20:48:03.521Z","pid":1,"hostname":"feemanagement-backend-http-host-d7565cc4f-tdwwn","req":{"id":"983ffd94b0fea70f09c65d19","method":"POST","url":"/v1/fee","query":{},"params":{},"headers":{"accept":"application/json, text/plain, */*","content-type":"application/json","user-agent":"axios/1.1.3","content-length":"2096","accept-encoding":"gzip, deflate, br","host":"feemanagement-backend-http-host.safra-applications-dev","connection":"close"},"remoteAddress":"10.255.253.217","remotePort":48924},"res":{"statusCode":200,"headers":{"cross-origin-embedder-policy":"require-corp","cross-origin-opener-policy":"same-origin","cross-origin-resource-policy":"same-origin","x-dns-prefetch-control":"off","x-frame-options":"SAMEORIGIN","strict-transport-security":"max-age=15552000; includeSubDomains","x-download-options":"noopen","x-content-type-options":"nosniff","origin-agent-cluster":"?1","x-permitted-cross-domain-policies":"none","referrer-policy":"no-referrer","x-xss-protection":"0","access-control-allow-origin":"*","x-request-id":"983ffd94b0fea70f09c65d19","x-correlation-id":"983ffd94b0fea70f09c65d19","content-type":"application/json; charset=utf-8","content-length":"30674","etag":"W/\"77d2-4Gd7usgCmDkA3UQUf8o6p/XLj0A\""}},"responseTime":570,"msg":"request completed"}_iduD_NHZcBhNBjJU-9iMqg_ignored - _index.ds-feemanagement-backend-http-host-dev-2025.05.10-000045_score -
+import { Fee } from '#src/models/entities/Fees.js';
+import Result from '#features/shared/result.js';
+import CustomerFees from '#src/models/CustomerFees.js';
+import BankAccountFee from '#src/models/BankAccountFee.js';
+import InvestimentAccountFee from '#src/models/InvestimentAccountFee.js';
+import { FeeCase } from '#src/models/entities/FeeCase.js';
+import { Field } from '#src/models/entities/Fields.js';
+import numberToCurrency from '#core/helpers/currency.js';
+import {
+  connectToFeeMgmtDb,
+  executeStoreProcedure,
+} from '#core/data/mssql/index.js';
+
+/**
+ * Consulta pacote de tarifas padrão para o cliente (CIF).
+ */
+async function getPackageData(cifno) {
+  const conn = await connectToFeeMgmtDb();
+  const [row] = await executeStoreProcedure(conn, 'sp_get_fees_byCIF', { cifno });
+  if (!row) return {};
+  return {
+    defaultFeePackageId: row['Default Fee Package Id'] ?? null,
+    branchCity: row['Branch City']?.trim() || '',
+    branchState: row['Branch State']?.trim() || '',
+    branchType: row['Branch Type']?.trim() || '',
+    defaultPackageType: row['Default Package Type']?.trim() || '',
+    feePackage: row['Default Fee Package']?.trim() || '',
+  };
+}
+
+/**
+ * Consulta tarifas padrão do pacote informado.
+ */
+async function getStandardFees(packageId) {
+  const conn = await connectToFeeMgmtDb();
+  const rows = await executeStoreProcedure(
+    conn, 'sp_get_standard_fees_bypackage',
+    { FeePackageId: packageId },
+  );
+  return rows ?? [];
+}
+
+/**
+ * Consulta exceções de tarifas do pacote informado.
+ */
+async function getExceptionFees(packageId) {
+  const conn = await connectToFeeMgmtDb();
+  const rows = await executeStoreProcedure(
+    conn, 'sp_get_exception_fees_bypackage',
+    { FeePackageId: packageId },
+  );
+  return rows ?? [];
+}
+
+/**
+ * Monta a URL do documento conforme o pacote padrão.
+ */
+function getDocumentUrl(id) {
+  const urls = global.environment.scheduleUrls || {};
+  const key = ({ 1: 'intlPB3', 2: 'uSPBIndividual3', 3: 'uSPBCorporation3' })[id];
+  return key ? urls[key] || '' : '';
+}
+
+/**
+ * Consulta estrutura dos grupos/tarifas no MongoDB.
+ */
+async function getFeeStandard(filter) {
+  return Fee.find({ $or: filter })
+    .select({ feeType: 1, feeGroups: { name: 1, fields: 1, code: 1 } })
+    .lean();
+}
+
+/**
+ * Utilitário para buscar grupo pelo nome.
+ */
+function findGroup(fee, name) {
+  return fee?.feeGroups?.find(g => g.name === name);
+}
+
+/**
+ * Mapeamento FeeCode → code (utilizado nos grupos/fields).
+ */
+const feeCodeMap = {
+  JH001: 1, JH002: 2, JH010: 3, JH008: 4,
+  BPS002: 6, BPS003: 5, BPS004: 7, BPS005: 7,
+};
+
+/**
+ * Aplica valores e labelValue nos campos do grupo Standard Fees.
+ * Custody (code 6) recebe label customizado (Amount + FreqDescription).
+ */
+function applyStandardAmounts(mongoFees, stdRows) {
+  mongoFees.forEach(fee => {
+    const stdGrp = findGroup(fee, 'Standard Fees');
+    if (!stdGrp) return;
+    stdGrp.fields.forEach(field => {
+      const row = stdRows.find(r => Number(r.FeeType) === field.code);
+      if (!row) return;
+      if (field.code === 6 && row.Amount && row.FrequencyDescription) {
+        field.defaultValue = row.Amount;
+        field.labelValue = `${row.Amount} - ${row.FrequencyDescription?.trim() || ''}`;
+        field.tooltip = row.FrequencyDescription?.trim() || '';
+        return;
+      }
+      const num = Number(row.FeeAmount);
+      if (!Number.isNaN(num)) {
+        field.defaultValue = num.toString();
+        field.labelValue = numberToCurrency(num);
+      } else {
+        field.defaultValue = row.FeeAmount;
+        field.labelValue = row.FrequencyDescription?.trim() || row.FeeAmount;
+      }
+      field.tooltip = row.FrequencyDescription?.trim() || '';
+    });
+  });
+}
+
+/**
+ * Gera todas as opções possíveis para Equity/Options (campo 7).
+ */
+function mergeEquityOptionAll(excRows) {
+  const equities = excRows.filter(r => r.FeeCode === "BPS004" && r.Amount && r.FreqDescription);
+  const options  = excRows.filter(r => r.FeeCode === "BPS005" && r.Amount && r.FreqDescription);
+  const allCodes = Array.from(new Set([...equities, ...options].map(r => r.Amount)));
+  
+  const result = allCodes.sort().map(code => {
+    const equity = equities.find(r => r.Amount === code);
+    const option = options .find(r => r.Amount === code);
+    return {
+      value: code,
+      text:
+        `${code} - ` +
+        `Equity:${equity && equity.FreqDescription ? equity.FreqDescription.trim() : '-'}` +
+        `; Option:${option && option.FreqDescription ? option.FreqDescription.trim() : '-'}`,
+      visible: equity.visible,
+      retired: false,
+    };
+  });
+
+  result.push({
+    value: "",
+    text: "Other",
+    visible: true,
+    retired: false,
+  });
+
+  return result;
+}
+
+/**
+ * Aplica opções de exceção para Equity/Options (campo 7).
+ */
+function applyEquityOptionException(field, excRows) {
+  if (field.code === 7) {
+    field.exceptionOptions = mergeEquityOptionAll(excRows); 
+    field.defaultValue = '';
+    field.labelValue = '';
+  }
+}
+
+/**
+ * Aplica opções de exceção nos grupos Exception Request.
+ * Custody (code 6) recebe label customizado (Amount + FreqDescription).
+ */
+function applyExceptionAmounts(mongoFees, excRows) {
+  const byCode = excRows.reduce((acc, r) => {
+    (acc[r.FeeCode] ??= []).push(r);
+    return acc;
+  }, {});
+  mongoFees.forEach(fee => {
+    const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
+    if (excGrp) {
+      excGrp.fields.forEach(field => applyEquityOptionException(field, excRows));
+    }
+    if (!excGrp) return;
+    excGrp.fields.forEach(field => {
+      if (field.code === 7) {
+        field.exceptionOptions = mergeEquityOptionAll(excRows);
+        field.defaultValue = '';
+        field.labelValue = '';
+        return;
+      }
+      const codes = Object.entries(feeCodeMap)
+        .filter(([, c]) => c === field.code)
+        .map(([k]) => k);
+      const rows = codes.flatMap(c => byCode[c] || []);
+      if (!rows.length) return;
+      if (field.code === 6) {
+        field.exceptionOptions = rows
+          .filter(r => !!r.Amount && !!r.FreqDescription) 
+          .map(r => ({
+            value: r.Amount,
+            text: `${r.Amount} - ${r.FreqDescription?.trim()}`,
+            visible: true,
+            retired: false,
+          }));
+        field.defaultValue = '';
+        field.labelValue = '';
+        return;
+      }
+      const nums = rows.filter(r => !Number.isNaN(Number(r.Amount)))
+        .sort((a, b) => Number(a.Amount) - Number(b.Amount));
+      const alpha = rows.filter(r => Number.isNaN(Number(r.Amount)))
+        .sort((a, b) => a.Amount.localeCompare(b.Amount));
+      field.exceptionOptions = [...nums, ...alpha].map(r => ({
+        value: r.Amount,
+        text: Number.isNaN(Number(r.Amount))
+          ? (r.FreqDescription?.trim() || r.Amount)
+          : numberToCurrency(Number(r.Amount)),
+        visible: true,
+        retired: false,
+      }));
+      field.defaultValue = '';
+      field.labelValue = '';
+    });
+  });
+}
+
+/**
+ * Ajusta labelValue do campo Custody (6) ou Equity/Options (7) nos grupos Standard/Current.
+ */
+function setEquityOptionLabelValue(field, excRows) {
+  if (field && field.code === 6 && field.defaultValue) {
+    const code = field.defaultValue;
+    const custody = excRows.filter(r => r.FeeCode === "BPS002");
+    const item = custody.find(r => r.Amount === code);
+    if (item) {
+      field.labelValue =
+        `${item.Amount} - ${item.FreqDescription?.trim() || ''}`;
+      return;
+    }
+  }
+  if (field && field.code === 7 && field.defaultValue) {
+    const code = field.defaultValue;
+    const equities = excRows.filter(r => r.FeeCode === "BPS004");
+    const options  = excRows.filter(r => r.FeeCode === "BPS005");
+    const equity = equities.find(r => r.Amount === code);
+    const option = options .find(r => r.Amount === code);
+    field.labelValue =
+      `${code} - ` +
+      `Equity:${equity && equity.FreqDescription ? equity.FreqDescription.trim() : '-'}` +
+      `; Option:${option && option.FreqDescription ? option.FreqDescription.trim() : '-'}`;
+  }
+}
+
+/**
+ * Preenche valores do grupo Client Current Fees (Investment Account Fees) após padrão/exception.
+ */
+function patchClientCurrent(customerAccount, feesArr) {
+  const invFee = feesArr.find(f => f.feeType === 'Investment Account Fees');
+  if (!invFee) return;
+  const currGrp = invFee.feeGroups?.find(g => g.name === 'Client Current Fees');
+  const stdGrp  = invFee.feeGroups?.find(g => g.name === 'Standard Fees');
+  if (!currGrp || !stdGrp) return;
+  const custodyAcc = customerAccount.find(a => a.feeType === 6);
+  if (custodyAcc) {
+    const fldCurr6 = currGrp.fields.find(f => f.code === 6);
+    if (fldCurr6) {
+      fldCurr6.defaultValue = custodyAcc.feeCode;
+    }
+  }
+  const fldStd7  = stdGrp.fields .find(f => f.code === 7);
+  const fldCurr7 = currGrp.fields.find(f => f.code === 7);
+  if (fldStd7 && fldCurr7 && !fldCurr7.labelValue) {
+    fldCurr7.defaultValue = fldStd7.defaultValue;
+    fldCurr7.labelValue   = fldStd7.labelValue;
+  }
+}
+
+/**
+ * Atualiza labelValue das exceções (exibe valor numérico se houver).
+ */
+function syncExceptionLabels(feesArr) {
+  feesArr.forEach(fee => {
+    const exc = findGroup(fee, 'Exception Request');
+    if (!exc) return;
+    exc.fields.forEach(f => {
+      const val = f.defaultValue;
+      f.labelValue = val ? numberToCurrency(Number(val)) : '';
+    });
+  });
+}
+
+/**
+ * Caso de uso principal: retorna estrutura de taxas de acordo com o CIF informado.
+ */
+export default class FeeGetByCifUseCase {
+  async execute({ customerAccount }) {
+    const fees = await getFeeStandard([
+      { feeType: 'Customer Fees' },
+      { feeType: 'Bank Account Fees' },
+      { feeType: 'Investment Account Fees' },
+    ]);
+    const pkgData = await getPackageData(customerAccount[0].cifno);
+    const packageId = pkgData.defaultFeePackageId;
+    const stdRows = await getStandardFees(packageId);
+    const excRows = await getExceptionFees(packageId);
+    applyStandardAmounts(fees, stdRows);
+    applyExceptionAmounts(fees, excRows);
+    fees.forEach(fee => {
+      const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
+      if (excGrp) {
+        excGrp.fields.forEach(field => applyEquityOptionException(field, excRows)); 
+      }
+      ['Standard Fees', 'Client Current Fees'].forEach(groupName => {
+        const group = fee.feeGroups?.find(g => g.name === groupName);
+        if (group) {
+          group.fields.forEach(field => setEquityOptionLabelValue(field, excRows));
+        }
+      });
+    });
+    customerAccount.forEach(acc => Object.assign(acc, pkgData));
+    const result = { fees: [] };
+    const [customer, bank, investment] = [
+      new CustomerFees(fees, customerAccount),
+      new BankAccountFee(fees, customerAccount),
+      new InvestimentAccountFee(
+        fees, customerAccount, await Field.findOne({ code: 7 }),
+      ),
+    ];
+    [customer, bank, investment]
+      .filter(f => f.fee && f.fee.feeGroups?.length)
+      .forEach(f => result.fees.push(f.fee));
+    const actives = await FeeCase.find({
+      cif: customerAccount[0].cifno,
+      status: { $nin: ['DONE', 'REJECTED'] },
+      caseNumber: { $exists: true },
+    });
+    result.feesActives = actives.map(({ caseNumber, id }) => ({ caseNumber, id }));
+    const docUrl = getDocumentUrl(packageId);
+    result.accounts = customerAccount.map(acc => ({
+      cifno: acc.cifno,
+      ddaNumber: acc.ddaNumber,
+      branchCity: acc.branchCity,
+      branchState: acc.branchState,
+      branchType: acc.branchType,
+      defaultPackageType: acc.defaultPackageType,
+      feePackage: acc.feePackage,
+      defaultFeePackageId: acc.defaultFeePackageId,
+      defaultFeePackage: acc.defaultFeePackage,
+      documentUrl: docUrl,
+      feeAmount: acc.feeAmount,
+      exceptionAmount: acc.exceptionAmount ?? null,
+    }));
+    result.documentUrl = docUrl;
+    patchClientCurrent(customerAccount, result.fees);
+    syncExceptionLabels(result.fees);
+    return Result.ok(result);
+  }
+}
