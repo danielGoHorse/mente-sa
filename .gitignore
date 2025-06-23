@@ -4,6 +4,26 @@ Chat, o ID vai vir assim, no endpoint
 
 
 E dai ele vai receber os dados, 
+// app/providers/useHistoryProvider.ts
+import { useQuery } from "@tanstack/react-query";
+import api from "@/app/api";
+import { HistoryData } from "@/app/store/types";
+
+const fetchHistory = async (requestId: string): Promise<HistoryData> => {
+  const response = await api.get(`/v1/wire-client-aggregator/pages/wire-client/workflow/${requestId}`);
+  return response.data; // <- desde que esteja no formato `HistoryData`
+};
+
+export function useHistoryProvider(requestId?: string) {
+  const query = useQuery<HistoryData>({
+    queryKey: ["historyProvider", requestId],
+    queryFn: () => fetchHistory(requestId as string),
+    enabled: !!requestId,
+    staleTime: 1000 * 60,
+  });
+
+  return { query };
+}
 
 Eles disseram que ele retorna o worflow apos o submit
 
