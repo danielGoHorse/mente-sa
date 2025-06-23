@@ -1,194 +1,302 @@
-import Result      from '#features/shared/result.js';
-import numberToCurrency from '#core/helpers/currency.js';
-import { FeeCase } from '#src/models/entities/FeeCase.js';
-import { Field }   from '#src/models/entities/Fields.js';
-import { Fee }     from '#src/models/entities/Fees.js';
-import {
-  connectToFeeMgmtDb,
-  executeStoreProcedure,
-} from '#core/data/mssql/index.js';
+"use client";
 
-const { logger } = global;
+import React, {
+  Fragment,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+} from "react";
+import CardsRow from "./CardsRow/cardsRow";
+import DataDisplay from "./DataDisplay/dataDisplay";
+import Status from "./Status/status";
+import TableStep from "./TableStep/tableStep";
+import Timeline from "./Timeline/timeline";
+import { formatDateTime } from "@/app/utils/formatDateTime";
 
-/* ---------------------------------------------------------------------------
- * Helpers
- * -------------------------------------------------------------------------*/
-const bitToBool = v => !!v; // 1 → true | 0 / null → false
+export type workflowStatus =
+  | "completed"
+  | "canceled"
+  | "waiting"
+  | "pending"
+  | "skipped";
 
-/* Gera TODAS as opções de Equity / Options (campo 7) onde Retired = 0.
- * O campo 'visible' é repassado como true/false para o front decidir. */
-function mergeEquityOptionAll(excRows) {
-  const equities = excRows.filter(
-    r => r.FeeCode === 'BPS004' && r.Retired === false
+export type IHistory = {
+  status: string;
+  data: any[][];
+  timeLine?: { name: string; status: workflowStatus }[];
+  cardRowData?: any[] | [];
+  dataDisplayData?: any[];
+  selectedBank?: string;
+};
+
+export default function History({
+  data,
+  timeLine,
+  cardRowData,
+  dataDisplayData,
+  selectedBank,
+}: IHistory) {
+  const timeLineMap = timeLine ?? [];
+
+  const statusFieldMap: Record<string, string> = {
+    cancel: "rejected",
+    canceled: "-",
+    completed: "approved",
+    pending: "-",
+    reject: "rejected",
+    return: "partial",
+    success: "approved",
+    waiting: "-",
+  };
+  const statusLabelMap: Record<string, string> = {
+    cancel: "Canceled",
+    canceled: "-",
+    completed: "Completed",
+    pending: "-",
+    return: "Requested change",
+    waiting: "-",
+  };
+
+  interface IPeople {
+    userId: Key | null | undefined;
+    firstName:
+      | string
+      | number
+      | bigint
+      | boolean
+      | ReactElement<any, string | JSXElementConstructor<any>>
+      | Iterable<ReactNode>
+      | null
+      | undefined;
+    lastName:
+      | string
+      | number
+      | bigint
+      | boolean
+      | ReactElement<any, string | JSXElementConstructor<any>>
+      | Iterable<ReactNode>
+      | null
+      | undefined;
+    addedAt?: string;
+    addedBy?: string;
+    approvalsLevel?: string;
+    permissionLevel?: string;
+    indexLevel?: number;
+    action?: {
+      signature: string;
+      subtype: ReactNode;
+      type: string;
+      date: string;
+      comment: any;
+    }[];
+    signature?: string;
+    date?: string;
+    type?: string;
+    comment?: any;
+  }
+
+  return (
+    <div className="p-6">
+      {cardRowData && (
+        <div className="flex flex-col gap-4 mb-6">
+          <CardsRow title="Approvals" data={cardRowData} />
+        </div>
+      )}
+
+      <div className="flex flex-col gap-4">
+        <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
+          Timeline
+        </div>
+        <Timeline.Root>
+          {data
+            .flatMap((subArray, subArrayIndex) =>
+              subArray.map((item, itemIndex) => ({
+                ...item,
+                isFromMultiple: subArray.length > 1,
+                subArrayIndex,
+                key: `${subArrayIndex}-${itemIndex}`,
+                originalStatus: item.status as workflowStatus,
+              }))
+            )
+            .map((item: any, idx, flat) => {
+              const isLast = idx === flat.length - 1;
+              const next = flat[idx + 1];
+              const statusValue = timeLine
+                ? timeLineMap[idx].status
+                : item.originalStatus;
+              const hasExtra =
+                !isLast &&
+                item.isFromMultiple &&
+                next?.isFromMultiple &&
+                item.subArrayIndex === next.subArrayIndex;
+
+              return (
+                <Fragment key={item.key}>
+                  <Timeline.Step progress={!isLast} status={statusValue}>
+                    <div className="relative flex flex-col items-center">
+                      {hasExtra && (
+                        <span className="absolute top-[-24px] left-1/2 transform -translate-x-1/2">
+                          <Timeline.Link
+                            status={next?.originalStatus}
+                            hoverContent={
+                              <div className="text-xs">
+                                <div>
+                                  <strong>Name:</strong> {item.name}
+                                </div>
+                                <div>
+                                  <strong>Status:</strong> {item.originalStatus}
+                                </div>
+                                <div>
+                                  <strong>Group:</strong> {item.subArrayIndex}
+                                </div>
+                              </div>
+                            }
+                          />
+                        </span>
+                      )}
+                      <Timeline.Circle status={statusValue} />
+                      <Timeline.Text>{item.name}</Timeline.Text>
+                    </div>
+                  </Timeline.Step>
+                </Fragment>
+              );
+            })}
+        </Timeline.Root>
+      </div>
+
+      <div className="mt-10">
+        <TableStep.Root>
+          {data.map((group, groupIdx) =>
+            group.map((item: any, itemIdx: number) => {
+              const statusValue = timeLine
+                ? timeLineMap[groupIdx].status
+                : (item.status as workflowStatus);
+
+              return (
+                <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
+                  <TableStep.Title status={statusValue}>
+                    {item.approvalsLevel ? (
+                      <div className="flex gap-1">
+                        <div className="font-normal">
+                          {groupIdx + 1}.{item.indexLevel}. {item.name}:
+                        </div>
+                        <div className="font-semibold">
+                          {item.approvalsLevel}
+                        </div>
+                        <br />
+                      </div>
+                    ) : (
+                      `${groupIdx + 1}. ${item.name}`
+                    )}
+                    <div className="text-[#636574]">
+                      {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
+                    </div>
+                  </TableStep.Title>
+
+                  <TableStep.Columns>
+                    <TableStep.Line>Participant</TableStep.Line>
+                    <TableStep.Line>Signature</TableStep.Line>
+                    <TableStep.Line>Completed</TableStep.Line>
+                    <TableStep.Line>Status</TableStep.Line>
+                    <TableStep.Line>Result</TableStep.Line>
+                    <TableStep.Line>Comments</TableStep.Line>
+                  </TableStep.Columns>
+
+                  {item.permissions?.people?.map(
+                    (people: IPeople, idx: number, arr: IPeople[]) => {
+                      const isPendingOrCompleted =
+                        item.status === "completed" ||
+                        item.status === "pending";
+
+                      return (
+                        <Fragment key={`${people.userId}-${idx}`}>
+                          <TableStep.Body>
+                            <TableStep.Item>
+                              <div className="flex items-center text-[#636574]">
+                                {people.firstName} {people.lastName}
+                                {people.addedAt && people.addedBy && (
+                                  <div className="text-sm leading-[21px] font-normal text-[#636574]">
+                                    {" "}
+                                    - Added by {people.addedBy}
+                                  </div>
+                                )}
+                              </div>
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? people.action[0].signature : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action
+                                ? formatDateTime(people.action[0].date)
+                                : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {isPendingOrCompleted ? (
+                                item.status === "pending" ? (
+                                  "Active"
+                                ) : (
+                                  <Status
+                                    width={164}
+                                    type={statusFieldMap[item.status] as any}
+                                  >
+                                    {statusLabelMap[item.status] as string}
+                                  </Status>
+                                )
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? (
+                                <Status
+                                  width={164}
+                                  type={
+                                    statusFieldMap[people.action[0].type] as any
+                                  }
+                                >
+                                  {people.action[0].type === "success"
+                                    ? item.successLabel
+                                    : people.action[0].subtype}
+                                </Status>
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action && people.action[0].comment
+                                ? people.action[0].comment
+                                : "-"}
+                            </TableStep.Item>
+                          </TableStep.Body>
+
+                          {idx !== arr.length - 1 && (
+                            <div className="border-b border-[#EBEBEB] mx-10" />
+                          )}
+                        </Fragment>
+                      );
+                    }
+                  )}
+                </Fragment>
+              );
+            })
+          )}
+        </TableStep.Root>
+      </div>
+
+      {dataDisplayData && dataDisplayData.length > 0 && (
+        <div className="mt-6">
+          <DataDisplay
+            title={`Process Integration: ${selectedBank}`}
+            data={dataDisplayData}
+          />
+        </div>
+      )}
+    </div>
   );
-  const options  = excRows.filter(
-    r => r.FeeCode === 'BPS005' && r.Retired === false
-  );
-
-  const allCodes = Array.from(new Set([...equities, ...options].map(r => r.Amount)));
-
-  const result = allCodes.sort().map(code => {
-    const equity = equities.find(r => r.Amount === code);
-    const option = options .find(r => r.Amount === code);
-    return {
-      value  : code,
-      text   :
-        `${code} - ` +
-        `Equity:${equity?.FreqDescription?.trim() ?? '-'}` +
-        `; Option:${option?.FreqDescription?.trim() ?? '-'}`,
-      visible: bitToBool(equity?.Visible ?? option?.Visible), // front decide
-      retired: false,
-    };
-  });
-
-  // Entrada "Other"
-  result.push({ value: '', text: 'Other', visible: true, retired: false });
-  return result;
-}
-
-/* ---------------------------------------------------------------------------
- * SQL helpers
- * -------------------------------------------------------------------------*/
-async function getStandardFees(packageId) {
-  const conn = await connectToFeeMgmtDb();
-  return executeStoreProcedure(conn, 'sp_get_standard_fees_bypackage', {
-    FeePackageId: packageId,
-  });
-}
-
-async function getExceptionFees(packageId) {
-  const conn = await connectToFeeMgmtDb();
-  return executeStoreProcedure(conn, 'sp_get_exception_fees_bypackage', {
-    FeePackageId: packageId,
-  });
-}
-
-/* ---------------------------------------------------------------------------
- * Main use-case
- * -------------------------------------------------------------------------*/
-export default class FeeCaseCreateUseCase {
-  async execute(feeTicketRequest) {
-    logger.info('FeeCaseCreateUseCase()');
-
-    /* 1. ID do pacote padrão (vem da tela) ----------------------- */
-    const packageId = feeTicketRequest.defaultFeePackageId; // ajuste se vier noutro campo
-    if (!packageId) return Result.fail('defaultFeePackageId not informed.');
-
-    /* 2. Estrutura (Mongo) --------------------------------------- */
-    const fieldsDataBase = await this.#getFeeStandard([
-      { feeType: 'Customer Fees' },
-      { feeType: 'Bank Account Fees' },
-      { feeType: 'Investment Account Fees' },
-    ]);
-
-    /* 3. Exceções do pacote (SQL) -------------------------------- */
-    const excRows = await getExceptionFees(packageId);
-
-    /* 4. Injeta apenas o campo 7 (Equity / Options) -------------- */
-    fieldsDataBase.forEach(fee => {
-      const excGrp = fee.feeGroups?.find(g => g.name === 'Exception Request');
-      if (!excGrp) return;
-      excGrp.fields.forEach(field => {
-        if (field.code === 7) {
-          field.exceptionOptions = mergeEquityOptionAll(excRows);
-        }
-      });
-    });
-
-    const allExceptions = this.#returnAllExceptions(fieldsDataBase);
-
-    /* ---------------- lógica existente -------------------------- */
-    const feeTicket = new FeeCase(feeTicketRequest);
-    const validate  = feeTicket.validateSync();
-    if (validate?.errors) return Result.fail(validate.errors);
-
-    let hasAnyChange = false;
-    for (const fee of feeTicket.fees) {
-      for (const [gIdx, group] of fee.feeGroups.entries()) {
-        for (const [fIdx, field] of group.fields.entries()) {
-
-          /* ----- se é Exception (terceira coluna) ---------------- */
-          if (field.isException) {
-            const newValue  =
-              field.defaultValue !== fee.feeGroups[gIdx - 1].fields[fIdx].defaultValue;
-            const validValue = !!field.defaultValue && field.defaultValue !== 'NOT APPLICABLE';
-            field.hasChanged = newValue && validValue;
-
-            if (field.hasChanged) {
-              hasAnyChange = true;
-              fee.hasAnyChange                 = true;
-              group.hasAnyChange               = true;
-              fee.feeGroups[gIdx - 1].hasAnyChange = true;
-              fee.feeGroups[gIdx - 2].hasAnyChange = true;
-            }
-
-            if (!field.hasChanged) {
-              field.defaultValue = fee.feeGroups[gIdx - 1].fields[fIdx].defaultValue;
-            }
-          }
-
-          /* ----- se defaultValue é numérico, formata ------------- */
-          if (/^\d+$/.test(field.defaultValue)) {
-            field.labelValue = numberToCurrency(field.defaultValue);
-            continue;
-          }
-
-          /* ----- Safekeeping / Equity: “Other” ------------------- */
-          if (field.labelValue === 'Other') {
-            const other = field.exceptionOptions.find(x => x.text === 'Other');
-            const fieldEquities =
-              (await Field.find({ code: 7, isException: true }))[0];
-            field.exceptionOptions = [...fieldEquities.exceptionOptions, other];
-
-          /* ----- Procura label pelo valor ------------------------ */
-          } else if (!field.labelValue || !field.labelValue.includes(field.defaultValue)) {
-            const exception = allExceptions.find(e => e.value === field.defaultValue) || { text: '' };
-            field.labelValue = exception.text;
-          }
-        }
-      }
-    }
-
-    if (!hasAnyChange) {
-      return Result.fail('Cannot create Fee Case without any change.');
-    }
-
-    /* remove taxas sem alteração */
-    feeTicket.fees = feeTicket.fees.filter(x => x.hasAnyChange);
-    feeTicket.fees.forEach(item => {
-      item.feeGroups = item.feeGroups.filter(x => x.hasAnyChange);
-    });
-
-    /* salva ------------------------------------------------------- */
-    try {
-      const model = await feeTicket.save();
-      return Result.ok(model.toObject());
-    } catch (err) {
-      logger.error(err);
-      return Result.fail('Error when try to save Fee Case');
-    }
-  }
-
-  /* -------------------------------------------------------------------- */
-  async #getFeeStandard(filter) {
-    const feeResult = [];
-    for await (const fee of Fee.find({ $or: filter }).select({
-      feeGroups: { fields: 1, code: 1 },
-    })) {
-      feeResult.push(fee.toObject());
-    }
-    return feeResult;
-  }
-
-  #returnAllExceptions(fees) {
-    const allExceptions = new Set();
-    fees.forEach(fee =>
-      fee.feeGroups.forEach(feeGroup =>
-        feeGroup.fields.forEach(field => {
-          if (field.isException) field.exceptionOptions.forEach(allExceptions.add, allExceptions);
-        })
-      )
-    );
-    return Array.from(allExceptions);
-  }
 }
