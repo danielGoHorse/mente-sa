@@ -1,9 +1,11 @@
-Type '{ status: string; data: ({ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; ... 4 more ...; action: { ...; }[]; }[]; }; }[] | { ...; }[])[]; cardRowData: ({ ...; } | { ...; })[]; dataDisplayDa...' is not assignable to type 'HistoryData'.
-  Types of property 'data' are incompatible.
-    Type '({ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; firstName: string; lastName: string; addedAt: string; addedBy: string; action: { ...; }[]; }[]; }; }[] | { ...; }[])[]' is not assignable to type '{ id: number; name: string; status: "pending" | "completed" | "skipped" | "canceled" | "waiting"; successLabel?: string | undefined; permissions: { people: { userId: string; firstName: string; lastName: string; action?: { ...; }[] | undefined; }[]; }; }[][]'.
-      Type '{ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; firstName: string; lastName: string; addedAt: string; addedBy: string; action: { ...; }[]; }[]; }; }[] | { ...; }[]' is not assignable to type '{ id: number; name: string; status: "pending" | "completed" | "skipped" | "canceled" | "waiting"; successLabel?: string | undefined; permissions: { people: { userId: string; firstName: string; lastName: string; action?: { ...; }[] | undefined; }[]; }; }[]'.
-        Type '{ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; firstName: string; lastName: string; addedAt: string; addedBy: string; action: { ...; }[]; }[]; }; }[]' is not assignable to type '{ id: number; name: string; status: "pending" | "completed" | "skipped" | "canceled" | "waiting"; successLabel?: string | undefined; permissions: { people: { userId: string; firstName: string; lastName: string; action?: { ...; }[] | undefined; }[]; }; }[]'.
-          Type '{ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; firstName: string; lastName: string; addedAt: string; addedBy: string; action: { ...; }[]; }[]; }; }' is not assignable to type '{ id: number; name: string; status: "pending" | "completed" | "skipped" | "canceled" | "waiting"; successLabel?: string | undefined; permissions: { people: { userId: string; firstName: string; lastName: string; action?: { ...; }[] | undefined; }[]; }; }'.
-            Types of property 'status' are incompatible.
-              Type 'string' is not assignable to type '"pending" | "completed" | "skipped" | "canceled" | "waiting"'.ts(2322)
-No quick fixes available
+<TabsContent value="history" className="...">
+  {historyQuery.data && (
+    <History
+      status={historyQuery.data.status}
+      data={historyQuery.data.data}
+      cardRowData={historyQuery.data.cardRowData}
+      dataDisplayData={historyQuery.data.dataDisplayData}
+      selectedBank={historyQuery.data.selectedBank}
+    />
+  )}
+</TabsContent>
