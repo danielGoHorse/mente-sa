@@ -1,9 +1,3 @@
-http://localhost:3000/Wire-Transfer---USD/7ba51df4-20ba-4b64-b0fc-c924d2c4954f
-
-Chat, o ID vai vir assim, no endpoint
-
-
-E dai ele vai receber os dados, 
 // app/providers/useHistoryProvider.ts
 import { useQuery } from "@tanstack/react-query";
 import api from "@/app/api";
@@ -24,44 +18,3 @@ export function useHistoryProvider(requestId?: string) {
 
   return { query };
 }
-
-Eles disseram que ele retorna o worflow apos o submit
-
-
-/* eslint-disable no-prototype-builtins */
-import api from "@/app/api";
-import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { apiConstants } from "../api/apiAddress";
-
-interface IQueryData {
-  data: {
-    data: {
-      requestConfig: Record<any, any>;
-    };
-  };
-}
-
-const request = async (body: any) => {
-  const response = await api.post(
-    `v1/wire-client-aggregator/pages/wire-client/submit`,
-    body
-  );
-
-  return {
-    ...response.data,
-  };
-};
-
-export function SubmitProvider() {
-  const mutation = useMutation({
-    mutationKey: ["submitProvider"],
-    mutationFn: request,
-    onSuccess: (response) => {},
-  });
-
-  return { mutation };
-}
-
-
-Esse é o submit provider, não sei se ajuda em algo
