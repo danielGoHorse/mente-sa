@@ -1,101 +1,40 @@
-"use client";
-import React, { useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs";
-import Requests from "@/components/Requests";
-import { Documents } from "@/components/Documents";
-import { useAuthStore } from "@/app/store/auth/authStore";
-import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
-import { Document, HistoryData } from "@/app/store/types";
-import History from "@/components/history/History";
-import historyJson from "@/mocks/historyMock.json";
+import api from "@/app/api";
 
-const historyData = historyJson as HistoryData;
+import { useMutation } from "@tanstack/react-query";
 
-type IPageTabsParams = {
-  params: {
-    requestName: string;
-    requestId?: string;
-  };
-  tabTriggerType: string;
+interface IData{
+   fullName :string;
+}
+
+interface searchUserResponse{
+    code:number
+    data:{
+        records:{
+        safranetUserId:string;
+        emailAddress: string;
+        fullName: string;
+        department: string ;
+        managerID:string ; 
+        }
+    }
+}
+
+const request = async (data :IData) => {
+    const response = await api.get<searchUserResponse>(
+        `v1/user-management/getemployee?name=${data.fullName}`
+    );
+        return {
+            ...response.data,
+        };
 };
 
-export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
-  const { userData } = useAuthStore((state) => state);
-  const { documentList, setDocumentList } = useDocumentStore((state) => state);
-
-  useEffect(() => {
-    setDocumentList([]);
-
-    return () => {
-      setDocumentList([]);
-    };
-  }, []);
-
-  return (
-    <Tabs
-      defaultValue={tabTriggerType}
-      className="min-h-screen w-full py-7 px-6"
-    >
-      <TabsList>
-        <TabsTrigger
-          value="request"
-          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
-        >
-          {params.requestId ? (
-            <>{`Request: ${params.requestId}`}</>
-          ) : (
-            "New Request"
-          )}
-        </TabsTrigger>
-        <TabsTrigger
-          value="documents"
-          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
-        >
-          Documents
-        </TabsTrigger>
-        <TabsTrigger
-          value="history"
-          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
-        >
-          History
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="request">
-        <Requests />
-      </TabsContent>
-
-      <TabsContent
-        value="documents"
-        className="mt-0 rounded-b-lg rounded-r-lg bg-[white] aria-selected:block rounded-lg p-6"
-      >
-        {
-          <Documents
-            baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
-            bucketName="conductor-client"
-            pathUrl="/v1/file"
-            getListDocument={documentList ?? []}
-            showUploader={true}
-            userData={userData}
-            onUploadDocuments={(documents: Document[]) =>
-              setDocumentList(documents)
-            }
-          />
-        }
-      </TabsContent>
-
-      <TabsContent
-        value="history"
-        className="mt-0 rounded-b-lg rounded-r-lg bg-[white] aria-selected:block rounded-lg p-6"
-      >
-        <History
-          status={historyData.status}
-          data={historyData.data}
-          cardRowData={historyData.cardRowData}
-          dataDisplayData={historyData.dataDisplayData}
-          selectedBank={historyData.selectedBank}
-        />
-      </TabsContent>
-    </Tabs>
-  );
+export function useSearchUserProvider(){
+ 
+    
+      const mutation = useMutation<searchUserResponse, Error, IData>({
+        mutationKey: ["searchUserProvider"],
+        mutationFn: request,
+        onSuccess:()=>{}
+});
+return { mutation };
 }
