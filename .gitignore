@@ -1,20 +1,193 @@
-// app/providers/useHistoryProvider.ts
-import { useQuery } from "@tanstack/react-query";
-import api from "@/app/api";
-import { HistoryData } from "@/app/store/types";
+api/index.ts:
 
-const fetchHistory = async (requestId: string): Promise<HistoryData> => {
-  const response = await api.get(`/v1/wire-client-aggregator/pages/wire-client/workflow/${requestId}`);
-  return response.data; // <- desde que esteja no formato `HistoryData`
+"use client";
+
+import { getObject } from "@/lib/utils";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { apiConstants } from "./apiAddress";
+
+const AccessToken = "@conductor:token";
+
+const getInitialUserData = () => {
+  const storedAuthState = Cookies.get("userData");
+  return storedAuthState ? JSON.parse(storedAuthState) : false;
 };
 
-export function useHistoryProvider(requestId?: string) {
-  const query = useQuery<HistoryData>({
-    queryKey: ["historyProvider", requestId],
-    queryFn: () => fetchHistory(requestId as string),
-    enabled: !!requestId,
-    staleTime: 1000 * 60,
-  });
+const getInitialAuthState = () => {
+  const storedAuthState = Cookies.get("isAuth");
+  return storedAuthState ? JSON.parse(storedAuthState) : false;
+};
 
-  return { query };
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+  timeout: 10 * 1000,
+  responseType: "json",
+  headers: {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Content-Security-Policy": "upgrade-insecure-requests",
+    "x-auth-profile": apiConstants.profile,
+    "x-auth-realm": apiConstants.realm,
+  },
+});
+
+api.interceptors.request.use(async (config) => {
+  const token = getObject(AccessToken);
+  const userData = getInitialUserData();
+  if (token) {
+    config.headers!.authorization = `Bearer ${token}`;
+  }
+  config.headers!.authorization = `Bearer "${userData.token}"`;
+  config.headers!["X-App-Name"] = `${userData.userName}`;
+  return await config;
+});
+
+api.interceptors.response.use((response) => {
+  switch (response.status) {
+    case 205:
+      window.location.reload();
+      break;
+
+    default:
+      break;
+  }
+
+  switch (response.data.code) {
+    case 205:
+      window.location.reload();
+      break;
+
+    default:
+      break;
+  }
+
+  return response;
+});
+
+export default api;
+
+api/apiAdress.ts:
+
+export const apiPathAddress = {
+  accessRequest: "/v1/access-request/create",
+  requestConfig: "v1/wire-client-aggregator/pages/",
+  getRequest: "v1/wire-client-management/request/getrequest/",
+  uploadDocuments: "/v1/file",
+};
+
+export const apiConstants = {
+  realm: "SNB-Internal",
+  profile: "employee",
+};
+
+
+api/wire-transfers/route.ts
+
+import { NextRequest, NextResponse } from 'next/server' 
+import axios, { AxiosResponse } from 'axios'
+import https from 'https'
+
+// --- Tipos da resposta externa (Safra) ---
+interface SafraRecord {
+  ticket: string
+  status: 'Active' | 'Pending' | 'Completed' | 'Failed'
+  amount: number
+  [key: string]: any
 }
+
+interface SafraApiResponse {
+  records?: SafraRecord[]
+}
+
+export interface WireTransfer {
+  ticket: string
+  status: SafraRecord['status']
+  amount: string
+}
+export interface WireTransferResponse {
+  transfers: WireTransfer[]
+  currentWireAmount: string
+  outgoingWireFee: string
+  remainingBalance: string
+}
+
+// Parâmetros fixos e taxa
+const FIXED = { Application: 8, Status: 1, TypeRequest: 3 }
+const WIRE_FEE_USD = 30
+
+const safraApi = axios.create({
+  baseURL:
+    process.env.SAFRA_API_BASE_URL
+      || 'https://casemanagement-api.qa.k8s.safra.int',
+  httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+  headers: { accept: 'text/plain; x-api-version=1.0' },
+  timeout: 10_000,
+})
+
+export async function GET(req: NextRequest) {
+  const cif  = req.nextUrl.searchParams.get('cif')
+  const user = req.nextUrl.searchParams.get('user')
+  if (!cif || !user) {
+    return NextResponse.json(
+      { error: 'Parâmetros “cif” e “user” são obrigatórios' },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const response: AxiosResponse<SafraApiResponse> =
+      await safraApi.get('/case-management/v1/searchcasebyuser', {
+        params: { CIF: cif, UserOwner: user, ...FIXED }
+      })
+
+    const records: SafraRecord[] = Array.isArray(response.data.records)
+      ? response.data.records
+      : []
+
+    const transfers: WireTransfer[] = records
+      .filter((r): r is SafraRecord => Boolean(r.ticket))
+      .map((r: SafraRecord) => ({
+        ticket: r.ticket,
+        status: r.status,
+        amount: formatUSD(r.amount),
+      }))
+
+    const totalAmount = transfers.reduce(
+      (sum, t) => sum + parseUSD(t.amount), 0
+    )
+    const totalFee     = transfers.length * WIRE_FEE_USD
+    const remaining    = totalAmount - totalFee
+
+    const result: WireTransferResponse = {
+      transfers,
+      currentWireAmount: formatUSD(totalAmount),
+      outgoingWireFee:   formatUSD(totalFee),
+      remainingBalance:  formatUSD(remaining),
+    }
+    return NextResponse.json(result)
+
+  } catch (err: any) {
+    console.error('Error /api/wire-transfers:', err)
+    const status  = err.response?.status ?? 500
+    const message = err.response?.data?.message
+      || err.response?.data
+      || err.message
+      || 'Fail to find wire transfers'
+    return NextResponse.json({ error: message }, { status })
+  }
+}
+
+// helpers
+function formatUSD(v: number): string {
+  return v.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+  })
+}
+function parseUSD(v: string): number {
+  return Number(v.replace(/[^0-9.-]+/g, ''))
+}
+
+
