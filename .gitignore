@@ -1,72 +1,101 @@
-// /app/api/mock/getHistoryDataMock.ts
-export async function getHistoryDataMock() {
-  return {
-    status: 'completed',
-    selectedBank: 'Santander',
-    cardRowData: [
-      { label: 'Pending', value: 2 },
-      { label: 'Completed', value: 4 },
-      { label: 'Canceled', value: 1 },
-    ],
-    dataDisplayData: [
-      { label: 'Bank Code', value: '033' },
-      { label: 'Operation', value: 'Transfer' },
-      { label: 'Account', value: '12345-6' },
-    ],
-    timeLine: [
-      { name: 'Step 1', status: 'completed' },
-      { name: 'Step 2', status: 'completed' },
-      { name: 'Step 3', status: 'waiting' },
-    ],
-    data: [
-      [
-        {
-          name: 'Approval 1',
-          status: 'completed',
-          indexLevel: 1,
-          approvalsLevel: 'Level 1',
-          permissionLevel: 'Manager',
-          permissions: {
-            people: [
-              {
-                userId: '1',
-                firstName: 'João',
-                lastName: 'Silva',
-                addedAt: '2024-12-01T12:00:00Z',
-                addedBy: 'Maria',
-                action: [
-                  {
-                    signature: 'JoãoS',
-                    subtype: 'Approved',
-                    type: 'success',
-                    date: '2024-12-01T15:00:00Z',
-                    comment: 'Tudo certo',
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      ],
-      [
-        {
-          name: 'Approval 2',
-          status: 'pending',
-          indexLevel: 1,
-          approvalsLevel: 'Level 2',
-          permissionLevel: 'Director',
-          permissions: {
-            people: [
-              {
-                userId: '2',
-                firstName: 'Ana',
-                lastName: 'Oliveira',
-                action: [],
-              },
-            ],
-          },
-        },
-      ],
-    ],
+"use client";
+import React, { useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs";
+import Requests from "@/components/Requests";
+import { Documents } from "@/components/Documents";
+import { useAuthStore } from "@/app/store/auth/authStore";
+import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
+import { Document, HistoryData } from "@/app/store/types";
+import History from "@/components/history/History";
+import historyJson from "@/mocks/historyMock.json";
+
+const historyData = historyJson as HistoryData;
+
+type IPageTabsParams = {
+  params: {
+    requestName: string;
+    requestId?: string;
   };
+  tabTriggerType: string;
+};
+
+export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
+  const { userData } = useAuthStore((state) => state);
+  const { documentList, setDocumentList } = useDocumentStore((state) => state);
+
+  useEffect(() => {
+    setDocumentList([]);
+
+    return () => {
+      setDocumentList([]);
+    };
+  }, []);
+
+  return (
+    <Tabs
+      defaultValue={tabTriggerType}
+      className="min-h-screen w-full py-7 px-6"
+    >
+      <TabsList>
+        <TabsTrigger
+          value="request"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          {params.requestId ? (
+            <>{`Request: ${params.requestId}`}</>
+          ) : (
+            "New Request"
+          )}
+        </TabsTrigger>
+        <TabsTrigger
+          value="documents"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          Documents
+        </TabsTrigger>
+        <TabsTrigger
+          value="history"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          History
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="request">
+        <Requests />
+      </TabsContent>
+
+      <TabsContent
+        value="documents"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-[white] aria-selected:block rounded-lg p-6"
+      >
+        {
+          <Documents
+            baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
+            bucketName="conductor-client"
+            pathUrl="/v1/file"
+            getListDocument={documentList ?? []}
+            showUploader={true}
+            userData={userData}
+            onUploadDocuments={(documents: Document[]) =>
+              setDocumentList(documents)
+            }
+          />
+        }
+      </TabsContent>
+
+      <TabsContent
+        value="history"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-[white] aria-selected:block rounded-lg p-6"
+      >
+        <History
+          status={historyData.status}
+          data={historyData.data}
+          cardRowData={historyData.cardRowData}
+          dataDisplayData={historyData.dataDisplayData}
+          selectedBank={historyData.selectedBank}
+        />
+      </TabsContent>
+    </Tabs>
+  );
 }
