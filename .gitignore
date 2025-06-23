@@ -1,20 +1,240 @@
-{historyQuery.data && (
-  <History
-    status={historyQuery.data.status}
-    data={historyQuery.data.data}
-    cardRowData={
-      historyQuery.data.cardRowData.map((item) => ({
-        label: item.title,
-        value: item.value,
-      }))
+ype '{ status: string; data: ({ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; ... 4 more ...; action: { ...; }[]; }[]; }; }[] | { ...; }[])[]; cardRowData: ({ ...; } | { ...; })[]; dataDisplayDa...' is not assignable to type 'HistoryData'.
+  Types of property 'data' are incompatible.
+    Type '({ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; firstName: string; lastName: string; addedAt: string; addedBy: string; action: { ...; }[]; }[]; }; }[] | { ...; }[])[]' is not assignable to type '{ id: number; name: string; status: "pending" | "completed" | "skipped" | "canceled" | "waiting"; successLabel?: string | undefined; permissions: { people: { userId: string; firstName: string; lastName: string; action?: { ...; }[] | undefined; }[]; }; }[][]'.
+      Type '{ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; firstName: string; lastName: string; addedAt: string; addedBy: string; action: { ...; }[]; }[]; }; }[] | { ...; }[]' is not assignable to type '{ id: number; name: string; status: "pending" | "completed" | "skipped" | "canceled" | "waiting"; successLabel?: string | undefined; permissions: { people: { userId: string; firstName: string; lastName: string; action?: { ...; }[] | undefined; }[]; }; }[]'.
+        Type '{ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; firstName: string; lastName: string; addedAt: string; addedBy: string; action: { ...; }[]; }[]; }; }[]' is not assignable to type '{ id: number; name: string; status: "pending" | "completed" | "skipped" | "canceled" | "waiting"; successLabel?: string | undefined; permissions: { people: { userId: string; firstName: string; lastName: string; action?: { ...; }[] | undefined; }[]; }; }[]'.
+          Type '{ id: number; name: string; status: string; successLabel: string; approvalsLevel: string; permissionLevel: string; indexLevel: number; permissions: { people: { userId: string; firstName: string; lastName: string; addedAt: string; addedBy: string; action: { ...; }[]; }[]; }; }' is not assignable to type '{ id: number; name: string; status: "pending" | "completed" | "skipped" | "canceled" | "waiting"; successLabel?: string | undefined; permissions: { people: { userId: string; firstName: string; lastName: string; action?: { ...; }[] | undefined; }[]; }; }'.
+            Types of property 'status' are incompatible.
+              Type 'string' is not assignable to type '"pending" | "completed" | "skipped" | "canceled" | "waiting"'.ts(2322)
+No quick fixes available
+
+
+O Mock verdadeiro que deve ser usado é esse chat:
+
+{ 
+  "status": "pending",
+  "data": [
+    [
+      {
+        "id": 1,
+        "name": "Initiator",
+        "status": "completed",
+        "successLabel": "Submitted",
+        "approvalsLevel": "Compliance",
+        "permissionLevel": "PB AA",
+        "indexLevel": 1,
+        "permissions": {
+          "people": [
+            {
+              "userId": "user1",
+              "firstName": "João",
+              "lastName": "Silva",
+              "addedAt": "2023-10-01T12:00:00Z",
+              "addedBy": "Carter Goose",
+              "action": [
+                {
+                  "signature": "PB AA",
+                  "type": "success",
+                  "subtype": "approved",
+                  "date": "2023-10-01T09:00:00Z",
+                  "comment": "Transferência iniciada"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    [
+      {
+        "id": 2,
+        "name": "Validations",
+        "status": "skipped",
+        "successLabel": "Validated",
+        "permissions": {
+          "people": [
+            {
+              "userId": "user2",
+              "firstName": "Maria",
+              "lastName": "Santos",
+              "addedAt": "2023-10-01T12:00:00Z",
+              "addedBy": "Carter Goose",
+                  "action": [
+                {
+                  "signature": "PB AA",
+                  "type": "success",
+                  "subtype": "approved",
+                  "date": "2023-10-01T10:30:00Z",
+                  "comment": "Validações concluídas"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    [
+      {
+        "id": 3,
+        "name": "Approvals and Restrictions",
+        "status": "pending",
+        "successLabel": "Approved",
+        "permissions": {
+          "people": [
+            {
+              "userId": "user3",
+              "firstName": "Carlos",
+              "lastName": "Oliveira",
+              "addedAt": "2023-10-01T12:00:00Z",
+              "addedBy": "Carter Goose",
+              "action": [
+                {
+                  "signature": "-",
+                  "type": "success",
+                  "subtype": "approved",
+                  "date": "2023-10-01T10:30:00Z",
+                  "comment": "Validações concluídas"
+                }
+              ]
+            },
+            {
+              "userId": "user4",
+              "firstName": "Ana",
+              "lastName": "Costa",
+              "addedAt": "2023-10-01T12:00:00Z",
+              "addedBy": "John Doe",
+              "action": [
+                {
+                  "signature": "-",
+                  "type": "success",
+                  "subtype": "approved",
+                  "date": "2023-10-01T10:30:00Z",
+                  "comment": "Validações concluídas"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 4,
+        "name": "Restriction Removal",
+        "status": "canceled",
+        "successLabel": "Restrictions Removed",
+        "permissions": {
+          "people": []
+        }
+      }
+    ],
+    [
+      {
+        "id": 5,
+        "name": "Wire Repair",
+        "status": "waiting",
+        "successLabel": "Repaired",
+        "permissions": {
+          "people": []
+        }
+      }
+    ],
+    [
+      {
+        "id": 6,
+        "name": "OFAC",
+        "status": "waiting",
+        "successLabel": "Cleared",
+        "permissions": {
+          "people": []
+        }
+      }
+    ],
+    [
+      {
+        "id": 7,
+        "name": "Processing",
+        "status": "waiting",
+        "successLabel": "Processed",
+        "permissions": {
+          "people": []
+        }
+      }
+    ],
+    [
+      {
+        "id": 8,
+        "name": "Initiator Notified",
+        "status": "waiting",
+        "successLabel": "Notified",
+        "permissions": {
+          "people": []
+        }
+      }
+    ]
+  ],
+  "cardRowData": [
+    {
+      "title": "Request Status",
+      "value": "In Progress",
+      "level": ""
+    },
+    {
+      "title": "Initiator",
+      "value": "Completed",
+      "level": "",
+      "date": "01/10/2023 09:00"
+    },
+    {
+      "title": "Validations",
+      "value": "Completed",
+      "level": "",
+      "date": "01/10/2023 10:30"
+    },
+    {
+      "title": "Approvals and Restrictions",
+      "value": "Pending (2/5)",
+      "level": "",
+      "date": ""
+    },
+    {
+      "title": "Restriction Removal",
+      "value": "Waiting",
+      "level": "",
+      "date": ""
+    },
+    {
+      "title": "Wire Repair",
+      "value": "Waiting",
+      "level": "",
+      "date": ""
+    },
+    {
+      "title": "OFAC",
+      "value": "Waiting",
+      "level": "",
+      "date": ""
+    },
+    {
+      "title": "Processing",
+      "value": "Waiting",
+      "level": "",
+      "date": ""
+    },
+    {
+      "title": "Initiator Notified",
+      "value": "Waiting",
+      "level": "",
+      "date": ""
     }
-    dataDisplayData={
-      historyQuery.data.dataDisplayData.map((item) => [
-        { label: "ID", value: item.Id },
-        { label: "Status", value: item.Status },
-        { label: "Date", value: item.Date },
-      ])
+  ],
+  "dataDisplayData": [
+    {
+      "Id": "WT-2023-001",
+      "Status": "In Progress",
+      "Date": "2023-10-01T09:00:00.000Z"
     }
-    selectedBank={historyQuery.data.selectedBank}
-  />
-)}
+  ],
+  "selectedBank": "Bank of America"
+}
+
+
+Pois tem algumas informações acho que faltaram:
