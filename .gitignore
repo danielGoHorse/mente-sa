@@ -1,17 +1,36 @@
-<History
-  data={data.workflow}
-  cardRowData={(data.workflowApprovers || []).map(item => ({
-    title: item.title,
-    value: item.value,
-    level: item.level ?? '',
-    date: item.date ?? ''
-  }))}
-  dataDisplayData={[
-    {
-      Id: data.caseNumber,
-      Status: data.caseStatus,
-      Date: data.createdAt
-    }
-  ]}
-  selectedBank={data.beneficiaryBankName?.content || ''}
-/>
+export interface HistoryData {
+  status: string;
+  data: Array<
+    Array<{
+      id: number;
+      name: string;
+      status: "completed" | "pending" | "waiting" | "canceled" | "skipped";
+      successLabel?: string;
+      permissions: {
+        people: Array<{
+          userId: string;
+          firstName: string;
+          lastName: string;
+          action?: Array<{
+            type: string;
+            subtype: string;
+            date: string;
+            comment: string;
+          }>;
+        }>;
+      };
+    }>
+  >;
+  cardRowData: Array<{
+    title: string;
+    value: string;
+    level: string;
+    date?: string;
+  }>;
+  dataDisplayData: Array<{
+    Id: string;
+    Status: string;
+    Date: string;
+  }>;
+  selectedBank: string;
+}
