@@ -1,40 +1,35 @@
-import { ChevronLeft, ChevronRight } from "lucide-react"; // ou qualquer ícone que preferir
-import { useRef } from "react";
+export const timelineWrapper = `
+  relative
+`;
 
-export default function TimelineScrollWrapper({ children }: { children: React.ReactNode }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+export const scrollContainer = `
+  overflow-x-auto 
+  no-scrollbar 
+  scroll-smooth
+`;
 
-  const scrollLeft = () => {
-    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
-  };
+export const scrollContent = `
+  flex 
+  gap-6 
+  min-w-fit 
+  px-8
+`;
 
-  const scrollRight = () => {
-    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
-  };
+export const chevronButton = `
+  absolute 
+  top-1/2 
+  -translate-y-1/2 
+  z-10 
+  bg-white 
+  shadow-md 
+  rounded-full 
+  p-1
+`;
 
-  return (
-    <div className="relative">
-      {/* Setas */}
-      <button
-        onClick={scrollLeft}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1"
-      >
-        <ChevronLeft size={20} />
-      </button>
-      <button
-        onClick={scrollRight}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1"
-      >
-        <ChevronRight size={20} />
-      </button>
+export const chevronLeft = `
+  left-0
+`;
 
-      {/* Scroll horizontal */}
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto no-scrollbar scroll-smooth"
-      >
-        <div className="flex gap-6 min-w-fit px-8">{children}</div>
-      </div>
-    </div>
-  );
-}
+export const chevronRight = `
+  right-0
+`;
