@@ -1,124 +1,24 @@
-import React from 'react'
+import CardsRowScrollWrapper from "./cardsRowScrollWrapper";
 
-export interface CardsRowProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string
-  data: Array<{
-    title: React.ReactNode
-    value: React.ReactNode
-    level?: React.ReactNode
-  }>
-}
+...
 
-const CardsRow: React.FC<CardsRowProps> = ({ title, data }) => {
-  if (!data || !Array.isArray(data)) {
-    return <div>Dados inválidos</div>
-  }
-
-  return (
-    <div>
-      {title && (
-        <h2
-          className="
-            font-semibold
-            text-base
-            leading-6
-            tracking-[0.12px]
-            text-[#484A55]
-            mb-4
-          "
-        >
-          {title}
-        </h2>
-      )}
-
-      <div className="flex gap-6">
-        {data.map((item, index) => (
-          <div
-            key={index}
-            className="
-              flex
-              flex-1
-              bg-[#f0f0f0]
-              rounded-lg
-              py-3
-              px-4
-              gap-4
-              justify-between
-            "
-          >
-            {/* Coluna Esquerda */}
-            <div
-              className={`flex flex-col ${
-                item.level ? 'font-semibold' : ''
-              }`}
-            >
-              <h3
-                className="
-                  font-normal
-                  text-[14px]
-                  leading-[21px]
-                  tracking-[0.12px]
-                  text-[#636574]
-                  m-0
-                "
-              >
-                {item.title}
-              </h3>
-              <div
-                className="
-                  font-semibold
-                  text-[14px]
-                  leading-[21px]
-                  tracking-[0.12px]
-                  text-[#484A55]
-                "
-              >
-                {item.value}
-              </div>
-            </div>
-
-            {/* Coluna Direita (apenas se tiver level) */}
-            {item.level && (
-              <div className="flex flex-col min-w-[42px]">
-                <h3
-                  className="
-                    font-normal
-                    text-[14px]
-                    leading-[21px]
-                    tracking-[0.12px]
-                    text-[#636574]
-                    m-0
-                  "
-                >
-                  Level
-                </h3>
-                <div
-                  className="
-                    font-semibold
-                    text-[14px]
-                    leading-[21px]
-                    tracking-[0.12px]
-                    text-[#484A55]
-                  "
-                >
-                  {item.level}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+<CardsRowScrollWrapper>
+  {data.map((item, index) => (
+    <div
+      key={index}
+      className="
+        flex-shrink-0
+        w-[200px]
+        bg-[#f0f0f0]
+        rounded-lg
+        py-3
+        px-4
+        gap-4
+        justify-between
+        flex
+      "
+    >
+      {/* conteúdo dos cards igual antes */}
     </div>
-  )
-}
-
-export default CardsRow
-
-
-
-
-  {cardRowData && (
-        <div className="flex flex-col gap-4 mb-6">
-          <CardsRow title="Approvals" data={cardRowData} />
-        </div>
-      )}
+  ))}
+</CardsRowScrollWrapper>
