@@ -1,68 +1,47 @@
-/** @type {import('tailwindcss').Config} */
+"use client";
 
-module.exports = {
-  darkMode: ["class"], // suporta modo escuro com classe
-  content: [
-    "./src/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-  ],
-  theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-          100: "#484A55",
-          500: "",
-          900: "",
-        },
-        secondary: {
-          secondary: "#F7F7F8",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      fontFamily: {
-        sans: ["var(--font-sans)", "sans-serif"],
-      },
-    },
-  },
-  plugins: [require("tailwindcss-animate")],
-};
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
+
+export default function CardsRowScrollWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative">
+      {/* Setas */}
+      <button
+        onClick={scrollLeft}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1"
+      >
+        <ChevronLeft size={20} />
+      </button>
+
+      <button
+        onClick={scrollRight}
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1"
+      >
+        <ChevronRight size={20} />
+      </button>
+
+      {/* Scroll horizontal com barra oculta */}
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto no-scrollbar scroll-smooth"
+      >
+        <div className="flex gap-6 min-w-fit px-8">{children}</div>
+      </div>
+    </div>
+  );
+}
