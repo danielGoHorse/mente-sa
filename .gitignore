@@ -1,47 +1,124 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
-import * as styles from "./styles";
+import React from 'react'
 
-export default function TimelineScrollWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+export interface CardsRowProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string
+  data: Array<{
+    title: React.ReactNode
+    value: React.ReactNode
+    level?: React.ReactNode
+  }>
+}
 
-  const scrollLeft = () => {
-    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
-  };
-
-  const scrollRight = () => {
-    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
-  };
+const CardsRow: React.FC<CardsRowProps> = ({ title, data }) => {
+  if (!data || !Array.isArray(data)) {
+    return <div>Dados inválidos</div>
+  }
 
   return (
-    <div className={styles.timelineWrapper}>
-      {/* Botões de navegação */}
-      <button
-        onClick={scrollLeft}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-1"
-      >
-        <ChevronLeft size={20} />
-      </button>
-      <button
-        onClick={scrollRight}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-1"
-      >
-        <ChevronRight size={20} />
-      </button>
+    <div>
+      {title && (
+        <h2
+          className="
+            font-semibold
+            text-base
+            leading-6
+            tracking-[0.12px]
+            text-[#484A55]
+            mb-4
+          "
+        >
+          {title}
+        </h2>
+      )}
 
-      {/* Scroll horizontal interno */}
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto scroll-smooth no-scrollbar w-full"
-      >
-        <div className="flex gap-6 min-w-fit px-8 py-2 items-stretch">
-          {children}
-        </div>
+      <div className="flex gap-6">
+        {data.map((item, index) => (
+          <div
+            key={index}
+            className="
+              flex
+              flex-1
+              bg-[#f0f0f0]
+              rounded-lg
+              py-3
+              px-4
+              gap-4
+              justify-between
+            "
+          >
+            {/* Coluna Esquerda */}
+            <div
+              className={`flex flex-col ${
+                item.level ? 'font-semibold' : ''
+              }`}
+            >
+              <h3
+                className="
+                  font-normal
+                  text-[14px]
+                  leading-[21px]
+                  tracking-[0.12px]
+                  text-[#636574]
+                  m-0
+                "
+              >
+                {item.title}
+              </h3>
+              <div
+                className="
+                  font-semibold
+                  text-[14px]
+                  leading-[21px]
+                  tracking-[0.12px]
+                  text-[#484A55]
+                "
+              >
+                {item.value}
+              </div>
+            </div>
+
+            {/* Coluna Direita (apenas se tiver level) */}
+            {item.level && (
+              <div className="flex flex-col min-w-[42px]">
+                <h3
+                  className="
+                    font-normal
+                    text-[14px]
+                    leading-[21px]
+                    tracking-[0.12px]
+                    text-[#636574]
+                    m-0
+                  "
+                >
+                  Level
+                </h3>
+                <div
+                  className="
+                    font-semibold
+                    text-[14px]
+                    leading-[21px]
+                    tracking-[0.12px]
+                    text-[#484A55]
+                  "
+                >
+                  {item.level}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
-  );
+  )
 }
+
+export default CardsRow
+
+
+
+
+  {cardRowData && (
+        <div className="flex flex-col gap-4 mb-6">
+          <CardsRow title="Approvals" data={cardRowData} />
+        </div>
+      )}
