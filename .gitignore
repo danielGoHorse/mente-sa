@@ -32,4 +32,35 @@
             return (
               <Fragment key={item.key}>
                 <Timeline.Step progress={!isLast} status={statusValue}>
-                  <div cla
+                  <div className="relative flex flex-col items-center">
+                    {hasExtra && (
+                      <span className="absolute top-[-24px] left-1/2 transform -translate-x-1/2">
+                        <Timeline.Link
+                          status={next?.originalStatus}
+                          hoverContent={
+                            <div className="text-xs">
+                              <div>
+                                <strong>Name:</strong> {item.name}
+                              </div>
+                              <div>
+                                <strong>Status:</strong> {item.originalStatus}
+                              </div>
+                              <div>
+                                <strong>Group:</strong> {item.subArrayIndex}
+                              </div>
+                            </div>
+                          }
+                        />
+                      </span>
+                    )}
+                    <Timeline.Circle status={statusValue} />
+                    <Timeline.Text>{item.name}</Timeline.Text>
+                  </div>
+                </Timeline.Step>
+              </Fragment>
+            );
+          })}
+      </Timeline.Root>
+    </div>
+  </div>
+</div>
