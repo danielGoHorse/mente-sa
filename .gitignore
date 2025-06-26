@@ -1,68 +1,302 @@
-import { HistoryData } from "@/app/store/types";
+"use client";
 
-/**
- * Converte a resposta da API (Wire Request) para o formato
- * que o componente <History> entende.
- */
-export function toHistoryData(api: any): HistoryData {
-  return {
-    status: api.caseStatus,                         // "pending"
-    data: api.workflow ?? [],                       // passos completos
-    timeLine: api.timeline ?? [],                   // linha do tempo simplificada
-    cardRowData: api.workflowApprovers ?? [],       // cards no topo
-    dataDisplayData: (api.actions ?? []).map((a: any) => ({
-      Id: a.stepName,
-      Status: `${a.type}${a.subtype ? `: ${a.subtype}` : ""}`,
-      Date: a.date,
-    })),
-    selectedBank: api.beneficiaryBankName?.content ?? "",
+import React, {
+  Fragment,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+} from "react";
+import CardsRow from "./CardsRow/cardsRow";
+import DataDisplay from "./DataDisplay/dataDisplay";
+import Status from "./Status/status";
+import TableStep from "./TableStep/tableStep";
+import Timeline from "./Timeline/timeline";
+import { formatDateTime } from "@/app/utils/formatDateTime";
+
+export type workflowStatus =
+  | "completed"
+  | "canceled"
+  | "waiting"
+  | "pending"
+  | "skipped";
+
+export type IHistory = {
+  status: string;
+  data: any[][];
+  timeLine?: { name: string; status: workflowStatus }[];
+  cardRowData?: any[] | [];
+  dataDisplayData?: any[];
+  selectedBank?: string;
+};
+
+export default function History({
+  data,
+  timeLine,
+  cardRowData,
+  dataDisplayData,
+  selectedBank,
+}: IHistory) {
+  const timeLineMap = timeLine ?? [];
+
+  const statusFieldMap: Record<string, string> = {
+    cancel: "rejected",
+    canceled: "-",
+    completed: "approved",
+    pending: "-",
+    reject: "rejected",
+    return: "partial",
+    success: "approved",
+    waiting: "-",
   };
-}
+  const statusLabelMap: Record<string, string> = {
+    cancel: "Canceled",
+    canceled: "-",
+    completed: "Completed",
+    pending: "-",
+    return: "Requested change",
+    waiting: "-",
+  };
 
-
-
-
-
-
-import { toHistoryData } from "@/app/utils/toHistoryData";
-
-export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
-  /* ...seu código... */
-  const { isLoading, isFetching, data: apiData } = getRequestConfig;
-
-  /* quando chegar a resposta, converta */
-  const historyData = apiData ? toHistoryData(apiData) : null;
-
-  if (!historyData) return null;        // loading / skeleton aqui, se quiser
+  interface IPeople {
+    userId: Key | null | undefined;
+    firstName:
+      | string
+      | number
+      | bigint
+      | boolean
+      | ReactElement<any, string | JSXElementConstructor<any>>
+      | Iterable<ReactNode>
+      | null
+      | undefined;
+    lastName:
+      | string
+      | number
+      | bigint
+      | boolean
+      | ReactElement<any, string | JSXElementConstructor<any>>
+      | Iterable<ReactNode>
+      | null
+      | undefined;
+    addedAt?: string;
+    addedBy?: string;
+    approvalsLevel?: string;
+    permissionLevel?: string;
+    indexLevel?: number;
+    action?: {
+      signature: string;
+      subtype: ReactNode;
+      type: string;
+      date: string;
+      comment: any;
+    }[];
+    signature?: string;
+    date?: string;
+    type?: string;
+    comment?: any;
+  }
 
   return (
-    <Tabs /* ... */>
-      {/* --- aba Request (sem mudanças) --- */}
+    <div className="p-6">
+      {cardRowData && (
+        <div className="flex flex-col gap-4 mb-6">
+          <CardsRow title="Approvals" data={cardRowData} />
+        </div>
+      )}
 
-      {/* --- aba Documents (sem mudanças) --- */}
+      <div className="flex flex-col gap-4">
+        <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
+          Timeline
+        </div>
+        <Timeline.Root>
+          {data
+            .flatMap((subArray, subArrayIndex) =>
+              subArray.map((item, itemIndex) => ({
+                ...item,
+                isFromMultiple: subArray.length > 1,
+                subArrayIndex,
+                key: `${subArrayIndex}-${itemIndex}`,
+                originalStatus: item.status as workflowStatus,
+              }))
+            )
+            .map((item: any, idx, flat) => {
+              const isLast = idx === flat.length - 1;
+              const next = flat[idx + 1];
+              const statusValue = timeLine
+                ? timeLineMap[idx].status
+                : item.originalStatus;
+              const hasExtra =
+                !isLast &&
+                item.isFromMultiple &&
+                next?.isFromMultiple &&
+                item.subArrayIndex === next.subArrayIndex;
 
-      {/* --- aba History --- */}
-      <TabsContent
-        value="history"
-        className="mt-0 rounded-b-lg rounded-r-lg bg-white p-6"
-      >
-        <History
-          /* mapeamento correto */
-          status={historyData.status}
-          data={historyData.data}
-          timeLine={historyData.timeLine}      {/* <- adicionado */}
-          cardRowData={historyData.cardRowData}
-          dataDisplayData={historyData.dataDisplayData}
-          selectedBank={historyData.selectedBank}
-        />
-      </TabsContent>
-    </Tabs>
+              return (
+                <Fragment key={item.key}>
+                  <Timeline.Step progress={!isLast} status={statusValue}>
+                    <div className="relative flex flex-col items-center">
+                      {hasExtra && (
+                        <span className="absolute top-[-24px] left-1/2 transform -translate-x-1/2">
+                          <Timeline.Link
+                            status={next?.originalStatus}
+                            hoverContent={
+                              <div className="text-xs">
+                                <div>
+                                  <strong>Name:</strong> {item.name}
+                                </div>
+                                <div>
+                                  <strong>Status:</strong> {item.originalStatus}
+                                </div>
+                                <div>
+                                  <strong>Group:</strong> {item.subArrayIndex}
+                                </div>
+                              </div>
+                            }
+                          />
+                        </span>
+                      )}
+                      <Timeline.Circle status={statusValue} />
+                      <Timeline.Text>{item.name}</Timeline.Text>
+                    </div>
+                  </Timeline.Step>
+                </Fragment>
+              );
+            })}
+        </Timeline.Root>
+      </div>
+
+      <div className="mt-10">
+        <TableStep.Root>
+          {data.map((group, groupIdx) =>
+            group.map((item: any, itemIdx: number) => {
+              const statusValue = timeLine
+                ? timeLineMap[groupIdx].status
+                : (item.status as workflowStatus);
+
+              return (
+                <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
+                  <TableStep.Title status={statusValue}>
+                    {item.approvalsLevel ? (
+                      <div className="flex gap-1">
+                        <div className="font-normal">
+                          {groupIdx + 1}.{item.indexLevel}. {item.name}:
+                        </div>
+                        <div className="font-semibold">
+                          {item.approvalsLevel}
+                        </div>
+                        <br />
+                      </div>
+                    ) : (
+                      `${groupIdx + 1}. ${item.name}`
+                    )}
+                    <div className="text-[#636574]">
+                      {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
+                    </div>
+                  </TableStep.Title>
+
+                  <TableStep.Columns>
+                    <TableStep.Line>Participant</TableStep.Line>
+                    <TableStep.Line>Signature</TableStep.Line>
+                    <TableStep.Line>Completed</TableStep.Line>
+                    <TableStep.Line>Status</TableStep.Line>
+                    <TableStep.Line>Result</TableStep.Line>
+                    <TableStep.Line>Comments</TableStep.Line>
+                  </TableStep.Columns>
+
+                  {item.permissions?.people?.map(
+                    (people: IPeople, idx: number, arr: IPeople[]) => {
+                      const isPendingOrCompleted =
+                        item.status === "completed" ||
+                        item.status === "pending";
+
+                      return (
+                        <Fragment key={`${people.userId}-${idx}`}>
+                          <TableStep.Body>
+                            <TableStep.Item>
+                              <div className="flex items-center text-[#636574]">
+                                {people.firstName} {people.lastName}
+                                {people.addedAt && people.addedBy && (
+                                  <div className="text-sm leading-[21px] font-normal text-[#636574]">
+                                    {" "}
+                                    - Added by {people.addedBy}
+                                  </div>
+                                )}
+                              </div>
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? people.action[0].signature : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action
+                                ? formatDateTime(people.action[0].date)
+                                : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {isPendingOrCompleted ? (
+                                item.status === "pending" ? (
+                                  "Active"
+                                ) : (
+                                  <Status
+                                    width={164}
+                                    type={statusFieldMap[item.status] as any}
+                                  >
+                                    {statusLabelMap[item.status] as string}
+                                  </Status>
+                                )
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? (
+                                <Status
+                                  width={164}
+                                  type={
+                                    statusFieldMap[people.action[0].type] as any
+                                  }
+                                >
+                                  {people.action[0].type === "success"
+                                    ? item.successLabel
+                                    : people.action[0].subtype}
+                                </Status>
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action && people.action[0].comment
+                                ? people.action[0].comment
+                                : "-"}
+                            </TableStep.Item>
+                          </TableStep.Body>
+
+                          {idx !== arr.length - 1 && (
+                            <div className="border-b border-[#EBEBEB] mx-10" />
+                          )}
+                        </Fragment>
+                      );
+                    }
+                  )}
+                </Fragment>
+              );
+            })
+          )}
+        </TableStep.Root>
+      </div>
+
+      {dataDisplayData && dataDisplayData.length > 0 && (
+        <div className="mt-6">
+          <DataDisplay
+            title={`Process Integration: ${selectedBank}`}
+            data={dataDisplayData}
+          />
+        </div>
+      )}
+    </div>
   );
 }
-
-
-
-
-
-
-
