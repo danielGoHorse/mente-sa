@@ -1,66 +1,40 @@
-<div className="flex flex-col gap-4">
-  <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
-    Timeline
-  </div>
+import { ChevronLeft, ChevronRight } from "lucide-react"; // ou qualquer ícone que preferir
+import { useRef } from "react";
 
-  {/* SCROLL WRAPPER */}
-  <div className="overflow-x-auto max-w-full">
-    <div className="min-w-fit flex gap-6 pr-6">
-      <Timeline.Root>
-        {data
-          .flatMap((subArray, subArrayIndex) =>
-            subArray.map((item, itemIndex) => ({
-              ...item,
-              isFromMultiple: subArray.length > 1,
-              subArrayIndex,
-              key: `${subArrayIndex}-${itemIndex}`,
-              originalStatus: item.status as workflowStatus,
-            }))
-          )
-          .map((item: any, idx, flat) => {
-            const isLast = idx === flat.length - 1;
-            const next = flat[idx + 1];
-            const statusValue = timeLine
-              ? timeLineMap[idx].status
-              : item.originalStatus;
-            const hasExtra =
-              !isLast &&
-              item.isFromMultiple &&
-              next?.isFromMultiple &&
-              item.subArrayIndex === next.subArrayIndex;
+export default function TimelineScrollWrapper({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-            return (
-              <Fragment key={item.key}>
-                <Timeline.Step progress={!isLast} status={statusValue}>
-                  <div className="relative flex flex-col items-center">
-                    {hasExtra && (
-                      <span className="absolute top-[-24px] left-1/2 transform -translate-x-1/2">
-                        <Timeline.Link
-                          status={next?.originalStatus}
-                          hoverContent={
-                            <div className="text-xs">
-                              <div>
-                                <strong>Name:</strong> {item.name}
-                              </div>
-                              <div>
-                                <strong>Status:</strong> {item.originalStatus}
-                              </div>
-                              <div>
-                                <strong>Group:</strong> {item.subArrayIndex}
-                              </div>
-                            </div>
-                          }
-                        />
-                      </span>
-                    )}
-                    <Timeline.Circle status={statusValue} />
-                    <Timeline.Text>{item.name}</Timeline.Text>
-                  </div>
-                </Timeline.Step>
-              </Fragment>
-            );
-          })}
-      </Timeline.Root>
+  const scrollLeft = () => {
+    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative">
+      {/* Setas */}
+      <button
+        onClick={scrollLeft}
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1"
+      >
+        <ChevronLeft size={20} />
+      </button>
+      <button
+        onClick={scrollRight}
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1"
+      >
+        <ChevronRight size={20} />
+      </button>
+
+      {/* Scroll horizontal */}
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto no-scrollbar scroll-smooth"
+      >
+        <div className="flex gap-6 min-w-fit px-8">{children}</div>
+      </div>
     </div>
-  </div>
-</div>
+  );
+}
