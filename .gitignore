@@ -1,35 +1,16 @@
-export const timelineWrapper = `
-  relative
-`;
+import * as styles from "./styles";
 
-export const scrollContainer = `
-  overflow-x-auto 
-  no-scrollbar 
-  scroll-smooth
-`;
+<div className={styles.timelineWrapper}>
+  <button className={`${styles.chevronButton} ${styles.chevronLeft}`} onClick={scrollLeft}>
+    <ChevronLeft size={20} />
+  </button>
+  <button className={`${styles.chevronButton} ${styles.chevronRight}`} onClick={scrollRight}>
+    <ChevronRight size={20} />
+  </button>
 
-export const scrollContent = `
-  flex 
-  gap-6 
-  min-w-fit 
-  px-8
-`;
-
-export const chevronButton = `
-  absolute 
-  top-1/2 
-  -translate-y-1/2 
-  z-10 
-  bg-white 
-  shadow-md 
-  rounded-full 
-  p-1
-`;
-
-export const chevronLeft = `
-  left-0
-`;
-
-export const chevronRight = `
-  right-0
-`;
+  <div ref={scrollRef} className={styles.scrollContainer}>
+    <div className={styles.scrollContent}>
+      {/* timeline steps aqui */}
+    </div>
+  </div>
+</div>
