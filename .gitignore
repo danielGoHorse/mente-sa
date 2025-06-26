@@ -1,47 +1,103 @@
-"use client";
+import styled from "styled-components";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
+export const PaperWrapper = styled.div`
+  display: flex;
+  gap: 1.5rem;
+`;
 
-export default function CardsRowScrollWrapper({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+export const Title = styled.div`
+  color: #484a55;
+  font-family: "Figtree";
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0.12px;
+  text-align: left;
+`;
 
-  const scrollLeft = () => {
-    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
-  };
+export const AditionalApprover = styled.div`
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 400;
+  font-style: "Figtree";
+  text-color: #636574;
+`;
 
-  const scrollRight = () => {
-    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
-  };
+export const AditionalWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  text-color: #636574;
+`;
 
-  return (
-    <div className="relative">
-      {/* Setas */}
-      <button
-        onClick={scrollLeft}
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1"
-      >
-        <ChevronLeft size={20} />
-      </button>
+export const Divider = styled.div`
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: #ebebeb;
+  margin-left: 2.5rem;
+  margin-right: 2.5rem;
+`;
 
-      <button
-        onClick={scrollRight}
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md rounded-full p-1"
-      >
-        <ChevronRight size={20} />
-      </button>
+export const TableStepWrapper = styled.div`
+  margin-top: 2.5rem;
+`;
 
-      {/* Scroll horizontal com barra oculta */}
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto no-scrollbar scroll-smooth"
-      >
-        <div className="flex gap-6 min-w-fit px-8">{children}</div>
-      </div>
-    </div>
-  );
-}
+export const ApprovalWrapper = styled.div`
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+`;
+
+export const TimelineWrapper = styled.div`
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+`;
+
+export const MainWrapper = styled.div`
+  padding: 1.5rem;
+`;
+
+export const DataDisplayWrapper = styled.div`
+  margin-top: 1.5rem;
+`;
+
+export const timelineWrapper = `
+  relative
+  w-full
+  overflow-hidden
+`;
+
+export const scrollContainer = `
+  overflow-x-auto 
+  no-scrollbar 
+  scroll-smooth
+`;
+
+export const scrollContent = `
+  flex 
+  gap-6 
+  min-w-fit 
+  px-8
+`;
+
+export const chevronButton = `
+  absolute 
+  top-1/2 
+  -translate-y-1/2 
+  z-10 
+  bg-white 
+  shadow-md 
+  rounded-full 
+  p-1
+`;
+
+export const chevronLeft = `
+  left-0
+`;
+
+export const chevronRight = `
+  right-0
+`;
+
+
