@@ -1,24 +1,41 @@
-import CardsRowScrollWrapper from "./cardsRowScrollWrapper";
+// components/History/CardsRow/cardsRowScrollWrapper.tsx
+"use client";
 
-...
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
 
-<CardsRowScrollWrapper>
-  {data.map((item, index) => (
-    <div
-      key={index}
-      className="
-        flex-shrink-0
-        w-[200px]
-        bg-[#f0f0f0]
-        rounded-lg
-        py-3
-        px-4
-        gap-4
-        justify-between
-        flex
-      "
-    >
-      {/* conteúdo dos cards igual antes */}
+export default function CardsRowScrollWrapper({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+  };
+
+  return (
+    <div className="relative w-full overflow-hidden">
+      <button
+        onClick={scrollLeft}
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-1"
+      >
+        <ChevronLeft size={20} />
+      </button>
+      <button
+        onClick={scrollRight}
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white shadow rounded-full p-1"
+      >
+        <ChevronRight size={20} />
+      </button>
+
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto scroll-smooth no-scrollbar w-full"
+      >
+        <div className="flex gap-6 min-w-fit px-8 py-2">{children}</div>
+      </div>
     </div>
-  ))}
-</CardsRowScrollWrapper>
+  );
+}
