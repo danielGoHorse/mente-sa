@@ -1,15 +1,25 @@
-Unhandled Runtime Error
+ npm run build
 
+> wire-client@0.1.0 build
+> next build
 
-Error: Cannot read properties of undefined (reading 'data')
+   ▲ Next.js 15.2.4
+   - Environments: .env
 
-src\app\utils\parseHistoryToData.ts (58:50) @ parseHistoryToData
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping linting
+   Checking validity of types  ..Failed to compile.
 
+./src/app/utils/parseHistoryToData.ts:1:37
+Type error: Parameter 'history' implicitly has an 'any' type.
 
-  56 |   
-  57 |     // 2. "Initiator"
-> 58 |     const initiatorStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("initiator"));
-     |                                                  ^
-  59 |     if (initiatorStep) {
-  60 |       mockData.push(mapStep(initiatorStep));
-  61 |     }
+> 1 | export  function parseHistoryToData(history) {
+    |                                     ^
+  2 |     if(!history || !Array.isArray(history.data)){
+  3 |         return {
+  4 |             status: history?.status ?? '',
+Next.js build worker exited with code: 1 and signal: null
+
+DanielG@NYDEVVDI0027 MINGW64 /z/workspace/wire-client-frontend (feature/Integration-WTC156)
+$
