@@ -1,21 +1,49 @@
-{item.name === "Approvals and Restrictions" && item.internalSteps ? (
-  // ENVOLVE O CÍRCULO E O TEXTO!
-  <div className="relative group">
-    <Timeline.Circle status={statusValue} />
-    <Timeline.Text>{item.name}</Timeline.Text>
-    <div
-      className="
-        absolute top-full left-1/2 -translate-x-1/2
-        mt-2 w-72 p-2 bg-white rounded shadow-lg z-50
-        opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all
-      "
-    >
-      <TimelinePopover steps={item.internalSteps} />
-    </div>
-  </div>
-) : (
-  <>
-    <Timeline.Circle status={statusValue} />
-    <Timeline.Text>{item.name}</Timeline.Text>
-  </>
-)}
+<TimelineScrollWrapper>
+  {data
+    .flatMap((subArray, subArrayIndex) =>
+      subArray.map((item, itemIndex) => ({
+        ...item,
+        isFromMultiple: subArray.length > 1,
+        subArrayIndex,
+        key: `${subArrayIndex}-${itemIndex}`,
+        originalStatus: item.status as workflowStatus,
+      }))
+    )
+    .map((item: any, idx, flat) => {
+      const isLast = idx === flat.length - 1;
+      const next = flat[idx + 1];
+      const statusValue = timeLine
+        ? timeLineMap[idx].status
+        : item.originalStatus;
+
+      return (
+        <Fragment key={item.key}>
+          <Timeline.Step progress={!isLast} status={statusValue}>
+            <div className="relative flex flex-col items-center justify-center overflow-visible min-h-[180px]">
+              {/* POPUP SÓ NO CÍRCULO DO AGRUPADO */}
+              {item.name === "Approvals and Restrictions" && item.internalSteps ? (
+                <div className="relative group flex flex-col items-center">
+                  <Timeline.Circle status={statusValue} />
+                  <Timeline.Text>{item.name}</Timeline.Text>
+                  <div
+                    className="
+                      absolute top-full left-1/2 -translate-x-1/2
+                      mt-2 w-72 p-2 bg-white rounded shadow-lg z-50
+                      opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all
+                    "
+                  >
+                    <TimelinePopover steps={item.internalSteps} />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Timeline.Circle status={statusValue} />
+                  <Timeline.Text>{item.name}</Timeline.Text>
+                </>
+              )}
+            </div>
+          </Timeline.Step>
+        </Fragment>
+      );
+    })}
+</TimelineScrollWrapper>
