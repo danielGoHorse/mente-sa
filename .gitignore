@@ -1,305 +1,84 @@
-"use client";
+import { HistoryData } from "../store/types";
 
-import React, {
-  Fragment,
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactNode,
-} from "react";
-import CardsRow from "./CardsRow/cardsRow";
-import DataDisplay from "./DataDisplay/dataDisplay";
-import Status from "./Status/status";
-import TableStep from "./TableStep/tableStep";
-import Timeline from "./Timeline/timeline";
-import { formatDateTime } from "@/app/utils/formatDateTime";
-import TimelineScrollWrapper from "./timelineScrollWrapper";
-import TimelinePopover from "./TimelinePopover/timeLinePopover";
-
-export type workflowStatus =
-  | "completed"
-  | "canceled"
-  | "waiting"
-  | "pending"
-  | "skipped";
-
-export type IHistory = {
-  status: string;
-  data: any[][];
-  timeLine?: { name: string; status: workflowStatus }[];
-  cardRowData?: any[] | [];
+type RawHistory = {
+  status?: string;
+  data?: any[][];
+  workflow?: any[][];
+  cardRowData?: any[];
   dataDisplayData?: any[];
   selectedBank?: string;
 };
 
-export default function History({
-  data,
-  timeLine,
-  cardRowData,
-  dataDisplayData,
-  selectedBank,
-}: IHistory) {
-  const timeLineMap = timeLine ?? [];
-
-
-  const statusFieldMap: Record<string, string> = {
-    cancel: "rejected",
-    canceled: "-",
-    completed: "approved",
-    pending: "-",
-    reject: "rejected",
-    return: "partial",
-    success: "approved",
-    waiting: "-",
-  };
-  const statusLabelMap: Record<string, string> = {
-    cancel: "Canceled",
-    canceled: "-",
-    completed: "Completed",
-    pending: "-",
-    return: "Requested change",
-    waiting: "-",
-  };
-
-  interface IPeople {
-    userId: Key | null | undefined;
-    firstName:
-    | string
-    | number
-    | bigint
-    | boolean
-    | ReactElement<any, string | JSXElementConstructor<any>>
-    | Iterable<ReactNode>
-    | null
-    | undefined;
-    lastName:
-    | string
-    | number
-    | bigint
-    | boolean
-    | ReactElement<any, string | JSXElementConstructor<any>>
-    | Iterable<ReactNode>
-    | null
-    | undefined;
-    addedAt?: string;
-    addedBy?: string;
-    approvalsLevel?: string;
-    permissionLevel?: string;
-    indexLevel?: number;
-    action?: {
-      signature: string;
-      subtype: ReactNode;
-      type: string;
-      date: string;
-      comment: any;
-    }[];
-    signature?: string;
-    date?: string;
-    type?: string;
-    comment?: any;
+export function parseHistoryToData(history: RawHistory): HistoryData {
+  if (!history || !Array.isArray(history.data)) {
+    return {
+      status: history?.status ?? "",
+      data: [],
+      cardRowData: [],
+      dataDisplayData: [],
+      selectedBank: "",
+    };
   }
 
-  return (
-    <div className="p-6">
-      {cardRowData && (
-        <div className="flex flex-col gap-4 mb-6">
-          <CardsRow title="Approvals" data={cardRowData} />
-        </div>
-      )}
+  const allSteps = history.data.flat();
 
-      <div className="flex flex-col gap-4">
-        <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
-          Timeline
-        </div>
-
-        {/* SCROLL WRAPPER */}
-        <div className=" max-full overflow-hidden">
-          {/* <div className="min-w-fit flex gap-6 pr-6"> */}
-          <TimelineScrollWrapper>
-            {data
-              .flatMap((subArray, subArrayIndex) =>
-                subArray.map((item, itemIndex) => ({
-                  ...item,
-                  isFromMultiple: subArray.length > 1,
-                  subArrayIndex,
-                  key: `${subArrayIndex}-${itemIndex}`,
-                  originalStatus: item.status as workflowStatus,
-                }))
-              )
-              .map((item: any, idx, flat) => {
-                const isLast = idx === flat.length - 1;
-                const next = flat[idx + 1];
-                const statusValue = timeLine
-                  ? timeLineMap[idx].status
-                  : item.originalStatus;
-
-                return (
-                  <Fragment key={item.key}>
-                    <Timeline.Step progress={!isLast} status={statusValue}>
-                      <div className="relative flex flex-col items-center justify-center overflow-visible min-h-[180px]">
-                        {/* POPUP SÓ NO CÍRCULO DO AGRUPADO */}
-                        {item.name === "Approvals and Restrictions" && item.internalSteps ? (
-                          <div className="relative group flex flex-col items-center">
-                            <Timeline.Circle status={statusValue} />
-                            <Timeline.Text>{item.name}</Timeline.Text>
-                            <div
-                              className="
-                      absolute top-full left-1/2 -translate-x-1/2
-                      mt-2 w-72 p-2 bg-white rounded shadow-lg z-50
-                      opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all
-                    "
-                            >
-                              <TimelinePopover steps={item.internalSteps} />
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <Timeline.Circle status={statusValue} />
-                            <Timeline.Text>{item.name}</Timeline.Text>
-                          </>
-                        )}
-                      </div>
-                    </Timeline.Step>
-                  </Fragment>
-                );
-              })}
-          </TimelineScrollWrapper>
-          {/* </div> */}
-        </div>
-      </div>
-
-      <div className="mt-10">
-        <TableStep.Root>
-          {data.map((group, groupIdx) =>
-            group.map((item: any, itemIdx: number) => {
-              const statusValue = timeLine
-                ? timeLineMap[groupIdx].status
-                : (item.status as workflowStatus);
-
-              return (
-                <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
-                  <TableStep.Title status={statusValue}>
-                    {item.approvalsLevel ? (
-                      <div className="flex gap-1">
-                        <div className="font-normal">
-                          {groupIdx + 1}.{item.indexLevel}. {item.name}:
-                        </div>
-                        <div className="font-semibold">
-                          {item.approvalsLevel}
-                        </div>
-                        <br />
-                      </div>
-                    ) : (
-                      `${groupIdx + 1}. ${item.name}`
-                    )}
-                    <div className="text-[#636574]">
-                      {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
-                    </div>
-                  </TableStep.Title>
-
-                  <TableStep.Columns>
-                    <TableStep.Line>Participant</TableStep.Line>
-                    <TableStep.Line>Signature</TableStep.Line>
-                    <TableStep.Line>Completed</TableStep.Line>
-                    <TableStep.Line>Status</TableStep.Line>
-                    <TableStep.Line>Result</TableStep.Line>
-                    <TableStep.Line>Comments</TableStep.Line>
-                  </TableStep.Columns>
-
-                  {item.permissions?.people?.map(
-                    (people: IPeople, idx: number, arr: IPeople[]) => {
-                      const isPendingOrCompleted =
-                        item.status === "completed" ||
-                        item.status === "pending";
-
-                      return (
-                        <Fragment key={`${people.userId}-${idx}`}>
-                          <TableStep.Body>
-                            <TableStep.Item>
-                              <div className="flex items-center text-[#636574]">
-                                {people.firstName} {people.lastName}
-                                {people.addedAt && people.addedBy && (
-                                  <div className="text-sm leading-[21px] font-normal text-[#636574]">
-                                    {" "}
-                                    - Added by {people.addedBy}
-                                  </div>
-                                )}
-                              </div>
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {people.action ? people.action[0].signature : "-"}
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {people.action
-                                ? formatDateTime(people.action[0].date)
-                                : "-"}
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {isPendingOrCompleted ? (
-                                item.status === "pending" ? (
-                                  "Active"
-                                ) : (
-                                  <Status
-                                    width={164}
-                                    type={statusFieldMap[item.status] as any}
-                                  >
-                                    {statusLabelMap[item.status] as string}
-                                  </Status>
-                                )
-                              ) : (
-                                "-"
-                              )}
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {people.action ? (
-                                <Status
-                                  width={164}
-                                  type={
-                                    statusFieldMap[people.action[0].type] as any
-                                  }
-                                >
-                                  {people.action[0].type === "success"
-                                    ? item.successLabel
-                                    : people.action[0].subtype}
-                                </Status>
-                              ) : (
-                                "-"
-                              )}
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {people.action && people.action[0].comment
-                                ? people.action[0].comment
-                                : "-"}
-                            </TableStep.Item>
-                          </TableStep.Body>
-
-                          {idx !== arr.length - 1 && (
-                            <div className="border-b border-[#EBEBEB] mx-10" />
-                          )}
-                        </Fragment>
-                      );
-                    }
-                  )}
-                </Fragment>
-              );
-            })
-          )}
-        </TableStep.Root>
-      </div>
-
-      {dataDisplayData && dataDisplayData.length > 0 && (
-        <div className="mt-6">
-          <DataDisplay
-            title={`Process Integration: ${selectedBank}`}
-            data={dataDisplayData}
-          />
-        </div>
-      )}
-    </div>
+  // Filtra todos os steps "Approvals and Restrictions:"
+  const approvalsSteps = allSteps.filter(s =>
+    s.name && s.name.startsWith("Approvals and Restrictions")
   );
+  // Mantém só os steps que NÃO são "Approvals and Restrictions:"
+  const otherSteps = allSteps.filter(
+    s => !s.name?.startsWith("Approvals and Restrictions")
+  );
+
+  // Monta o step agrupado
+  let stepsFinal: any[] = [];
+  if (approvalsSteps.length > 0) {
+    // Descobre o status geral
+    const status =
+      approvalsSteps.find(s => s.status === "pending")?.status ||
+      approvalsSteps.find(s => s.status === "waiting")?.status ||
+      approvalsSteps[0]?.status ||
+      "pending";
+    const approvalsStep = {
+      id: 9999,
+      name: "Approvals and Restrictions",
+      status,
+      successLabel: "Approved",
+      permissions: { people: [] },
+      internalSteps: approvalsSteps,
+    };
+
+    // Insere o agrupado NA MESMA POSIÇÃO do PRIMEIRO step "Approvals and Restrictions"
+    // (ou após "Validate Workflow", se quiser fixo)
+    const firstApprovalsIdx = allSteps.findIndex(s =>
+      s.name?.startsWith("Approvals and Restrictions")
+    );
+
+    // Pega todos os steps até o primeiro approvalsStep
+    const stepsBefore = allSteps.slice(0, firstApprovalsIdx);
+    // Todos os steps depois dos approvalsSteps
+    const stepsAfter = allSteps.slice(firstApprovalsIdx + approvalsSteps.length);
+
+    // Junta tudo, só UM step agrupador
+    stepsFinal = [
+      ...stepsBefore,
+      approvalsStep,
+      ...stepsAfter
+    ];
+  } else {
+    // Não tem approvals agrupado, só mostra todos os steps
+    stepsFinal = allSteps;
+  }
+
+  // Monta o array igual ao seu mock (cada step em um array)
+  const mockData = stepsFinal.map(item => [item]);
+
+  return {
+    status: history.status ?? "",
+    data: mockData,
+    cardRowData: history.cardRowData ?? [],
+    dataDisplayData: history.dataDisplayData ?? [],
+    selectedBank: history.selectedBank ?? "",
+  };
 }
