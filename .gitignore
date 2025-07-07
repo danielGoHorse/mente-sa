@@ -1,124 +1,28 @@
-<Timeline.Link
-  status={step.status}
-  hoverContent={
-    step.internalSteps && (
-      <div className="p-2">
-        <div className="font-bold mb-2">Aprovações:</div>
-        {step.internalSteps.map((subStep, idx) => (
-          <div key={idx} className="mb-1">
-            <span className="font-semibold">{subStep.name.replace("Approvals and Restrictions: ", "")}:</span>
-            <span className="ml-1">{subStep.status}</span>
-          </div>
-        ))}
-      </div>
-    )
-  }
-/>
-
-
-
-
 import React from "react";
+import Timeline from "@/components/Timeline";
+import { TimelinePopover } from "@/components/TimelinePopover";
 
-interface InternalStep {
-  name: string;
-  status: string;
-  successLabel?: string;
-  permissions?: {
-    people: Array<{
-      userId: string;
-      firstName?: string;
-      lastName?: string;
-      action?: Array<{
-        type: string;
-        subtype: string;
-        date: string;
-        comment: string;
-      }>;
-    }>;
-  };
-}
+// Isso aqui seria o array vindo do seu parser!
+const steps = [
+  { name: "Initiator", status: "completed" },
+  { name: "Validations", status: "completed" },
+  {
+    name: "Approvals and Restrictions",
+    status: "pending",
+    internalSteps: [
+      { name: "Approvals and Restrictions: Acceptance", status: "completed" },
+      { name: "Approvals and Restrictions: Compliance", status: "pending" },
+      { name: "Approvals and Restrictions: Fraud", status: "waiting" },
+      // ... outros substeps
+    ]
+  },
+  { name: "Restriction Removal", status: "waiting" },
+];
 
-interface TimelinePopoverProps {
-  steps: InternalStep[];
-}
-
-const statusColor = {
-  completed: "text-green-600",
-  pending: "text-yellow-600",
-  waiting: "text-blue-600",
-  canceled: "text-red-600",
-  skipped: "text-gray-400",
-};
-
-export const TimelinePopover: React.FC<TimelinePopoverProps> = ({ steps }) => (
-  <div className="p-2 rounded-lg shadow-lg bg-white w-72">
-    <div className="font-bold mb-2 text-base text-gray-800">
-      Detalhes das Aprovações
-    </div>
-    <ol className="space-y-2">
+const MyTimeline = () => (
+  <Timeline.Root>
+    <Timeline.Scroll>
       {steps.map((step, idx) => (
-        <li key={idx} className="flex items-start gap-2">
-          {/* Pequeno círculo de status */}
-          <span
-            className={`mt-1 w-3 h-3 rounded-full inline-block ${
-              step.status === "completed"
-                ? "bg-green-500"
-                : step.status === "pending"
-                ? "bg-yellow-400"
-                : step.status === "waiting"
-                ? "bg-blue-500"
-                : step.status === "canceled"
-                ? "bg-red-500"
-                : "bg-gray-300"
-            }`}
-            title={step.status}
-          ></span>
-          <div>
-            <span className="font-semibold">
-              {step.name.replace("Approvals and Restrictions: ", "")}
-            </span>
-            <span className={`ml-2 text-xs ${statusColor[step.status as keyof typeof statusColor] || ""}`}>
-              {step.status}
-            </span>
-            {/* Mostrar quem aprovou (se quiser) */}
-            {step.permissions?.people?.length ? (
-              <div className="text-xs text-gray-600 mt-1">
-                {step.permissions.people.map((p, i) => (
-                  <div key={i}>
-                    {p.firstName} {p.lastName}
-                    {p.action?.length
-                      ? `: ${p.action
-                          .map(
-                            (a) =>
-                              `${a.type}${a.subtype ? ` (${a.subtype})` : ""}${
-                                a.date ? ` em ${a.date}` : ""
-                              }`
-                          )
-                          .join(", ")}`
-                      : ""}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </li>
-      ))}
-    </ol>
-  </div>
-);
-
-
-
-
-import { TimelinePopover } from "./TimelinePopover"; // Ajuste o caminho
-
-<Timeline.Link
-  status={step.status}
-  hoverContent={
-    step.internalSteps && step.internalSteps.length > 0 && (
-      <TimelinePopover steps={step.internalSteps} />
-    )
-  }
-/>
-
+        <Timeline.Step key={idx} status={step.status}>
+          <Timeline.Circle status={step.status} />
+          <Timeline.
