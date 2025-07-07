@@ -25,4 +25,18 @@ const MyTimeline = () => (
       {steps.map((step, idx) => (
         <Timeline.Step key={idx} status={step.status}>
           <Timeline.Circle status={step.status} />
-          <Timeline.
+          <Timeline.Text>{step.name}</Timeline.Text>
+          {/* Só para o agrupado! */}
+          {step.name === "Approvals and Restrictions" && step.internalSteps && (
+            <Timeline.Link
+              status={step.status}
+              hoverContent={<TimelinePopover steps={step.internalSteps} />}
+            />
+          )}
+        </Timeline.Step>
+      ))}
+    </Timeline.Scroll>
+  </Timeline.Root>
+);
+
+export default MyTimeline;
