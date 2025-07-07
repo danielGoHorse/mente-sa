@@ -1,137 +1,80 @@
 import { HistoryData } from "../store/types";
 
-
 type RawHistory = {
-    status?: string;
-    data?: any[][];
-    workflow?: any[][];
-    cardRowData?: any[];
-    dataDisplayData?: any[];
-    selectedBank?: string;
-  };
-  
+  status?: string;
+  data?: any[][];
+  workflow?: any[][];
+  cardRowData?: any[];
+  dataDisplayData?: any[];
+  selectedBank?: string;
+};
 
-export  function parseHistoryToData(history: RawHistory): HistoryData {
-    if(!history || !Array.isArray(history.data)){
-        return {
-            status: history?.status ?? '',
-            data:[],
-            cardRowData:[],
-            dataDisplayData:[],
-            selectedBank:''
-        };
-    }
-    // Função para agrupar approvals
-function groupApprovals(steps) {
-      // Seleciona todos steps "Approvals and Restrictions:"
-      const approvalSteps = steps.filter(step =>
-        step.name && step.name.startsWith('Approvals and Restrictions')
-      );
-      // Para cada pessoa que deveria aprovar, pega os dados (mock espera um array de people)
-      const people = [];
-      approvalSteps.forEach(step => {
-        if (step.permissions?.people && Array.isArray(step.permissions.people)) {
-          step.permissions.people.forEach(person => {
-            // No mock cada pessoa pode ter action como array, garantir isso
-            people.push({
-              ...person,
-              // Aqui você pode adaptar os campos se quiser, ex:
-              action: person.action || [],
-            });
-          });
-        }
-      });
-      // Status geral: pending se algum pending, senão waiting/canceled/etc
-      const status =
-        approvalSteps.find(s => s.status === 'pending')?.status ||
-        approvalSteps[0]?.status ||
-        'pending';
-      return {
-        id: 3,
-        name: "Approvals and Restrictions",
-        status,
-        successLabel: "Approved",
-        permissions: {
-          people
-        }
-      };
-    }
-  
-    // Função para transformar um step "simples"
-    function mapStep(step, mockData) {
-      return {
-        id: step.id,
-        name: step.name,
-        status: step.status,
-        successLabel: step.successLabel || '',
-        permissions: {
-          people: (step.permissions?.people || []).map(p => ({
-            ...p,
-            action: p.action || [],
-          }))
-        }
-      };
-    }
-  
-    // 1. Transforma steps em formato mock
-    const mockData = [];
-  
-    // 2. "Initiator"
-    const initiatorStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("initiator"));
-    if (initiatorStep) {
-      mockData.push(mapStep(initiatorStep));
-    }
-  
-    // 3. "Validations" ou "Validation"
-    const validationStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("validation"));
-    if (validationStep) {
-      mockData.push({
-        ...mapStep(validationStep),
-        name: "Validations" // Normaliza nome
-      });
-    }
-  
-    // 4. "Approvals and Restrictions" agrupado
-    mockData.push(groupApprovals((Array.isArray(history.data) ? history.data.flat() : [])));
-  
-    // 5. Restriction Removal
-    const restrictionRemovalStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("restriction removal"));
-    if (restrictionRemovalStep) {
-      mockData.push(mapStep(restrictionRemovalStep));
-    }
-  
-    // 6. "Wire Repair"
-    const wireRepairStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("wire repair"));
-    if (wireRepairStep) {
-      mockData.push(mapStep(wireRepairStep));
-    }
-  
-    // 7. "OFAC"
-    const ofacStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("ofac"));
-    if (ofacStep) {
-      mockData.push(mapStep(ofacStep));
-    }
-  
-    // 8. "Processing"
-    const processingStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("processing"));
-    if (processingStep) {
-      mockData.push(mapStep(processingStep));
-    }
-  
-    // 9. "Initiator Notified"
-    const notifiedStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("initiator notified"));
-    if (notifiedStep) {
-      mockData.push(mapStep(notifiedStep));
-    }
-  
-    // --- cardRowData e dataDisplayData, selectedBank
-    // Apenas replica do original (pode customizar se quiser)
+export function parseHistoryToData(history: RawHistory): HistoryData {
+  if (!history || !Array.isArray(history.data)) {
     return {
-      status: history.status,
-      data: mockData.map(item => [item]), // cada step como array (igual seu mock)
-      cardRowData: history.cardRowData,
-      dataDisplayData: history.dataDisplayData,
-      selectedBank: history.selectedBank,
+      status: history?.status ?? "",
+      data: [],
+      cardRowData: [],
+      dataDisplayData: [],
+      selectedBank: "",
     };
   }
-  
+
+  // Achando os steps internos do grupo
+  const allSteps = history.data.flat();
+  const approvalsSteps = allSteps.filter(s =>
+    s.name && s.name.startsWith("Approvals and Restrictions")
+  );
+  const otherSteps = allSteps.filter(
+    s => !s.name?.startsWith("Approvals and Restrictions")
+  );
+
+  // Step agrupado (com os internos)
+  let approvalsStep = null;
+  if (approvalsSteps.length) {
+    const status =
+      approvalsSteps.find(s => s.status === "pending")?.status ||
+      approvalsSteps[0]?.status ||
+      "pending";
+    approvalsStep = {
+      id: 9999,
+      name: "Approvals and Restrictions",
+      status,
+      successLabel: "Approved",
+      permissions: { people: [] },
+      internalSteps: approvalsSteps,
+    };
+  }
+
+  // Monta a timeline: insere o agrupado na posição original do primeiro substep agrupado
+  const stepsFinal: any[] = [];
+  let inserted = false;
+  for (let i = 0; i < otherSteps.length; i++) {
+    const s = otherSteps[i];
+    // Insere o step agrupador após "Validate Workflow" ou antes de "Restriction Removal"
+    if (
+      !inserted &&
+      approvalsStep &&
+      (s.name === "Validate Workflow" ||
+        (otherSteps[i + 1] &&
+          otherSteps[i + 1].name === "Restriction Removal"))
+    ) {
+      stepsFinal.push(approvalsStep);
+      inserted = true;
+    }
+    stepsFinal.push(s);
+  }
+  // Caso não tenha sido inserido, coloca no final
+  if (!inserted && approvalsStep) stepsFinal.push(approvalsStep);
+
+  // Monta o array igual seu mock (cada step em um array)
+  const mockData = stepsFinal.map(item => [item]);
+
+  return {
+    status: history.status ?? "",
+    data: mockData,
+    cardRowData: history.cardRowData ?? [],
+    dataDisplayData: history.dataDisplayData ?? [],
+    selectedBank: history.selectedBank ?? "",
+  };
+}
