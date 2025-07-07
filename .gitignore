@@ -1,80 +1,157 @@
-import { HistoryData } from "../store/types";
+"use client";
+import React, { useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs";
+import CreationContent from "./content/CreationContent";
+import ValidationContent from "./content/ValidationsContent";
+import { Documents } from "@/components/Documents";
+import { useAuthStore } from "@/app/store/auth/authStore";
+import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
+import { Document } from "@/app/store/types";
+import RequestConfigProvider from "@/app/providers/getRequestProvider";
+import { TabsNavigation } from "@/components/TabsNavigation";
+import Requests from "@/components/Requests";
+import History from "@/components/history/History";
+import { toHistoryData } from "@/app/utils/toHistoryData";
+import { parseHistoryToData } from "@/app/utils/parseHistoryToData";
 
-type RawHistory = {
-  status?: string;
-  data?: any[][];
-  workflow?: any[][];
-  cardRowData?: any[];
-  dataDisplayData?: any[];
-  selectedBank?: string;
+type IPageTabsParams = {
+  params: {
+    requestName: string;
+    requestId?: string;
+  };
+  tabTriggerType: string;
 };
 
-export function parseHistoryToData(history: RawHistory): HistoryData {
-  if (!history || !Array.isArray(history.data)) {
-    return {
-      status: history?.status ?? "",
-      data: [],
-      cardRowData: [],
-      dataDisplayData: [],
-      selectedBank: "",
+export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
+  const { getRequestConfig } = RequestConfigProvider(params.requestId);
+  const { userData } = useAuthStore((state) => state);
+  const { documentList, setDocumentList } = useDocumentStore((state) => state);
+  const { isLoading, isFetching, data } = getRequestConfig;
+
+  // Exemplo de uso:
+
+  
+  const mockJson = getRequestConfig.data && getRequestConfig.data.data
+  ? parseHistoryToData(getRequestConfig.data)
+  : null;
+
+  
+ if(mockJson){
+  console.log('>>>>>>>>>>>>',JSON.stringify(mockJson, null, 2));
+ }
+
+  const validationStatus = data?.timeline
+    ?.flat()
+    ?.find((item: any) => item?.name?.includes("Validation"));
+
+  useEffect(() => {
+    setDocumentList([]);
+
+    return () => {
+      setDocumentList([]);
     };
+  }, []);
+
+  if (!data) {
+    return;
   }
 
-  // Achando os steps internos do grupo
-  const allSteps = history.data.flat();
-  const approvalsSteps = allSteps.filter(s =>
-    s.name && s.name.startsWith("Approvals and Restrictions")
+  const historyData = toHistoryData(data);
+
+  console.log('historyData', historyData)
+
+  return (
+    <Tabs
+      defaultValue={tabTriggerType}
+      className="min-h-screen w-full py-7 px-6"
+    >
+      <TabsList>
+        <TabsTrigger
+          value="request"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          {data.caseNumber ? (
+            <>{`Request: ${data.caseNumber}`}</>
+          ) : (
+            "New Request"
+          )}
+        </TabsTrigger>
+        <TabsTrigger
+          value="documents"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          Documents
+        </TabsTrigger>
+        <TabsTrigger
+          value="history"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          History
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="request">
+        {validationStatus.status === "pending" ? (
+          <Requests data={data} />
+        ) : (
+          <div className="w-full ">
+            <TabsNavigation
+              tabs={[
+                {
+                  label: "Creation",
+                  content: <CreationContent data={data} />,
+                },
+                {
+                  label: "Validations",
+                  content: <ValidationContent />,
+                } /*,
+                // {
+                //   label: "Acceptance",
+                //   content: <AcceptanceContent />,
+                // },
+                // {
+                //   label: "Callback",
+                //   content: <CallbackContent />,
+                // },*/,
+              ]}
+              initialTab={0}
+            />
+          </div>
+        )}
+      </TabsContent>
+
+      <TabsContent
+        value="documents"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-[white] aria-selected:block rounded-lg p-6"
+      >
+        {
+          <Documents
+            baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
+            bucketName="conductor-client"
+            pathUrl="/v1/file"
+            getListDocument={documentList ?? []}
+            showUploader={true}
+            userData={userData}
+            onUploadDocuments={(documents: Document[]) =>
+              setDocumentList(documents)
+            }
+          />
+        }
+      </TabsContent>
+      <TabsContent
+        value="history"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-white p-6"
+      >
+        <History
+          status={historyData.status}
+          data={historyData.data}
+          cardRowData={historyData.cardRowData}
+          dataDisplayData={historyData.dataDisplayData}
+          selectedBank={historyData.selectedBank}
+        />
+      </TabsContent>
+
+      <TabsContent value="history">{<p>History</p>}</TabsContent>
+    </Tabs>
   );
-  const otherSteps = allSteps.filter(
-    s => !s.name?.startsWith("Approvals and Restrictions")
-  );
-
-  // Step agrupado (com os internos)
-  let approvalsStep = null;
-  if (approvalsSteps.length) {
-    const status =
-      approvalsSteps.find(s => s.status === "pending")?.status ||
-      approvalsSteps[0]?.status ||
-      "pending";
-    approvalsStep = {
-      id: 9999,
-      name: "Approvals and Restrictions",
-      status,
-      successLabel: "Approved",
-      permissions: { people: [] },
-      internalSteps: approvalsSteps,
-    };
-  }
-
-  // Monta a timeline: insere o agrupado na posição original do primeiro substep agrupado
-  const stepsFinal: any[] = [];
-  let inserted = false;
-  for (let i = 0; i < otherSteps.length; i++) {
-    const s = otherSteps[i];
-    // Insere o step agrupador após "Validate Workflow" ou antes de "Restriction Removal"
-    if (
-      !inserted &&
-      approvalsStep &&
-      (s.name === "Validate Workflow" ||
-        (otherSteps[i + 1] &&
-          otherSteps[i + 1].name === "Restriction Removal"))
-    ) {
-      stepsFinal.push(approvalsStep);
-      inserted = true;
-    }
-    stepsFinal.push(s);
-  }
-  // Caso não tenha sido inserido, coloca no final
-  if (!inserted && approvalsStep) stepsFinal.push(approvalsStep);
-
-  // Monta o array igual seu mock (cada step em um array)
-  const mockData = stepsFinal.map(item => [item]);
-
-  return {
-    status: history.status ?? "",
-    data: mockData,
-    cardRowData: history.cardRowData ?? [],
-    dataDisplayData: history.dataDisplayData ?? [],
-    selectedBank: history.selectedBank ?? "",
-  };
 }
