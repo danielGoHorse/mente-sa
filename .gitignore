@@ -1,27 +1,55 @@
-import React from "react";
+import React, { useState, Fragment } from "react";
 import Timeline from "../Timeline/timeline";
+import TimelineApprovalsModal from "../TimelinePopover/timeLinePopover"; // ajuste para o path correto
 
+// ...outros imports
 
-export default function TimelineApprovalsModal({ open, onClose, data }) {
-  if (!open) return null;
-  // CSS de modal pode ser adaptado ou trocar por popover da lib que preferir
+export default function History({
+  // ...props
+  approvalsSteps = [],
+  data,
+  // outros props...
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  // Encontre o índice do círculo especial:
+  const approvalsIdx = data.findIndex(
+    (stepArr) =>
+      stepArr.length === 1 &&
+      stepArr[0].name === "Approvals and Restrictions"
+  );
 
   return (
-    <div className="fixed z-50 top-0 left-0 w-full h-full bg-black/30 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-8 min-w-[400px] relative">
-        <button className="absolute top-2 right-2" onClick={onClose}>
-          ✕
-        </button>
-        <div className="mb-4 font-semibold">Approvals and Restrictions</div>
-        <Timeline.Root>
-          {data.map((step, i) => (
-            <Timeline.Step key={step.id || i} status={step.status}>
-              <Timeline.Circle status={step.status} />
-              <Timeline.Text>{step.name}</Timeline.Text>
-            </Timeline.Step>
-          ))}
-        </Timeline.Root>
+    <div className="p-6">
+      <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
+        Timeline
       </div>
+
+      <Timeline.Root>
+        {data.map((stepArr, idx) => {
+          const step = stepArr[0];
+          const isApprovals = step.name === "Approvals and Restrictions";
+          return (
+            <Timeline.Step key={step.id || idx} status={step.status}>
+              <div
+                onMouseEnter={() => isApprovals && setHovered(true)}
+                onMouseLeave={() => isApprovals && setHovered(false)}
+                className="relative flex flex-col items-center"
+              >
+                <Timeline.Circle status={step.status} />
+                <Timeline.Text>{step.name}</Timeline.Text>
+                {isApprovals && hovered && (
+                  <TimelineApprovalsModal
+                    open={true}
+                    onClose={() => setHovered(false)}
+                    data={approvalsSteps}
+                  />
+                )}
+              </div>
+            </Timeline.Step>
+          );
+        })}
+      </Timeline.Root>
     </div>
   );
 }
