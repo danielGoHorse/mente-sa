@@ -1,32 +1,78 @@
 import React, { useState } from "react";
-import Timeline from "../Timeline/timeline";
+import Timeline from "./Timeline/timeline";
+import TimelineApprovalsModal from "./TimelineApprovalsModal/timeLineApprovalsModal";
 
-export default function TimelineApprovalsPopover({ data }) {
-  const [hovered, setHovered] = useState(false);
+// ...outros imports...
+
+export default function History({ data, cardRowData, approvalsSteps, ... }) {
+  const [showApprovalsModal, setShowApprovalsModal] = useState(false);
+  const [modalStepIndex, setModalStepIndex] = useState<number | null>(null);
 
   return (
-    <div className="relative inline-block">
-      <span
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <Timeline.Link status="waiting" />
-      </span>
-      {hovered && (
-        <div className="absolute z-50 left-1/2 top-full -translate-x-1/2 mt-2 bg-white rounded shadow-lg min-w-[400px] p-4">
-          <div className="mb-4 font-semibold">
-            Approvals and Restrictions Details
-          </div>
-          <Timeline.Root>
-            {data.map((step, i) => (
-              <Timeline.Step key={step.id || i} status={step.status}>
-                <Timeline.Circle status={step.status} />
-                <Timeline.Text>{step.name}</Timeline.Text>
-              </Timeline.Step>
-            ))}
-          </Timeline.Root>
+    <div className="p-6">
+      {/* Approvals Cards */}
+      {cardRowData && (
+        <div className="flex flex-col gap-4 mb-6">
+          <CardsRow title="Approvals" data={cardRowData} />
         </div>
       )}
+
+      {/* Timeline */}
+      <div className="flex flex-col gap-4">
+        <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
+          Timeline
+        </div>
+        <div className=" max-full overflow-hidden">
+          <Timeline.Scroll>
+            {data
+              .flatMap((subArray, subArrayIndex) =>
+                subArray.map((item, itemIndex) => ({
+                  ...item,
+                  isFromMultiple: subArray.length > 1,
+                  subArrayIndex,
+                  key: `${subArrayIndex}-${itemIndex}`,
+                }))
+              )
+              .map((item, idx, flat) => {
+                const isApprovalsStep = item.name?.includes("Approvals and Restrictions");
+                return (
+                  <React.Fragment key={item.key}>
+                    <Timeline.Step status={item.status} progress={idx < flat.length - 1}>
+                      <div
+                        className="relative flex flex-col items-center justify-center overflow-visible min-h-[180px]"
+                        onMouseEnter={() => {
+                          if (isApprovalsStep) {
+                            setModalStepIndex(idx);
+                            setShowApprovalsModal(true);
+                          }
+                        }}
+                        onMouseLeave={() => setShowApprovalsModal(false)}
+                      >
+                        <Timeline.Circle status={item.status} />
+                        <Timeline.Text>{item.name}</Timeline.Text>
+
+                        {/* Só renderiza o modal quando mouse está no círculo e é approvals step */}
+                        {showApprovalsModal && modalStepIndex === idx && approvalsSteps && (
+                          <TimelineApprovalsModal
+                            open={showApprovalsModal}
+                            onClose={() => setShowApprovalsModal(false)}
+                            data={approvalsSteps}
+                          />
+                        )}
+                      </div>
+                    </Timeline.Step>
+                  </React.Fragment>
+                );
+              })}
+          </Timeline.Scroll>
+        </div>
+      </div>
+      {/* ...restante do componente... */}
     </div>
   );
 }
+
+
+
+
+
