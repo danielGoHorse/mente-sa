@@ -1,3 +1,15 @@
+{/* usa o agrupado (mockJson) se ele existir */}
+<History
+  status={(mockJson ?? historyData).status}
+  data={(mockJson ?? historyData).data}
+  cardRowData={(mockJson ?? historyData).cardRowData}
+  dataDisplayData={(mockJson ?? historyData).dataDisplayData}
+  selectedBank={(mockJson ?? historyData).selectedBank}
+/>
+
+
+
+
 import { HistoryData } from "../store/types";
 
 type RawHistory = {
