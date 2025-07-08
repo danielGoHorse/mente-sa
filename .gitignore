@@ -1,8 +1,32 @@
-<Timeline.Root>
-  {data.map((step, i) => (
-    <Timeline.Step key={step.id || i} status={step.status}>
-      <Timeline.Circle status={step.status} />
-      <Timeline.Text>{step.name}</Timeline.Text>
-    </Timeline.Step>
-  ))}
-</Timeline.Root>
+import React, { useState } from "react";
+import Timeline from "../Timeline/timeline";
+
+export default function TimelineApprovalsPopover({ data }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div className="relative inline-block">
+      <span
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <Timeline.Link status="waiting" />
+      </span>
+      {hovered && (
+        <div className="absolute z-50 left-1/2 top-full -translate-x-1/2 mt-2 bg-white rounded shadow-lg min-w-[400px] p-4">
+          <div className="mb-4 font-semibold">
+            Approvals and Restrictions Details
+          </div>
+          <Timeline.Root>
+            {data.map((step, i) => (
+              <Timeline.Step key={step.id || i} status={step.status}>
+                <Timeline.Circle status={step.status} />
+                <Timeline.Text>{step.name}</Timeline.Text>
+              </Timeline.Step>
+            ))}
+          </Timeline.Root>
+        </div>
+      )}
+    </div>
+  );
+}
