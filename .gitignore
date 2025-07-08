@@ -6,6 +6,7 @@ import React, {
   Key,
   ReactElement,
   ReactNode,
+  useState,
 } from "react";
 import CardsRow from "./CardsRow/cardsRow";
 import DataDisplay from "./DataDisplay/dataDisplay";
@@ -30,7 +31,7 @@ export type IHistory = {
   cardRowData?: any[] | [];
   dataDisplayData?: any[];
   selectedBank?: string;
-  approvalsSteps?:any;
+  approvalsSteps?: any[]; // ADICIONE ESSA PROP
 };
 
 export default function History({
@@ -39,8 +40,10 @@ export default function History({
   cardRowData,
   dataDisplayData,
   selectedBank,
-  approvalsSteps
+  approvalsSteps = [],
 }: IHistory) {
+  const [showApprovalsModal, setShowApprovalsModal] = useState(false);
+
   const timeLineMap = timeLine ?? [];
 
   const statusFieldMap: Record<string, string> = {
@@ -65,23 +68,23 @@ export default function History({
   interface IPeople {
     userId: Key | null | undefined;
     firstName:
-    | string
-    | number
-    | bigint
-    | boolean
-    | ReactElement<any, string | JSXElementConstructor<any>>
-    | Iterable<ReactNode>
-    | null
-    | undefined;
+      | string
+      | number
+      | bigint
+      | boolean
+      | ReactElement<any, string | JSXElementConstructor<any>>
+      | Iterable<ReactNode>
+      | null
+      | undefined;
     lastName:
-    | string
-    | number
-    | bigint
-    | boolean
-    | ReactElement<any, string | JSXElementConstructor<any>>
-    | Iterable<ReactNode>
-    | null
-    | undefined;
+      | string
+      | number
+      | bigint
+      | boolean
+      | ReactElement<any, string | JSXElementConstructor<any>>
+      | Iterable<ReactNode>
+      | null
+      | undefined;
     addedAt?: string;
     addedBy?: string;
     approvalsLevel?: string;
@@ -115,9 +118,7 @@ export default function History({
 
         {/* SCROLL WRAPPER */}
         <div className=" max-full overflow-hidden">
-          {/* <div className="min-w-fit flex gap-6 pr-6"> */}
-          <TimelineScrollWrapper >
-
+          <TimelineScrollWrapper>
             {data
               .flatMap((subArray, subArrayIndex) =>
                 subArray.map((item, itemIndex) => ({
@@ -139,6 +140,9 @@ export default function History({
                   item.isFromMultiple &&
                   next?.isFromMultiple &&
                   item.subArrayIndex === next.subArrayIndex;
+
+                // Detecta o step agrupado para abrir modal:
+                const isApprovalsStep = item.name === "Approvals and Restrictions";
 
                 return (
                   <Fragment key={item.key}>
@@ -164,15 +168,39 @@ export default function History({
                             />
                           </span>
                         )}
-                         <Timeline.Circle status={statusValue} />
-                         <Timeline.Text>{item.name}</Timeline.Text>
+                        {isApprovalsStep ? (
+                          <>
+                            <span
+                              style={{ cursor: "pointer" }}
+                              onClick={() => setShowApprovalsModal(true)}
+                              title="Ver detalhes dos Approvals"
+                            >
+                              <Timeline.Circle status={statusValue} />
+                              <Timeline.Text>
+                                {item.name}
+                                <span className="ml-1 text-xs text-blue-600 underline">
+                                  (detalhes)
+                                </span>
+                              </Timeline.Text>
+                            </span>
+                            <TimelineApprovalsModal
+                              open={showApprovalsModal}
+                              onClose={() => setShowApprovalsModal(false)}
+                              data={approvalsSteps}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <Timeline.Circle status={statusValue} />
+                            <Timeline.Text>{item.name}</Timeline.Text>
+                          </>
+                        )}
                       </div>
                     </Timeline.Step>
                   </Fragment>
                 );
               })}
           </TimelineScrollWrapper>
-          {/* </div> */}
         </div>
       </div>
 
