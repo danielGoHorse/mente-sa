@@ -1,960 +1,618 @@
-Chat, eu tenho um component que representa o historico das transações de um fluxo...
+Eu recebo esse payload e injeto na const mockJson
 
-Ele varios steps em sua time line, que nesse componente é chamada no Timeline.Circle
+"use client";
+import React, { useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs";
+import CreationContent from "./content/CreationContent";
+import ValidationContent from "./content/ValidationsContent";
+import { Documents } from "@/components/Documents";
+import { useAuthStore } from "@/app/store/auth/authStore";
+import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
+import { Document } from "@/app/store/types";
+import RequestConfigProvider from "@/app/providers/getRequestProvider";
+import { TabsNavigation } from "@/components/TabsNavigation";
+import Requests from "@/components/Requests";
+import History from "@/components/history/History";
+import { toHistoryData } from "@/app/utils/toHistoryData";
+import { parseHistoryToData } from "@/app/utils/parseHistoryToData";
 
-Acontece que há varios passos, a partir do Initiator...Um trecho desses steps são os Approvals and Restrictions, que nesse ex. são 9...
+type IPageTabsParams = {
+  params: {
+    requestName: string;
+    requestId?: string;
+  };
+  tabTriggerType: string;
+};
 
-O que o cliente quer é que apareça apenas 1 step, chamado Approvals and Restrictions, e que ao passar o mouse em cima, abra uma especie de modal com o mesmo componente timeline circle só que só com os steps desse grupo approvals and restrictions....
+export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
+  const { getRequestConfig } = RequestConfigProvider(params.requestId);
+  const { userData } = useAuthStore((state) => state);
+  const { documentList, setDocumentList } = useDocumentStore((state) => state);
+  const { isLoading, isFetching, data } = getRequestConfig;
 
-O Ex. de retorno que estou tendo é esse:
+  // Exemplo de uso:
 
-{
-    "code": 200,
-    "data": {
-        "requestId": "FCDCB5D4-852E-4D86-8A5E-10724ABEFABA",
-        "caseId": "e65ce86e-34f5-4bbf-b2df-b493d6c9e8d8",
-        "transferType": {
-            "content": "usd-domestic",
-            "required": true
-        },
-        "initiator": {
-            "content": "Flavio Hojda",
-            "required": true
-        },
-        "cifAccountNumber": {
-            "content": "NAA0010",
-            "required": true
-        },
-        "accountNumber": {
-            "content": "9590000017226444-1",
-            "required": true
-        },
-        "availableBalance": {
-            "content": "0",
-            "required": false
-        },
-        "amountUSD": {
-            "content": "1234",
-            "required": true
-        },
-        "levelUrgency": {
-            "content": "normal",
-            "required": false
-        },
-        "originSource": {
-            "content": "email",
-            "required": true
-        },
-        "insufficientFunds": {
-            "content": "yes",
-            "required": true
-        },
-        "insufficientFundsComment": {
-            "content": "",
-            "required": false
-        },
-        "notificationContactAttempt": {
-            "content": true,
-            "required": false
-        },
-        "notificationProcesedPayPlus": {
-            "content": true,
-            "required": false
-        },
-        "notificationAdditionalUsers": {
-            "content": true,
-            "required": false
-        },
-        "notificationUsers": {
-            "content": [
-                "AdamCYaakobA"
-            ],
-            "required": false
-        },
-        "forceCallbackToggle": {
-            "content": true,
-            "required": false
-        },
-        "forceCallbackBestNumberCall": {
-            "content": "temporary",
-            "required": false
-        },
-        "forceCallbackTemporaryPhoneNumber": {
-            "content": "test tempoery",
-            "required": true
-        },
-        "emailAddress": {
-            "content": [],
-            "required": false
-        },
-        "temporaryEmail": {
-            "content": "",
-            "required": false
-        },
-        "reasonTransaction": {
-            "content": "sameBeneficialOwner",
-            "required": true
-        },
-        "pleaseSpecify": {
-            "content": "",
-            "required": false
-        },
-        "bankAbaRoutingNumber": {
-            "content": "091801234",
-            "required": false
-        },
-        "bankCountry": {
-            "content": "US",
-            "required": false
-        },
-        "beneficiaryCountry": {
-            "content": "US",
-            "required": false
-        },
-        "relationshipBeneficiary": {
-            "content": "Self",
-            "required": true
-        },
-        "swiftBicBeneficiary": {
-            "content": "",
-            "required": false
-        },
-        "selectedBeneficiary": {
-            "content": "New beneficiary",
-            "required": false
-        },
-        "templateName": {
-            "content": "bene template",
-            "required": false
-        },
-        "beneficiaryAccountNumber": {
-            "content": "124",
-            "required": false
-        },
-        "beneficiaryBankCity": {
-            "content": "CHIPPEWA FALLS",
-            "required": false
-        },
-        "beneficiaryBankName": {
-            "content": "NORTHWESTERN BANK                   ",
-            "required": false
-        },
-        "beneficiaryName": {
-            "content": "bene name",
-            "required": false
-        },
-        "beneficiaryAddressLine1": {
-            "content": "addres 1",
-            "required": false
-        },
-        "beneficiaryAddressLine2": {
-            "content": "address 2",
-            "required": false
-        },
-        "beneficiaryCity": {
-            "content": "test city",
-            "required": false
-        },
-        "beneficiaryState": {
-            "content": "AL",
-            "required": false
-        },
-        "beneficiaryZipCode": {
-            "content": "1000",
-            "required": false
-        },
-        "beneficiaryOBIFFC1": {
-            "content": "1",
-            "required": false
-        },
-        "beneficiaryOBIFFC2": {
-            "content": "2",
-            "required": false
-        },
-        "beneficiaryOBIFFC3": {
-            "content": "3",
-            "required": false
-        },
-        "beneficiaryOBIFFC4": {
-            "content": "4",
-            "required": false
-        },
-        "beneficiaryToggle": {
-            "content": true,
-            "required": false
-        },
-        "workflow": [
-            [
+  
+  const mockJson = getRequestConfig.data && getRequestConfig.data.data
+  ? parseHistoryToData(getRequestConfig.data)
+  : null;
+
+  
+ if(mockJson){
+  console.log('>>>>>>>>>>>>',JSON.stringify(mockJson, null, 2));
+ }
+
+  const validationStatus = data?.timeline
+    ?.flat()
+    ?.find((item: any) => item?.name?.includes("Validation"));
+
+  useEffect(() => {
+    setDocumentList([]);
+
+    return () => {
+      setDocumentList([]);
+    };
+  }, []);
+
+  if (!data) {
+    return;
+  }
+
+  const historyData = toHistoryData(data);
+
+  console.log('historyData', historyData)
+
+  return (
+    <Tabs
+      defaultValue={tabTriggerType}
+      className="min-h-screen w-full py-7 px-6"
+    >
+      <TabsList>
+        <TabsTrigger
+          value="request"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          {data.caseNumber ? (
+            <>{`Request: ${data.caseNumber}`}</>
+          ) : (
+            "New Request"
+          )}
+        </TabsTrigger>
+        <TabsTrigger
+          value="documents"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          Documents
+        </TabsTrigger>
+        <TabsTrigger
+          value="history"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          History
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="request">
+        {validationStatus.status === "pending" ? (
+          <Requests data={data} />
+        ) : (
+          <div className="w-full ">
+            <TabsNavigation
+              tabs={[
                 {
-                    "id": 1,
-                    "name": "Initiator",
-                    "creator": true,
-                    "status": "completed",
-                    "showHistory": true,
-                    "successLabel": "Submitted",
-                    "isClarification": false,
-                    "templateNotify": {
-                        "onFirstPending": null,
-                        "onReturnPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Change requested",
-                            "templateName": "wire-return-dep-approval.hbs"
-                        },
-                        "onApprovedRequest": null,
-                        "OnCompletedRequest": null,
-                        "OnClarificationRequest": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - More information Requested",
-                            "templateName": "wire-return-dep-verification.hbs"
-                        }
-                    },
-                    "permissions": {
-                        "people": [
-                            {
-                                "userId": "FlavioH",
-                                "firstName": "Flavio",
-                                "lastName": "Hojda",
-                                "email": "Flavio.Hojda@safra.com",
-                                "action": [
-                                    {
-                                        "firstName": "Flavio",
-                                        "lastName": "Hojda",
-                                        "type": "success",
-                                        "subtype": "",
-                                        "date": "06/25/2025 13:13:45",
-                                        "comment": ""
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    "implementation": null,
-                    "completedAt": "2025-06-25T13:13:45.0532975-04:00"
-                }
-            ],
-            [
-                {
-                    "id": 2,
-                    "name": "Validation",
-                    "status": "pending",
-                    "showHistory": true,
-                    "successLabel": "Submitted",
-                    "templateNotify": {
-                        "onFirstPending": null,
-                        "onReturnPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Change requested",
-                            "templateName": "wire-return-dep-approval.hbs"
-                        },
-                        "onApprovedRequest": null,
-                        "OnCompletedRequest": null,
-                        "OnClarificationRequest": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - More information Requested",
-                            "templateName": "wire-return-dep-verification.hbs"
-                        }
-                    },
-                    "permissions": {
-                        "people": [
-                            {
-                                "userId": "Flavio Hojda"
-                            }
-                        ]
-                    },
-                    "implementation": null
-                }
-            ],
-            [
-                {
-                    "id": 3,
-                    "name": "Validate Workflow",
-                    "type": "notification",
-                    "status": "waiting",
-                    "successLabel": "Notified",
-                    "stepType": "netFlixWorkFlow",
-                    "subWorkflowName": "WIRECLIENT_Setup_Workflow",
-                    "subWorkflowInputs": {
-                        "requestId": "fcdcb5d4-852e-4d86-8a5e-10724abefaba",
-                        "caseId": "e65ce86e-34f5-4bbf-b2df-b493d6c9e8d8",
-                        "caseNumber": "WIRE130"
-                    },
-                    "showApprovals": false,
-                    "skipValidation": true,
-                    "workflowSelection": {},
-                    "templateNotify": {
-                        "onFirstPending": null,
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [],
-                        "people": []
-                    },
-                    "implementation": null
-                }
-            ],
-            [
-                {
-                    "id": 31,
-                    "name": "Approvals and Restrictions: Acceptance",
-                    "status": "waiting",
-                    "requiredApprovals": "SignatureLevel",
-                    "showHistory": true,
-                    "showAll": true,
-                    "conditionToShowStep": "",
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [],
-                        "people": []
-                    },
-                    "implementation": null
+                  label: "Creation",
+                  content: <CreationContent data={data} />,
                 },
                 {
-                    "id": 32,
-                    "name": "Approvals and Restrictions: Callback",
-                    "status": "waiting",
-                    "requiredApprovals": 2,
-                    "showHistory": true,
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "conditionToShowStep": "restrictionCallback",
-                    "autoApproveSameUser": false,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [],
-                        "people": []
-                    }
-                },
-                {
-                    "id": 33,
-                    "name": "Approvals and Restrictions: Accounting",
-                    "status": "waiting",
-                    "requiredApprovals": 2,
-                    "showHistory": true,
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "conditionToShowStep": "restrictionAccounting",
-                    "autoApproveSameUser": false,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [
-                            "Accounting"
-                        ],
-                        "people": []
-                    }
-                },
-                {
-                    "id": 34,
-                    "name": "Approvals and Restrictions: Compliance",
-                    "status": "waiting",
-                    "requiredApprovals": 2,
-                    "showHistory": true,
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "conditionToShowStep": "restrictionCompliance",
-                    "autoApproveSameUser": false,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [
-                            "Compliance"
-                        ],
-                        "people": []
-                    }
-                },
-                {
-                    "id": 35,
-                    "name": "Approvals and Restrictions: Compliance BSA",
-                    "status": "waiting",
-                    "requiredApprovals": 2,
-                    "showHistory": true,
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "conditionToShowStep": "restrictionComplianceBsa",
-                    "autoApproveSameUser": false,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [
-                            "Compliance BSA"
-                        ],
-                        "people": []
-                    }
-                },
-                {
-                    "id": 36,
-                    "name": "Approvals and Restrictions: Account Officer Approval",
-                    "status": "waiting",
-                    "requiredApprovals": 2,
-                    "showHistory": true,
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "conditionToShowStep": "restrictionAccountOfficerApproval",
-                    "autoApproveSameUser": false,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [
-                            ""
-                        ],
-                        "people": []
-                    }
-                },
-                {
-                    "id": 37,
-                    "name": "Approvals and Restrictions: Credit",
-                    "status": "waiting",
-                    "requiredApprovals": 2,
-                    "showHistory": true,
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "conditionToShowStep": "restrictionCredit",
-                    "autoApproveSameUser": false,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [
-                            ""
-                        ],
-                        "people": []
-                    }
-                },
-                {
-                    "id": 38,
-                    "name": "Approvals and Restrictions: Branch",
-                    "status": "waiting",
-                    "requiredApprovals": 2,
-                    "showHistory": true,
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "conditionToShowStep": "restrictionBranch",
-                    "autoApproveSameUser": false,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [
-                            ""
-                        ],
-                        "people": []
-                    }
-                },
-                {
-                    "id": 39,
-                    "name": "Approvals and Restrictions: Fraud",
-                    "status": "waiting",
-                    "requiredApprovals": 2,
-                    "showHistory": true,
-                    "successLabel": "Approved",
-                    "nextStepButton": "approve",
-                    "setResult": true,
-                    "conditionToShowStep": "restrictionFraud",
-                    "autoApproveSameUser": false,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "wire-manager-approval.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "groups": [
-                            ""
-                        ],
-                        "people": []
-                    }
-                }
-            ],
-            [
-                {
-                    "id": 4,
-                    "name": "Restriction Removal",
-                    "status": "waiting",
-                    "showHistory": true,
-                    "successLabel": "Submitted",
-                    "templateNotify": {
-                        "onFirstPending": null,
-                        "onReturnPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Change requested",
-                            "templateName": "wire-return-dep-approval.hbs"
-                        },
-                        "onApprovedRequest": null,
-                        "OnCompletedRequest": null,
-                        "OnClarificationRequest": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - More information Requested",
-                            "templateName": "wire-return-dep-verification.hbs"
-                        }
-                    },
-                    "permissions": {
-                        "people": [
-                            {
-                                "userId": "Flavio Hojda"
-                            }
-                        ]
-                    },
-                    "implementation": null
-                }
-            ],
-            [
-                {
-                    "id": 5,
-                    "name": "Wire Repair",
-                    "status": "waiting",
-                    "showHistory": true,
-                    "successLabel": "Submitted",
-                    "templateNotify": {
-                        "onFirstPending": null,
-                        "onReturnPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Change requested",
-                            "templateName": "wire-return-dep-approval.hbs"
-                        },
-                        "onApprovedRequest": null,
-                        "OnCompletedRequest": null,
-                        "OnClarificationRequest": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - More information Requested",
-                            "templateName": "wire-return-dep-verification.hbs"
-                        }
-                    },
-                    "permissions": {
-                        "people": [
-                            {
-                                "userId": "Flavio Hojda"
-                            }
-                        ]
-                    },
-                    "implementation": null
-                }
-            ],
-            [
-                {
-                    "id": 6,
-                    "name": "OFAC",
-                    "status": "waiting",
-                    "successLabel": "Issued",
-                    "nextStepButton": "issued",
-                    "stepType": "netFlixWorkFlow",
-                    "subWorkflowName": "WIRE_OFAC_Scan",
-                    "subWorkflowInputs": {
-                        "requestId": "fcdcb5d4-852e-4d86-8a5e-10724abefaba",
-                        "caseId": "e65ce86e-34f5-4bbf-b2df-b493d6c9e8d8",
-                        "etlName": "ofac",
-                        "caseNumber": "WIRE130"
-                    },
-                    "setResult": true,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request $CASENUMBER$ - $REQUESTTYPE$ - Pending your approval",
-                            "templateName": "tr_pending_to_process.hbs"
-                        },
-                        "onReturnPending": {
-                            "subject": "Request $CASENUMBER$ - $REQUESTTYPE$ - Rescheculing Request",
-                            "templateName": "tr_rescheduling_approve.hbs"
-                        },
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": {
-                            "subject": "Request $CASENUMBER$ - $REQUESTTYPE$ - Canceled",
-                            "templateName": "tr_completed_canceled.hbs"
-                        },
-                        "OnRejectRequest": null
-                    },
-                    "permissions": {
-                        "people": [
-                            {
-                                "userId": "ofac",
-                                "firstName": "OFAC",
-                                "lastName": "Check",
-                                "email": "ofac"
-                            }
-                        ]
-                    },
-                    "idStepReturn": 1
-                }
-            ],
-            [
-                {
-                    "id": 7,
-                    "name": "Processing",
-                    "status": "waiting",
-                    "successLabel": "Submitted",
-                    "stepType": "manualNetflix",
-                    "nextStepButton": "approved",
-                    "setResult": true,
-                    "subWorkflowName": "WIRE_Payplus",
-                    "subWorkflowInputs": {
-                        "requestId": "fcdcb5d4-852e-4d86-8a5e-10724abefaba",
-                        "caseId": "e65ce86e-34f5-4bbf-b2df-b493d6c9e8d8",
-                        "caseNumber": "WIRE130"
-                    },
-                    "templateNotify": {
-                        "onFirstPending": null,
-                        "onReturnPending": null,
-                        "onApprovedRequest": null,
-                        "OnCanceledRequest": null,
-                        "OnRejectRequest": null
-                    },
-                    "permissions": {
-                        "canReturn": false,
-                        "canCancel": true,
-                        "canEdit": false,
-                        "canComment": false,
-                        "canSave": false,
-                        "canSubmit": false,
-                        "canHavePeopleAdded": false,
-                        "canContingency": true,
-                        "groups": [
-                            "Wire Transfer"
-                        ],
-                        "people": []
-                    },
-                    "implementation": null
-                }
-            ],
-            [
-                {
-                    "id": 8,
-                    "name": "Initiator Notified",
-                    "type": "notification",
-                    "status": "waiting",
-                    "successLabel": "Notified",
-                    "stepType": "netFlixWorkFlow",
-                    "subWorkflowName": "WIRECLIENT_Initiator_Notified",
-                    "nextStepButton": "approved",
-                    "subWorkflowInputs": {
-                        "requestId": "fcdcb5d4-852e-4d86-8a5e-10724abefaba",
-                        "caseId": "e65ce86e-34f5-4bbf-b2df-b493d6c9e8d8",
-                        "caseNumber": "WIRE130"
-                    },
-                    "showApprovals": false,
-                    "skipValidation": true,
-                    "templateNotify": {
-                        "onFirstPending": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Approved",
-                            "templateName": "wire-approved-request.hbs"
-                        },
-                        "onReturnPending": null,
-                        "onApprovedRequest": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Approved",
-                            "templateName": "wire-approved-request.hbs"
-                        },
-                        "OnCanceledRequest": {
-                            "subject": "Request DEPTWT$CASENUMBER$ - $REQUESTTYPE$ - Canceled",
-                            "templateName": "wire-canceled-request.hbs"
-                        },
-                        "OnClarificationRequest": null
-                    },
-                    "permissions": {
-                        "people": [
-                            {
-                                "userId": "Flavio Hojda"
-                            }
-                        ]
-                    },
-                    "implementation": null
-                }
-            ]
-        ],
-        "externalLoads": null,
-        "caseStatus": "pending",
-        "createdBy": "FlavioH",
-        "caseNumber": "WIRE130",
-        "createdAt": "2025-06-25T13:13:43.117",
-        "frontEntries": null,
-        "backEntries": null,
-        "documents": null,
-        "actions": [
-            {
-                "stepName": "Initiator",
-                "type": "success",
-                "subtype": "submit",
-                "userId": "FlavioH",
-                "date": "06/25/2025 13:13:45",
-                "firstName": "Flavio",
-                "lastName": "Hojda",
-                "comment": ""
+                  label: "Validations",
+                  content: <ValidationContent />,
+                } /*,
+                // {
+                //   label: "Acceptance",
+                //   content: <AcceptanceContent />,
+                // },
+                // {
+                //   label: "Callback",
+                //   content: <CallbackContent />,
+                // },*/,
+              ]}
+              initialTab={0}
+            />
+          </div>
+        )}
+      </TabsContent>
+
+      <TabsContent
+        value="documents"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-[white] aria-selected:block rounded-lg p-6"
+      >
+        {
+          <Documents
+            baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
+            bucketName="conductor-client"
+            pathUrl="/v1/file"
+            getListDocument={documentList ?? []}
+            showUploader={true}
+            userData={userData}
+            onUploadDocuments={(documents: Document[]) =>
+              setDocumentList(documents)
             }
-        ],
-        "timeline": [
-            [
-                {
-                    "name": "Initiator",
-                    "status": "completed"
-                }
-            ],
-            [
-                {
-                    "name": "Validation",
-                    "status": "pending"
-                }
-            ],
-            [
-                {
-                    "name": "Validate Workflow",
-                    "status": "waiting"
-                }
-            ],
-            [
-                {
-                    "name": "Approvals and Restrictions: Acceptance",
-                    "status": "waiting"
-                },
-                {
-                    "name": "Approvals and Restrictions: Callback",
-                    "status": "waiting"
-                },
-                {
-                    "name": "Approvals and Restrictions: Accounting",
-                    "status": "waiting"
-                },
-                {
-                    "name": "Approvals and Restrictions: Compliance",
-                    "status": "waiting"
-                },
-                {
-                    "name": "Approvals and Restrictions: Compliance BSA",
-                    "status": "waiting"
-                },
-                {
-                    "name": "Approvals and Restrictions: Account Officer Approval",
-                    "status": "waiting"
-                },
-                {
-                    "name": "Approvals and Restrictions: Credit",
-                    "status": "waiting"
-                },
-                {
-                    "name": "Approvals and Restrictions: Branch",
-                    "status": "waiting"
-                },
-                {
-                    "name": "Approvals and Restrictions: Fraud",
-                    "status": "waiting"
-                }
-            ],
-            [
-                {
-                    "name": "Restriction Removal",
-                    "status": "waiting"
-                }
-            ],
-            [
-                {
-                    "name": "Wire Repair",
-                    "status": "waiting"
-                }
-            ],
-            [
-                {
-                    "name": "OFAC",
-                    "status": "waiting"
-                }
-            ],
-            [
-                {
-                    "name": "Processing",
-                    "status": "waiting"
-                }
-            ],
-            [
-                {
-                    "name": "Initiator Notified",
-                    "status": "waiting"
-                }
-            ]
-        ],
-        "messages": [],
-        "workflowApprovers": [
-            {
-                "title": "Request Status",
-                "value": "pending",
-                "level": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Acceptance 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Acceptance 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Callback 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Callback 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Accounting 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Accounting 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Compliance 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Compliance 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Compliance BSA 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Compliance BSA 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Account Officer Approval 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Account Officer Approval 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Credit 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Credit 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Branch 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Branch 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Fraud 1",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            },
-            {
-                "title": "Approvals and Restrictions: Fraud 2",
-                "value": "Pending",
-                "level": "",
-                "date": ""
-            }
-        ]
-    }
+          />
+        }
+      </TabsContent>
+      <TabsContent
+        value="history"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-white p-6"
+      >
+        <History
+          status={historyData.status}
+          data={historyData.data}
+          cardRowData={historyData.cardRowData}
+          dataDisplayData={historyData.dataDisplayData}
+          selectedBank={historyData.selectedBank}
+        />
+      </TabsContent>
+
+      <TabsContent value="history">{<p>History</p>}</TabsContent>
+    </Tabs>
+  );
 }
 
-Eu queria que vc guardasse essa informação para eu poder te mostrar o codigo que recebe esse payload e trata de montar o componente
+
+O componente que trata os dados é esse:
+
+
+import { HistoryData } from "../store/types";
+
+
+type RawHistory = {
+    status?: string;
+    data?: any[][];
+    workflow?: any[][];
+    cardRowData?: any[];
+    dataDisplayData?: any[];
+    selectedBank?: string;
+  };
+  
+
+export  function parseHistoryToData(history: RawHistory): HistoryData {
+    if(!history || !Array.isArray(history.data)){
+        return {
+            status: history?.status ?? '',
+            data:[],
+            cardRowData:[],
+            dataDisplayData:[],
+            selectedBank:''
+        };
+    }
+    // Função para agrupar approvals
+function groupApprovals(steps: any[]) {
+      // Seleciona todos steps "Approvals and Restrictions:"
+      const approvalSteps = steps.filter(step =>
+        step.name && step.name.startsWith('Approvals and Restrictions')
+      );
+      // Para cada pessoa que deveria aprovar, pega os dados (mock espera um array de people)
+      const people: any[] = [];
+      approvalSteps.forEach(step => {
+        if (step.permissions?.people && Array.isArray(step.permissions.people)) {
+          step.permissions.people.forEach((person: { action: any; }) => {
+            // No mock cada pessoa pode ter action como array, garantir isso
+            people.push({
+              ...person,
+              // Aqui você pode adaptar os campos se quiser, ex:
+              action: person.action || [],
+            });
+          });
+        }
+      });
+      // Status geral: pending se algum pending, senão waiting/canceled/etc
+      const status =
+        approvalSteps.find(s => s.status === 'pending')?.status ||
+        approvalSteps[0]?.status ||
+        'pending';
+      return {
+        id: 3,
+        name: "Approvals and Restrictions",
+        status,
+        successLabel: "Approved",
+        permissions: {
+          people
+        }
+      };
+    }
+  
+    // Função para transformar um step "simples"
+    function mapStep(step, mockData) {
+      return {
+        id: step.id,
+        name: step.name,
+        status: step.status,
+        successLabel: step.successLabel || '',
+        permissions: {
+          people: (step.permissions?.people || []).map(p => ({
+            ...p,
+            action: p.action || [],
+          }))
+        }
+      };
+    }
+  
+    // 1. Transforma steps em formato mock
+    const mockData = [];
+  
+    // 2. "Initiator"
+    const initiatorStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("initiator"));
+    if (initiatorStep) {
+      mockData.push(mapStep(initiatorStep));
+    }
+  
+    // 3. "Validations" ou "Validation"
+    const validationStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("validation"));
+    if (validationStep) {
+      mockData.push({
+        ...mapStep(validationStep),
+        name: "Validations" // Normaliza nome
+      });
+    }
+  
+    // 4. "Approvals and Restrictions" agrupado
+    mockData.push(groupApprovals((Array.isArray(history.data) ? history.data.flat() : [])));
+  
+    // 5. Restriction Removal
+    const restrictionRemovalStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("restriction removal"));
+    if (restrictionRemovalStep) {
+      mockData.push(mapStep(restrictionRemovalStep));
+    }
+  
+    // 6. "Wire Repair"
+    const wireRepairStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("wire repair"));
+    if (wireRepairStep) {
+      mockData.push(mapStep(wireRepairStep));
+    }
+  
+    // 7. "OFAC"
+    const ofacStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("ofac"));
+    if (ofacStep) {
+      mockData.push(mapStep(ofacStep));
+    }
+  
+    // 8. "Processing"
+    const processingStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("processing"));
+    if (processingStep) {
+      mockData.push(mapStep(processingStep));
+    }
+  
+    // 9. "Initiator Notified"
+    const notifiedStep = (Array.isArray(history.data) ? history.data.flat() : []).find(s => s.name?.toLowerCase().includes("initiator notified"));
+    if (notifiedStep) {
+      mockData.push(mapStep(notifiedStep));
+    }
+  
+    // --- cardRowData e dataDisplayData, selectedBank
+    // Apenas replica do original (pode customizar se quiser)
+    return {
+      status: history.status,
+      data: mockData.map(item => [item]), // cada step como array (igual seu mock)
+      cardRowData: history.cardRowData,
+      dataDisplayData: history.dataDisplayData,
+      selectedBank: history.selectedBank,
+    };
+  }
+  
+
+Quem monta o componente history é esse:
+
+"use client";
+
+import React, {
+  Fragment,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+} from "react";
+import CardsRow from "./CardsRow/cardsRow";
+import DataDisplay from "./DataDisplay/dataDisplay";
+import Status from "./Status/status";
+import TableStep from "./TableStep/tableStep";
+import Timeline from "./Timeline/timeline";
+import { formatDateTime } from "@/app/utils/formatDateTime";
+import TimelineScrollWrapper from "./timelineScrollWrapper";
+import { TimelinePopover } from "./TimelinePopover/timeLinePopover";
+
+export type workflowStatus =
+  | "completed"
+  | "canceled"
+  | "waiting"
+  | "pending"
+  | "skipped";
+
+export type IHistory = {
+  status: string;
+  data: any[][];
+  timeLine?: { name: string; status: workflowStatus }[];
+  cardRowData?: any[] | [];
+  dataDisplayData?: any[];
+  selectedBank?: string;
+};
+
+export default function History({
+  data,
+  timeLine,
+  cardRowData,
+  dataDisplayData,
+  selectedBank,
+}: IHistory) {
+  const timeLineMap = timeLine ?? [];
+
+  const statusFieldMap: Record<string, string> = {
+    cancel: "rejected",
+    canceled: "-",
+    completed: "approved",
+    pending: "-",
+    reject: "rejected",
+    return: "partial",
+    success: "approved",
+    waiting: "-",
+  };
+  const statusLabelMap: Record<string, string> = {
+    cancel: "Canceled",
+    canceled: "-",
+    completed: "Completed",
+    pending: "-",
+    return: "Requested change",
+    waiting: "-",
+  };
+
+  interface IPeople {
+    userId: Key | null | undefined;
+    firstName:
+    | string
+    | number
+    | bigint
+    | boolean
+    | ReactElement<any, string | JSXElementConstructor<any>>
+    | Iterable<ReactNode>
+    | null
+    | undefined;
+    lastName:
+    | string
+    | number
+    | bigint
+    | boolean
+    | ReactElement<any, string | JSXElementConstructor<any>>
+    | Iterable<ReactNode>
+    | null
+    | undefined;
+    addedAt?: string;
+    addedBy?: string;
+    approvalsLevel?: string;
+    permissionLevel?: string;
+    indexLevel?: number;
+    action?: {
+      signature: string;
+      subtype: ReactNode;
+      type: string;
+      date: string;
+      comment: any;
+    }[];
+    signature?: string;
+    date?: string;
+    type?: string;
+    comment?: any;
+  }
+
+  return (
+    <div className="p-6">
+      {cardRowData && (
+        <div className="flex flex-col gap-4 mb-6">
+          <CardsRow title="Approvals" data={cardRowData} />
+        </div>
+      )}
+
+      <div className="flex flex-col gap-4">
+        <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
+          Timeline
+        </div>
+
+        {/* SCROLL WRAPPER */}
+        <div className=" max-full overflow-hidden">
+          {/* <div className="min-w-fit flex gap-6 pr-6"> */}
+          <TimelineScrollWrapper >
+
+            {data
+              .flatMap((subArray, subArrayIndex) =>
+                subArray.map((item, itemIndex) => ({
+                  ...item,
+                  isFromMultiple: subArray.length > 1,
+                  subArrayIndex,
+                  key: `${subArrayIndex}-${itemIndex}`,
+                  originalStatus: item.status as workflowStatus,
+                }))
+              )
+              .map((item: any, idx, flat) => {
+                const isLast = idx === flat.length - 1;
+                const next = flat[idx + 1];
+                const statusValue = timeLine
+                  ? timeLineMap[idx].status
+                  : item.originalStatus;
+                const hasExtra =
+                  !isLast &&
+                  item.isFromMultiple &&
+                  next?.isFromMultiple &&
+                  item.subArrayIndex === next.subArrayIndex;
+
+                return (
+                  <Fragment key={item.key}>
+                    <Timeline.Step progress={!isLast} status={statusValue}>
+                      <div className="relative flex flex-col items-center justify-center  overflow-visible min-h-[180px]">
+                        {hasExtra && (
+                          <span className="absolute top-[-3px] left-1/2 transform -translate-x-1/2">
+                            <Timeline.Link
+                              status={next?.originalStatus}
+                              hoverContent={
+                                <div className="text-xs  z-10">
+                                  <div>
+                                    <strong>Name:</strong> {item.name}
+                                  </div>
+                                  <div>
+                                    <strong>Status:</strong> {item.originalStatus}
+                                  </div>
+                                  <div>
+                                    <strong>Group:</strong> {item.subArrayIndex}
+                                  </div>
+                                </div>
+                              }
+                            />
+                          </span>
+                        )}
+                         <Timeline.Circle status={statusValue} />
+                         <Timeline.Text>{item.name}</Timeline.Text>
+                      </div>
+                    </Timeline.Step>
+                  </Fragment>
+                );
+              })}
+          </TimelineScrollWrapper>
+          {/* </div> */}
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <TableStep.Root>
+          {data.map((group, groupIdx) =>
+            group.map((item: any, itemIdx: number) => {
+              const statusValue = timeLine
+                ? timeLineMap[groupIdx].status
+                : (item.status as workflowStatus);
+
+              return (
+                <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
+                  <TableStep.Title status={statusValue}>
+                    {item.approvalsLevel ? (
+                      <div className="flex gap-1">
+                        <div className="font-normal">
+                          {groupIdx + 1}.{item.indexLevel}. {item.name}:
+                        </div>
+                        <div className="font-semibold">
+                          {item.approvalsLevel}
+                        </div>
+                        <br />
+                      </div>
+                    ) : (
+                      `${groupIdx + 1}. ${item.name}`
+                    )}
+                    <div className="text-[#636574]">
+                      {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
+                    </div>
+                  </TableStep.Title>
+
+                  <TableStep.Columns>
+                    <TableStep.Line>Participant</TableStep.Line>
+                    <TableStep.Line>Signature</TableStep.Line>
+                    <TableStep.Line>Completed</TableStep.Line>
+                    <TableStep.Line>Status</TableStep.Line>
+                    <TableStep.Line>Result</TableStep.Line>
+                    <TableStep.Line>Comments</TableStep.Line>
+                  </TableStep.Columns>
+
+                  {item.permissions?.people?.map(
+                    (people: IPeople, idx: number, arr: IPeople[]) => {
+                      const isPendingOrCompleted =
+                        item.status === "completed" ||
+                        item.status === "pending";
+
+                      return (
+                        <Fragment key={`${people.userId}-${idx}`}>
+                          <TableStep.Body>
+                            <TableStep.Item>
+                              <div className="flex items-center text-[#636574]">
+                                {people.firstName} {people.lastName}
+                                {people.addedAt && people.addedBy && (
+                                  <div className="text-sm leading-[21px] font-normal text-[#636574]">
+                                    {" "}
+                                    - Added by {people.addedBy}
+                                  </div>
+                                )}
+                              </div>
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? people.action[0].signature : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action
+                                ? formatDateTime(people.action[0].date)
+                                : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {isPendingOrCompleted ? (
+                                item.status === "pending" ? (
+                                  "Active"
+                                ) : (
+                                  <Status
+                                    width={164}
+                                    type={statusFieldMap[item.status] as any}
+                                  >
+                                    {statusLabelMap[item.status] as string}
+                                  </Status>
+                                )
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? (
+                                <Status
+                                  width={164}
+                                  type={
+                                    statusFieldMap[people.action[0].type] as any
+                                  }
+                                >
+                                  {people.action[0].type === "success"
+                                    ? item.successLabel
+                                    : people.action[0].subtype}
+                                </Status>
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action && people.action[0].comment
+                                ? people.action[0].comment
+                                : "-"}
+                            </TableStep.Item>
+                          </TableStep.Body>
+
+                          {idx !== arr.length - 1 && (
+                            <div className="border-b border-[#EBEBEB] mx-10" />
+                          )}
+                        </Fragment>
+                      );
+                    }
+                  )}
+                </Fragment>
+              );
+            })
+          )}
+        </TableStep.Root>
+      </div>
+
+      {dataDisplayData && dataDisplayData.length > 0 && (
+        <div className="mt-6">
+          <DataDisplay
+            title={`Process Integration: ${selectedBank}`}
+            data={dataDisplayData}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
