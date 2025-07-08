@@ -1,140 +1,265 @@
-export function parseHistoryToData(history: RawHistory): HistoryData {
-  if (!history || !Array.isArray(history.data)) {
-    return {
-      status: history?.status ?? "",
-      data: [],
-      cardRowData: [],
-      dataDisplayData: [],
-      selectedBank: "",
-      approvalsSteps: [],
-    };
-  }
+export type ButtonProps = {
+  type: string;
+  label: string;
+  name: string;
+  icon?: string;
+  iconSize?: number;
+  theme: "primary" | "outline" | "text" | undefined;
+  method: string;
+  openModal?: boolean;
+  requestBody: string;
+  requestName?: boolean;
+  actionAfterSubmit?: any;
+  action: string;
+  size: "lg" | "sm" | undefined;
+  width: string | number | undefined;
+  disabled: boolean | undefined;
+  bringFields?: string[];
+  styles: any;
+};
 
-  // Filtra os steps agrupados (Approvals and Restrictions)
-  const approvalsSteps = (history.data.flat()).filter(
-    (s) => s.name && s.name.startsWith("Approvals and Restrictions")
-  );
+export type QuestionBehavior = {
+  renderByFieldConditions?: {
+    fieldName: string;
+    fieldValues: string;
+  }[];
+};
 
-  // Filtra todos os outros steps (não approvals)
-  const normalSteps = (history.data.flat()).filter(
-    (s) => !(s.name && s.name.startsWith("Approvals and Restrictions"))
-  );
-
-  // Monta os steps da timeline principal:
-  const timelineSteps = [];
-
-  // 1. Initiator
-  const initiatorStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("initiator")
-  );
-  if (initiatorStep) timelineSteps.push(initiatorStep);
-
-  // 2. Validation
-  const validationStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("validation")
-  );
-  if (validationStep) timelineSteps.push({
-    ...validationStep,
-    name: "Validations",
-  });
-
-  // 3. Approvals (Agrupado)
-  if (approvalsSteps.length > 0) {
-    // status geral: se algum pending -> pending, senão waiting, senão completed...
-    const groupStatus =
-      approvalsSteps.find((s) => s.status === "pending")?.status ||
-      approvalsSteps[0].status ||
-      "pending";
-    timelineSteps.push({
-      id: 999, // qualquer id fixo
-      name: "Approvals and Restrictions",
-      status: groupStatus,
-      // outros campos que quiser exibir
-    });
-  }
-
-  // 4. Restriction Removal
-  const restrictionRemovalStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("restriction removal")
-  );
-  if (restrictionRemovalStep) timelineSteps.push(restrictionRemovalStep);
-
-  // 5. Wire Repair
-  const wireRepairStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("wire repair")
-  );
-  if (wireRepairStep) timelineSteps.push(wireRepairStep);
-
-  // 6. OFAC
-  const ofacStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("ofac")
-  );
-  if (ofacStep) timelineSteps.push(ofacStep);
-
-  // ...adicione outros steps como precisar
-
-  // Finaliza
-  return {
-    status: history.status,
-    data: timelineSteps.map((step) => [step]), // cada step dentro de um array
-    cardRowData: history.cardRowData,
-    dataDisplayData: history.dataDisplayData,
-    selectedBank: history.selectedBank,
-    approvalsSteps, // Passa o grupo pro modal
+export type Question = {
+  title: string;
+  attributes: {
+    behavior: QuestionBehavior;
+    styles: Record<string, string>;
   };
+};
+
+export type Section = {
+  questions: Question[];
+  attributes: {
+    behavior: Record<string, string>;
+    styles: Record<string, string>;
+  };
+};
+
+export type Container = {
+  sections: Section[];
+  attributes: {
+    behavior: Record<string, string>;
+    styles: Record<string, string>;
+  };
+};
+
+export type TCard = {
+  title: string;
+  border: boolean;
+  img: string;
+  size: string;
+  subTitle: string;
+  cardWidth: string;
+  cardHeight: string;
+};
+
+export type frontEntries = {
+  card: TCard[];
+  containers: Container[];
+  attributes: {
+    behavior: Record<string, string>;
+    styles: Record<string, string>;
+  };
+};
+
+export type Document = {
+  itemRef?: string;
+  createdAt?: string | number | Date;
+  documentName: string;
+  documentSize?: string;
+  documentUUID?: string;
+  documentStatus?: string;
+  documentURL?: string;
+  documentURLPreview?: string;
+  uploadedBy: { fullName?: string; userId?: string };
+};
+
+export type ActiveRequests = {
+  requestId: string;
+  caseNumber: number;
+  caseId?: string;
+};
+
+export type IData = {
+  id?: string;
+  requestId?: string;
+  responseId?: string;
+  page?: string;
+  caseNumber?: string;
+  caseStatus?: string;
+  createdBy?: string;
+  requestConfigId?: string;
+  workflowConfigId?: string;
+  workflow?: any[];
+  documents?: Document[];
+  frontEntries: frontEntries;
+  backEntries: Record<string, Record<string, any>>;
+  options: {
+    validationRequired: false;
+  };
+  approvals: any[];
+  buttons: ButtonProps[];
+  version: string;
+  activeRequests: ActiveRequests[];
+  messageResult?: Record<string, any>;
+  data?: IData;
+  timeline?: TimeLineItems[];
+  actions?: ActionsItems[];
+  result?: string;
+};
+
+export type TimeLineItems = {
+  name: string;
+  status: string;
+};
+
+export type ActionsItems = {
+  firstName: string;
+  lastName: string;
+  comment: string;
+  stepName: string;
+  type: string;
+  subtype: string;
+  userID: string;
+  date: string;
+};
+
+export type CaseAttribute = {
+  name: string;
+  value: string;
+};
+
+export type CardDashboardData = {
+  application: number;
+  applicationName: string;
+  caseAttribute: CaseAttribute[];
+  createdBy: string;
+  createdOn: string;
+  currentActivity: string;
+  editedAt: string;
+  editedBy: string;
+  locked: boolean;
+  lockedBy: string;
+  status: number;
+};
+
+export type DashboardTableProps = {
+  field?: any;
+  reference: string;
+  initiator: string;
+  currentActivity: string;
+  status: number;
+  result: number;
+  department: string;
+  createdOn: string;
+  url: string;
+};
+
+export type DashboardFilterProps = {
+  reference: string;
+  initiator: string;
+  currentActivity: string;
+  task: string;
+  status: string;
+  result: string;
+  department: string;
+  createdOn: string;
+  accountOfficer: string;
+  clientName: string;
+  cif: string;
+  referenceNumber: string;
+  createdBy: string;
+};
+
+export type DashboardOptionProps = {
+  value: string;
+  label: string;
+};
+
+export interface BeneficiaryData {
+  beneficiaryEnabled: boolean;
+  usBankEnabled: boolean;
+  intermediaryBankEnabled: boolean;
+  selectedBeneficiary: string;
+  templateName: string;
+  bankCountry: string;
+  bankIdType: string;
+  intermediaryBankCountry: string;
+  beneficiaryBankIdType: string;
+  beneficiaryBankCountry: string;
+  beneficiaryCountry: string;
+  bankAba: string;
+  bankName: string;
+  bankCity: string;
+  swiftBicBeneficiary: string;
+  intermediaryBankName: string;
+  intermediaryBankCity: string;
+  beneficiaryBankName: string;
+  beneficiaryBankCity: string;
+  beneficiaryName: string;
+  addressLine1: string;
+  addressLine2: string;
+  beneficiaryCity: string;
+  beneficiaryState: string;
+  beneficiaryZipCode: string;
+  accountNumber: string;
+  obiEnabled: boolean;
+  obiReferences: string[];
+  isDomestic: boolean;
+}
+
+export interface HistoryData {
+  status: string;
+  data: Array<
+    Array<{
+      id: number;
+      name: string;
+      status: "completed" | "pending" | "waiting" | "canceled" | "skipped";
+      successLabel?: string;
+      permissions: {
+        people: Array<{
+          userId: string;
+          firstName: string;
+          lastName: string;
+          action?: Array<{
+            type: string;
+            subtype: string;
+            date: string;
+            comment: string;
+          }>;
+        }>;
+      };
+    }>
+  >;
+  cardRowData: Array<{
+    title: string;
+    value: string;
+    level: string;
+    date?: string;
+  }>;
+  dataDisplayData: Array<{
+    Id: string;
+    Status: string;
+    Date: string;
+  }>;
+  selectedBank: string;
+  
 }
 
 
-
-
-{
-  data
-    .flatMap((subArray, subArrayIndex) =>
-      subArray.map((item, itemIndex) => ({
-        ...item,
-        isFromMultiple: subArray.length > 1,
-        subArrayIndex,
-        key: `${subArrayIndex}-${itemIndex}`,
-        originalStatus: item.status as workflowStatus,
-      }))
-    )
-    .map((item: any, idx, flat) => {
-      // ...
-      const isApprovalsStep = item.name === "Approvals and Restrictions";
-      return (
-        <Fragment key={item.key}>
-          <Timeline.Step progress={!isLast} status={statusValue}>
-            <div className="relative flex flex-col items-center justify-center  overflow-visible min-h-[180px]">
-              {isApprovalsStep ? (
-                <>
-                  <span
-                    style={{ cursor: "pointer" }}
-                    onClick={() => setShowApprovalsModal(true)}
-                    title="Ver detalhes dos Approvals"
-                  >
-                    <Timeline.Circle status={statusValue} />
-                    <Timeline.Text>
-                      {item.name}
-                      <span className="ml-1 text-xs text-blue-600 underline">
-                        (detalhes)
-                      </span>
-                    </Timeline.Text>
-                  </span>
-                  <TimelineApprovalsModal
-                    open={showApprovalsModal}
-                    onClose={() => setShowApprovalsModal(false)}
-                    data={approvalsSteps}
-                  />
-                </>
-              ) : (
-                <>
-                  <Timeline.Circle status={statusValue} />
-                  <Timeline.Text>{item.name}</Timeline.Text>
-                </>
-              )}
-            </div>
-          </Timeline.Step>
-        </Fragment>
-      );
-    });
+export interface BankAccount {
+  id: string;
+  accountNumber: string;
+  name: string;
+  availableBalance: number;
+  origin: string;
+  cif?: string;
+  emailVerified?: boolean;
+  status?: string
 }
