@@ -1,54 +1,13 @@
-import React from "react";
-import Timeline from "../Timeline/timeline";
-
-interface TimelineApprovalsModalProps {
-  open: boolean;
-  onClose: () => void;
-  data: any[];
-}
-
-export default function TimelineApprovalsModal({
-  open,
-  onClose,
-  data,
-}: TimelineApprovalsModalProps) {
-
-  if (!open) return null;
-
-  // Fecha ao clicar na camada semitransparente OU ao perder o hover
-  const handleOverlayClose = () => onClose();
-  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
-
-  return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
-      onClick={handleOverlayClose}
-      onMouseLeave={handleOverlayClose} // sai do modal = fecha
-    >
-      <div
-        className="relative bg-white rounded-lg p-8 min-w-[400px]"
-        onClick={stopPropagation}        // evita fechar ao clicar no conteúdo
-        onMouseEnter={stopPropagation}   // mantém aberto enquanto o cursor estiver aqui
-      >
-        <button
-          className="absolute top-2 right-2"
-          onClick={onClose}
-          aria-label="Fechar"
-        >
-          ✕
-        </button>
-
-        <div className="mb-4 font-semibold">Approvals and Restrictions</div>
-
-        <Timeline.Root>
-          {data.map((step, i) => (
-            <Timeline.Step key={step.id || i} status={step.status}>
-              <Timeline.Circle status={step.status} />
-              <Timeline.Text>{step.name}</Timeline.Text>
-            </Timeline.Step>
-          ))}
-        </Timeline.Root>
-      </div>
-    </div>
-  );
-}
+  plugins: [require("tailwindcss-animate"),
+    function({ addUtilities }){
+      addUtilities({
+        ".no-scrollbar": {
+          "&::-webkit-scrollbar":{
+            display: "none",
+          },
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+        }
+      })
+    }
+  ],
