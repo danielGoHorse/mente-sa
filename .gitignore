@@ -1,67 +1,18 @@
-{/* usa o agrupado (mockJson) se ele existir */}
-<History
-  status={(mockJson ?? historyData).status}
-  data={(mockJson ?? historyData).data}
-  cardRowData={(mockJson ?? historyData).cardRowData}
-  dataDisplayData={(mockJson ?? historyData).dataDisplayData}
-  selectedBank={(mockJson ?? historyData).selectedBank}
-/>
-
-
-
-
-import { HistoryData } from "../store/types";
-
-type RawHistory = {
-  status?: string;
-  data?: any[][];
-  cardRowData?: any[];
-  dataDisplayData?: any[];
-  selectedBank?: string;
-};
-
-export function parseHistoryToData(history: RawHistory): HistoryData {
-  if (!history || !Array.isArray(history.data)) {
-    return { status: "", data: [], cardRowData: [], dataDisplayData: [], selectedBank: "" };
-  }
-
-  const all = history.data.flat();
-
-  // separa
-  const approvals = all.filter(s => s.name?.startsWith("Approvals and Restrictions"));
-  const others    = all.filter(s => !s.name?.startsWith("Approvals and Restrictions"));
-
-  // cria step agrupado
-  let finalSteps = [...others];
-  if (approvals.length) {
-    const status =
-      approvals.find(s => s.status === "pending")?.status ||
-      approvals.find(s => s.status === "waiting")?.status ||
-      approvals[0].status;
-
-    const grouped = {
-      id: 9999,
-      name: "Approvals and Restrictions",
-      status,
-      successLabel: "Approved",
-      permissions: { people: [] },
-      internalSteps: approvals,
-    };
-
-    // posição do 1º Approvals
-    const firstIdx = all.findIndex(s => s.name?.startsWith("Approvals and Restrictions"));
-    finalSteps = [
-      ...all.slice(0, firstIdx), // tudo antes
-      grouped,
-      ...all.slice(firstIdx + approvals.length), // tudo depois
-    ];
-  }
-
-  return {
-    status: history.status ?? "",
-    data: finalSteps.map(s => [s]),   // formato esperado pelo History
-    cardRowData: history.cardRowData ?? [],
-    dataDisplayData: history.dataDisplayData ?? [],
-    selectedBank: history.selectedBank ?? "",
-  };
-}
+{item.name === "Approvals and Restrictions" && item.internalSteps ? (
+  <div className="relative group flex flex-col items-center">
+    <Timeline.Circle status={statusValue} />
+    <Timeline.Text>{item.name}</Timeline.Text>
+    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2
+                    w-72 p-2 bg-white rounded shadow-lg z-50
+                    opacity-0 pointer-events-none
+                    group-hover:opacity-100 group-hover:pointer-events-auto
+                    transition-all">
+      <TimelinePopover steps={item.internalSteps} />
+    </div>
+  </div>
+) : (
+  <>
+    <Timeline.Circle status={statusValue} />
+    <Timeline.Text>{item.name}</Timeline.Text>
+  </>
+)}
