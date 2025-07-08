@@ -11,8 +11,7 @@ export default function TimelineApprovalsModal({
   open,
   onClose,
   data,
-} : TimelineApprovalsModalProps)
-  
+}: TimelineApprovalsModalProps) {
 
   if (!open) return null;
 
