@@ -1,13 +1,29 @@
-  plugins: [require("tailwindcss-animate"),
-    function({ addUtilities }){
-      addUtilities({
-        ".no-scrollbar": {
-          "&::-webkit-scrollbar":{
-            display: "none",
-          },
-          "-ms-overflow-style": "none",
-          "scrollbar-width": "none",
-        }
-      })
-    }
-  ],
+// Dentro do seu Timeline principal (History), para a etapa de Approvals and Restrictions:
+
+<Timeline.Step key={item.key} status={statusValue}>
+  <div className="relative flex flex-col items-center justify-center overflow-visible min-h-[180px] group">
+    {/* Círculo com hover */}
+    <div className="relative inline-block">
+      <Timeline.Circle status={statusValue} />
+      {/* Mostra hover só se for "Approvals and Restrictions" */}
+      {item.name.includes("Approvals and Restrictions") && (
+        <div
+          className="
+            absolute top-full left-1/2 -translate-x-1/2
+            mt-2 w-60 p-2 bg-white rounded shadow-lg z-30
+            opacity-0 group-hover:opacity-100 transition-opacity
+            pointer-events-none
+          "
+        >
+          {/* Aqui põe os detalhes que quiser mostrar no hover */}
+          <div className="text-xs text-gray-700">
+            <div><strong>Step:</strong> {item.name}</div>
+            <div><strong>Status:</strong> {item.status}</div>
+            {/* Adicione outros campos aqui! */}
+          </div>
+        </div>
+      )}
+    </div>
+    <Timeline.Text>{item.name.split(":")[1]?.trim() || item.name}</Timeline.Text>
+  </div>
+</Timeline.Step>
