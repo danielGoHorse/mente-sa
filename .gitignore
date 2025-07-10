@@ -5,7 +5,89 @@
     {/* Círculo com hover */}
     <div className="relative inline-block">
       <Timeline.Circle status={statusValue} />
-      {/* Mostra hover só se for "Approvals and Restrictions" */}
+      {/* Mostra hover só se for "Approvals and Restrictions" */}import React from "react";
+import Timeline from "../Timeline/timeline";
+import Image from "next/image";
+import WrapperIcon from "@/app/assets/svg/Wrapper.svg"; // ajuste o path se precisar
+
+interface TimelineApprovalsModalProps {
+  open: boolean;
+  onClose: () => void;
+  data: any[];
+}
+
+export default function TimelineApprovalsModal({
+  open,
+  onClose,
+  data,
+}: TimelineApprovalsModalProps) {
+  if (!open) return null;
+
+  // Fecha ao clicar fora ou sair com o mouse
+  const handleOverlayClose = () => onClose();
+  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
+      onClick={handleOverlayClose}
+      onMouseLeave={handleOverlayClose}
+    >
+      <div
+        className="relative bg-white rounded-lg p-8 min-w-[400px]"
+        onClick={stopPropagation}
+        onMouseEnter={stopPropagation}
+      >
+        <button
+          className="absolute top-2 right-2"
+          onClick={onClose}
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+        <div className="mb-4 font-semibold">Approvals and Restrictions</div>
+        <Timeline.Root>
+          {data.map((step, i) => (
+            <Timeline.Step key={step.id || i} status={step.status}>
+              {/* Wrapper do hover */}
+              <div className="relative flex flex-col items-center group">
+                {/* Círculo */}
+                <Timeline.Circle status={step.status} />
+                {/* Quadradinho Wrapper em cima do círculo */}
+                <span className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                  <div className="w-[28px] h-[28px] flex items-center rounded-[5px] justify-center bg-white border border-[#DBDBDB] shadow">
+                    <Image src={WrapperIcon} alt="IconWrapper" />
+                  </div>
+                  {/* Hover Box, aparece ao passar mouse em todo bloco */}
+                  <div
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 p-2 bg-white rounded shadow-lg z-20
+                      opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
+                  >
+                    <div className="text-xs text-gray-700">
+                      <div>
+                        <strong>Step:</strong>{" "}
+                        {step.name.split(":")[1]?.trim() || step.name}
+                      </div>
+                      <div>
+                        <strong>Status:</strong> {step.status}
+                      </div>
+                      {/* Adicione outros detalhes aqui, se quiser */}
+                    </div>
+                  </div>
+                </span>
+                {/* Nome do step abaixo */}
+                <Timeline.Text>
+                  {step.name.split(":")[1]?.trim() || step.name}
+                </Timeline.Text>
+              </div>
+            </Timeline.Step>
+          ))}
+        </Timeline.Root>
+      </div>
+    </div>
+  );
+}
+
       {item.name.includes("Approvals and Restrictions") && (
         <div
           className="
