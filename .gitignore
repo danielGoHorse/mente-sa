@@ -1,191 +1,336 @@
-import React, { ReactNode, useRef } from "react";
-import FlagIcon from "@/app/assets/svg/flag.svg";
-import CheckIcon from "@/app/assets/svg/check.svg";
-import FlagGreenIcon from "@/app/assets/svg/flag-green.svg";
-import CloseGrayIcon from "@/app/assets/svg/close-gray.svg";
-import CloseWhiteIcon from "@/app/assets/svg/close-white.svg";
-import ChevronLeftLargeIcon from "@/app/assets/svg/chevron-left-large.svg";
-import ChevronRightLargeIcon from "@/app/assets/svg/chevron-right-large.svg";
-import WrapperIcon from "@/app/assets/svg/Wrapper.svg"; // novo ícone quadrado
-import { StaticImageData } from "next/image";
-import Image from "next/image";
+"use client";
 
-type StatusType = "waiting" | "pending" | "completed" | "canceled" | "skipped";
+import React, {
+  Fragment,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  useState,
+} from "react";
+import CardsRow from "./CardsRow/cardsRow";
+import DataDisplay from "./DataDisplay/dataDisplay";
+import Status from "./Status/status";
+import TableStep from "./TableStep/tableStep";
+import Timeline from "./Timeline/timeline";
+import { formatDateTime } from "@/app/utils/formatDateTime";
+import TimelineScrollWrapper from "./timelineScrollWrapper";
+import TimelineApprovalsModal from "./TimelineApprovalsModal/timelineApprovalsModal";
 
-interface TimelineProps {
-  children?: ReactNode;
-}
+export type workflowStatus =
+  | "completed"
+  | "canceled"
+  | "waiting"
+  | "pending"
+  | "skipped";
 
-interface StepProps {
-  status?: StatusType;
-  progress?: boolean;
-  children?: ReactNode;
-}
-
-//
-// Root & Scroll
-//
-export const TimelineRoot: React.FC<TimelineProps> = ({ children }) => (
-  <div className="flex">{children}</div>
-);
-
-export const TimelineScroll: React.FC<TimelineProps> = ({ children }) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const scroll = (delta: number) => {
-    if (scrollRef.current) scrollRef.current.scrollLeft += delta;
-  };
-  return (
-    <div className="flex items-center">
-      <button
-        onClick={() => scroll(-100)}
-        className="w-[37px] h-[56px] flex items-center justify-center rounded border border-[#DBDBDB] bg-white"
-      >
-        <ChevronLeftLargeIcon />
-      </button>
-      <div
-        ref={scrollRef}
-        className="flex gap-[10px] w-full overflow-x-auto whitespace-nowrap transition-all duration-300 scrollbar-none"
-      >
-        {children}
-      </div>
-      <button
-        onClick={() => scroll(100)}
-        className="w-[37px] h-[56px] flex items-center justify-center rounded border border-[#DBDBDB] bg-white"
-      >
-        <ChevronRightLargeIcon />
-      </button>
-    </div>
-  );
+export type IHistory = {
+  status: string;
+  data: any[][];
+  timeLine?: { name: string; status: workflowStatus }[];
+  cardRowData?: any[] | [];
+  dataDisplayData?: any[];
+  selectedBank?: string;
+  approvalsSteps?: any[]; // ADICIONE ESSA PROP
 };
 
-//
-// Circle
-//
-export const TimelineCircle: React.FC<Pick<StepProps, "status">> = ({
-  status = "waiting",
-}) => {
-  const IconMap: Record<StatusType, StaticImageData> = {
-    waiting: FlagIcon,
-    pending: FlagGreenIcon,
-    completed: CheckIcon,
-    canceled: CloseWhiteIcon,
-    skipped: CloseGrayIcon,
+export default function History({
+  data,
+  timeLine,
+  cardRowData,
+  dataDisplayData,
+  selectedBank,
+  approvalsSteps = [],
+}: IHistory) {
+  const [showApprovalsModal, setShowApprovalsModal] = useState(false);
+
+
+  const timeLineMap = timeLine ?? [];
+
+  const statusFieldMap: Record<string, string> = {
+    cancel: "rejected",
+    canceled: "-",
+    completed: "approved",
+    pending: "-",
+    reject: "rejected",
+    return: "partial",
+    success: "approved",
+    waiting: "-",
   };
-  const BorderColorMap: Record<StatusType, string> = {
-    waiting: "#DBDBDB",
-    pending: "#008056",
-    completed: "#008056",
-    canceled: "#CA303D",
-    skipped: "#DBDBDB",
+  const statusLabelMap: Record<string, string> = {
+    cancel: "Canceled",
+    canceled: "-",
+    completed: "Completed",
+    pending: "-",
+    return: "Requested change",
+    waiting: "-",
   };
-  const BgColorMap: Record<StatusType, string> = {
-    waiting: "#FFFFFF",
-    pending: "#FFFFFF",
-    completed: "#008056",
-    canceled: "#CA303D",
-    skipped: "#F7F7F8",
-  };
-  const Icon = IconMap[status];
+
+  interface IPeople {
+    userId: Key | null | undefined;
+    firstName:
+    | string
+    | number
+    | bigint
+    | boolean
+    | ReactElement<any, string | JSXElementConstructor<any>>
+    | Iterable<ReactNode>
+    | null
+    | undefined;
+    lastName:
+    | string
+    | number
+    | bigint
+    | boolean
+    | ReactElement<any, string | JSXElementConstructor<any>>
+    | Iterable<ReactNode>
+    | null
+    | undefined;
+    addedAt?: string;
+    addedBy?: string;
+    approvalsLevel?: string;
+    permissionLevel?: string;
+    indexLevel?: number;
+    action?: {
+      signature: string;
+      subtype: ReactNode;
+      type: string;
+      date: string;
+      comment: any;
+    }[];
+    signature?: string;
+    date?: string;
+    type?: string;
+    comment?: any;
+  }
+
   return (
-    <div
-      className="w-[56px] h-[56px] flex items-center justify-center rounded-full"
-      style={{
-        border: `1px solid ${BorderColorMap[status]}`,
-        backgroundColor: BgColorMap[status],
-      }}
-    >
-      <Image src={Icon} alt="icon" />
-    </div>
-  );
-};
+    <div className="p-6">
+      {cardRowData && (
+        <div className="flex flex-col gap-4 mb-6">
+          <CardsRow title="Approvals" data={cardRowData} />
+        </div>
+      )}
 
-//
-// Link (quadrado com hoverContent)
-//
-export interface TimelineLinkProps {
-  status?: StatusType;
-  hoverContent?: ReactNode;
-}
+      <div className="flex flex-col gap-4">
+        <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
+          Timeline
+        </div>
 
-export const TimelineLink: React.FC<TimelineLinkProps> = ({
-  status = "waiting",
-  hoverContent,
-}) => {
-  const BorderColorMap: Record<StatusType, string> = {
-    waiting: "#DBDBDB",
-    pending: "#008056",
-    completed: "#008056",
-    canceled: "#CA303D",
-    skipped: "#DBDBDB",
-  };
+        {/* SCROLL WRAPPER */}
+        <div className=" max-full overflow-hidden">
+          <TimelineScrollWrapper>
+            {data
+              .flatMap((subArray, subArrayIndex) =>
+                subArray.map((item, itemIndex) => ({
+                  ...item,
+                  isFromMultiple: subArray.length > 1,
+                  subArrayIndex,
+                  key: `${subArrayIndex}-${itemIndex}`,
+                  originalStatus: item.status as workflowStatus,
+                }))
+              )
+              .map((item: any, idx, flat) => {
+                const isLast = idx === flat.length - 1;
+                const next = flat[idx + 1];
+                const statusValue = timeLine
+                  ? timeLineMap[idx].status
+                  : item.originalStatus;
+                const hasExtra =
+                  !isLast &&
+                  item.isFromMultiple &&
+                  next?.isFromMultiple &&
+                  item.subArrayIndex === next.subArrayIndex;
 
-  return (
-    <div className="relative inline-block group mt-[7px]">
-      <div className="w-[28px] h-[28px] flex items-center rounded-[5px] justify-center bg-white">
-        <Image src={WrapperIcon} alt="IconWrapper" />
+                // Detecta o step agrupado para abrir modal:
+                const isApprovalsStep = item.name === "Approvals and Restrictions";
+
+                return (
+                  <Fragment key={item.key}>
+                    <Timeline.Step progress={!isLast} status={statusValue}>
+                      <div className="relative flex flex-col items-center justify-center  overflow-visible min-h-[180px]">
+                        {hasExtra && (
+                          <span className="absolute top-[-3px] left-1/2 transform -translate-x-1/2">
+                            <Timeline.Link
+                              status={next?.originalStatus}
+                              hoverContent={
+                                <div className="text-xs  z-10">
+                                  <div>
+                                    <strong>Name:</strong> {item.name}
+                                  </div>
+                                  <div>
+                                    <strong>Status:</strong> {item.originalStatus}
+                                  </div>
+                                  <div>
+                                    <strong>Group:</strong> {item.subArrayIndex}
+                                  </div>
+                                </div>
+                              }
+                            />
+                          </span>
+                        )}
+                        {isApprovalsStep ? (
+                          <>
+                            <span className="inline-flex flex-col items-center cursor-pointer"
+                              onMouseEnter={() => setShowApprovalsModal(true)}
+                              onFocus={() => setShowApprovalsModal(true)}
+                              title="Ver detalhes dos Approvals" >
+                              <Timeline.Circle status={statusValue} />
+                              <Timeline.Text>{item.name}</Timeline.Text>
+                            </span>
+                            <TimelineApprovalsModal
+                              open={showApprovalsModal}
+                              onClose={() => setShowApprovalsModal(false)}
+                              data={approvalsSteps}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <Timeline.Circle status={statusValue} />
+                            <Timeline.Text>{item.name}</Timeline.Text>
+                          </>
+                        )}
+                      </div>
+                    </Timeline.Step>
+                  </Fragment>
+                );
+              })}
+          </TimelineScrollWrapper>
+        </div>
       </div>
-      {hoverContent && (
-        <div
-          className="
-            absolute top-full left-1/2 -translate-x-1/2
-            mt-2 w-48 p-2 bg-white rounded shadow-lg
-            opacity-0 group-hover:opacity-100 transition-opacity
-          "
-        >
-          {hoverContent}
+
+      <div className="mt-10">
+        <TableStep.Root>
+          {data.map((group, groupIdx) =>
+            group.map((item: any, itemIdx: number) => {
+              const statusValue = timeLine
+                ? timeLineMap[groupIdx].status
+                : (item.status as workflowStatus);
+
+              return (
+                <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
+                  <TableStep.Title status={statusValue}>
+                    {item.approvalsLevel ? (
+                      <div className="flex gap-1">
+                        <div className="font-normal">
+                          {groupIdx + 1}.{item.indexLevel}. {item.name}:
+                        </div>
+                        <div className="font-semibold">
+                          {item.approvalsLevel}
+                        </div>
+                        <br />
+                      </div>
+                    ) : (
+                      `${groupIdx + 1}. ${item.name}`
+                    )}
+                    <div className="text-[#636574]">
+                      {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
+                    </div>
+                  </TableStep.Title>
+
+                  <TableStep.Columns>
+                    <TableStep.Line>Participant</TableStep.Line>
+                    <TableStep.Line>Signature</TableStep.Line>
+                    <TableStep.Line>Completed</TableStep.Line>
+                    <TableStep.Line>Status</TableStep.Line>
+                    <TableStep.Line>Result</TableStep.Line>
+                    <TableStep.Line>Comments</TableStep.Line>
+                  </TableStep.Columns>
+
+                  {item.permissions?.people?.map(
+                    (people: IPeople, idx: number, arr: IPeople[]) => {
+                      const isPendingOrCompleted =
+                        item.status === "completed" ||
+                        item.status === "pending";
+
+                      return (
+                        <Fragment key={`${people.userId}-${idx}`}>
+                          <TableStep.Body>
+                            <TableStep.Item>
+                              <div className="flex items-center text-[#636574]">
+                                {people.firstName} {people.lastName}
+                                {people.addedAt && people.addedBy && (
+                                  <div className="text-sm leading-[21px] font-normal text-[#636574]">
+                                    {" "}
+                                    - Added by {people.addedBy}
+                                  </div>
+                                )}
+                              </div>
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? people.action[0].signature : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action
+                                ? formatDateTime(people.action[0].date)
+                                : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {isPendingOrCompleted ? (
+                                item.status === "pending" ? (
+                                  "Active"
+                                ) : (
+                                  <Status
+                                    width={164}
+                                    type={statusFieldMap[item.status] as any}
+                                  >
+                                    {statusLabelMap[item.status] as string}
+                                  </Status>
+                                )
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? (
+                                <Status
+                                  width={164}
+                                  type={
+                                    statusFieldMap[people.action[0].type] as any
+                                  }
+                                >
+                                  {people.action[0].type === "success"
+                                    ? item.successLabel
+                                    : people.action[0].subtype}
+                                </Status>
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action && people.action[0].comment
+                                ? people.action[0].comment
+                                : "-"}
+                            </TableStep.Item>
+                          </TableStep.Body>
+
+                          {idx !== arr.length - 1 && (
+                            <div className="border-b border-[#EBEBEB] mx-10" />
+                          )}
+                        </Fragment>
+                      );
+                    }
+                  )}
+                </Fragment>
+              );
+            })
+          )}
+        </TableStep.Root>
+      </div>
+
+      {dataDisplayData && dataDisplayData.length > 0 && (
+        <div className="mt-6">
+          <DataDisplay
+            title={`Process Integration: ${selectedBank}`}
+            data={dataDisplayData}
+          />
         </div>
       )}
     </div>
   );
-};
-
-//
-// Step & Text
-//
-export const TimelineStep: React.FC<StepProps> = ({
-  status = "waiting",
-  progress = false,
-  children,
-}) => {
-  const BorderColorMap: Record<StatusType, string> = {
-    waiting: "#DBDBDB",
-    pending: "#008056",
-    completed: "#008056",
-    canceled: "#CA303D",
-    skipped: "#DBDBDB",
-  };
-  const borderColor = BorderColorMap[status];
-
-  return (
-    <div
-      className="relative flex-1 flex flex-col items-center"
-      style={{ width: 150 }}
-    >
-      {progress && (
-        <div
-          className="absolute  border-b left-[calc(55%+25px)] top-[43%] -translate-y-1/2 w-[calc(100%+10px-56px)]"
-          style={{ borderColor }}
-        />
-      )}
-      <div className="relative flex flex-col items-center gap-2">
-        {children}
-      </div>
-    </div>
-  );
-};
-
-export const TimelineText: React.FC<TimelineProps> = ({ children }) => (
-  <span className="text-[12px] font-normal leading-[18px] text-[#484A55] text-center font-figtree tracking-[0.12px]">
-    {children}
-  </span>
-);
-
-const Timeline = {
-  Scroll: TimelineScroll,
-  Root: TimelineRoot,
-  Step: TimelineStep,
-  Circle: TimelineCircle,
-  Link: TimelineLink,
-  Text: TimelineText,
-};
-export default Timeline;
+}
