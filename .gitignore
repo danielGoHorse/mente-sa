@@ -1,336 +1,85 @@
-"use client";
+import React from "react";
+import Timeline from "../Timeline/timeline";
+import Image from "next/image";
+import WrapperIcon from "@/app/assets/svg/Wrapper.svg"; // ajuste o path se necessário
 
-import React, {
-  Fragment,
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactNode,
-  useState,
-} from "react";
-import CardsRow from "./CardsRow/cardsRow";
-import DataDisplay from "./DataDisplay/dataDisplay";
-import Status from "./Status/status";
-import TableStep from "./TableStep/tableStep";
-import Timeline from "./Timeline/timeline";
-import { formatDateTime } from "@/app/utils/formatDateTime";
-import TimelineScrollWrapper from "./timelineScrollWrapper";
-import TimelineApprovalsModal from "./TimelineApprovalsModal/timelineApprovalsModal";
+interface TimelineApprovalsModalProps {
+  open: boolean;
+  onClose: () => void;
+  data: any[];
+}
 
-export type workflowStatus =
-  | "completed"
-  | "canceled"
-  | "waiting"
-  | "pending"
-  | "skipped";
-
-export type IHistory = {
-  status: string;
-  data: any[][];
-  timeLine?: { name: string; status: workflowStatus }[];
-  cardRowData?: any[] | [];
-  dataDisplayData?: any[];
-  selectedBank?: string;
-  approvalsSteps?: any[]; // ADICIONE ESSA PROP
-};
-
-export default function History({
+export default function TimelineApprovalsModal({
+  open,
+  onClose,
   data,
-  timeLine,
-  cardRowData,
-  dataDisplayData,
-  selectedBank,
-  approvalsSteps = [],
-}: IHistory) {
-  const [showApprovalsModal, setShowApprovalsModal] = useState(false);
+}: TimelineApprovalsModalProps) {
+  if (!open) return null;
 
-
-  const timeLineMap = timeLine ?? [];
-
-  const statusFieldMap: Record<string, string> = {
-    cancel: "rejected",
-    canceled: "-",
-    completed: "approved",
-    pending: "-",
-    reject: "rejected",
-    return: "partial",
-    success: "approved",
-    waiting: "-",
-  };
-  const statusLabelMap: Record<string, string> = {
-    cancel: "Canceled",
-    canceled: "-",
-    completed: "Completed",
-    pending: "-",
-    return: "Requested change",
-    waiting: "-",
-  };
-
-  interface IPeople {
-    userId: Key | null | undefined;
-    firstName:
-    | string
-    | number
-    | bigint
-    | boolean
-    | ReactElement<any, string | JSXElementConstructor<any>>
-    | Iterable<ReactNode>
-    | null
-    | undefined;
-    lastName:
-    | string
-    | number
-    | bigint
-    | boolean
-    | ReactElement<any, string | JSXElementConstructor<any>>
-    | Iterable<ReactNode>
-    | null
-    | undefined;
-    addedAt?: string;
-    addedBy?: string;
-    approvalsLevel?: string;
-    permissionLevel?: string;
-    indexLevel?: number;
-    action?: {
-      signature: string;
-      subtype: ReactNode;
-      type: string;
-      date: string;
-      comment: any;
-    }[];
-    signature?: string;
-    date?: string;
-    type?: string;
-    comment?: any;
-  }
+  // Fecha ao clicar fora ou sair com o mouse
+  const handleOverlayClose = () => onClose();
+  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
 
   return (
-    <div className="p-6">
-      {cardRowData && (
-        <div className="flex flex-col gap-4 mb-6">
-          <CardsRow title="Approvals" data={cardRowData} />
-        </div>
-      )}
-
-      <div className="flex flex-col gap-4">
-        <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
-          Timeline
-        </div>
-
-        {/* SCROLL WRAPPER */}
-        <div className=" max-full overflow-hidden">
-          <TimelineScrollWrapper>
-            {data
-              .flatMap((subArray, subArrayIndex) =>
-                subArray.map((item, itemIndex) => ({
-                  ...item,
-                  isFromMultiple: subArray.length > 1,
-                  subArrayIndex,
-                  key: `${subArrayIndex}-${itemIndex}`,
-                  originalStatus: item.status as workflowStatus,
-                }))
-              )
-              .map((item: any, idx, flat) => {
-                const isLast = idx === flat.length - 1;
-                const next = flat[idx + 1];
-                const statusValue = timeLine
-                  ? timeLineMap[idx].status
-                  : item.originalStatus;
-                const hasExtra =
-                  !isLast &&
-                  item.isFromMultiple &&
-                  next?.isFromMultiple &&
-                  item.subArrayIndex === next.subArrayIndex;
-
-                // Detecta o step agrupado para abrir modal:
-                const isApprovalsStep = item.name === "Approvals and Restrictions";
-
-                return (
-                  <Fragment key={item.key}>
-                    <Timeline.Step progress={!isLast} status={statusValue}>
-                      <div className="relative flex flex-col items-center justify-center  overflow-visible min-h-[180px]">
-                        {hasExtra && (
-                          <span className="absolute top-[-3px] left-1/2 transform -translate-x-1/2">
-                            <Timeline.Link
-                              status={next?.originalStatus}
-                              hoverContent={
-                                <div className="text-xs  z-10">
-                                  <div>
-                                    <strong>Name:</strong> {item.name}
-                                  </div>
-                                  <div>
-                                    <strong>Status:</strong> {item.originalStatus}
-                                  </div>
-                                  <div>
-                                    <strong>Group:</strong> {item.subArrayIndex}
-                                  </div>
-                                </div>
-                              }
-                            />
-                          </span>
-                        )}
-                        {isApprovalsStep ? (
-                          <>
-                            <span className="inline-flex flex-col items-center cursor-pointer"
-                              onMouseEnter={() => setShowApprovalsModal(true)}
-                              onFocus={() => setShowApprovalsModal(true)}
-                              title="Ver detalhes dos Approvals" >
-                              <Timeline.Circle status={statusValue} />
-                              <Timeline.Text>{item.name}</Timeline.Text>
-                            </span>
-                            <TimelineApprovalsModal
-                              open={showApprovalsModal}
-                              onClose={() => setShowApprovalsModal(false)}
-                              data={approvalsSteps}
-                            />
-                          </>
-                        ) : (
-                          <>
-                            <Timeline.Circle status={statusValue} />
-                            <Timeline.Text>{item.name}</Timeline.Text>
-                          </>
-                        )}
-                      </div>
-                    </Timeline.Step>
-                  </Fragment>
-                );
-              })}
-          </TimelineScrollWrapper>
-        </div>
-      </div>
-
-      <div className="mt-10">
-        <TableStep.Root>
-          {data.map((group, groupIdx) =>
-            group.map((item: any, itemIdx: number) => {
-              const statusValue = timeLine
-                ? timeLineMap[groupIdx].status
-                : (item.status as workflowStatus);
-
-              return (
-                <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
-                  <TableStep.Title status={statusValue}>
-                    {item.approvalsLevel ? (
-                      <div className="flex gap-1">
-                        <div className="font-normal">
-                          {groupIdx + 1}.{item.indexLevel}. {item.name}:
-                        </div>
-                        <div className="font-semibold">
-                          {item.approvalsLevel}
-                        </div>
-                        <br />
-                      </div>
-                    ) : (
-                      `${groupIdx + 1}. ${item.name}`
-                    )}
-                    <div className="text-[#636574]">
-                      {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
+      onClick={handleOverlayClose}
+      onMouseLeave={handleOverlayClose}
+    >
+      <div
+        className="relative bg-white rounded-lg p-8 min-w-[400px]"
+        onClick={stopPropagation}
+        onMouseEnter={stopPropagation}
+      >
+        <button
+          className="absolute top-2 right-2"
+          onClick={onClose}
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+        <div className="mb-4 font-semibold">Approvals and Restrictions</div>
+        <Timeline.Root>
+          {data.map((step, i) => {
+            const isLast = i === data.length - 1;
+            return (
+              <Timeline.Step key={step.id || i} status={step.status} progress={!isLast}>
+                {/* Wrapper quadradinho */}
+                <div className="relative flex flex-col items-center group">
+                  {/* Círculo */}
+                  <Timeline.Circle status={step.status} />
+                  {/* Quadradinho acima do círculo */}
+                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <div className="w-[28px] h-[28px] flex items-center rounded-[5px] justify-center bg-white border border-[#DBDBDB] shadow">
+                      <Image src={WrapperIcon} alt="IconWrapper" />
                     </div>
-                  </TableStep.Title>
-
-                  <TableStep.Columns>
-                    <TableStep.Line>Participant</TableStep.Line>
-                    <TableStep.Line>Signature</TableStep.Line>
-                    <TableStep.Line>Completed</TableStep.Line>
-                    <TableStep.Line>Status</TableStep.Line>
-                    <TableStep.Line>Result</TableStep.Line>
-                    <TableStep.Line>Comments</TableStep.Line>
-                  </TableStep.Columns>
-
-                  {item.permissions?.people?.map(
-                    (people: IPeople, idx: number, arr: IPeople[]) => {
-                      const isPendingOrCompleted =
-                        item.status === "completed" ||
-                        item.status === "pending";
-
-                      return (
-                        <Fragment key={`${people.userId}-${idx}`}>
-                          <TableStep.Body>
-                            <TableStep.Item>
-                              <div className="flex items-center text-[#636574]">
-                                {people.firstName} {people.lastName}
-                                {people.addedAt && people.addedBy && (
-                                  <div className="text-sm leading-[21px] font-normal text-[#636574]">
-                                    {" "}
-                                    - Added by {people.addedBy}
-                                  </div>
-                                )}
-                              </div>
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {people.action ? people.action[0].signature : "-"}
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {people.action
-                                ? formatDateTime(people.action[0].date)
-                                : "-"}
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {isPendingOrCompleted ? (
-                                item.status === "pending" ? (
-                                  "Active"
-                                ) : (
-                                  <Status
-                                    width={164}
-                                    type={statusFieldMap[item.status] as any}
-                                  >
-                                    {statusLabelMap[item.status] as string}
-                                  </Status>
-                                )
-                              ) : (
-                                "-"
-                              )}
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {people.action ? (
-                                <Status
-                                  width={164}
-                                  type={
-                                    statusFieldMap[people.action[0].type] as any
-                                  }
-                                >
-                                  {people.action[0].type === "success"
-                                    ? item.successLabel
-                                    : people.action[0].subtype}
-                                </Status>
-                              ) : (
-                                "-"
-                              )}
-                            </TableStep.Item>
-
-                            <TableStep.Item>
-                              {people.action && people.action[0].comment
-                                ? people.action[0].comment
-                                : "-"}
-                            </TableStep.Item>
-                          </TableStep.Body>
-
-                          {idx !== arr.length - 1 && (
-                            <div className="border-b border-[#EBEBEB] mx-10" />
-                          )}
-                        </Fragment>
-                      );
-                    }
-                  )}
-                </Fragment>
-              );
-            })
-          )}
-        </TableStep.Root>
+                    {/* Hover box */}
+                    <div
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 p-2 bg-white rounded shadow-lg z-20
+                        opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
+                    >
+                      <div className="text-xs text-gray-700">
+                        <div>
+                          <strong>Step:</strong>{" "}
+                          {step.name.split(":")[1]?.trim() || step.name}
+                        </div>
+                        <div>
+                          <strong>Status:</strong> {step.status}
+                        </div>
+                        {/* outros detalhes se quiser */}
+                      </div>
+                    </div>
+                  </span>
+                  {/* Nome do step */}
+                  <Timeline.Text>
+                    {step.name.split(":")[1]?.trim() || step.name}
+                  </Timeline.Text>
+                </div>
+              </Timeline.Step>
+            );
+          })}
+        </Timeline.Root>
       </div>
-
-      {dataDisplayData && dataDisplayData.length > 0 && (
-        <div className="mt-6">
-          <DataDisplay
-            title={`Process Integration: ${selectedBank}`}
-            data={dataDisplayData}
-          />
-        </div>
-      )}
     </div>
   );
 }
