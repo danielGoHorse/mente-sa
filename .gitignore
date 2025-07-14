@@ -1,44 +1,14 @@
 <TableStep.Root>
-  {(() => {
-    const renderedIndexes = new Set();
-
-    // Ajuda a encontrar e agrupar os approvals do mesmo tipo vizinhos
-    function getApprovalGroupIdx(steps: any[], startIdx: number) {
-      const current = steps[startIdx];
-      // Captura o "tipo" ("Callback", "Accounting", etc)
-      const match = current.name.match(/^Approvals and Restrictions: ([^0-9:]+?)(?: \d+)?$/);
-      if (!match) return [startIdx, startIdx];
-      const key = match[1].trim();
-      let end = startIdx;
-      // Agrupa todos steps seguintes do mesmo tipo
-      for (let i = startIdx + 1; i < steps.length; i++) {
-        const m = steps[i].name?.match(/^Approvals and Restrictions: ([^0-9:]+?)(?: \d+)?$/);
-        if (!m || m[1].trim() !== key) break;
-        end = i;
-      }
-      return [startIdx, end];
-    }
-
-    return data.flat().map((item: any, idx: number, arr: any[]) => {
-      if (renderedIndexes.has(idx)) return null;
-
-      // Verifica se é approvals
-      const match = item.name?.match(/^Approvals and Restrictions: ([^0-9:]+?)(?: \d+)?$/);
-      if (match) {
-        // Agrupa todos steps do mesmo tipo seguidos
-        const [start, end] = getApprovalGroupIdx(arr, idx);
-        for (let i = start; i <= end; i++) renderedIndexes.add(i);
-
-        const approvalType = match[1].trim();
-        const group = arr.slice(start, end + 1);
-
-        return (
-          <Fragment key={approvalType + '-' + start}>
-            <TableStep.Title status={group[0].status}>
-              {`${approvalType} (${group.filter(s => s.status === 'completed').length}/${group.length})`}
-              <div className="text-[#636574]">
-                {group[0].permissionLevel ? ` • ${group[0].permissionLevel}` : ""}
-              </div>
+  {data.map((group, groupIdx) =>
+    group.flatMap((item: any, itemIdx: number) => {
+      // Verifica se é o step de approvals
+      if (item.name === "Approvals and Restrictions" && approvalsSteps && approvalsSteps.length) {
+        // Renderiza cada step de approvals como uma linha independente
+        return approvalsSteps.map((approvalStep: any, idx: number) => (
+          <Fragment key={`approval-${approvalStep.id || idx}`}>
+            <TableStep.Title status={approvalStep.status}>
+              {/* Numeração ex: 3.1, 3.2, etc */}
+              {`${groupIdx + 1}.${idx + 1} ${approvalStep.name}`}
             </TableStep.Title>
             <TableStep.Columns>
               <TableStep.Line>Participant</TableStep.Line>
@@ -48,122 +18,41 @@
               <TableStep.Line>Result</TableStep.Line>
               <TableStep.Line>Comments</TableStep.Line>
             </TableStep.Columns>
-            {group.map((approvalStep, groupStepIdx) =>
-              approvalStep.permissions?.people?.map((people: any, idx2: number, arr2: any[]) => (
-                <Fragment key={`${approvalType}-${groupStepIdx}-${people.userId}-${idx2}`}>
-                  <TableStep.Body>
-                    <TableStep.Item>
-                      <div className="flex items-center text-[#636574]">
-                        {people.firstName} {people.lastName}
-                      </div>
-                    </TableStep.Item>
-                    <TableStep.Item>
-                      {people.action ? people.action[0].signature : "-"}
-                    </TableStep.Item>
-                    <TableStep.Item>
-                      {people.action ? formatDateTime(people.action[0].date) : "-"}
-                    </TableStep.Item>
-                    <TableStep.Item>
-                      {(approvalStep.status === "completed" || approvalStep.status === "pending")
-                        ? (approvalStep.status === "pending" ? "Active" :
-                          <Status width={164} type={statusFieldMap[approvalStep.status] as any}>
-                            {statusLabelMap[approvalStep.status] as string}
-                          </Status>)
-                        : "-"}
-                    </TableStep.Item>
-                    <TableStep.Item>
-                      {people.action ? (
-                        <Status
-                          width={164}
-                          type={statusFieldMap[people.action[0].type] as any}
-                        >
-                          {people.action[0].type === "success"
-                            ? approvalStep.successLabel
-                            : people.action[0].subtype}
-                        </Status>
-                      ) : "-"}
-                    </TableStep.Item>
-                    <TableStep.Item>
-                      {people.action && people.action[0].comment
-                        ? people.action[0].comment
-                        : "-"}
-                    </TableStep.Item>
-                  </TableStep.Body>
-                  {idx2 !== arr2.length - 1 && (
-                    <div className="border-b border-[#EBEBEB] mx-10" />
-                  )}
-                </Fragment>
-              ))
-            )}
+            {/* Preencher as linhas com os participantes se houver */}
+            {approvalStep.permissions?.people?.map((people: any, pidx: number, arr: any[]) => (
+              <Fragment key={`${approvalStep.id}-${people.userId}-${pidx}`}>
+                <TableStep.Body>
+                  <TableStep.Item>{people.firstName} {people.lastName}</TableStep.Item>
+                  <TableStep.Item>{people.action ? people.action[0].signature : "-"}</TableStep.Item>
+                  <TableStep.Item>{people.action ? formatDateTime(people.action[0].date) : "-"}</TableStep.Item>
+                  <TableStep.Item>{approvalStep.status}</TableStep.Item>
+                  <TableStep.Item>
+                    {people.action ? (
+                      <Status width={164} type={statusFieldMap[people.action[0].type]}>
+                        {people.action[0].type === "success"
+                          ? approvalStep.successLabel
+                          : people.action[0].subtype}
+                      </Status>
+                    ) : "-"}
+                  </TableStep.Item>
+                  <TableStep.Item>{people.action?.[0]?.comment || "-"}</TableStep.Item>
+                </TableStep.Body>
+                {pidx !== arr.length - 1 && <div className="border-b border-[#EBEBEB] mx-10" />}
+              </Fragment>
+            ))}
+          </Fragment>
+        ));
+      } else {
+        // Passos normais (os outros steps)
+        return (
+          <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
+            <TableStep.Title status={item.status}>
+              {`${groupIdx + 1}. ${item.name}`}
+            </TableStep.Title>
+            {/* ...restante da lógica dos steps normais... */}
           </Fragment>
         );
       }
-
-      // Renderiza normalmente os outros steps
-      renderedIndexes.add(idx);
-      return (
-        <Fragment key={idx}>
-          <TableStep.Title status={item.status}>
-            {`${idx + 1}. ${item.name}`}
-            <div className="text-[#636574]">
-              {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
-            </div>
-          </TableStep.Title>
-          <TableStep.Columns>
-            <TableStep.Line>Participant</TableStep.Line>
-            <TableStep.Line>Signature</TableStep.Line>
-            <TableStep.Line>Completed</TableStep.Line>
-            <TableStep.Line>Status</TableStep.Line>
-            <TableStep.Line>Result</TableStep.Line>
-            <TableStep.Line>Comments</TableStep.Line>
-          </TableStep.Columns>
-          {item.permissions?.people?.map((people: any, idx2: number, arr2: any[]) => (
-            <Fragment key={`${idx}-${people.userId}-${idx2}`}>
-              <TableStep.Body>
-                <TableStep.Item>
-                  <div className="flex items-center text-[#636574]">
-                    {people.firstName} {people.lastName}
-                  </div>
-                </TableStep.Item>
-                <TableStep.Item>
-                  {people.action ? people.action[0].signature : "-"}
-                </TableStep.Item>
-                <TableStep.Item>
-                  {people.action ? formatDateTime(people.action[0].date) : "-"}
-                </TableStep.Item>
-                <TableStep.Item>
-                  {(item.status === "completed" || item.status === "pending")
-                    ? (item.status === "pending" ? "Active" :
-                      <Status width={164} type={statusFieldMap[item.status] as any}>
-                        {statusLabelMap[item.status] as string}
-                      </Status>)
-                    : "-"}
-                </TableStep.Item>
-                <TableStep.Item>
-                  {people.action ? (
-                    <Status
-                      width={164}
-                      type={statusFieldMap[people.action[0].type] as any}
-                    >
-                      {people.action[0].type === "success"
-                        ? item.successLabel
-                        : people.action[0].subtype}
-                    </Status>
-                  ) : "-"}
-                </TableStep.Item>
-                <TableStep.Item>
-                  {people.action && people.action[0].comment
-                    ? people.action[0].comment
-                    : "-"}
-                </TableStep.Item>
-              </TableStep.Body>
-              {idx2 !== arr2.length - 1 && (
-                <div className="border-b border-[#EBEBEB] mx-10" />
-              )}
-            </Fragment>
-          ))}
-        </Fragment>
-      );
-    });
-  })()}
+    })
+  )}
 </TableStep.Root>
