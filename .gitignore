@@ -1,41 +1,29 @@
 <TableStep.Root>
-  {/* Primeiro, agrupe os steps */}
   {(() => {
-    // Filtra somente os Approvals and Restrictions, o resto mostra normal
-    const approvalSteps = [];
-    const otherSteps = [];
+    // Separa os approvals do resto
+    const approvalSteps: any[] = [];
+    const otherSteps: any[] = [];
 
     data.flat().forEach(step => {
-      if (step.name.startsWith("Approvals and Restrictions")) {
+      if (typeof step.name === "string" && step.name.startsWith("Approvals and Restrictions")) {
         approvalSteps.push(step);
       } else {
         otherSteps.push(step);
       }
     });
 
-    // Agrupa Approvals
-    const grouped = groupApprovalSteps(approvalSteps);
+    const groupedApprovals = groupApprovalSteps(approvalSteps);
 
     return (
       <>
-        {/* Renderiza os outros steps normalmente */}
+        {/* Passos comuns */}
         {otherSteps.map((item, idx) => (
           <Fragment key={idx}>
             <TableStep.Title status={item.status}>
-              {item.name}
+              {`${idx + 1}. ${item.name}`}
               <div className="text-[#636574]">
                 {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
               </div>
-            </TableStep.Title>
-            {/* ...colunas/linhas iguais ao seu código */}
-          </Fragment>
-        ))}
-
-        {/* Renderiza os Approvals agrupados */}
-        {Object.entries(grouped).map(([key, steps], idx) => (
-          <Fragment key={key}>
-            <TableStep.Title status={steps[0].status}>
-              {key} ({steps.filter(s => s.status === 'completed').length}/{steps.length})
             </TableStep.Title>
             <TableStep.Columns>
               <TableStep.Line>Participant</TableStep.Line>
@@ -45,16 +33,112 @@
               <TableStep.Line>Result</TableStep.Line>
               <TableStep.Line>Comments</TableStep.Line>
             </TableStep.Columns>
-            {/* Agora renderiza cada substep */}
-            {steps.map((item, idx) =>
-              item.permissions?.people?.map((people, idx2, arr) => (
-                <Fragment key={`${people.userId}-${idx2}`}>
+            {item.permissions?.people?.map((people: any, idx2: number, arr: any[]) => (
+              <Fragment key={`${people.userId}-${idx2}`}>
+                <TableStep.Body>
+                  <TableStep.Item>
+                    <div className="flex items-center text-[#636574]">
+                      {people.firstName} {people.lastName}
+                    </div>
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {people.action ? people.action[0].signature : "-"}
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {people.action ? formatDateTime(people.action[0].date) : "-"}
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {(item.status === "completed" || item.status === "pending")
+                      ? (item.status === "pending" ? "Active" :
+                        <Status width={164} type={statusFieldMap[item.status] as any}>
+                          {statusLabelMap[item.status] as string}
+                        </Status>)
+                      : "-"}
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {people.action ? (
+                      <Status
+                        width={164}
+                        type={statusFieldMap[people.action[0].type] as any}
+                      >
+                        {people.action[0].type === "success"
+                          ? item.successLabel
+                          : people.action[0].subtype}
+                      </Status>
+                    ) : "-"}
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {people.action && people.action[0].comment
+                      ? people.action[0].comment
+                      : "-"}
+                  </TableStep.Item>
+                </TableStep.Body>
+                {idx2 !== arr.length - 1 && (
+                  <div className="border-b border-[#EBEBEB] mx-10" />
+                )}
+              </Fragment>
+            ))}
+          </Fragment>
+        ))}
+
+        {/* Approvals agrupados */}
+        {Object.entries(groupedApprovals).map(([approvalType, steps], idx) => (
+          <Fragment key={approvalType}>
+            <TableStep.Title status={steps[0].status}>
+              {`${approvalType} (${steps.filter(s => s.status === 'completed').length}/${steps.length})`}
+              <div className="text-[#636574]">
+                {/* Se algum dos steps tiver permissionLevel, mostra */}
+                {steps[0].permissionLevel ? ` • ${steps[0].permissionLevel}` : ""}
+              </div>
+            </TableStep.Title>
+            <TableStep.Columns>
+              <TableStep.Line>Participant</TableStep.Line>
+              <TableStep.Line>Signature</TableStep.Line>
+              <TableStep.Line>Completed</TableStep.Line>
+              <TableStep.Line>Status</TableStep.Line>
+              <TableStep.Line>Result</TableStep.Line>
+              <TableStep.Line>Comments</TableStep.Line>
+            </TableStep.Columns>
+            {steps.map((item: any, subIdx: number) =>
+              item.permissions?.people?.map((people: any, idx2: number, arr: any[]) => (
+                <Fragment key={`${approvalType}-${subIdx}-${people.userId}-${idx2}`}>
                   <TableStep.Body>
                     <TableStep.Item>
-                      {/* ...participante */}
-                      {people.firstName} {people.lastName}
+                      <div className="flex items-center text-[#636574]">
+                        {people.firstName} {people.lastName}
+                      </div>
                     </TableStep.Item>
-                    {/* ...outros TableStep.Item iguais ao seu código */}
+                    <TableStep.Item>
+                      {people.action ? people.action[0].signature : "-"}
+                    </TableStep.Item>
+                    <TableStep.Item>
+                      {people.action ? formatDateTime(people.action[0].date) : "-"}
+                    </TableStep.Item>
+                    <TableStep.Item>
+                      {(item.status === "completed" || item.status === "pending")
+                        ? (item.status === "pending" ? "Active" :
+                          <Status width={164} type={statusFieldMap[item.status] as any}>
+                            {statusLabelMap[item.status] as string}
+                          </Status>)
+                        : "-"}
+                    </TableStep.Item>
+                    <TableStep.Item>
+                      {people.action ? (
+                        <Status
+                          width={164}
+                          type={statusFieldMap[people.action[0].type] as any}
+                        >
+                          {people.action[0].type === "success"
+                            ? item.successLabel
+                            : people.action[0].subtype}
+                        </Status>
+                      ) : "-"}
+                    </TableStep.Item>
+                    <TableStep.Item>
+                      {people.action && people.action[0].comment
+                        ? people.action[0].comment
+                        : "-"}
+                    </TableStep.Item>
                   </TableStep.Body>
                   {idx2 !== arr.length - 1 && (
                     <div className="border-b border-[#EBEBEB] mx-10" />
