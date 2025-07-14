@@ -5,8 +5,8 @@ export interface CardsRowProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string
   data: Array<{
     title: React.ReactNode
-    value: React.ReactNode
-    level?: React.ReactNode
+    value: string // altere para string, se necessário!
+    level?: string // altere para string, se necessário!
   }>
 }
 
@@ -49,9 +49,7 @@ const CardsRow: React.FC<CardsRowProps> = ({ title, data }) => {
           >
             {/* Coluna Esquerda */}
             <div
-              className={`flex flex-col ${
-                item.level ? 'font-semibold' : ''
-              }`}
+              className={`flex flex-col ${item.level ? 'font-semibold' : ''}`}
             >
               <h3
                 className="
@@ -74,7 +72,12 @@ const CardsRow: React.FC<CardsRowProps> = ({ title, data }) => {
                   text-[#484A55]
                 "
               >
-                {item.value}
+                {/* Aqui faz o split do value */}
+                {item.value
+                  ? item.value.split('<br/>').map((line, idx) => (
+                      <div key={idx}>{line}</div>
+                    ))
+                  : null}
               </div>
             </div>
 
@@ -102,7 +105,12 @@ const CardsRow: React.FC<CardsRowProps> = ({ title, data }) => {
                     text-[#484A55]
                   "
                 >
-                  {item.level}
+                  {/* Aqui faz o split do level */}
+                  {item.level
+                    ? item.level.split('<br/>').map((line, idx) => (
+                        <div key={idx}>{line}</div>
+                      ))
+                    : null}
                 </div>
               </div>
             )}
