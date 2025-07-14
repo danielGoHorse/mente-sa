@@ -1,16 +1,83 @@
-{steps.map((step, idx) => (
-  <React.Fragment key={step.id || idx}>
-    <TableStep.Title>{step.name}</TableStep.Title>
-    {/* Aqui TableStep.Columns/TableStep.Body dos participantes desse step */}
+ <Fragment key={`approval-${approvalStep.id || idx}`}>
+            <TableStep.Title status={approvalStep.status as workflowStatus}>
+              {/* Numeração tipo 3.1, 3.2... */}
+              <span className="font-normal">
+                {`${groupIdx + 1}.${idx + 1} `}
+              </span>
+              <span className="font-semibold">
+                {approvalStep.name.replace(/^Approvals and Restrictions:? ?/, "")}
+              </span>
+            </TableStep.Title>
 
-    {/* Se for o step de approvals, renderiza os substeps */}
-    {step.name === "Approvals and Restrictions" && step.substeps && (
-      step.substeps.map((sub, subIdx) => (
-        <React.Fragment key={sub.id || subIdx}>
-          <TableStep.Title>{sub.name}</TableStep.Title>
-          {/* TableStep.Columns/TableStep.Body dos participantes do substep */}
-        </React.Fragment>
-      ))
-    )}
-  </React.Fragment>
-))}
+            <TableStep.Columns>
+              <TableStep.Line>Participant</TableStep.Line>
+              <TableStep.Line>Signature</TableStep.Line>
+              <TableStep.Line>Completed</TableStep.Line>
+              <TableStep.Line>Status</TableStep.Line>
+              <TableStep.Line>Result</TableStep.Line>
+              <TableStep.Line>Comments</TableStep.Line>
+            </TableStep.Columns>
+
+            {approvalStep.permissions?.people?.map((people: any, pidx: number, arr: any[]) => (
+              <Fragment key={`${approvalStep.id}-${people.userId}-${pidx}`}>
+                <TableStep.Body>
+                  <TableStep.Item>
+                    <div className="flex items-center text-[#636574]">
+                      {people.firstName} {people.lastName}
+                      {people.addedAt && people.addedBy && (
+                        <div className="text-sm leading-[21px] font-normal text-[#636574]">
+                          {" "}
+                          - Added by {people.addedBy}
+                        </div>
+                      )}
+                    </div>
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {people.action ? people.action[0].signature : "-"}
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {people.action
+                      ? formatDateTime(people.action[0].date)
+                      : "-"}
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {approvalStep.status === "completed" ||
+                    approvalStep.status === "pending"
+                      ? approvalStep.status === "pending"
+                        ? "Active"
+                        : (
+                            <Status
+                              width={164}
+                              type={safeStatusType(statusFieldMap[approvalStep.status])}
+                            >
+                              {statusLabelMap[approvalStep.status]}
+                            </Status>
+                          )
+                      : "-"}
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {people.action ? (
+                      <Status
+                        width={164}
+                        type={safeStatusType(statusFieldMap[people.action[0].type] as workflowStatus)}
+                      >
+                        {people.action[0].type === "success"
+                          ? approvalStep.successLabel
+                          : people.action[0].subtype}
+                      </Status>
+                    ) : (
+                      "-"
+                    )}
+                  </TableStep.Item>
+                  <TableStep.Item>
+                    {people.action && people.action[0].comment
+                      ? people.action[0].comment
+                      : "-"}
+                  </TableStep.Item>
+                </TableStep.Body>
+                {pidx !== arr.length - 1 && (
+                  <div className="border-b border-[#EBEBEB] mx-10" />
+                )}
+              </Fragment>
+            ))}
+          </Fragment>
