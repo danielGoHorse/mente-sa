@@ -1,85 +1,36 @@
-import React from "react";
-import Timeline from "../Timeline/timeline";
-import Image from "next/image";
-import WrapperIcon from "@/app/assets/svg/Wrapper.svg"; // ajuste o path se necessário
+type CardRow = {
+  title: string;
+  value: string;
+  level: string;
+  date?: string;
+};
 
-interface TimelineApprovalsModalProps {
-  open: boolean;
-  onClose: () => void;
-  data: any[];
-}
+function groupCardRows(cardRows: CardRow[]): CardRow[] {
+  const grouped: Record<string, CardRow[]> = {};
 
-export default function TimelineApprovalsModal({
-  open,
-  onClose,
-  data,
-}: TimelineApprovalsModalProps) {
-  if (!open) return null;
+  cardRows.forEach((item) => {
+    // Mantém “Request Status” como está
+    if (item.title.trim() === "Request Status") {
+      if (!grouped[item.title]) grouped[item.title] = [];
+      grouped[item.title].push(item);
+      return;
+    }
 
-  // Fecha ao clicar fora ou sair com o mouse
-  const handleOverlayClose = () => onClose();
-  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+    // Remove prefixo e número final (ex: “Approvals and Restrictions: Acceptance 1” -> “Acceptance”)
+    let baseTitle = item.title
+      .replace(/^Approvals and Restrictions:\s?/, "") // tira o prefixo
+      .replace(/\s+\d+$/, "") // tira o número final
+      .trim();
 
-  return (
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
-      onClick={handleOverlayClose}
-      onMouseLeave={handleOverlayClose}
-    >
-      <div
-        className="relative bg-white rounded-lg p-8 min-w-[400px]"
-        onClick={stopPropagation}
-        onMouseEnter={stopPropagation}
-      >
-        <button
-          className="absolute top-2 right-2"
-          onClick={onClose}
-          aria-label="Fechar"
-        >
-          ✕
-        </button>
-        <div className="mb-4 font-semibold">Approvals and Restrictions</div>
-        <Timeline.Root>
-          {data.map((step, i) => {
-            const isLast = i === data.length - 1;
-            return (
-              <Timeline.Step key={step.id || i} status={step.status} progress={!isLast}>
-                {/* Wrapper quadradinho */}
-                <div className="relative flex flex-col items-center group">
-                  {/* Círculo */}
-                  <Timeline.Circle status={step.status} />
-                  {/* Quadradinho acima do círculo */}
-                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <div className="w-[28px] h-[28px] flex items-center rounded-[5px] justify-center bg-white border border-[#DBDBDB] shadow">
-                      <Image src={WrapperIcon} alt="IconWrapper" />
-                    </div>
-                    {/* Hover box */}
-                    <div
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 p-2 bg-white rounded shadow-lg z-20
-                        opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
-                    >
-                      <div className="text-xs text-gray-700">
-                        <div>
-                          <strong>Step:</strong>{" "}
-                          {step.name.split(":")[1]?.trim() || step.name}
-                        </div>
-                        <div>
-                          <strong>Status:</strong> {step.status}
-                        </div>
-                        {/* outros detalhes se quiser */}
-                      </div>
-                    </div>
-                  </span>
-                  {/* Nome do step */}
-                  <Timeline.Text>
-                    {step.name.split(":")[1]?.trim() || step.name}
-                  </Timeline.Text>
-                </div>
-              </Timeline.Step>
-            );
-          })}
-        </Timeline.Root>
-      </div>
-    </div>
-  );
+    if (!grouped[baseTitle]) grouped[baseTitle] = [];
+    grouped[baseTitle].push(item);
+  });
+
+  // Agrupa: cada grupo vira um único card, valores/levels como linhas internas
+  return Object.entries(grouped).map(([baseTitle, rows]) => ({
+    title: baseTitle,
+    value: rows.map((row) => row.value).join("<br/>"),
+    level: rows.map((row) => row.level).join("<br/>"),
+    date: rows.map((row) => row.date || "").join("<br/>"),
+  }));
 }
