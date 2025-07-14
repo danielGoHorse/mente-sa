@@ -1,36 +1,116 @@
-type CardRow = {
-  title: string;
-  value: string;
-  level: string;
-  date?: string;
-};
+import React from 'react'
+import CardsRowScrollWrapper from '../cardsRowScrollWrapper'
 
-function groupCardRows(cardRows: CardRow[]): CardRow[] {
-  const grouped: Record<string, CardRow[]> = {};
-
-  cardRows.forEach((item) => {
-    // Mantém “Request Status” como está
-    if (item.title.trim() === "Request Status") {
-      if (!grouped[item.title]) grouped[item.title] = [];
-      grouped[item.title].push(item);
-      return;
-    }
-
-    // Remove prefixo e número final (ex: “Approvals and Restrictions: Acceptance 1” -> “Acceptance”)
-    let baseTitle = item.title
-      .replace(/^Approvals and Restrictions:\s?/, "") // tira o prefixo
-      .replace(/\s+\d+$/, "") // tira o número final
-      .trim();
-
-    if (!grouped[baseTitle]) grouped[baseTitle] = [];
-    grouped[baseTitle].push(item);
-  });
-
-  // Agrupa: cada grupo vira um único card, valores/levels como linhas internas
-  return Object.entries(grouped).map(([baseTitle, rows]) => ({
-    title: baseTitle,
-    value: rows.map((row) => row.value).join("<br/>"),
-    level: rows.map((row) => row.level).join("<br/>"),
-    date: rows.map((row) => row.date || "").join("<br/>"),
-  }));
+export interface CardsRowProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string
+  data: Array<{
+    title: React.ReactNode
+    value: React.ReactNode
+    level?: React.ReactNode
+  }>
 }
+
+const CardsRow: React.FC<CardsRowProps> = ({ title, data }) => {
+  if (!data || !Array.isArray(data)) {
+    return <div>Dados inválidos</div>
+  } 
+
+  return (
+    <div>
+      {title && (
+        <h2
+          className="
+            font-semibold
+            text-base
+            leading-6
+            tracking-[0.12px]
+            text-[#484A55]
+            mb-4
+          "
+        >
+          {title}
+        </h2>
+      )}
+
+      <CardsRowScrollWrapper>
+        {data.map((item, index) => (
+          <div
+            key={index}
+            className="
+              flex
+              flex-1
+              bg-[#f0f0f0]
+              rounded-lg
+              py-3
+              px-4
+              gap-4
+              justify-between
+            "
+          >
+            {/* Coluna Esquerda */}
+            <div
+              className={`flex flex-col ${
+                item.level ? 'font-semibold' : ''
+              }`}
+            >
+              <h3
+                className="
+                  font-normal
+                  text-[14px]
+                  leading-[21px]
+                  tracking-[0.12px]
+                  text-[#636574]
+                  m-0
+                "
+              >
+                {item.title}
+              </h3>
+              <div
+                className="
+                  font-semibold
+                  text-[14px]
+                  leading-[21px]
+                  tracking-[0.12px]
+                  text-[#484A55]
+                "
+              >
+                {item.value}
+              </div>
+            </div>
+
+            {/* Coluna Direita (apenas se tiver level) */}
+            {item.level && (
+              <div className="flex flex-col min-w-[42px]">
+                <h3
+                  className="
+                    font-normal
+                    text-[14px]
+                    leading-[21px]
+                    tracking-[0.12px]
+                    text-[#636574]
+                    m-0
+                  "
+                >
+                  Level
+                </h3>
+                <div
+                  className="
+                    font-semibold
+                    text-[14px]
+                    leading-[21px]
+                    tracking-[0.12px]
+                    text-[#484A55]
+                  "
+                >
+                  {item.level}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </CardsRowScrollWrapper>
+    </div>
+  )
+}
+
+export default CardsRow
