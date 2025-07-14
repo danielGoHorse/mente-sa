@@ -1,14 +1,70 @@
-function groupApprovalSteps(steps: any[]) {
-  // Agrupa os steps por tipo (Callback, Credit, etc)
-  const grouped: { [key: string]: any[] } = {};
+<TableStep.Root>
+  {/* Primeiro, agrupe os steps */}
+  {(() => {
+    // Filtra somente os Approvals and Restrictions, o resto mostra normal
+    const approvalSteps = [];
+    const otherSteps = [];
 
-  steps.forEach((step) => {
-    // Extrai o nome "Callback", "Credit", etc
-    const match = step.name.match(/^Approvals and Restrictions: (.+?)\s?\d*$/);
-    const key = match ? match[1].trim() : step.name;
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(step);
-  });
+    data.flat().forEach(step => {
+      if (step.name.startsWith("Approvals and Restrictions")) {
+        approvalSteps.push(step);
+      } else {
+        otherSteps.push(step);
+      }
+    });
 
-  return grouped;
-}
+    // Agrupa Approvals
+    const grouped = groupApprovalSteps(approvalSteps);
+
+    return (
+      <>
+        {/* Renderiza os outros steps normalmente */}
+        {otherSteps.map((item, idx) => (
+          <Fragment key={idx}>
+            <TableStep.Title status={item.status}>
+              {item.name}
+              <div className="text-[#636574]">
+                {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
+              </div>
+            </TableStep.Title>
+            {/* ...colunas/linhas iguais ao seu código */}
+          </Fragment>
+        ))}
+
+        {/* Renderiza os Approvals agrupados */}
+        {Object.entries(grouped).map(([key, steps], idx) => (
+          <Fragment key={key}>
+            <TableStep.Title status={steps[0].status}>
+              {key} ({steps.filter(s => s.status === 'completed').length}/{steps.length})
+            </TableStep.Title>
+            <TableStep.Columns>
+              <TableStep.Line>Participant</TableStep.Line>
+              <TableStep.Line>Signature</TableStep.Line>
+              <TableStep.Line>Completed</TableStep.Line>
+              <TableStep.Line>Status</TableStep.Line>
+              <TableStep.Line>Result</TableStep.Line>
+              <TableStep.Line>Comments</TableStep.Line>
+            </TableStep.Columns>
+            {/* Agora renderiza cada substep */}
+            {steps.map((item, idx) =>
+              item.permissions?.people?.map((people, idx2, arr) => (
+                <Fragment key={`${people.userId}-${idx2}`}>
+                  <TableStep.Body>
+                    <TableStep.Item>
+                      {/* ...participante */}
+                      {people.firstName} {people.lastName}
+                    </TableStep.Item>
+                    {/* ...outros TableStep.Item iguais ao seu código */}
+                  </TableStep.Body>
+                  {idx2 !== arr.length - 1 && (
+                    <div className="border-b border-[#EBEBEB] mx-10" />
+                  )}
+                </Fragment>
+              ))
+            )}
+          </Fragment>
+        ))}
+      </>
+    );
+  })()}
+</TableStep.Root>
