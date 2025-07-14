@@ -1,124 +1,351 @@
-import React from 'react'
-import CardsRowScrollWrapper from '../cardsRowScrollWrapper'
+Chat, o TableStep, teria que mostrar todos os steps, diferente dos outros agrupados....
 
-export interface CardsRowProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string
-  data: Array<{
-    title: React.ReactNode
-    value: string // altere para string, se necessário!
-    level?: string // altere para string, se necessário!
-  }>
-}
+A unica coisa é que por ex. Approvals and Restriction por ex. na frente ele mostra quantos steps tem assim (0/2) no caso tem sei la 18, (0/18) e na frente de cada o passo, tipo Account Officer por ex
 
-const CardsRow: React.FC<CardsRowProps> = ({ title, data }) => {
-  if (!data || !Array.isArray(data)) {
-    return <div>Dados inválidos</div>
-  } 
+
+
+
+"use client";
+
+import React, {
+  Fragment,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  useState,
+} from "react";
+import CardsRow, { CardsRowProps } from "./CardsRow/cardsRow";
+import DataDisplay from "./DataDisplay/dataDisplay";
+import Status from "./Status/status";
+import TableStep from "./TableStep/tableStep";
+import Timeline from "./Timeline/timeline";
+import { formatDateTime } from "@/app/utils/formatDateTime";
+import TimelineScrollWrapper from "./timelineScrollWrapper";
+import TimelineApprovalsModal from "./TimelineApprovalsModal/timelineApprovalsModal";
+import groupCardRows from "./CardsRow/groupCardRows"
+
+export type workflowStatus =
+  | "completed"
+  | "canceled"
+  | "waiting"
+  | "pending"
+  | "skipped";
+
+
+
+export type IHistory = {
+  status: string;
+  data: any[][];
+  timeLine?: { name: string; status: workflowStatus }[];
+  cardRowData?: any[] | [];
+  dataDisplayData?: any[];
+  selectedBank?: string;
+  approvalsSteps?: any[]; // ADICIONE ESSA PROP
+};
+
+export default function History({
+  data,
+  timeLine,
+  cardRowData,
+  dataDisplayData,
+  selectedBank,
+  approvalsSteps = [],
+}: IHistory) {
+  const [showApprovalsModal, setShowApprovalsModal] = useState(false);
+
+
+  const timeLineMap = timeLine ?? [];
+
+  const groupedCardRow  = groupCardRows(cardRowData ?? [])
+
+
+  console.log('>>>>>>>>>>>>',groupedCardRow)
+
+  const statusFieldMap: Record<string, string> = {
+    cancel: "rejected",
+    canceled: "-",
+    completed: "approved",
+    pending: "-",
+    reject: "rejected",
+    return: "partial",
+    success: "approved",
+    waiting: "-",
+  };
+  const statusLabelMap: Record<string, string> = {
+    cancel: "Canceled",
+    canceled: "-",
+    completed: "Completed",
+    pending: "-",
+    return: "Requested change",
+    waiting: "-",
+  };
+
+  interface IPeople {
+    userId: Key | null | undefined;
+    firstName:
+    | string
+    | number
+    | bigint
+    | boolean
+    | ReactElement<any, string | JSXElementConstructor<any>>
+    | Iterable<ReactNode>
+    | null
+    | undefined;
+    lastName:
+    | string
+    | number
+    | bigint
+    | boolean
+    | ReactElement<any, string | JSXElementConstructor<any>>
+    | Iterable<ReactNode>
+    | null
+    | undefined;
+    addedAt?: string;
+    addedBy?: string;
+    approvalsLevel?: string;
+    permissionLevel?: string;
+    indexLevel?: number;
+    action?: {
+      signature: string;
+      subtype: ReactNode;
+      type: string;
+      date: string;
+      comment: any;
+    }[];
+    signature?: string;
+    date?: string;
+    type?: string;
+    comment?: any;
+  }
 
   return (
-    <div>
-      {title && (
-        <h2
-          className="
-            font-semibold
-            text-base
-            leading-6
-            tracking-[0.12px]
-            text-[#484A55]
-            mb-4
-          "
-        >
-          {title}
-        </h2>
+    <div className="p-6">
+      {cardRowData && (
+        <div className="flex flex-col gap-4 mb-6">
+          <CardsRow title="Approvals" data={groupedCardRow} />
+        </div>
       )}
 
-      <CardsRowScrollWrapper>
-        {data.map((item, index) => (
-          <div
-            key={index}
-            className="
-              flex
-              flex-1
-              bg-[#f0f0f0]
-              rounded-lg
-              py-3
-              px-4
-              gap-4
-              justify-between
-            "
-          >
-            {/* Coluna Esquerda */}
-            <div
-              className={`flex flex-col ${item.level ? 'font-semibold' : ''}`}
-            >
-              <h3
-                className="
-                  font-normal
-                  text-[14px]
-                  leading-[21px]
-                  tracking-[0.12px]
-                  text-[#636574]
-                  m-0
-                "
-              >
-                {item.title}
-              </h3>
-              <div
-                className="
-                  font-semibold
-                  text-[14px]
-                  leading-[21px]
-                  tracking-[0.12px]
-                  text-[#484A55]
-                "
-              >
-                {/* Aqui faz o split do value */}
-                {item.value
-                  ? item.value.split('<br/>').map((line, idx) => (
-                      <div key={idx}>{line}</div>
-                    ))
-                  : null}
-              </div>
-            </div>
+      <div className="flex flex-col gap-4">
+        <div className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px] text-left">
+          Timeline
+        </div>
 
-            {/* Coluna Direita (apenas se tiver level) */}
-            {item.level && (
-              <div className="flex flex-col min-w-[42px]">
-                <h3
-                  className="
-                    font-normal
-                    text-[14px]
-                    leading-[21px]
-                    tracking-[0.12px]
-                    text-[#636574]
-                    m-0
-                  "
-                >
-                  Level
-                </h3>
-                <div
-                  className="
-                    font-semibold
-                    text-[14px]
-                    leading-[21px]
-                    tracking-[0.12px]
-                    text-[#484A55]
-                  "
-                >
-                  {/* Aqui faz o split do level */}
-                  {item.level
-                    ? item.level.split('<br/>').map((line, idx) => (
-                        <div key={idx}>{line}</div>
-                      ))
-                    : null}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </CardsRowScrollWrapper>
+        {/* SCROLL WRAPPER */}
+        <div className=" max-full overflow-hidden">
+          <TimelineScrollWrapper>
+            {data
+              .flatMap((subArray, subArrayIndex) =>
+                subArray.map((item, itemIndex) => ({
+                  ...item,
+                  isFromMultiple: subArray.length > 1,
+                  subArrayIndex,
+                  key: `${subArrayIndex}-${itemIndex}`,
+                  originalStatus: item.status as workflowStatus,
+                }))
+              )
+              .map((item: any, idx, flat) => {
+                const isLast = idx === flat.length - 1;
+                const next = flat[idx + 1];
+                const statusValue = timeLine
+                  ? timeLineMap[idx].status
+                  : item.originalStatus;
+                const hasExtra =
+                  !isLast &&
+                  item.isFromMultiple &&
+                  next?.isFromMultiple &&
+                  item.subArrayIndex === next.subArrayIndex;
+
+                // Detecta o step agrupado para abrir modal:
+                const isApprovalsStep = item.name === "Approvals and Restrictions";
+
+                return (
+                  <Fragment key={item.key}>
+                    <Timeline.Step progress={!isLast} status={statusValue}>
+                      <div className="relative flex flex-col items-center justify-center  overflow-visible min-h-[180px]">
+                        {hasExtra && (
+                          <span className="absolute top-[-3px] left-1/2 transform -translate-x-1/2">
+                            <Timeline.Link
+                              status={next?.originalStatus}
+                              hoverContent={
+                                <div className="text-xs  z-10">
+                                  <div>
+                                    <strong>Name:</strong> {item.name}
+                                  </div>
+                                  <div>
+                                    <strong>Status:</strong> {item.originalStatus}
+                                  </div>
+                                  <div>
+                                    <strong>Group:</strong> {item.subArrayIndex}
+                                  </div>
+                                </div>
+                              }
+                            />
+                          </span>
+                        )}
+                        {isApprovalsStep ? (
+                          <>
+                            <span className="inline-flex flex-col items-center cursor-pointer"
+                              onMouseEnter={() => setShowApprovalsModal(true)}
+                              onFocus={() => setShowApprovalsModal(true)}
+                              title="Ver detalhes dos Approvals" >
+                              <Timeline.Circle status={statusValue} />
+                              <Timeline.Text>{item.name}</Timeline.Text>
+                            </span>
+                            <TimelineApprovalsModal
+                              open={showApprovalsModal}
+                              onClose={() => setShowApprovalsModal(false)}
+                              data={approvalsSteps}
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <Timeline.Circle status={statusValue} />
+                            <Timeline.Text>{item.name}</Timeline.Text>
+                          </>
+                        )}
+                      </div>
+                    </Timeline.Step>
+                  </Fragment>
+                );
+              })}
+          </TimelineScrollWrapper>
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <TableStep.Root>
+          {data.map((group, groupIdx) =>
+            group.map((item: any, itemIdx: number) => {
+              const statusValue = timeLine
+                ? timeLineMap[groupIdx].status
+                : (item.status as workflowStatus);
+
+              return (
+                <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
+                  <TableStep.Title status={statusValue}>
+                    {item.approvalsLevel ? (
+                      <div className="flex gap-1">
+                        <div className="font-normal">
+                          {groupIdx + 1}.{item.indexLevel}. {item.name}:
+                        </div>
+                        <div className="font-semibold">
+                          {item.approvalsLevel}
+                        </div>
+                        <br />
+                      </div>
+                    ) : (
+                      `${groupIdx + 1}. ${item.name}`
+                    )}
+                    <div className="text-[#636574]">
+                      {item.permissionLevel ? ` • ${item.permissionLevel}` : ""}
+                    </div>
+                  </TableStep.Title>
+
+                  <TableStep.Columns>
+                    <TableStep.Line>Participant</TableStep.Line>
+                    <TableStep.Line>Signature</TableStep.Line>
+                    <TableStep.Line>Completed</TableStep.Line>
+                    <TableStep.Line>Status</TableStep.Line>
+                    <TableStep.Line>Result</TableStep.Line>
+                    <TableStep.Line>Comments</TableStep.Line>
+                  </TableStep.Columns>
+
+                  {item.permissions?.people?.map(
+                    (people: IPeople, idx: number, arr: IPeople[]) => {
+                      const isPendingOrCompleted =
+                        item.status === "completed" ||
+                        item.status === "pending";
+
+                      return (
+                        <Fragment key={`${people.userId}-${idx}`}>
+                          <TableStep.Body>
+                            <TableStep.Item>
+                              <div className="flex items-center text-[#636574]">
+                                {people.firstName} {people.lastName}
+                                {people.addedAt && people.addedBy && (
+                                  <div className="text-sm leading-[21px] font-normal text-[#636574]">
+                                    {" "}
+                                    - Added by {people.addedBy}
+                                  </div>
+                                )}
+                              </div>
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? people.action[0].signature : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action
+                                ? formatDateTime(people.action[0].date)
+                                : "-"}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {isPendingOrCompleted ? (
+                                item.status === "pending" ? (
+                                  "Active"
+                                ) : (
+                                  <Status
+                                    width={164}
+                                    type={statusFieldMap[item.status] as any}
+                                  >
+                                    {statusLabelMap[item.status] as string}
+                                  </Status>
+                                )
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action ? (
+                                <Status
+                                  width={164}
+                                  type={
+                                    statusFieldMap[people.action[0].type] as any
+                                  }
+                                >
+                                  {people.action[0].type === "success"
+                                    ? item.successLabel
+                                    : people.action[0].subtype}
+                                </Status>
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+
+                            <TableStep.Item>
+                              {people.action && people.action[0].comment
+                                ? people.action[0].comment
+                                : "-"}
+                            </TableStep.Item>
+                          </TableStep.Body>
+
+                          {idx !== arr.length - 1 && (
+                            <div className="border-b border-[#EBEBEB] mx-10" />
+                          )}
+                        </Fragment>
+                      );
+                    }
+                  )}
+                </Fragment>
+              );
+            })
+          )}
+        </TableStep.Root>
+      </div>
+
+      {dataDisplayData && dataDisplayData.length > 0 && (
+        <div className="mt-6">
+          <DataDisplay
+            title={`Process Integration: ${selectedBank}`}
+            data={dataDisplayData}
+          />
+        </div>
+      )}
     </div>
-  )
+  );
 }
-
-export default CardsRow
