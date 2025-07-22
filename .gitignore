@@ -1,14 +1,23 @@
-Error: Route "/Wire-Transfer---USD/[requestId]" used `params.requestId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis     
-    at Page (src\app\(private)\Wire-Transfer---USD\[requestId]\page.tsx:14:68)
-  12 |       <div className="flex min-h-screen flex-col items-center">
-  13 |         <PageTabs
-> 14 |           params={{ requestName: "wire-trasnfer", requestId: params.requestId }}
-     |                                                                    ^
-  15 |           tabTriggerType="request"
-  16 |         />
-  17 |       </div>
+// src/app/(private)/Wire-Transfer---USD/[requestId]/page.tsx
+import PageTitle from "@/components/PageTitle";
+import PageTabs from "./page_tabs";
 
-Chat, como eu li route só te contar que page esta aqui:
+type PageProps = {
+  params: { requestId?: string };
+};
 
-Z:\workspace\wire-client-frontend\src\app\(private)\Wire-Transfer---USD\[requestId]\page.tsx
+export default function Page({ params }: PageProps) {
+  const { requestId } = params; // nada de await aqui
 
+  return (
+    <>
+      <PageTitle title="Wire Transfer - USD" />
+      <div className="flex min-h-screen flex-col items-center">
+        <PageTabs
+          params={{ requestName: "wire-transfer", requestId }} // pode ser undefined
+          tabTriggerType="request"
+        />
+      </div>
+    </>
+  );
+}
