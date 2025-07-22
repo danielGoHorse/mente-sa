@@ -1,30 +1,17 @@
+<CancelRequestModal
+  open={cancelRequestIsOpen}
+  onClose={() => setCancelRequestIsOpen(false)}
+  onSubmit={(reason) => {
+    if (data?.requestId) handleCancelRequest(data.requestId, reason);
+  }}
+  requestId={data?.requestId ?? ""}
+/>
 
- { label: "Creation", content: <CreationContent data={data} /> },
-Type 'RawResponse & { documents: UploadedDocument[]; }' is not assignable to type '[] | undefined'.
-  Type 'RawResponse & { documents: UploadedDocument[]; }' is not assignable to type '[]'.ts(2322)
-CreationContent.tsx(3, 3): The expected type comes from property 'data' which is declared here on type 'IntrinsicAttributes & RequestsProps'
-(property) data?: [] | undefined
-No quick fixes available
 
 
-
-
- <CancelRequestModal
-                open={cancelRequestIsOpen}
-                onClose={() => setCancelRequestIsOpen(false)}
-                onSubmit={(reason) => {
-                  handleCancelRequest(data?.requestId, reason);
-                  // setRequestCanceled(true); // se quiser usar
-                }}
-                requestId={data?.requestId}
-              />
-Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
-  Type 'undefined' is not assignable to type 'string'.ts(2345)
-(property) requestId?: string | undefined
-No quick fixes available
-
-Type 'string | undefined' is not assignable to type 'string'.
-  Type 'undefined' is not assignable to type 'string'.ts(2322)
-CancelRequestModal.tsx(12, 3): The expected type comes from property 'requestId' which is declared here on type 'IntrinsicAttributes & ICancelRequestModal'
-(property) requestId: string
-No quick fixes available
+function handleCancelRequest(requestId: string, reason: string) { ... }
+// para
+function handleCancelRequest(requestId: string | undefined, reason: string) {
+  if (!requestId) return;
+  // ...
+}
