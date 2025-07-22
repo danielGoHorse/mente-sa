@@ -1,529 +1,36 @@
-// src/app/store/types.ts
-export interface UploadedDocument {
-  documentName: string;
-  documentUUID: string;              // obrigatório
-  serverPath: string;                // "uuid/file.ext"
-  createdAt: string;                 // ISO string
-  uploadedBy: { fullName?: string; userId?: string };
-
-  // opcionais
-  documentSize?: number;
-  documentStatus?: string;
-  documentURL?: string;              // blob local para preview imediato
-  documentURLPreview?: string;
-  serverUrlSigned?: string;          // URL assinada (expira)
-  itemRef?: string;
-}
-
-/**
- * Alias para manter compatibilidade com lugares que usam `Document`
- * (se você ainda precisa exportar esse nome).
- */
-export type Document = UploadedDocument;
+Unhandled Runtime Error
 
 
+Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.
 
-// src/app/store/documentsStore/documentStore.ts
-import { create } from 'zustand';
-import { UploadedDocument } from '@/app/store/types';
+src\components\RadioGroup.tsx (27:5) @ _c2
 
-export interface FeeDocuments {
-  documentList: UploadedDocument[];
-  setDocumentList: (documentList: UploadedDocument[]) => void;
-  clearDocumentList: () => void;
-}
 
-export const useDocumentStore = create<FeeDocuments>((set) => ({
-  documentList: [],
-  setDocumentList: (docs) =>
-    set({
-      documentList: docs.map((d) => ({
-        ...d,
-        documentName: d.documentName.replace(/\s/g, '_'),
-      })),
-    }),
-  clearDocumentList: () => set({ documentList: [] }),
-}));
+  25 | >(({ className, ...props }, ref) => {
+  26 |   return (
+> 27 |     <RadioGroupPrimitive.Item
+     |     ^
+  28 |       ref={ref}
+  29 |       className={cn(
+  30 |         "aspect-square h-[18px] w-[18px] rounded-full border-1 border-solid bg-white text-[#8A8C98] focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+Call Stack
+67
 
+Show 60 ignore-listed frame(s)
+Array.map
+<anonymous> (0:0)
+button
+<anonymous> (0:0)
+_c2
+src\components\RadioGroup.tsx (27:5)
+Object.render
+src\components\Requests.tsx (597:23)
+Requests
+src\components\Requests.tsx (584:15)
 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
-import UploadDocumentIcon from "@/app/assets/svg/upload-document.svg";
-import Image from "next/image";
-import { useParams } from "next/navigation";
-import { UploadedDocument } from "@/app/store/types";
-
-interface DocumentUploadProps {
-  onError: (
-    reason: "Large" | "UploadError" | "NotSupported" | "Upload" | "ResetError"
-  ) => void;
-  setDocumentList: (document: UploadedDocument[]) => void;
-  documentList: UploadedDocument[];
-  disabled?: boolean;
-  userData: any;
-  baseUrl: string;
-  pathUrl: string;
-  bucketName: string;
-  itemRef?: string;
-}
-
-function extractServerPath(message: string): string {
-  const match = message.match(/file\s(.+)\swas uploaded/i);
-  return match?.[1] ?? "";
-}
-
-const Uploader: React.FC<DocumentUploadProps> = (props) => {
-  const [files, setFiles] = useState<File[]>([]);
-  const [documentList, setDocumentListLocal] = useState<UploadedDocument[]>(props.documentList);
-  const [uuid] = useState(crypto.randomUUID());
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [inputId] = useState(() => `file-input-${uuid}`);
-
-  const params = useParams();
-
-  useEffect(() => {
-    setDocumentListLocal(props.documentList);
-  }, [props.documentList]);
-
-  const isFileSupported = (file: File) => {
-    const supported = [".PDF", ".EML", ".DOC", ".DOCX", ".XLS", ".XLSX", ".CSV", ".PNG", ".JPG"];
-    const ext = file.name.split(".").pop()?.toUpperCase();
-    return !!ext && supported.includes(`.${ext}`);
-  };
-
-  const isFileSizeValid = (file: File) => {
-    const maxSize = 10 * 1024 * 1024; // 10 MB
-    return file.size <= maxSize;
-  };
-
-  const handleFileValidation = (file: File): boolean => {
-    if (!isFileSupported(file)) {
-      props.onError("NotSupported");
-      return false;
-    }
-    if (!isFileSizeValid(file)) {
-      props.onError("Large");
-      return false;
-    }
-    return true;
-  };
-
-  const handleUpload = async (file: File, UUID: string) => {
-    props.onError("ResetError");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("application", props.bucketName);
-    formData.append("randomUUID", UUID);
-
-    try {
-      const { data } = await axios.post(`${props.baseUrl}${props.pathUrl}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (e) => {
-          const percent = Math.round((e.loaded * 100) / (e.total ?? 1));
-          setUploadProgress(percent);
-        },
-      });
-
-      setUploadProgress(null);
-      props.onError("Upload");
-
-      return {
-        serverPath: extractServerPath(data?.data?.message ?? ""),
-        serverUrlSigned: data?.data?.url ?? "",
-      };
-    } catch (error) {
-      setUploadProgress(null);
-      props.onError("UploadError");
-      return null;
-    }
-  };
-
-  async function processNewFiles(newFiles: File[]) {
-    const first = newFiles[0];
-    if (!first) return;
-
-    // evita duplicado por nome (melhore depois se necessário)
-    const exists = documentList.some(
-      (doc) => doc.documentName.replace(/\s/g, "_") === first.name.replace(/\s/g, "_")
-    );
-    if (exists) return;
-
-    const getUUID = documentList[0]?.documentUUID ?? uuid;
-
-    if (!handleFileValidation(first)) return;
-
-    const uploadResp = await handleUpload(first, getUUID);
-    if (!uploadResp) return;
-
-    const uploadedDocs: UploadedDocument[] = newFiles.map((document) => ({
-      itemRef: props.itemRef,
-      documentName: document.name,
-      documentSize: document.size,
-      documentStatus: "uploaded",
-      documentUUID: getUUID,
-      serverPath: uploadResp.serverPath,
-      serverUrlSigned: uploadResp.serverUrlSigned,
-      documentURL: URL.createObjectURL(document),
-      documentURLPreview: URL.createObjectURL(document),
-      uploadedBy: {
-        fullName: props.userData.fullName,
-        userId: props.userData.userName,
-      },
-      createdAt: new Date().toISOString(),
-    }));
-
-    const merged = [...documentList, ...uploadedDocs];
-    setDocumentListLocal(merged);
-    props.setDocumentList(merged);
-
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    setFiles((prev) => [...prev, ...newFiles]);
-  }
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    if (props.disabled) return;
-    const newFiles = Array.from(e.dataTransfer.files);
-    processNewFiles(newFiles);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newFiles = Array.from(e.target.files ?? []);
-    processNewFiles(newFiles);
-  };
-
-  return (
-    <div className={`${params.requestId && "cursor-not-allowed pointer-events-none"}`}>
-      <div className="w-full flex" onDrop={handleDrop} onDragOver={handleDragOver}>
-        <label
-          htmlFor={inputId}
-          className="box-border flex flex-col justify-center items-center p-[24px] gap-[16px] w-full h-[216px] bg-[#f7f7f8] border-[1px] border-dashed border-[#b8b8b8] rounded-[8px] flex-none order-1 self-stretch flex-grow-0 cursor-pointer"
-        >
-          {uploadProgress !== null ? (
-            <div className="w-[30%] h-2 bg-gray-200 rounded mt-2">
-              <div
-                className="h-full bg-blue-500 rounded transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          ) : (
-            <>
-              <Image src={UploadDocumentIcon} alt="upload-document-icon" />
-              <a className="font-[Figtree] not-italic font-normal text-[16px] leading-[24px] flex items-center text-center tracking-[0.12px] text-[#636574]">
-                Drag and drop your files here
-              </a>
-              <a className="font-[Figtree] not-italic font-normal text-[16px] leading-[24px] flex items-center text-center tracking-[0.12px] text-[#636574]">
-                Accepted file types: .pdf, .eml, .doc, .docx, .xls, .xlsx, .csv, .png, or .jpg (max 10 MB)
-              </a>
-            </>
-          )}
-
-          <input
-            id={inputId}
-            type="file"
-            accept=".pdf, .eml, .doc, .docx, .xls, .xlsx, .csv, .png, .jpg"
-            onChange={handleFileInputChange}
-            multiple
-            ref={fileInputRef}
-            style={{ display: "none" }}
-            disabled={props.disabled}
-          />
-        </label>
-      </div>
-    </div>
-  );
-};
-
-export default Uploader;
-
-
-
-"use client";
-import Image from "next/image";
-import React, { Fragment, useEffect, useState } from "react";
-import DocumentIcon from "@/app/assets/svg/document-icon.svg";
-import WarningIcon from "@/app/assets/svg/warning-color.svg";
-import VisibilityOffIcon from "@/app/assets/svg/visibility-off.svg";
-import DownloadIcon from "@/app/assets/svg/download.svg";
-import DeleteIcon from "@/app/assets/svg/delete.svg";
-import ErrorIcon from "@/app/assets/svg/error-circle-color.svg";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./Tooltip";
-import Uploader from "./Uploader";
-import { formatDateTime } from "@/lib/utils";
-import { UploadedDocument } from "@/app/store/types";
-
-interface DocumentsProps {
-  userData: any;
-  showUploader: boolean;
-  baseUrl: string;
-  pathUrl: string;
-  bucketName: string;
-  messageOnUpload?: boolean;
-  disabled?: boolean;
-  itemRef?: string;
-  getListDocument: UploadedDocument[];
-  onUploadDocuments: (documents: UploadedDocument[]) => void;
-}
-
-export const Documents = ({
-  showUploader = true,
-  userData,
-  baseUrl,
-  pathUrl,
-  bucketName,
-  messageOnUpload = true,
-  disabled = false,
-  itemRef,
-  getListDocument,
-  onUploadDocuments,
-}: DocumentsProps) => {
-  const [uploadError, setUploadError] = useState(false);
-  const [notSupported, setNotSupported] = useState(false);
-  const [tooLarge, setTooLarge] = useState(false);
-  const [upload, setUpload] = useState(false);
-  const [documentList, setDocumentList] = useState<UploadedDocument[]>(getListDocument);
-
-  const filteredDocs = itemRef
-    ? documentList.filter((item) => item.itemRef === itemRef)
-    : documentList;
-
-  useEffect(() => {
-    onUploadDocuments(documentList);
-  }, [documentList, onUploadDocuments]);
-
-  const handleSetError = (
-    reason: "Large" | "UploadError" | "NotSupported" | "Upload" | "ResetError"
-  ) => {
-    if (reason === "Large") setTooLarge(true);
-    if (reason === "UploadError") setUploadError(true);
-    if (reason === "NotSupported") setNotSupported(true);
-    if (reason === "Upload") setUpload(true);
-    if (reason === "ResetError") {
-      setTooLarge(false);
-      setUploadError(false);
-      setNotSupported(false);
-    }
-  };
-
-  const handleDelete = (key: string) => {
-    const updated = documentList.filter(
-      (item) => (item.serverPath ?? item.documentUUID) !== key
-    );
-    setDocumentList(updated);
-  };
-
-  const handleDownload = (key: string) => {
-    const doc = documentList.find((i) => (i.serverPath ?? i.documentUUID) === key);
-    if (!doc) return;
-    const link: HTMLAnchorElement = document.createElement("a");
-    link.href = doc.serverUrlSigned ?? doc.documentURL ?? "";
-    link.download = doc.documentName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleViewDocument = (key: string) => {
-    const doc = documentList.find((i) => (i.serverPath ?? i.documentUUID) === key);
-    if (!doc) return;
-    const link: HTMLAnchorElement = document.createElement("a");
-    link.href = doc.serverUrlSigned ?? doc.documentURLPreview ?? "";
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <div className="w-full">
-      {showUploader && !disabled && (
-        <>
-          {uploadError && (
-            <div className="py-2">
-              <div className="gap-[16px] flex rounded-[4px] px-[15px] py-[12px] flex-col border border-solid border-transparent bg-[rgb(251,_234,_234)]">
-                <div className="gap-[8px] flex items-center ">
-                  <div>
-                    <Image src={ErrorIcon} width={24} height={24} alt="error-icon" />
-                  </div>
-                  <div>
-                    <span className="font-[Figtree] not-italic font-normal text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(72,_74,_85)]">
-                      An error occurred when uploading your file. Please try again
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          {notSupported && (
-            <div className="py-2">
-              <div className="gap-[16px] flex rounded-[4px] px-[15px] py-[12px] flex-col border border-solid border-transparent bg-[rgb(251,_234,_234)]">
-                <div className="gap-[8px] flex items-center ">
-                  <div>
-                    <Image src={ErrorIcon} width={24} height={24} alt="error-icon" />
-                  </div>
-                  <div>
-                    <span className="font-[Figtree] not-italic font-normal text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(72,_74,_85)]">
-                      This document type is not supported.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {tooLarge && (
-            <div className="py-2">
-              <div className="gap-[16px] flex rounded-[4px] px-[15px] py-[12px] flex-col border border-solid border-transparent bg-[rgb(251,_234,_234)]">
-                <div className="gap-[8px] flex items-center ">
-                  <div>
-                    <Image src={ErrorIcon} width={24} height={24} alt="error-icon" />
-                  </div>
-                  <div>
-                    <span className="font-[Figtree] not-italic font-normal text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(72,_74,_85)]">
-                      The document is larger than supported. Please upload a file up to 10 MB.
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <Uploader
-            itemRef={itemRef}
-            onError={handleSetError}
-            userData={userData}
-            setDocumentList={setDocumentList}
-            documentList={documentList}
-            baseUrl={baseUrl}
-            pathUrl={pathUrl}
-            bucketName={bucketName}
-          />
-        </>
-      )}
-
-      {documentList && documentList.length === 0 && !showUploader && (
-        <div className="flex items-center justify-center content-center min-h-[296px]">
-          <div className="flex flex-col items-center">
-            <Image src={DocumentIcon} alt="document-icon" />
-            <p className="font-[Figtree] not-italic font-normal text-[16px] leading-[21px] tracking-[0.12px] mt-[20px]">
-              There are no documents attached to this request.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {upload && messageOnUpload && (
-        <div className="py-[25px]">
-          <div className="gap-[16px] flex rounded-[4px] px-[15px] py-[12px] flex-col border border-solid border-transparent bg-[rgb(254,_248,_232)]">
-            <div className="gap-[8px] flex items-center ">
-              <div>
-                <Image src={WarningIcon} width={24} height={24} alt="warning-icon" />
-              </div>
-              <div>
-                <span className="font-[Figtree] not-italic font-normal text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(72,_74,_85)]">
-                  The uploaded files will be saved only when submitting the request from the 'New Request' tab.
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {filteredDocs.length > 0 && (
-        <div className="flex flex-wrap justify-between md:justify-start">
-          <div className="w-full flex flex-wrap justify-between px-[8px] py-[12px]">
-            <p className="font-[Figtree] font-semibold text-[14px] leading-[21px] tracking-[0.12px] text-[#484a55]" style={{ width: "55%" }}>
-              File
-            </p>
-            <p className="font-[Figtree] font-semibold text-[14px] leading-[21px] tracking-[0.12px] text-[#484a55] w-[90px]">
-              Uploaded By
-            </p>
-            <p className="font-[Figtree] font-semibold text-[14px] leading-[21px] tracking-[0.12px] text-[#484a55] w-[90px]">
-              Upload Date
-            </p>
-            <p className="font-[Figtree] font-semibold text-[14px] leading-[21px] tracking-[0.12px] text-[#484a55] w-[90px]">
-              Actions
-            </p>
-          </div>
-
-          <div className="w-full border-b border-b-[1px_solid_rgb(219,_219,_219)]" />
-
-          {filteredDocs.map((item) => {
-            const key = item.serverPath ?? item.documentUUID;
-            return (
-              <Fragment key={key}>
-                <div className="w-full flex flex-wrap justify-between px-[8px] py-[12px]">
-                  <a style={{ width: "56%" }} className="font-[Figtree] text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(99,_101,_116)] whitespace-nowrap overflow-hidden overflow-ellipsis">
-                    {item.documentName}
-                  </a>
-                  <a className="font-[Figtree] text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(99,_101,_116)] whitespace-nowrap overflow-hidden overflow-ellipsis">
-                    {item.uploadedBy.fullName}
-                  </a>
-                  <a className="font-[Figtree] text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(99,_101,_116)] whitespace-nowrap overflow-hidden overflow-ellipsis">
-                    {item.createdAt ? formatDateTime(item.createdAt, true) : "-"}
-                  </a>
-                  <div className="flex">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <a className="flex cursor-pointer mr-[8px]" onClick={() => handleViewDocument(key)}>
-                            <Image src={VisibilityOffIcon} alt="visibility-icon" />
-                          </a>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Preview</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <a className="flex cursor-pointer mr-[8px]" onClick={() => handleDownload(key)}>
-                            <Image src={DownloadIcon} alt="download-icon" />
-                          </a>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Download</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <a className="flex cursor-pointer mr-[8px]" onClick={() => handleDelete(key)}>
-                            <Image src={DeleteIcon} alt="delete-icon" />
-                          </a>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delete</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-                <div className="w-full border-b border-b-[1px_solid_rgba(0,_0,_0,_0.05)]"></div>
-              </Fragment>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
-
-
-
-"use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs";
 import CreationContent from "./content/CreationContent";
@@ -531,7 +38,7 @@ import ValidationContent from "./content/ValidationsContent";
 import { Documents } from "@/components/Documents";
 import { useAuthStore } from "@/app/store/auth/authStore";
 import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
-import { UploadedDocument } from "@/app/store/types";
+import { Document, UploadedDocument } from "@/app/store/types";
 import RequestConfigProvider from "@/app/providers/getRequestProvider";
 import { TabsNavigation } from "@/components/TabsNavigation";
 import Requests from "@/components/Requests";
@@ -551,7 +58,7 @@ import { Approvals } from "@/components/Approvals";
 import AlertColorIcon from "@/app/assets/svg/alert-color.svg";
 import CancelRequestIcon from "@/app/assets/svg/close.svg";
 import { useCancelRequestProvider } from "@/app/providers/cancelRequestProvider";
-import api from "@/config/api"; // ajuste o caminho certo
+import api from "@/app/api";
 
 type IPageTabsParams = {
   params: {
@@ -570,35 +77,48 @@ type CancelRequestWarningProps = {
 export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
   const { getRequestConfig } = RequestConfigProvider(params.requestId);
   const { userData } = useAuthStore((state) => state);
-  const { documentList, setDocumentList, clearDocumentList } = useDocumentStore((state) => state);
+  const { documentList, setDocumentList } = useDocumentStore((state) => state);
   const { data } = getRequestConfig;
-
   const [pendingComments, setPendingComments] = useState<string[]>([]);
   const requestId = data?.requestId ? data.requestId : uuidv7();
-  const [requestQualificationIsOpen, setRequestQualificationIsOpen] = useState(false);
+  const [requestQualificationIsOpen, setRequestQualificationIsOpen] =
+    useState(false);
   const [cancelRequestIsOpen, setCancelRequestIsOpen] = useState(false);
   const [requestCanceled, setRequestCanceled] = useState(false);
   const [openErrorModal, setOpenErrorModal] = useState<boolean>(false);
   const { mutation } = useCancelRequestProvider();
-  const [dataCancelRequest, setDataCancelRequest] = useState<CancelRequestWarningProps>();
+  const [dataCancelRequest, setDataCancelRequest] =
+    useState<CancelRequestWarningProps>();
 
-  const validationStatus = data?.timeline?.flat()?.find((item: any) => item?.name?.includes("Validation"));
+  const validationStatus = data?.timeline
+    ?.flat()
+    ?.find((item: any) => item?.name?.includes("Validation"));
 
   useEffect(() => {
-    // Limpa ao desmontar
+
     return () => {
-      clearDocumentList();
+      setDocumentList([]);
     };
-  }, [clearDocumentList]);
+  }, [setDocumentList]);
 
-  if (!data) return null;
-
+  if (!data) {
+    return;
+  }
   const workflowData = toHistoryData(data);
   const historyData = parseHistoryToData(workflowData);
-
   const mockedApprovals = [
-    { title: "Acceptance", userName: "GinaS", date: "2/12/2023", hour: "10:22 AM" },
-    { title: "Compliance", userName: "MarceloH", date: "2/12/2023", hour: "11:47 AM" },
+    {
+      title: "Acceptance",
+      userName: "GinaS",
+      date: "2/12/2023",
+      hour: "10:22 AM",
+    },
+    {
+      title: "Compliance",
+      userName: "MarceloH",
+      date: "2/12/2023",
+      hour: "11:47 AM",
+    },
   ];
 
   const handleCancelRequest = (requestId: string, reason: string) => {
@@ -606,11 +126,11 @@ export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
       { requestId },
       {
         onSuccess: (response) => {
-          const res = response?.data;
+          const data = response?.data;
           const formatted = {
-            userThatCanceled: res.userName,
-            date: res.date,
-            reason: res.note || reason,
+            userThatCanceled: data.userName,
+            date: data.date,
+            reason: data.note || reason,
           };
           setDataCancelRequest(formatted);
           return formatted;
@@ -620,49 +140,72 @@ export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
   };
 
   async function onSubmit() {
-    try {
-      if (!documentList?.length) {
-        setOpenErrorModal(true);
-        return;
-      }
-
-      const docsForSubmit = documentList.map(
-        (d) => d.serverPath ?? `${d.documentUUID}/${d.documentName}`
-      );
-
-      const payload = {
-        // ...resto dos campos do seu form
-        documents: {
-          content: docsForSubmit,
-          required: false,
-        },
-        requestId,
-        comments: pendingComments,
-      };
-
-      await api.post("/v1/requests", payload);
-      // sucesso...
-    } catch (err) {
-      console.error(err);
+  try {
+    // 1) Validação básica
+    if (!documentList?.length) {
       setOpenErrorModal(true);
+      return;
     }
+
+    // 2) Monta array de paths estáveis
+    const docsForSubmit = documentList.map((d) => d.serverPath ?? `${d.documentUUID}/${d.documentName}`);
+
+    const payload = {
+      // ...demais campos do seu form
+      documents: {
+        content: docsForSubmit,
+        required: false,
+      },
+      requestId,
+      comments: pendingComments,
+    };
+
+    await api.post("/v1/requests", payload);
+
+    // sucesso...
+  } catch (err) {
+    console.error(err);
+    setOpenErrorModal(true);
   }
+}
+
+ 
 
   return (
-    <Tabs defaultValue={tabTriggerType} className="min-h-screen w-full py-7 px-6">
+    <Tabs
+      defaultValue={tabTriggerType}
+      className="min-h-screen w-full py-7 px-6"
+    >
       <TabsList>
-        <TabsTrigger value="request" className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]">
-          {data.caseNumber ? `Request: ${data.caseNumber}` : "New Request"}
+        <TabsTrigger
+          value="request"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          {data.caseNumber ? (
+            <>{`Request: ${data.caseNumber}`}</>
+          ) : (
+            "New Request"
+          )}
         </TabsTrigger>
-        <TabsTrigger value="documents" className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]">
+        <TabsTrigger
+          value="documents"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
           Documents
         </TabsTrigger>
-        <TabsTrigger value="history" className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]">
+        <TabsTrigger
+          value="history"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
           History
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="request" forceMount className="aria-selected:block data-[state=inactive]:hidden">
+      <TabsContent
+        value="request"
+        forceMount
+        className="aria-selected:block data-[state=inactive]:hidden"
+      >
         {validationStatus.status === "waiting" ? (
           <Requests data={data} />
         ) : (
@@ -672,10 +215,18 @@ export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
                 <div className="w-1/2 pr-4">
                   <TabsNavigation
                     tabs={[
-                      { label: "Creation", content: <CreationContent data={data} /> },
+                      {
+                        label: "Creation",
+                        content: <CreationContent data={data} />,
+                      },
                       {
                         label: "Validations",
-                        content: <ValidationContent data={data} cancelRequestWarning={dataCancelRequest} />,
+                        content: (
+                          <ValidationContent
+                            data={data}
+                            cancelRequestWarning={dataCancelRequest}
+                          />
+                        ),
                       },
                     ]}
                     initialTab={0}
@@ -683,26 +234,31 @@ export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
                 </div>
                 <div className="w-[6px] bg-[#F7F7F8] rounded-[15px] h-min-[605px] h-max-full"></div>
                 <div className="w-1/2 pl-4">
-                  <InstructionEmail />
+                  <InstructionEmail></InstructionEmail>
                 </div>
               </div>
-
               <div className="my-8">
                 <Comments
                   userName={userData.userName || ""}
-                  disabled={!!data}
-                  onOutput={(comments: string[]) => setPendingComments(comments)}
+                  disabled={data ? true : false}
+                  onOutput={(comments: string[]) =>
+                    setPendingComments(comments)
+                  }
                   requestId={requestId}
                 />
               </div>
-
               {data && <Approvals approvalsList={mockedApprovals} />}
 
               <Dialog open={openErrorModal} onOpenChange={setOpenErrorModal}>
                 <DialogContent className="w-[400px] h-[286px] pb-0">
                   <div className="flex flex-col justify-center items-center w-full">
                     <div className="flex justify-center">
-                      <Image src={AlertColorIcon} alt="Alert Icon" width={56} height={56} />
+                      <Image
+                        src={AlertColorIcon}
+                        alt="Alert Icon"
+                        width={56}
+                        height={56}
+                      />
                     </div>
                     <p className="text-[#1E2347] my-6 font-semibold text-lg text-center">
                       Please fix the highlighted errors before submitting.
@@ -719,12 +275,21 @@ export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
                   </div>
                 </DialogContent>
               </Dialog>
-
               {!data ? (
                 <div className="flex justify-between gap-4 mt-6">
                   <div className="flex gap-4">
-                    <Button variant="print" size="print" onClick={() => window.print()}>
-                      <Image src={PrintIcon} alt="print-icon" width={24} height={24} className="mr-2" />
+                    <Button
+                      variant="print"
+                      size="print"
+                      onClick={() => window.print()}
+                    >
+                      <Image
+                        src={PrintIcon}
+                        alt="print-icon"
+                        width={24}
+                        height={24}
+                        className="mr-2"
+                      />
                       Print
                     </Button>
                   </div>
@@ -738,26 +303,31 @@ export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
                       className="mr-2"
                       onClick={() => setCancelRequestIsOpen(true)}
                     >
-                      <Image src={CancelRequestIcon} alt="CancelRequest" />
+                      <Image
+                        src={CancelRequestIcon}
+                        alt="CancelRequest"
+                      ></Image>
                       Cancel request
                     </Button>
                   </div>
                   <div className="flex justify-end mt-14">
-                    <Button variant="submit" size="submit" onClick={onSubmit}>
+                    <Button
+                      variant="submit"
+                      size="submit"
+                     onClick={onSubmit}
+                    >
                       Submit
                     </Button>
                   </div>
                 </div>
               )}
             </div>
-
             {requestQualificationIsOpen && (
               <RequestClarificationModal
                 open={requestQualificationIsOpen}
                 onOpenChange={setRequestQualificationIsOpen}
               />
             )}
-
             {cancelRequestIsOpen && (
               <CancelRequestModal
                 open={cancelRequestIsOpen}
@@ -775,20 +345,24 @@ export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
 
       <TabsContent
         value="documents"
-        className="mt-0 rounded-b-lg rounded-r-lg bg-white aria-selected:block data-[state=inactive]:hidden rounded-lg p-6"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-[white] aria-selected:block data-[state=inactive]:hidden rounded-lg p-6"
       >
-        <Documents
-          baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
-          bucketName="conductor-client"
-          pathUrl="/v1/file"
-          getListDocument={documentList}
-          showUploader={true}
-          userData={userData}
-          onUploadDocuments={(docs: UploadedDocument[]) => setDocumentList(docs)}
-        />
+        {
+           <Documents
+           baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
+           bucketName="conductor-client"
+           pathUrl="/v1/file"
+           getListDocument={documentList}
+           showUploader={true}
+           userData={userData}
+           onUploadDocuments={(docs: UploadedDocument[]) => setDocumentList(docs)}
+         />
+        }
       </TabsContent>
-
-      <TabsContent value="history" className="mt-0 rounded-b-lg rounded-r-lg bg-white p-6">
+      <TabsContent
+        value="history"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-white p-6"
+      >
         <History
           status={historyData.status}
           data={historyData.data}
@@ -798,8 +372,8 @@ export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
           approvalsSteps={historyData.approvalsSteps}
         />
       </TabsContent>
+
+      <TabsContent value="history">{<p>History</p>}</TabsContent>
     </Tabs>
   );
 }
-
-
