@@ -3,7 +3,79 @@
 import React, { useEffect, useRef, useState } from "react";
 // ...imports
 
-export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
+export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {// src/app/providers/getRequestProvider.ts
+"use client";
+
+import api from "@/app/api";
+import { useQuery } from "@tanstack/react-query";
+import { UploadedDocument } from "@/app/store/types";
+
+type RawData = {
+  documents?: { content?: string[]; required?: boolean };
+  createdBy: string;
+  createdAt: string;
+  // ... resto do shape
+};
+
+async function getSignedLink(serverPath: string) {
+  // ajuste se o endpoint for diferente
+  const res = await api.get("/v1/file/link", {
+    params: {
+      application: "conductor-client",
+      path: serverPath,
+    },
+  });
+  return res.data.data; // { url, urlPreview }
+}
+
+async function normalizeDocs(raw: RawData): Promise<UploadedDocument[]> {
+  const paths = raw.documents?.content ?? [];
+  return Promise.all(
+    paths.map(async (p) => {
+      const [uuid, ...rest] = p.split("/");
+      const name = rest.join("/");
+      const { url, urlPreview } = await getSignedLink(p);
+      return {
+        serverPath: p,
+        documentUUID: uuid,
+        documentName: name,
+        serverUrlSigned: url,
+        documentURLPreview: urlPreview,
+        uploadedBy: { fullName: raw.createdBy, userId: raw.createdBy },
+        createdAt: raw.createdAt ?? new Date().toISOString(),
+        documentStatus: "uploaded",
+      };
+    })
+  );
+}
+
+const fetchRequestConfig = async () => {
+  const { data } = await api.get(`/v1/wire-client-aggregator/pages/wire`);
+  const raw: RawData = data.data;
+  const docs = await normalizeDocs(raw);
+  return { ...raw, documents: docs };
+};
+
+export const fetchRequestConfigById = async (id: string) => {
+  const { data } = await api.get(`/v1/wire-client-aggregator/pages/wire-client/${id}`);
+  const raw: RawData = data.data;
+  const docs = await normalizeDocs(raw);
+  return { ...raw, documents: docs };
+};
+
+export default function RequestConfigProvider(requestId?: string) {
+  const getRequestConfig = useQuery({
+    queryKey: ["requestConfig", requestId],
+    queryFn: () => (requestId ? fetchRequestConfigById(requestId) : fetchRequestConfig()),
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    retry: false,
+  });
+
+  return { getRequestConfig };
+}
+
   const { getRequestConfig } = RequestConfigProvider(params.requestId);
   const { userData } = useAuthStore();
   const { documentList, setDocumentList } = useDocumentStore();
