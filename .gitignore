@@ -1,320 +1,752 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import React, { useEffect, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs";
-import CreationContent from "./content/CreationContent";
-import ValidationContent from "./content/ValidationsContent";
-import { Documents } from "@/components/Documents";
-import { useAuthStore } from "@/app/store/auth/authStore";
-import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
-import { UploadedDocument } from "@/app/store/types";
-import RequestConfigProvider from "@/app/providers/getRequestProvider";
-import { TabsNavigation } from "@/components/TabsNavigation";
-import Requests from "@/components/Requests";
-import History from "@/components/history/History";
-import { toHistoryData } from "@/app/utils/toHistoryData";
-import { parseHistoryToData } from "@/app/utils/parseHistoryToData";
-import InstructionEmail from "@/components/InstructionEmail";
-import { Comments } from "@/components/Comments";
-import { uuidv7 } from "uuidv7";
-import { Button } from "@/components/Button";
-import CancelRequestModal from "@/components/CancelRequestModal";
-import RequestClarificationModal from "@/components/RequestClarificationModal";
 import Image from "next/image";
-import PrintIcon from "@/app/assets/svg/print-color.svg";
+import { useEffect, useState } from "react";
+import BriefCaseIcon from "../app/assets/svg/briefcase-icon.svg";
+import CheckIcon from "../app/assets/svg/check.svg";
+import PrintIcon from "../app/assets/svg/print-color.svg";
+import AlertColorIcon from "../app/assets/svg/alert-color.svg";
+import XIcon from "../app/assets/svg/x.svg";
+import { Approvals } from "./Approvals";
+import { useRef } from "react";
+import { BankAccount, BeneficiaryData, HistoryData } from "@/app/store/types";
+import BeneficiaryInformationSection, {
+  BeneficiaryInformationSectionHandles,
+} from "./Beneficiary";
+import { Button } from "./Button";
+import ClientSearch from "./ClientInformation";
+import { Comments } from "./Comments";
+import EmailConfirmation from "./EmailConfirmation";
+import ForceCallbackSection from "./ForceCallbackSection";
+import InstructionEmail from "./InstructionEmail";
+import ClientInfoCard from "./ValidationClientInformation";
+
+import {
+  Controller,
+  FormProvider,
+  SubmitHandler,
+  useForm,
+} from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { SubmitProvider } from "@/app/providers/submitProvider";
+import { RadioGroup, RadioGroupItem } from "./RadioGroup";
+import WireTransferCard from "./Wire-information";
+import ActiveWireTransfers from "./ActiveWireTransfers";
+import AdditionalInformation from "./AdditionalInformation";
+import CancelRequestModal from "./CancelRequestModal";
+import { Label } from "./Label";
+import { uuidv7 } from "uuidv7";
+import { useAuthStore } from "@/app/store/auth/authStore";
+import RequestClarificationModal from "./RequestClarificationModal";
+import { useAccountSummaryProvider } from "@/app/providers/accountSummaryProvider";
+import Notification from "./Notification";
+import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogFooter } from "@/components/Modal";
-import { Approvals } from "@/components/Approvals";
-import AlertColorIcon from "@/app/assets/svg/alert-color.svg";
-import CancelRequestIcon from "@/app/assets/svg/close.svg";
-import { useCancelRequestProvider } from "@/app/providers/cancelRequestProvider";
-import api from "@/app/api"; // ajuste o path se for diferente
-import { DialogTitle } from "@radix-ui/react-dialog";
+import { CommentsProvider } from "@/app/providers/commentProvider";
+import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
 
-type IPageTabsParams = {
-  params: {
-    requestName: string;
-    requestId?: string;
-  };
-  tabTriggerType: string;
+type RequestsProps = {
+  data?: any;
 };
 
-type CancelRequestWarningProps = {
-  userThatCanceled: string;
-  date: string;
-  reason: string;
-};
-
-export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
-  const { getRequestConfig } = RequestConfigProvider(params.requestId);
-  const { userData } = useAuthStore((state) => state);
-  const { documentList, setDocumentList } = useDocumentStore((state) => state);
-
-  const { data } = getRequestConfig;
-
-  const [pendingComments, setPendingComments] = useState<string[]>([]);
-  const requestId = data?.requestId ? data.requestId : uuidv7();
+const Requests = ({ data }: RequestsProps) => {
   const [requestQualificationIsOpen, setRequestQualificationIsOpen] =
     useState(false);
   const [cancelRequestIsOpen, setCancelRequestIsOpen] = useState(false);
-  const [requestCanceled, setRequestCanceled] = useState(false);
+  const { mutation } = SubmitProvider();
+  const [cifSelected, setCifSelected] = useState(false);
+  const [cif, setCif] = useState<string | undefined>(undefined);
+  const [selectedAccountNumber, setSelectedAccountNumber] = useState<
+    string | undefined
+  >();
+  const [authorizedEmails, setAuthorizedEmails] = useState<string[]>([]);
+  const [authorizedEmailExist, setAuthorizedEmailExist] = useState(false);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
+  const [hasClient, setHasClient] = useState(data ?? false);
   const [openErrorModal, setOpenErrorModal] = useState<boolean>(false);
-  const { mutation } = useCancelRequestProvider();
-  const [dataCancelRequest, setDataCancelRequest] =
-    useState<CancelRequestWarningProps>();
 
-  const validationStatus = data?.timeline
-    ?.flat()
-    ?.find((item: any) => item?.name?.includes("Validation"));
+  const { userData } = useAuthStore((state) => state);
 
-  // // Limpa documentos ao desmontar a página
-  // useEffect(() => {
-  //   return () => {
-  //     setDocumentList([]);
-  //   };
-  // }, [setDocumentList]);
+  const router = useRouter();
+  const requestId = data?.requestId ? data.requestId : uuidv7();
+  const beneficiaryRef = useRef<BeneficiaryInformationSectionHandles>(null);
 
-  if (!data) return null;
+  const [requestCanceled, setRequestCanceled] = useState(false);
+  const [pendingComments, setPendingComments] = useState<string[]>([]);
 
-  const workflowData = toHistoryData(data);
-  const historyData = parseHistoryToData(workflowData);
+  const { documentList } = useDocumentStore((state) => state);
 
-  const mockedApprovals = [
-    { title: "Acceptance", userName: "GinaS", date: "2/12/2023", hour: "10:22 AM" },
-    { title: "Compliance", userName: "MarceloH", date: "2/12/2023", hour: "11:47 AM" },
-  ];
+  const CreationFormSchema = z.object({
+    transferType: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    initiator: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    cifAccountNumber: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    accountNumber: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    availableBalance: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    amountUSD: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    levelUrgency: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    originSource: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    clientEmail: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    temporaryClientEmail: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    emailIsVerified: z.object({
+      content: z.boolean(),
+      required: z.boolean(),
+    }),
+    insufficientFunds: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    insufficientFundsComment: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    notificationContactAttempt: z.object({
+      content: z.boolean().optional(),
+      required: z.boolean(),
+    }),
+    notificationProcesedPayPlus: z.object({
+      content: z.boolean().optional(),
+      required: z.boolean(),
+    }),
+    notificationAdditionalUsers: z.object({
+      content: z.boolean().optional(),
+      required: z.boolean(),
+    }),
+    notificationUsers: z.object({
+      content: z.array(z.string()).optional(),
+      required: z.boolean(),
+    }),
+    forceCallbackToggle: z.object({
+      content: z.boolean().optional(),
+      required: z.boolean(),
+    }),
+    forceCallbackBestNumberCall: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    forceCallbackTemporaryPhoneNumber: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    emailAddress: z.object({
+      content: z.array(z.string()).optional(),
+      required: z.boolean(),
+    }),
+    documents: z.object({
+      content: z.array(z.string()).optional(),
+      required: z.boolean(),
+    }),
+    temporaryEmail: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    reasonTransaction: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    pleaseSpecify: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    bankAbaRoutingNumber: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    bankCountry: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryCountry: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    relationshipBeneficiary: z.object({
+      content: z.string(),
+      required: z.boolean(),
+    }),
+    swiftBicBeneficiary: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    selectedBeneficiary: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    templateName: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryAccountNumber: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryBankCity: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryBankName: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryName: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryAddressLine1: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryAddressLine2: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryCity: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryState: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryZipCode: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryOBIToggle: z.object({
+      content: z.boolean().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryOBIFFC1: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryOBIFFC2: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryOBIFFC3: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryOBIFFC4: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    beneficiaryToggle: z.object({
+      content: z.boolean().optional(),
+      required: z.boolean(),
+    }),
+    accountOfficer: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+    accountName: z.object({
+      content: z.string().optional(),
+      required: z.boolean(),
+    }),
+  });
 
-  const handleCancelRequest = (requestId: string, reason: string) => {
-    mutation.mutate(
-      { requestId },
-      {
-        onSuccess: (response) => {
-          const r = response?.data;
-          const formatted = {
-            userThatCanceled: r.userName,
-            date: r.date,
-            reason: r.note || reason,
-          };
-          setDataCancelRequest(formatted);
-          return formatted;
-        },
-      }
-    );
+  type CreationFormData = z.infer<typeof CreationFormSchema>;
+
+  const getValues = () => {
+    if (!data) {
+      return;
+    }
+
+    return data;
   };
 
-  async function onSubmit() {
-    try {
-      if (!documentList?.length) {
-        setOpenErrorModal(true);
-        return;
-      }
+  const methods = useForm<CreationFormData>({
+    resolver: zodResolver(CreationFormSchema),
+    defaultValues: {
+      transferType: {
+        content: getValues()?.transferType.content ?? "usd-domestic",
+        required: true,
+      },
+      initiator: {
+        content: getValues()?.initiator.content ?? userData.fullName,
+        required: true,
+      },
+      cifAccountNumber: {
+        content: getValues()?.cifAccountNumber.content ?? "",
+        required: true,
+      },
+      accountNumber: {
+        content: getValues()?.accountNumber.content ?? "",
+        required: true,
+      },
+      amountUSD: {
+        content: getValues()?.amountUSD.content ?? "",
+        required: true,
+      },
+      availableBalance: {
+        content: getValues()?.availableBalance?.content ?? "0",
+        required: false,
+      },
+      levelUrgency: {
+        content: getValues()?.levelUrgency.content ?? "",
+        required: true,
+      },
+      originSource: {
+        content: getValues()?.originSource.content ?? "",
+        required: false,
+      },
+      clientEmail: {
+        content: getValues()?.clientEmail.content ?? "",
+        required: false,
+      },
+      temporaryClientEmail: {
+        content: getValues()?.temporaryClientEmail.content ?? "",
+        required: false,
+      },
+      emailIsVerified: {
+        content: getValues()?.emailIsVerified.content ?? false,
+        required: false,
+      },
+      insufficientFunds: {
+        content: getValues()?.insufficientFunds.content ?? "",
+        required: false,
+      },
+      insufficientFundsComment: {
+        content: getValues()?.insufficientFundsComment.content ?? "",
+        required: false,
+      },
+      emailAddress: {
+        content: [],
+        required: false,
+      },
+      documents: {
+        content: [],
+        required: false,
+      },
+      temporaryEmail: {
+        content: getValues()?.temporaryEmail.content ?? "",
+        required: false,
+      },
+      notificationContactAttempt: {
+        content: getValues()?.notificationContactAttempt.content ?? false,
+        required: false,
+      },
+      notificationProcesedPayPlus: {
+        content: getValues()?.notificationProcesedPayPlus.content ?? false,
+        required: false,
+      },
+      notificationAdditionalUsers: {
+        content: getValues()?.notificationAdditionalUsers.content ?? false,
+        required: false,
+      },
+      notificationUsers: {
+        content: getValues()?.notificationUsers.content ?? [],
+        required: false,
+      },
+      forceCallbackToggle: {
+        content: getValues()?.forceCallbackToggle?.content ?? false,
+        required: false,
+      },
+      forceCallbackBestNumberCall: {
+        content: getValues()?.forceCallbackBestNumberCall.content ?? "",
+        required: false,
+      },
+      forceCallbackTemporaryPhoneNumber: {
+        content: getValues()?.forceCallbackTemporaryPhoneNumber.content ?? "",
+        required: false,
+      },
+      reasonTransaction: {
+        content: getValues()?.reasonTransaction.content ?? "",
+        required: true,
+      },
+      pleaseSpecify: {
+        content: getValues()?.pleaseSpecify.content ?? "",
+        required: false,
+      },
+      relationshipBeneficiary: {
+        content: getValues()?.relationshipBeneficiary.content ?? "",
+        required: true,
+      },
+      swiftBicBeneficiary: {
+        content: getValues()?.swiftBicBeneficiary.content ?? "",
+        required: false,
+      },
+      selectedBeneficiary: {
+        content: getValues()?.selectedBeneficiary.content ?? "",
+        required: false,
+      },
+      templateName: {
+        content: getValues()?.templateName.content ?? "",
+        required: false,
+      },
+      bankAbaRoutingNumber: {
+        content: getValues()?.bankAbaRoutingNumber.content ?? "",
+        required: false,
+      },
+      bankCountry: {
+        content: getValues()?.bankCountry.content ?? "US",
+        required: false,
+      },
+      beneficiaryCountry: {
+        content: getValues()?.beneficiaryCountry.content ?? "US",
+        required: false,
+      },
+      beneficiaryAccountNumber: {
+        content: getValues()?.beneficiaryAccountNumber.content ?? "",
+        required: false,
+      },
+      beneficiaryBankCity: {
+        content: getValues()?.beneficiaryBankCity.content ?? "",
+        required: false,
+      },
+      beneficiaryBankName: {
+        content: getValues()?.beneficiaryBankName.content ?? "",
+        required: false,
+      },
+      beneficiaryName: {
+        content: getValues()?.beneficiaryName.content ?? "",
+        required: false,
+      },
+      beneficiaryAddressLine1: {
+        content: getValues()?.beneficiaryAddressLine1?.content ?? "",
+        required: false,
+      },
+      beneficiaryAddressLine2: {
+        content: getValues()?.beneficiaryAddressLine2?.content ?? "",
+        required: false,
+      },
+      beneficiaryCity: {
+        content: getValues()?.beneficiaryCity.content ?? "",
+        required: false,
+      },
+      beneficiaryState: {
+        content: getValues()?.beneficiaryState.content ?? "",
+        required: false,
+      },
+      beneficiaryZipCode: {
+        content: getValues()?.beneficiaryZipCode.content ?? "",
+        required: false,
+      },
+      beneficiaryOBIToggle: {
+        content: getValues()?.beneficiaryOBIToggle?.content ?? false,
+        required: false,
+      },
+      beneficiaryOBIFFC1: {
+        content: getValues()?.beneficiaryOBIFFC1.content ?? "",
+        required: false,
+      },
+      beneficiaryOBIFFC2: {
+        content: getValues()?.beneficiaryOBIFFC2.content ?? "",
+        required: false,
+      },
+      beneficiaryOBIFFC3: {
+        content: getValues()?.beneficiaryOBIFFC3.content ?? "",
+        required: false,
+      },
+      beneficiaryOBIFFC4: {
+        content: getValues()?.beneficiaryOBIFFC4.content ?? "",
+        required: false,
+      },
+      beneficiaryToggle: {
+        content: getValues()?.beneficiaryToggle?.content ?? false,
+        required: false,
+      },
+      accountOfficer: {
+        content: getValues()?.accountOfficer?.content ?? "",
+        required: false,
+      },
+      accountName: {
+        content: getValues()?.accountName?.content ?? "",
+        required: false,
+      },
+    },
+  });
 
-      const docsForSubmit = documentList.map(
-        (d) => d.serverPath ?? `${d.documentUUID}/${d.documentName}`
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: {},
+  } = methods;
+
+  const { addComment } = CommentsProvider();
+
+  const onSubmit: SubmitHandler<CreationFormData> = (data) => {
+    const body: any = {
+      jsonRequest: {
+        ...data,
+      },
+    };
+
+    mutation
+      .mutateAsync(body)
+      .then(async (response) => {
+        const requestId = response.data.responseId;
+
+        for (const comment of pendingComments) {
+          await addComment({
+            module: "wire-client",
+            requestId: requestId,
+            userId: userData.id,
+            userName: userData.userName,
+            comment,
+          });
+        }
+        router.push(`/success-screen?requestId=${requestId}`);
+      })
+      .catch((error) => {
+        if (error.response.status === 400) {
+          setOpenErrorModal(true);
+        }
+      });
+  };
+
+  const { query } = useAccountSummaryProvider(cif || "");
+
+  useEffect(() => {
+    const documentsName = documentList.map((x) => x.documentName);
+
+    setValue("documents", {
+      content: documentsName ?? [],
+      required: false,
+    });
+  }, [documentList, setValue]);
+
+  useEffect(() => {
+    if (query.data?.data?.accounts) {
+      const transformedAccounts = query.data.data.accounts.map(
+        (apiAccount, index) => ({
+          id: `${apiAccount.accountNumber}-${index}`,
+          accountNumber: apiAccount.accountNumber,
+          name: apiAccount.accountDescription,
+          availableBalance: apiAccount.availableBalance || 0,
+          origin: "internal",
+          accountType: apiAccount.accountType,
+          accountProductCode: apiAccount.accountProductCode,
+        })
       );
-
-      const payload = {
-        // ...adicione aqui os demais campos do formulário
-        documents: {
-          content: docsForSubmit,
-          required: false,
-        },
-        requestId,
-        comments: pendingComments,
-      };
-
-      await api.post("/v1/requests", payload);
-      // TODO: feedback de sucesso
-    } catch (err) {
-      console.error(err);
-      setOpenErrorModal(true);
+      setAccounts(transformedAccounts);
     }
-  }
+  }, [cifSelected, cif, query.data, query.isLoading]);
+
+  const mockedApprovals = [
+    {
+      title: "Acceptance",
+      userName: "GinaS",
+      date: "2/12/2023",
+      hour: "10:22 AM",
+    },
+    {
+      title: "Compliance",
+      userName: "MarceloH",
+      date: "2/12/2023",
+      hour: "11:47 AM",
+    },
+  ];
 
   return (
-    <Tabs defaultValue={tabTriggerType} className="min-h-screen w-full py-7 px-6">
-      <TabsList>
-        <TabsTrigger
-          value="request"
-          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
-        >
-          {data.caseNumber ? `Request: ${data.caseNumber}` : "New Request"}
-        </TabsTrigger>
-
-        <TabsTrigger
-          value="documents"
-          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
-        >
-          Documents
-        </TabsTrigger>
-
-        <TabsTrigger
-          value="history"
-          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
-        >
-          History
-        </TabsTrigger>
-      </TabsList>
-
-      {/* REQUEST TAB */}
-      <TabsContent
-        value="request"
-        forceMount
-        className="aria-selected:block data-[state=inactive]:hidden"
-      >
-        {validationStatus.status === "waiting" ? (
-          <Requests data={data} />
-        ) : (
-          <div className="w-full flex">
-            <div className="bg-white rounded-lg p-8">
-              <div className="w-full flex">
-                <div className="w-1/2 pr-4">
-                  <TabsNavigation
-                    tabs={[
-                      { label: "Creation", content: <CreationContent data={data} /> },
-                      {
-                        label: "Validations",
-                        content: (
-                          <ValidationContent
-                            data={data}
-                            cancelRequestWarning={dataCancelRequest}
-                          />
-                        ),
-                      },
-                    ]}
-                    initialTab={0}
-                  />
-                </div>
-
-                <div className="w-[6px] bg-[#F7F7F8] rounded-[15px] h-min-[605px] h-max-full"></div>
-
-                <div className="w-1/2 pl-4">
-                  <InstructionEmail />
-                </div>
-              </div>
-
-              <div className="my-8">
-                <Comments
-                  userName={userData.userName || ""}
-                  disabled={!!data}
-                  onOutput={(comments: string[]) => setPendingComments(comments)}
-                  requestId={requestId}
-                />
-              </div>
-
-              {data && <Approvals approvalsList={mockedApprovals} />}
-
-              <Dialog open={openErrorModal} onOpenChange={setOpenErrorModal}>
-                <DialogContent className="w-[400px] h-[286px] pb-0">
-                  <DialogTitle></DialogTitle>
-                  <div className="flex flex-col justify-center items-center w-full">
-                    <div className="flex justify-center">
-                      <Image src={AlertColorIcon} alt="Alert Icon" width={56} height={56} />
+    <div className="bg-white rounded-lg p-8">
+      <div className="w-full flex">
+        <div className="w-1/2 pr-4">
+          <FormProvider {...methods}>
+            <p className="text-[#484A55] text-lg font-semibold mb-4">
+              Transfer Type
+            </p>
+            <div className="flex mb-4">
+              <Controller
+                name="transferType"
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup
+                    defaultValue="usd-domestic"
+                    value={field.value.content}
+                    disabled={data}
+                    onValueChange={(value) => {
+                      field.onChange({ content: value, required: true });
+                    }}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="usd-domestic" id="usd-domestic" />
+                      <Label htmlFor="usd-domestic">USD - Domestic</Label>
                     </div>
-                    <p className="text-[#1E2347] my-6 font-semibold text-lg text-center">
-                      Please fix the highlighted errors before submitting.
-                    </p>
-                    <DialogFooter className="w-full">
-                      <Button
-                        variant="modalError"
-                        size="modalError"
-                        onClick={() => setOpenErrorModal(false)}
-                      >
-                        Close
-                      </Button>
-                    </DialogFooter>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              {!data ? (
-                <div className="flex justify-between gap-4 mt-6">
-                  <div className="flex gap-4">
-                    <Button variant="print" size="print" onClick={() => window.print()}>
-                      <Image
-                        src={PrintIcon}
-                        alt="print-icon"
-                        width={24}
-                        height={24}
-                        className="mr-2"
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem
+                        value="usd-international"
+                        id="usd-international"
                       />
-                      Print
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex justify-between">
-                  <div className="flex justify-end mt-14">
-                    <Button
-                      variant="cancelRequest"
-                      size="cancelRequest"
-                      className="mr-2"
-                      onClick={() => setCancelRequestIsOpen(true)}
-                    >
-                      <Image src={CancelRequestIcon} alt="CancelRequest" />
-                      Cancel request
-                    </Button>
-                  </div>
-                  <div className="flex justify-end mt-14">
-                    <Button variant="submit" size="submit" onClick={onSubmit}>
-                      Submit
-                    </Button>
-                  </div>
-                </div>
-              )}
+                      <Label htmlFor="usd-international">
+                        USD - International
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                )}
+              />
             </div>
 
+            <ClientSearch
+              data={data}
+              setCif={setCif}
+              setCifSelected={setCifSelected}
+              setSelectedAccountNumber={setSelectedAccountNumber}
+              setAuthorizedEmail={setAuthorizedEmails}
+              setAuthorizedEmailExist={setAuthorizedEmailExist}
+              onClientFound={() => setHasClient(true)}
+              onClientClear={() => setHasClient(false)}
+              disabled={data}
+            />
+
+            <WireTransferCard
+              hasClient={hasClient}
+              preselectedBankId={getValues()?.accountNumber.content}
+              accounts={accounts}
+              selectedCif={cif || undefined}
+              selectedAccountNumber={selectedAccountNumber}
+              authorizedEmails={authorizedEmails}
+              authorizedEmailExist={authorizedEmailExist}
+              disabled={data}
+            />
+
+            {hasClient && (
+              <>
+                <BeneficiaryInformationSection
+                  ref={beneficiaryRef}
+                  isDomestic={true}
+                  disabled={data}
+                />
+                <AdditionalInformation disabled={data} />
+
+                {watch("accountNumber").content.trim() && (
+                  <ActiveWireTransfers user={userData.userName} />
+                )}
+                <Notification disabled={data} />
+                <ForceCallbackSection
+                  cif={cif || ""}
+                  appName={userData.userName}
+                  disabled={data}
+                />
+                {watch("transferType").content === "usd-international" && (
+                  <EmailConfirmation cif={cif || ""} />
+                )}
+              </>
+            )}
+          </FormProvider>
+        </div>
+        <div className="w-[6px] bg-[#F7F7F8] rounded-[15px] h-min-[605px] h-max-full"></div>
+        <div className="w-1/2 pl-4">
+          <InstructionEmail></InstructionEmail>
+        </div>
+      </div>
+
+      <div className="my-8">
+        <Comments
+          userName={userData.userName || ""}
+          disabled={data ? true : false}
+          onOutput={(comments: string[]) => setPendingComments(comments)}
+          requestId={requestId}
+        />
+      </div>
+
+      {data && <Approvals approvalsList={mockedApprovals} />}
+
+      <Dialog open={openErrorModal} onOpenChange={setOpenErrorModal}>
+        <DialogContent className="w-[400px] h-[286px] pb-0">
+          <div className="flex flex-col justify-center items-center w-full">
+            <div className="flex justify-center">
+              <Image
+                src={AlertColorIcon}
+                alt="Alert Icon"
+                width={56}
+                height={56}
+              />
+            </div>
+            <p className="text-[#1E2347] my-6 font-semibold text-lg text-center">
+              Please fix the highlighted errors before submitting.
+            </p>
+            <DialogFooter className="w-full">
+              <Button
+                variant="modalError"
+                size="modalError"
+                onClick={() => setOpenErrorModal(false)}
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {data ? (
+        <div className="flex justify-between gap-4 mt-6">
+          <div className="flex gap-4">
+            <Button variant="print" size="print" onClick={() => window.print()}>
+              <Image
+                src={PrintIcon}
+                alt="print-icon"
+                width={24}
+                height={24}
+                className="mr-2"
+              />
+              Print
+            </Button>
             {requestQualificationIsOpen && (
               <RequestClarificationModal
                 open={requestQualificationIsOpen}
                 onOpenChange={setRequestQualificationIsOpen}
               />
             )}
-
-            {cancelRequestIsOpen && (
-              <CancelRequestModal
-                open={cancelRequestIsOpen}
-                onClose={() => setCancelRequestIsOpen(false)}
-                onSubmit={(reason) => {
-                  handleCancelRequest(data?.requestId, reason);
-                  setRequestCanceled(true);
-                }}
-                requestId={data?.requestId}
-              />
-            )}
           </div>
-        )}
-      </TabsContent>
-
-      {/* DOCUMENTS TAB */}
-      <TabsContent
-        value="documents"
-        className="mt-0 rounded-b-lg rounded-r-lg bg-white aria-selected:block data-[state=inactive]:hidden rounded-lg p-6"
-      >
-        <Documents
-          baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
-          bucketName="conductor-client"
-          pathUrl="/v1/file"
-          getListDocument={documentList}
-          showUploader={true}
-          userData={userData}
-          onUploadDocuments={(docs: UploadedDocument[]) => setDocumentList(docs)}
-        />
-      </TabsContent>
-
-      {/* HISTORY TAB */}
-      <TabsContent
-        value="history"
-        className="mt-0 rounded-b-lg rounded-r-lg bg-white p-6"
-      >
-        <History
-          status={historyData.status}
-          data={historyData.data}
-          cardRowData={historyData.cardRowData}
-          dataDisplayData={historyData.dataDisplayData}
-          selectedBank={historyData.selectedBank}
-          approvalsSteps={historyData.approvalsSteps}
-        />
-      </TabsContent>
-    </Tabs>
+          {cancelRequestIsOpen && (
+            <CancelRequestModal
+              open={cancelRequestIsOpen}
+              onClose={() => setCancelRequestIsOpen(false)}
+              onSubmit={(reason) => {
+                setRequestCanceled(true);
+              }}
+              requestId={data?.requestId}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="flex justify-end mt-14">
+          <Button
+            variant="submit"
+            size="submit"
+            onClick={() => handleSubmit(onSubmit)()}
+          >
+            Submit
+          </Button>
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default Requests;
