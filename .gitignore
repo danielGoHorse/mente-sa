@@ -1,33 +1,3 @@
-type CancelRequestWarning = {
-  userThatCanceled: string;
-  date: string;
-  reason: string;
-};
-
-function handleCancelRequest(
-  requestId: string | undefined,
-  reason: string,
-  mutation: ReturnType<typeof useCancelRequestProvider>["mutation"],
-  setDataCancelRequest: React.Dispatch<React.SetStateAction<CancelRequestWarning | undefined>>
-) {
-  if (!requestId) return; // nada a fazer sem id
-
-  mutation.mutate(
-    { requestId, reason }, // ajuste se sua API precisa do reason no body
-    {
-      onSuccess: (response) => {
-        const r = response?.data;
-        const formatted: CancelRequestWarning = {
-          userThatCanceled: r.userName,
-          date: r.date,
-          reason: r.note || reason,
-        };
-        setDataCancelRequest(formatted);
-      },
-      onError: (err) => {
-        console.error("Erro ao cancelar request:", err);
-        // opcional: exibir toast/modal aqui
-      },
-    }
-  );
-}
+onSubmit={(reason) => {
+  handleCancelRequest(data?.requestId, reason, mutation, setDataCancelRequest);
+}}
