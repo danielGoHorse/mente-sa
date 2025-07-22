@@ -1,21 +1,30 @@
-// src/app/(private)/Wire-Transfer---USD/[requestId]/page.tsx
-import PageTitle from "@/components/PageTitle";
-import PageTabs from "./page_tabs";
+DanielG@NYDEVVDI0027 MINGW64 /z/workspace/wire-client-frontend (SubmitDocument)
+$ npm run build
 
-type PageProps = { params: { requestId?: string } };
+> wire-client@0.1.0 build
+> next build
 
-export default async function Page({ params }: PageProps) {
-  const { requestId } = await params; // 👈 satisfaz o Next
+   ▲ Next.js 15.2.4
+   - Environments: .env
 
-  return (
-    <>
-      <PageTitle title="Wire Transfer - USD" />
-      <div className="flex min-h-screen flex-col items-center">
-        <PageTabs
-          params={{ requestName: "wire-transfer", requestId }}
-          tabTriggerType="request"
-        />
-      </div>
-    </>
-  );
-}
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping linting
+   Checking validity of types  ...Failed to compile.
+
+.next/types/app/(private)/Wire-Transfer---USD/[requestId]/page.ts:34:29
+Type error: Type 'PageProps' does not satisfy the constraint 'import("Z:/workspace/wire-client-frontend/.next/types/app/(private)/Wire-Transfer---USD/[requestId]/page").PageProps'.
+  Types of property 'params' are incompatible.
+    Type '{ requestId?: string | undefined; }' is missing the following properties from type 'Promise<any>': then, catch, finally, [Symbol.toStringTag]
+
+  32 |
+  33 | // Check the prop type of the entry function
+> 34 | checkFields<Diff<PageProps, FirstArg<TEntry['default']>, 'default'>>()
+     |                             ^
+  35 |
+  36 | // Check the arguments and return type of the generateMetadata function
+  37 | if ('generateMetadata' in entry) {
+Next.js build worker exited with code: 1 and signal: null
+
+DanielG@NYDEVVDI0027 MINGW64 /z/workspace/wire-client-frontend (SubmitDocument)
+$
