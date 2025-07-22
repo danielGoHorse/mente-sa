@@ -1,3 +1,100 @@
+A primeira é a que vem todos os dados com o data que eu coloquei la embaixo...as outras duas, na ordem apresentam o que eu te mostro a seguir:
+
+Request URL
+https://api.dev.k8s.safra.int/v1/wire-client-aggregator/pages/wire-client/1c2d9676-ea12-4453-a02a-6b0faea39109
+Request Method
+GET
+Status Code
+200 OK
+Remote Address
+192.168.100.240:443
+Referrer Policy
+strict-origin-when-cross-origin
+
+Request URL
+https://comments-api.dev.k8s.safra.int/comments/wire-client/1c2d9676-ea12-4453-a02a-6b0faea39109
+Request Method
+GET
+Status Code
+200 OK
+Remote Address
+192.168.100.240:443
+Referrer Policy
+strict-origin-when-cross-origin
+
+{data: [],…}
+data
+: 
+[]
+links
+: 
+{,…}
+current
+: 
+"/comments/wire-client/1c2d9676-ea12-4453-a02a-6b0faea39109?page=1&limit=20&sortBy=createdAt:ASC"
+meta
+: 
+{itemsPerPage: 20, totalItems: 0, currentPage: 1, totalPages: 0, sortBy: [["createdAt", "ASC"]]}
+currentPage
+: 
+1
+itemsPerPage
+: 
+20
+sortBy
+: 
+[["createdAt", "ASC"]]
+0
+: 
+["createdAt", "ASC"]
+totalItems
+: 
+0
+totalPages
+: 
+0
+
+Request URL
+https://comments-api.dev.k8s.safra.int/comments/wire-client/1c2d9676-ea12-4453-a02a-6b0faea39109
+Request Method
+GET
+Status Code
+200 OK
+Remote Address
+192.168.100.240:443
+Referrer Policy
+strict-origin-when-cross-origin
+
+data: [],…}
+data
+: 
+[]
+links
+: 
+{,…}
+current
+: 
+"/comments/wire-client/1c2d9676-ea12-4453-a02a-6b0faea39109?page=1&limit=20&sortBy=createdAt:ASC"
+meta
+: 
+{itemsPerPage: 20, totalItems: 0, currentPage: 1, totalPages: 0, sortBy: [["createdAt", "ASC"]]}
+currentPage
+: 
+1
+itemsPerPage
+: 
+20
+sortBy
+: 
+[["createdAt", "ASC"]]
+totalItems
+: 
+0
+totalPages
+: 
+0
+
+
 {
   "requestId": "1c2d9676-ea12-4453-a02a-6b0faea39109",
   "caseId": "7b7a7af3-0d9b-484a-9f79-1da54d6129f2",
