@@ -1,7 +1,29 @@
-{
-    "code": 200,
-    "data": {
-        "message": "The file aa531718-2ec4-4d66-b07e-c416dd63de33/document.pdf was uploaded",
-        "url": "https://minio.dev.k8s.safra.int/conductor-client/aa531718-2ec4-4d66-b07e-c416dd63de33/document.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=FFeuG0gEVNwJAsn4%2F20250722%2Fk8s-dev%2Fs3%2Faws4_request&X-Amz-Date=20250722T071222Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=b56010a239a2a083c0864939376d9ccd2fdc58e6d286dca5e6ca567c80789fef"
+async function onSubmit() {
+  try {
+    // 1) Validação básica
+    if (!documentList?.length) {
+      setOpenErrorModal(true);
+      return;
     }
+
+    // 2) Monta array de paths estáveis
+    const docsForSubmit = documentList.map((d) => d.serverPath ?? `${d.documentUUID}/${d.documentName}`);
+
+    const payload = {
+      // ...demais campos do seu form
+      documents: {
+        content: docsForSubmit,
+        required: false,
+      },
+      requestId,
+      comments: pendingComments,
+    };
+
+    await api.post("/v1/requests", payload);
+
+    // sucesso...
+  } catch (err) {
+    console.error(err);
+    setOpenErrorModal(true);
+  }
 }
