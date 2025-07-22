@@ -1,9 +1,4 @@
-// src/app/(private)/Wire-Transfer---USD/[requestId]/page_tabs.tsx
-"use client";
-import React, { useEffect, useRef, useState } from "react";
-// ...imports
-
-export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {// src/app/providers/getRequestProvider.ts
+// src/app/providers/getRequestProvider.ts
 "use client";
 
 import api from "@/app/api";
@@ -74,82 +69,4 @@ export default function RequestConfigProvider(requestId?: string) {
   });
 
   return { getRequestConfig };
-}
-
-  const { getRequestConfig } = RequestConfigProvider(params.requestId);
-  const { userData } = useAuthStore();
-  const { documentList, setDocumentList } = useDocumentStore();
-  const { data } = getRequestConfig;
-
-  const [pendingComments, setPendingComments] = useState<string[]>([]);
-  const requestId = data?.requestId ?? uuidv7();
-  const [requestQualificationIsOpen, setRequestQualificationIsOpen] = useState(false);
-  const [cancelRequestIsOpen, setCancelRequestIsOpen] = useState(false);
-  const [openErrorModal, setOpenErrorModal] = useState(false);
-  const { mutation } = useCancelRequestProvider();
-  const [dataCancelRequest, setDataCancelRequest] = useState<CancelRequestWarningProps>();
-
-  // --------- HIDRATA DOCS UMA VEZ -----------
-  const hydratedRef = useRef(false);
-  useEffect(() => {
-    if (!data || hydratedRef.current) return;
-
-    // se o provider já devolveu UploadedDocument[], ótimo:
-    if (Array.isArray(data.documents) && data.documents.length) {
-      setDocumentList(data.documents);
-      hydratedRef.current = true;
-      return;
-    }
-
-    // fallback: se veio no formato {content:[]}
-    if (data.documents?.content?.length) {
-      const docs = data.documents.content.map((p: string) => {
-        const [uuid, ...rest] = p.split("/");
-        return {
-          serverPath: p,
-          documentUUID: uuid,
-          documentName: rest.join("/"),
-          uploadedBy: { fullName: data.createdBy, userId: data.createdBy },
-          createdAt: data.createdAt ?? new Date().toISOString(),
-          documentStatus: "uploaded",
-        } as UploadedDocument;
-      });
-      setDocumentList(docs);
-      hydratedRef.current = true;
-    }
-  }, [data, setDocumentList]);
-
-  if (!data) return null;
-
-  const validationStatus = data?.timeline?.flat()?.find((i: any) => i?.name?.includes("Validation"));
-
-  // ...
-
-  return (
-    <Tabs defaultValue={tabTriggerType} className="min-h-screen w-full py-7 px-6">
-      {/* triggers ... */}
-
-      <TabsContent value="request" forceMount className="aria-selected:block data-[state=inactive]:hidden">
-        {validationStatus?.status === "waiting" ? (
-          <Requests data={data} />
-        ) : (
-          // ... resto do conteúdo
-        )}
-      </TabsContent>
-
-      <TabsContent value="documents" className="mt-0 rounded-b-lg rounded-r-lg bg-white aria-selected:block data-[state=inactive]:hidden rounded-lg p-6">
-        <Documents
-          baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
-          bucketName="conductor-client"
-          pathUrl="/v1/file"
-          getListDocument={documentList}
-          showUploader
-          userData={userData}
-          onUploadDocuments={setDocumentList}
-        />
-      </TabsContent>
-
-      {/* history tab ... */}
-    </Tabs>
-  );
 }
