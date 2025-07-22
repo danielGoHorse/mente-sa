@@ -1,23 +1,14 @@
-// src/app/(private)/Wire-Transfer---USD/[requestId]/page.tsx
-import PageTitle from "@/components/PageTitle";
-import PageTabs from "./page_tabs";
-
-type PageProps = {
-  params: { requestId?: string };
-};
-
-export default function Page({ params }: PageProps) {
-  const { requestId } = params; // nada de await aqui
-
-  return (
-    <>
-      <PageTitle title="Wire Transfer - USD" />
-      <div className="flex min-h-screen flex-col items-center">
-        <PageTabs
-          params={{ requestName: "wire-transfer", requestId }} // pode ser undefined
-          tabTriggerType="request"
-        />
-      </div>
-    </>
-  );
-}
+  11 |   return (
+  12 |     <>
+ GET /Wire-Transfer---USD/1c2d9676-ea12-4453-a02a-6b0faea39109 200 in 1010ms
+ ✓ Compiled in 1770ms (3716 modules)
+Error: Route "/Wire-Transfer---USD/[requestId]" used `params.requestId`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at Page (src\app\(private)\Wire-Transfer---USD\[requestId]\page.tsx:9:10)
+   7 |
+   8 | export default function Page({ params }: PageProps) {
+>  9 |   const { requestId } = params;
+     |          ^
+  10 |
+  11 |   return (
+  12 |     <>
+ GET /Wire-Transfer---USD/1c2d9676-ea12-4453-a02a-6b0faea39109 200 in 1088ms
