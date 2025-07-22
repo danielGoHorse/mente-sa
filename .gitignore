@@ -1,130 +1,68 @@
-interface DocumentUploaded {
-  documentName: string;
-  documentSize?: number | string;
-  documentStatus?: string;
-  documentUUID: string;
-  serverPath: string;          // "uuid/file.ext"
-  serverUrlSigned: string;     // signed url
-  documentURL?: string;        // blob local
-  documentURLPreview?: string; // blob local
-  uploadedBy: { fullName?: string; userId?: string };
-  createdAt: string;
-  itemRef?: string;
-}
+Argument of type 'Document[]' is not assignable to parameter of type 'DocumentUploaded[]'.
+  Property 'serverPath' is missing in type 'Document' but required in type 'DocumentUploaded'.ts(2345)
+documentStore.ts(4, 3): 'serverPath' is declared here.
+(parameter) documents: Document[]
+No quick fixes available
 
-
-function extractServerPath(message: string) {
-  const match = message.match(/file\s(.+)\swas uploaded/i);
-  return match?.[1] ?? "";
-}
-
-
-const handleUpload = async (file: File, UUID: string) => {
-  props.onError("ResetError");
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("application", props.bucketName);
-  formData.append("randomUUID", UUID);
-
-  try {
-    const { data } = await axios.post(`${props.baseUrl}${props.pathUrl}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-      onUploadProgress: (e) => {
-        const percent = Math.round((e.loaded * 100) / (e.total ?? 1));
-        setUploadProgress(percent);
-      },
-    });
-
-    setUploadProgress(null);
-    props.onError("Upload");
-
-    return {
-      serverPath: extractServerPath(data?.data?.message ?? ""),
-      serverUrlSigned: data?.data?.url ?? "",
-    };
-  } catch (error) {
-    setUploadProgress(null);
-    props.onError("UploadError");
-    return null;
-  }
-};
-
-
-async function processNewFiles(newFiles: File[]) {
-  // Evita duplicados por serverPath/UUID? Aqui ainda não temos, então por nome + itemRef/uuid
-  const existingNames = new Set(documentList.map(d => d.documentName.replace(/\s/g, "_")));
-
-  const first = newFiles[0];
-  if (!first) return;
-
-  if (existingNames.has(first.name.replace(/\s/g, "_"))) return;
-
-  const getUUID = documentList[0]?.documentUUID ?? uuid;
-
-  if (!handleFileValidation(first)) return;
-
-  const uploadResp = await handleUpload(first, getUUID);
-  if (!uploadResp) return;
-
-  const uploadedDocuments: DocumentUploaded[] = newFiles.map((document) => ({
-    itemRef: props.itemRef,
-    documentName: document.name,
-    documentSize: document.size,
-    documentStatus: "uploaded",
-    documentUUID: getUUID,
-    serverPath: uploadResp.serverPath,
-    serverUrlSigned: uploadResp.serverUrlSigned,
-    documentURL: URL.createObjectURL(document),
-    documentURLPreview: URL.createObjectURL(document),
-    uploadedBy: {
-      fullName: props.userData.fullName,
-      userId: props.userData.userName,
-    },
-    createdAt: new Date().toISOString(),
-  }));
-
-  const merged = [...documentList, ...uploadedDocuments];
-  setDocumentList(merged);
-  props.setDocumentList(merged);
-
-  if (fileInputRef.current) fileInputRef.current.value = "";
-}
-
-const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-  e.preventDefault();
-  const newFiles = Array.from(e.dataTransfer.files);
-  processNewFiles(newFiles);
-};
-
-const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const newFiles = Array.from(e.target.files ?? []);
-  processNewFiles(newFiles);
-};
+Aqui:
+ 
+            onUploadDocuments={(documents: Document[]) =>
+              setDocumentList(documents)
+            
 
 
 
-const isFileSupported = (file: File) => {
-  const supported = [
-    ".PDF", ".EML", ".DOC", ".DOCX", ".XLS", ".XLSX", ".CSV",
-    ".PNG", ".JPG"
-  ];
-  const ext = file.name.split(".").pop()?.toUpperCase();
-  return !!ext && supported.includes(`.${ext}`);
-};
+Cannot find name 'api'.ts(2304)
+any
 
-const isFileSizeValid = (file: File) => {
-  const maxSize = 10 * 1024 * 1024;
-  return file.size <= maxSize;
-};
+Aqui: await api.post("/v1/requests", payload);
 
-const handleFileValidation = (file: File): boolean => {
-  if (!isFileSupported(file)) {
-    props.onError("NotSupported");
-    return false;
-  }
-  if (!isFileSizeValid(file)) {
-    props.onError("Large");
-    return false;
-  }
-  return true;
-};
+
+Cannot find name 'key'.ts(2304)
+any
+Aqui:
+
+    const updated = documentList.filter(
+      (item) => (item.serverPath ?? item.documentUUID) !== key
+    )
+
+Ate aqui esta no page_tabs.tsx...esta correto o local?
+
+o outro é do Documents.tsx
+
+
+
+
+Type 'Dispatch<SetStateAction<DocumentUploadedProps[]>>' is not assignable to type '(document: DocumentUploaded[]) => void'.
+  Types of parameters 'value' and 'document' are incompatible.
+    Type 'DocumentUploaded[]' is not assignable to type 'SetStateAction<DocumentUploadedProps[]>'.
+      Type 'DocumentUploaded[]' is not assignable to type 'DocumentUploadedProps[]'.
+        Type 'DocumentUploaded' is not assignable to type 'DocumentUploadedProps'.
+          Types of property 'documentSize' are incompatible.
+            Type 'string | number | undefined' is not assignable to type 'string | undefined'.
+              Type 'number' is not assignable to type 'string'.ts(2322)
+Uploader.tsx(12, 3): The expected type comes from property 'setDocumentList' which is declared here on type 'IntrinsicAttributes & DocumentUpload'
+(property) DocumentUpload.setDocumentList: (document: DocumentUploaded[]) => void
+
+
+Type 'DocumentUploadedProps[]' is not assignable to type 'DocumentUploaded[]'.
+  Type 'DocumentUploadedProps' is not assignable to type 'DocumentUploaded'.
+    Types of property 'documentUUID' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.ts(2322)
+Uploader.tsx(13, 3): The expected type comes from property 'documentList' which is declared here on type 'IntrinsicAttributes & DocumentUpload'
+(property) DocumentUpload.documentList: DocumentUploaded[]
+
+Aqui:
+
+
+          <Uploader
+            itemRef={itemRef}
+            onError={handleSetError}
+            userData={userData}
+            setDocumentList={setDocumentList}
+            documentList={documentList}
+            baseUrl={baseUrl}
+            pathUrl={pathUrl}
+            bucketName={bucketName}
+          />
