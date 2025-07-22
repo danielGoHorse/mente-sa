@@ -1,50 +1,52 @@
-import { UploadedDocument } from "@/app/store/types";
-import api from "@/app/api";
+Console Error
 
-// ...
+React has detected a change in the order of Hooks called by PageTabs. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://react.dev/link/rules-of-hooks
 
-useEffect(() => {
-  async function hydrateDocs() {
-    if (!data?.documents?.content?.length) return;
+   Previous render            Next render
+   ------------------------------------------------------
+1. useContext                 useContext
+2. useContext                 useContext
+3. useContext                 useContext
+4. useEffect                  useEffect
+5. useState                   useState
+6. useCallback                useCallback
+7. useSyncExternalStore       useSyncExternalStore
+8. useEffect                  useEffect
+9. useSyncExternalStore       useSyncExternalStore
+10. useDebugValue             useDebugValue
+11. useSyncExternalStore      useSyncExternalStore
+12. useDebugValue             useDebugValue
+13. useState                  useState
+14. useState                  useState
+15. useState                  useState
+16. useState                  useState
+17. useState                  useState
+18. useContext                useContext
+19. useState                  useState
+20. useEffect                 useEffect
+21. useCallback               useCallback
+22. useSyncExternalStore      useSyncExternalStore
+23. useCallback               useCallback
+24. useState                  useState
+25. undefined                 useEffect
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    // Evita reprocessar
-    if (documentList.length) return;
+Show More
+src\app\(private)\Wire-Transfer---USD\[requestId]\page_tabs.tsx (80:10) @ PageTabs
 
-    const paths: string[] = data.documents.content;
 
-    async function getLinks(serverPath: string) {
-      const res = await api.get("/v1/file/link", {
-        params: {
-          application: "conductor-client",
-          path: serverPath,
-        },
-      });
-      const { url, urlPreview } = res.data.data;
-      return { url, urlPreview };
-    }
+  78 | // ...
+  79 |
+> 80 | useEffect(() => {
+     |          ^
+  81 |   async function hydrateDocs() {
+  82 |     if (!data?.documents?.content?.length) return;
+  83 |
+Call Stack
+8
 
-    const docs: UploadedDocument[] = await Promise.all(
-      paths.map(async (p) => {
-        const [uuid, ...rest] = p.split("/");
-        const name = rest.join("/");
-
-        const { url, urlPreview } = await getLinks(p);
-
-        return {
-          serverPath: p,
-          serverUrlSigned: url,
-          documentURLPreview: urlPreview,
-          documentName: name,
-          documentUUID: uuid,
-          createdAt: data.createdAt ?? new Date().toISOString(),
-          uploadedBy: { fullName: data.createdBy, userId: data.createdBy },
-          documentStatus: "uploaded",
-        };
-      })
-    );
-
-    setDocumentList(docs);
-  }
-
-  hydrateDocs();
-}, [data, documentList.length, setDocumentList]);
+Show 6 ignore-listed frame(s)
+PageTabs
+src\app\(private)\Wire-Transfer---USD\[requestId]\page_tabs.tsx (80:10)
+Page
+rsc:/Server/webpack-internal:///(rsc)/src/app/(private)/Wire-Transfer---USD/%5BrequestId%5D/page.tsx (25:102)
