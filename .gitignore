@@ -1,46 +1,280 @@
-useEffect(() => {
-  async function hydrateDocs() {
-    if (!data?.documents?.content?.length) return;
+"use client";
+import Image from "next/image";
+import React, { Fragment, useEffect, useState } from "react";
+import DocumentIcon from "@/app/assets/svg/document-icon.svg";
+import WarningIcon from "@/app/assets/svg/warning-color.svg";
+import VisibilityOffIcon from "@/app/assets/svg/visibility-off.svg";
+import DownloadIcon from "@/app/assets/svg/download.svg";
+import DeleteIcon from "@/app/assets/svg/delete.svg";
+import ErrorIcon from "@/app/assets/svg/error-circle-color.svg";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./Tooltip";
+import Uploader from "./Uploader";
+import { formatDateTime } from "@/lib/utils";
+import { UploadedDocument } from "@/app/store/types";
 
-    // Se já tem algo no store, não hidrata de novo (evita reprocessar)
-    if (documentList.length) return;
+interface DocumentsProps {
+  userData: any;
+  showUploader: boolean;
+  baseUrl: string;
+  pathUrl: string;
+  bucketName: string;
+  messageOnUpload?: boolean;
+  disabled?: boolean;
+  itemRef?: string;
+  getListDocument: UploadedDocument[];
+  onUploadDocuments: (documents: UploadedDocument[]) => void;
+}
 
-    const paths: string[] = data.documents.content;
+export const Documents = ({
+  showUploader = true,
+  userData,
+  baseUrl,
+  pathUrl,
+  bucketName,
+  messageOnUpload = true,
+  disabled = false,
+  itemRef,
+  getListDocument,
+  onUploadDocuments,
+}: DocumentsProps) => {
+  const [uploadError, setUploadError] = useState(false);
+  const [notSupported, setNotSupported] = useState(false);
+  const [tooLarge, setTooLarge] = useState(false);
+  const [upload, setUpload] = useState(false);
+  // const [documentList, setDocumentList] = useState<UploadedDocument[]>(getListDocument);
 
-    // Função para pegar URL assinada (ajuste o endpoint)
-    async function getLinks(serverPath: string) {
-      const res = await api.get("/v1/file/link", {
-        params: {
-          application: "conductor-client",
-          path: serverPath,
-        },
-      });
-      const { url, urlPreview } = res.data.data; // conforme seu backend
-      return { url, urlPreview };
-    }
+  const documentList = getListDocument;
 
-    const docs: UploadedDocument[] = await Promise.all(
-      paths.map(async (p) => {
-        const [uuid, ...rest] = p.split("/");
-        const name = rest.join("/");
-
-        const { url, urlPreview } = await getLinks(p);
-
-        return {
-          serverPath: p,
-          serverUrlSigned: url,
-          documentURLPreview: urlPreview,
-          documentName: name,
-          documentUUID: uuid,
-          createdAt: data.createdAt ?? new Date().toISOString(),
-          uploadedBy: { fullName: data.createdBy, userId: data.createdBy },
-          documentStatus: "uploaded",
-        };
-      })
-    );
-
-    setDocumentList(docs);
+  const setDocs = (docs: UploadedDocument[]) => {
+    onUploadDocuments(docs);
   }
 
-  hydrateDocs();
-}, [data, documentList.length, setDocumentList]);
+  const filteredDocs = itemRef
+    ? documentList.filter((item) => item.itemRef === itemRef)
+    : documentList;
+
+  // useEffect(() => {
+  //   onUploadDocuments(documentList);
+  // }, [documentList, onUploadDocuments]);
+
+  const handleSetError = (
+    reason: "Large" | "UploadError" | "NotSupported" | "Upload" | "ResetError"
+  ) => {
+    if (reason === "Large") setTooLarge(true);
+    if (reason === "UploadError") setUploadError(true);
+    if (reason === "NotSupported") setNotSupported(true);
+    if (reason === "Upload") setUpload(true);
+    if (reason === "ResetError") {
+      setTooLarge(false);
+      setUploadError(false);
+      setNotSupported(false);
+    }
+  };
+
+  const handleDelete = (key: string) => {
+    const updated = documentList.filter(
+      (item) => (item.serverPath ?? item.documentUUID) !== key
+    );
+    setDocs(updated);
+  };
+
+  const handleDownload = (key: string) => {
+    const doc = documentList.find((i) => (i.serverPath ?? i.documentUUID) === key);
+    if (!doc) return;
+    const link: HTMLAnchorElement = document.createElement("a");
+    link.href = doc.serverUrlSigned ?? doc.documentURL ?? "";
+    link.download = doc.documentName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleViewDocument = (key: string) => {
+    const doc = documentList.find((i) => (i.serverPath ?? i.documentUUID) === key);
+    if (!doc) return;
+    const link: HTMLAnchorElement = document.createElement("a");
+    link.href = doc.serverUrlSigned ?? doc.documentURLPreview ?? "";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="w-full">
+      {showUploader && !disabled && (
+        <>
+          {uploadError && (
+            <div className="py-2">
+              <div className="gap-[16px] flex rounded-[4px] px-[15px] py-[12px] flex-col border border-solid border-transparent bg-[rgb(251,_234,_234)]">
+                <div className="gap-[8px] flex items-center ">
+                  <div>
+                    <Image src={ErrorIcon} width={24} height={24} alt="error-icon" />
+                  </div>
+                  <div>
+                    <span className="font-[Figtree] not-italic font-normal text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(72,_74,_85)]">
+                      An error occurred when uploading your file. Please try again
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {notSupported && (
+            <div className="py-2">
+              <div className="gap-[16px] flex rounded-[4px] px-[15px] py-[12px] flex-col border border-solid border-transparent bg-[rgb(251,_234,_234)]">
+                <div className="gap-[8px] flex items-center ">
+                  <div>
+                    <Image src={ErrorIcon} width={24} height={24} alt="error-icon" />
+                  </div>
+                  <div>
+                    <span className="font-[Figtree] not-italic font-normal text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(72,_74,_85)]">
+                      This document type is not supported.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tooLarge && (
+            <div className="py-2">
+              <div className="gap-[16px] flex rounded-[4px] px-[15px] py-[12px] flex-col border border-solid border-transparent bg-[rgb(251,_234,_234)]">
+                <div className="gap-[8px] flex items-center ">
+                  <div>
+                    <Image src={ErrorIcon} width={24} height={24} alt="error-icon" />
+                  </div>
+                  <div>
+                    <span className="font-[Figtree] not-italic font-normal text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(72,_74,_85)]">
+                      The document is larger than supported. Please upload a file up to 10 MB.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Uploader
+            itemRef={itemRef}
+            onError={handleSetError}
+            userData={userData}
+            setDocumentList={setDocs}
+            documentList={documentList}
+            baseUrl={baseUrl}
+            pathUrl={pathUrl}
+            bucketName={bucketName}
+          />
+        </>
+      )}
+
+      {documentList && documentList.length === 0 && !showUploader && (
+        <div className="flex items-center justify-center content-center min-h-[296px]">
+          <div className="flex flex-col items-center">
+            <Image src={DocumentIcon} alt="document-icon" />
+            <p className="font-[Figtree] not-italic font-normal text-[16px] leading-[21px] tracking-[0.12px] mt-[20px]">
+              There are no documents attached to this request.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {upload && messageOnUpload && (
+        <div className="py-[25px]">
+          <div className="gap-[16px] flex rounded-[4px] px-[15px] py-[12px] flex-col border border-solid border-transparent bg-[rgb(254,_248,_232)]">
+            <div className="gap-[8px] flex items-center ">
+              <div>
+                <Image src={WarningIcon} width={24} height={24} alt="warning-icon" />
+              </div>
+              <div>
+                <span className="font-[Figtree] not-italic font-normal text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(72,_74,_85)]">
+                  The uploaded files will be saved only when submitting the request from the 'New Request' tab.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {filteredDocs.length > 0 && (
+        <div className="flex flex-wrap justify-between md:justify-start">
+          <div className="w-full flex flex-wrap justify-between px-[8px] py-[12px]">
+            <p className="font-[Figtree] font-semibold text-[14px] leading-[21px] tracking-[0.12px] text-[#484a55]" style={{ width: "55%" }}>
+              File
+            </p>
+            <p className="font-[Figtree] font-semibold text-[14px] leading-[21px] tracking-[0.12px] text-[#484a55] w-[90px]">
+              Uploaded By
+            </p>
+            <p className="font-[Figtree] font-semibold text-[14px] leading-[21px] tracking-[0.12px] text-[#484a55] w-[90px]">
+              Upload Date
+            </p>
+            <p className="font-[Figtree] font-semibold text-[14px] leading-[21px] tracking-[0.12px] text-[#484a55] w-[90px]">
+              Actions
+            </p>
+          </div>
+
+          <div className="w-full border-b border-b-[1px_solid_rgb(219,_219,_219)]" />
+
+          {filteredDocs.map((item) => {
+            const key = item.serverPath ?? item.documentUUID;
+            return (
+              <Fragment key={key}>
+                <div className="w-full flex flex-wrap justify-between px-[8px] py-[12px]">
+                  <a style={{ width: "56%" }} className="font-[Figtree] text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(99,_101,_116)] whitespace-nowrap overflow-hidden overflow-ellipsis">
+                    {item.documentName}
+                  </a>
+                  <a className="font-[Figtree] text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(99,_101,_116)] whitespace-nowrap overflow-hidden overflow-ellipsis">
+                    {item.uploadedBy.fullName}
+                  </a>
+                  <a className="font-[Figtree] text-[14px] leading-[21px] tracking-[0.12px] text-[rgb(99,_101,_116)] whitespace-nowrap overflow-hidden overflow-ellipsis">
+                    {item.createdAt ? formatDateTime(item.createdAt, true) : "-"}
+                  </a>
+                  <div className="flex">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <a className="flex cursor-pointer mr-[8px]" onClick={() => handleViewDocument(key)}>
+                            <Image src={VisibilityOffIcon} alt="visibility-icon" />
+                          </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Preview</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <a className="flex cursor-pointer mr-[8px]" onClick={() => handleDownload(key)}>
+                            <Image src={DownloadIcon} alt="download-icon" />
+                          </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Download</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <a className="flex cursor-pointer mr-[8px]" onClick={() => handleDelete(key)}>
+                            <Image src={DeleteIcon} alt="delete-icon" />
+                          </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+                <div className="w-full border-b border-b-[1px_solid_rgba(0,_0,_0,_0.05)]"></div>
+              </Fragment>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
