@@ -1,29 +1,13 @@
-async function onSubmit() {
-  try {
-    // 1) Validação básica
-    if (!documentList?.length) {
-      setOpenErrorModal(true);
-      return;
-    }
-
-    // 2) Monta array de paths estáveis
-    const docsForSubmit = documentList.map((d) => d.serverPath ?? `${d.documentUUID}/${d.documentName}`);
-
-    const payload = {
-      // ...demais campos do seu form
-      documents: {
-        content: docsForSubmit,
-        required: false,
-      },
-      requestId,
-      comments: pendingComments,
-    };
-
-    await api.post("/v1/requests", payload);
-
-    // sucesso...
-  } catch (err) {
-    console.error(err);
-    setOpenErrorModal(true);
-  }
+interface DocumentUploadedProps {
+  documentName: string;
+  documentSize?: string;
+  documentStatus?: string;
+  documentUUID?: string;
+  documentURL?: string;        // local blob (pode manter se quiser)
+  documentURLPreview?: string; // local blob
+  serverPath?: string;         // "uuid/file.ext" => vindo do backend
+  serverUrlSigned?: string;    // signed URL (preview/download)
+  uploadedBy: { fullName?: string; userId?: string };
+  createdAt?: string | number | Date;
+  itemRef?: string | undefined;
 }
