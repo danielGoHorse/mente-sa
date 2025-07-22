@@ -1,13 +1,46 @@
-documents
-: 
-{content: ["9fa84395-32a7-4b14-b79e-82f23905a130/document.pdf"], required: false}
-content
-: 
-["9fa84395-32a7-4b14-b79e-82f23905a130/document.pdf"]
-0
-: 
-"9fa84395-32a7-4b14-b79e-82f23905a130/document.pdf"
-required
-: 
-false
+useEffect(() => {
+  async function hydrateDocs() {
+    if (!data?.documents?.content?.length) return;
 
+    // Se já tem algo no store, não hidrata de novo (evita reprocessar)
+    if (documentList.length) return;
+
+    const paths: string[] = data.documents.content;
+
+    // Função para pegar URL assinada (ajuste o endpoint)
+    async function getLinks(serverPath: string) {
+      const res = await api.get("/v1/file/link", {
+        params: {
+          application: "conductor-client",
+          path: serverPath,
+        },
+      });
+      const { url, urlPreview } = res.data.data; // conforme seu backend
+      return { url, urlPreview };
+    }
+
+    const docs: UploadedDocument[] = await Promise.all(
+      paths.map(async (p) => {
+        const [uuid, ...rest] = p.split("/");
+        const name = rest.join("/");
+
+        const { url, urlPreview } = await getLinks(p);
+
+        return {
+          serverPath: p,
+          serverUrlSigned: url,
+          documentURLPreview: urlPreview,
+          documentName: name,
+          documentUUID: uuid,
+          createdAt: data.createdAt ?? new Date().toISOString(),
+          uploadedBy: { fullName: data.createdBy, userId: data.createdBy },
+          documentStatus: "uploaded",
+        };
+      })
+    );
+
+    setDocumentList(docs);
+  }
+
+  hydrateDocs();
+}, [data, documentList.length, setDocumentList]);
