@@ -1,35 +1,93 @@
-import { create } from 'zustand';
+/* ...imports */
+import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
+import { UploadedDocument } from "@/app/store/types";
+import api from "@/config/api"; // <-- ajuste o caminho correto
 
-export interface DocumentUploaded {
-  serverPath: string;                           // obrigatório
-  documentName: string;                         // obrigatório
-  documentUUID: string;                         // obrigatório
-  createdAt: string;                            // ISO string
-  uploadedBy: { fullName?: string; userId?: string };
+export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
+  const { getRequestConfig } = RequestConfigProvider(params.requestId);
+  const { userData } = useAuthStore((state) => state);
+  const { documentList, setDocumentList } = useDocumentStore((state) => state);
+  const { data } = getRequestConfig;
+  const [pendingComments, setPendingComments] = useState<string[]>([]);
+  const requestId = data?.requestId ? data.requestId : uuidv7();
+  const [requestQualificationIsOpen, setRequestQualificationIsOpen] = useState(false);
+  const [cancelRequestIsOpen, setCancelRequestIsOpen] = useState(false);
+  const [requestCanceled, setRequestCanceled] = useState(false);
+  const [openErrorModal, setOpenErrorModal] = useState<boolean>(false);
+  const { mutation } = useCancelRequestProvider();
+  const [dataCancelRequest, setDataCancelRequest] = useState<CancelRequestWarningProps>();
 
-  // opcionais
-  documentSize?: number;
-  documentStatus?: string;
-  documentURL?: string;         // blob local
-  documentURLPreview?: string;  // blob local
-  serverUrlSigned?: string;     // URL assinada
-  itemRef?: string;
+  const validationStatus = data?.timeline?.flat()?.find((item: any) => item?.name?.includes("Validation"));
+
+  useEffect(() => {
+    // NÃO limpar aqui, só ao desmontar
+    return () => {
+      setDocumentList([]);
+    };
+  }, [setDocumentList]);
+
+  if (!data) return null;
+
+  const workflowData = toHistoryData(data);
+  const historyData = parseHistoryToData(workflowData);
+
+  const mockedApprovals = [/* ... */];
+
+  const handleCancelRequest = (requestId: string, reason: string) => {
+    mutation.mutate(
+      { requestId },
+      {
+        onSuccess: (response) => {
+          const data = response?.data;
+          const formatted = {
+            userThatCanceled: data.userName,
+            date: data.date,
+            reason: data.note || reason,
+          };
+          setDataCancelRequest(formatted);
+          return formatted;
+        },
+      }
+    );
+  };
+
+  async function onSubmit() {
+    try {
+      if (!documentList?.length) {
+        setOpenErrorModal(true);
+        return;
+      }
+
+      const docsForSubmit = documentList.map(
+        (d) => d.serverPath ?? `${d.documentUUID}/${d.documentName}`
+      );
+
+      const payload = {
+        // ...todos os campos que você já tem
+        documents: {
+          content: docsForSubmit,
+          required: false,
+        },
+        requestId,
+        comments: pendingComments,
+      };
+
+      await api.post("/v1/requests", payload);
+      // sucesso...
+    } catch (e) {
+      console.error(e);
+      setOpenErrorModal(true);
+    }
+  }
+
+  return (
+    <Tabs defaultValue={tabTriggerType} className="min-h-screen w-full py-7 px-6">
+      {/* ...Triggers e Contents */}
+      {/* Botão Submit */}
+      <Button variant="submit" size="submit" onClick={onSubmit}>
+        Submit
+      </Button>
+      {/* ...resto */}
+    </Tabs>
+  );
 }
-
-export interface FeeDocuments {
-  documentList: DocumentUploaded[];
-  setDocumentList: (documentList: DocumentUploaded[]) => void;
-  clearDocumentList: () => void;
-}
-
-export const useDocumentStore = create<FeeDocuments>((set) => ({
-  documentList: [],
-  setDocumentList: (docs) => {
-    const withoutSpaces = docs.map((doc) => ({
-      ...doc,
-      documentName: doc.documentName.replace(/\s/g, '_'),
-    }));
-    set({ documentList: withoutSpaces });
-  },
-  clearDocumentList: () => set({ documentList: [] }),
-}));
