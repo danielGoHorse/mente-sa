@@ -1,72 +1,83 @@
-// src/app/providers/getRequestProvider.ts
+// src/app/(private)/Wire-Transfer---USD/[requestId]/page_tabs.tsx
 "use client";
+import React, { useEffect, useRef, useState } from "react";
+// ...imports
 
-import api from "@/app/api";
-import { useQuery } from "@tanstack/react-query";
-import { UploadedDocument } from "@/app/store/types";
+export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
+  const { getRequestConfig } = RequestConfigProvider(params.requestId);
+  const { userData } = useAuthStore();
+  const { documentList, setDocumentList } = useDocumentStore();
+  const { data } = getRequestConfig;
 
-type RawData = {
-  documents?: { content?: string[]; required?: boolean };
-  createdBy: string;
-  createdAt: string;
-  // ... resto do shape
-};
+  const [pendingComments, setPendingComments] = useState<string[]>([]);
+  const requestId = data?.requestId ?? uuidv7();
+  const [requestQualificationIsOpen, setRequestQualificationIsOpen] = useState(false);
+  const [cancelRequestIsOpen, setCancelRequestIsOpen] = useState(false);
+  const [openErrorModal, setOpenErrorModal] = useState(false);
+  const { mutation } = useCancelRequestProvider();
+  const [dataCancelRequest, setDataCancelRequest] = useState<CancelRequestWarningProps>();
 
-async function getSignedLink(serverPath: string) {
-  // ajuste se o endpoint for diferente
-  const res = await api.get("/v1/file/link", {
-    params: {
-      application: "conductor-client",
-      path: serverPath,
-    },
-  });
-  return res.data.data; // { url, urlPreview }
-}
+  // --------- HIDRATA DOCS UMA VEZ -----------
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!data || hydratedRef.current) return;
 
-async function normalizeDocs(raw: RawData): Promise<UploadedDocument[]> {
-  const paths = raw.documents?.content ?? [];
-  return Promise.all(
-    paths.map(async (p) => {
-      const [uuid, ...rest] = p.split("/");
-      const name = rest.join("/");
-      const { url, urlPreview } = await getSignedLink(p);
-      return {
-        serverPath: p,
-        documentUUID: uuid,
-        documentName: name,
-        serverUrlSigned: url,
-        documentURLPreview: urlPreview,
-        uploadedBy: { fullName: raw.createdBy, userId: raw.createdBy },
-        createdAt: raw.createdAt ?? new Date().toISOString(),
-        documentStatus: "uploaded",
-      };
-    })
+    // se o provider já devolveu UploadedDocument[], ótimo:
+    if (Array.isArray(data.documents) && data.documents.length) {
+      setDocumentList(data.documents);
+      hydratedRef.current = true;
+      return;
+    }
+
+    // fallback: se veio no formato {content:[]}
+    if (data.documents?.content?.length) {
+      const docs = data.documents.content.map((p: string) => {
+        const [uuid, ...rest] = p.split("/");
+        return {
+          serverPath: p,
+          documentUUID: uuid,
+          documentName: rest.join("/"),
+          uploadedBy: { fullName: data.createdBy, userId: data.createdBy },
+          createdAt: data.createdAt ?? new Date().toISOString(),
+          documentStatus: "uploaded",
+        } as UploadedDocument;
+      });
+      setDocumentList(docs);
+      hydratedRef.current = true;
+    }
+  }, [data, setDocumentList]);
+
+  if (!data) return null;
+
+  const validationStatus = data?.timeline?.flat()?.find((i: any) => i?.name?.includes("Validation"));
+
+  // ...
+
+  return (
+    <Tabs defaultValue={tabTriggerType} className="min-h-screen w-full py-7 px-6">
+      {/* triggers ... */}
+
+      <TabsContent value="request" forceMount className="aria-selected:block data-[state=inactive]:hidden">
+        {validationStatus?.status === "waiting" ? (
+          <Requests data={data} />
+        ) : (
+          // ... resto do conteúdo
+        )}
+      </TabsContent>
+
+      <TabsContent value="documents" className="mt-0 rounded-b-lg rounded-r-lg bg-white aria-selected:block data-[state=inactive]:hidden rounded-lg p-6">
+        <Documents
+          baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
+          bucketName="conductor-client"
+          pathUrl="/v1/file"
+          getListDocument={documentList}
+          showUploader
+          userData={userData}
+          onUploadDocuments={setDocumentList}
+        />
+      </TabsContent>
+
+      {/* history tab ... */}
+    </Tabs>
   );
-}
-
-const fetchRequestConfig = async () => {
-  const { data } = await api.get(`/v1/wire-client-aggregator/pages/wire`);
-  const raw: RawData = data.data;
-  const docs = await normalizeDocs(raw);
-  return { ...raw, documents: docs };
-};
-
-export const fetchRequestConfigById = async (id: string) => {
-  const { data } = await api.get(`/v1/wire-client-aggregator/pages/wire-client/${id}`);
-  const raw: RawData = data.data;
-  const docs = await normalizeDocs(raw);
-  return { ...raw, documents: docs };
-};
-
-export default function RequestConfigProvider(requestId?: string) {
-  const getRequestConfig = useQuery({
-    queryKey: ["requestConfig", requestId],
-    queryFn: () => (requestId ? fetchRequestConfigById(requestId) : fetchRequestConfig()),
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    retry: false,
-  });
-
-  return { getRequestConfig };
 }
