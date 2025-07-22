@@ -1,68 +1,42 @@
-Argument of type 'Document[]' is not assignable to parameter of type 'DocumentUploaded[]'.
-  Property 'serverPath' is missing in type 'Document' but required in type 'DocumentUploaded'.ts(2345)
-documentStore.ts(4, 3): 'serverPath' is declared here.
-(parameter) documents: Document[]
-No quick fixes available
+import { create } from 'zustand';
 
-Aqui:
- 
-            onUploadDocuments={(documents: Document[]) =>
-              setDocumentList(documents)
-            
+export interface DocumentUploaded {
+  serverPath: string;
+  createdAt?: string | number | Date;
+  documentName: string;
+  documentSize?: string;
+  documentUUID?: string;
+  documentStatus?: string;
+  documentURL?: string;
+  documentURLPreview?: string;
+  uploadedBy: { fullName?: string; userId?: string };
+}
 
+export interface DocumentLinkData {
+  code: number;
+  data: {
+    url: string;
+    urlPreview: string;
+  };
+}
 
+export interface FeeDocuments {
+  documentList: DocumentUploaded[];
+  setDocumentList: (documentList: DocumentUploaded[]) => void;
+}
 
-Cannot find name 'api'.ts(2304)
-any
-
-Aqui: await api.post("/v1/requests", payload);
-
-
-Cannot find name 'key'.ts(2304)
-any
-Aqui:
-
-    const updated = documentList.filter(
-      (item) => (item.serverPath ?? item.documentUUID) !== key
-    )
-
-Ate aqui esta no page_tabs.tsx...esta correto o local?
-
-o outro é do Documents.tsx
-
-
-
-
-Type 'Dispatch<SetStateAction<DocumentUploadedProps[]>>' is not assignable to type '(document: DocumentUploaded[]) => void'.
-  Types of parameters 'value' and 'document' are incompatible.
-    Type 'DocumentUploaded[]' is not assignable to type 'SetStateAction<DocumentUploadedProps[]>'.
-      Type 'DocumentUploaded[]' is not assignable to type 'DocumentUploadedProps[]'.
-        Type 'DocumentUploaded' is not assignable to type 'DocumentUploadedProps'.
-          Types of property 'documentSize' are incompatible.
-            Type 'string | number | undefined' is not assignable to type 'string | undefined'.
-              Type 'number' is not assignable to type 'string'.ts(2322)
-Uploader.tsx(12, 3): The expected type comes from property 'setDocumentList' which is declared here on type 'IntrinsicAttributes & DocumentUpload'
-(property) DocumentUpload.setDocumentList: (document: DocumentUploaded[]) => void
+export const useDocumentStore = create<FeeDocuments>((set) => ({
+  documentList: [],
+  setDocumentList: (document: DocumentUploaded[]) => {
+    const documentsWithoutSpaces = document.map((doc) => {
+      const documentName = doc.documentName.replace(/\s/g, '_');
+      return { ...doc, documentName };
+    });
+    set({ documentList: documentsWithoutSpaces });
+  },
+}));
 
 
-Type 'DocumentUploadedProps[]' is not assignable to type 'DocumentUploaded[]'.
-  Type 'DocumentUploadedProps' is not assignable to type 'DocumentUploaded'.
-    Types of property 'documentUUID' are incompatible.
-      Type 'string | undefined' is not assignable to type 'string'.
-        Type 'undefined' is not assignable to type 'string'.ts(2322)
-Uploader.tsx(13, 3): The expected type comes from property 'documentList' which is declared here on type 'IntrinsicAttributes & DocumentUpload'
-(property) DocumentUpload.documentList: DocumentUploaded[]
+Eu tenho isso...no caminho:
 
-Aqui:
-
-
-          <Uploader
-            itemRef={itemRef}
-            onError={handleSetError}
-            userData={userData}
-            setDocumentList={setDocumentList}
-            documentList={documentList}
-            baseUrl={baseUrl}
-            pathUrl={pathUrl}
-            bucketName={bucketName}
-          />
+Z:\workspace\wire-client-frontend\src\app\store\documentsStore\documentStore.ts
