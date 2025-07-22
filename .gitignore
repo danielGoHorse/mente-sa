@@ -1,28 +1,20 @@
-DanielG@NYDEVVDI0027 MINGW64 /z/workspace/wire-client-frontend (SubmitDocument)
-$ npm run build
+// src/app/(private)/cancel-screen/page.tsx
+export default function CancelScreen() {
+  const { data } = useCancelRequestProvider(); // exemplo
 
-> wire-client@0.1.0 build
-> next build
+  if (!data) {
+    return null; // ou um skeleton/loading
+  }
 
-   ▲ Next.js 15.2.4
-   - Environments: .env
+  return (
+    <label className="font-[Figtree] text-[16px] font-semibold">
+      The request <span>#{data.caseNumber}</span> has been cancelled.
+    </label>
+  );
+}
 
-   Creating an optimized production build ...
- ✓ Compiled successfully
-   Skipping linting
-   Checking validity of types  .Failed to compile.
 
-./src/app/(private)/cancel-screen/page.tsx:34:19
-Type error: 'data' is possibly 'undefined'.
 
-  32 |               The request{" "}
-  33 |               <label className="font-[Figtree] font-[400px] text-[16px] font-semibold">
-> 34 |                 #{data.caseNumber}
-     |                   ^
-  35 |               </label>{" "}
-  36 |               has been cancelled.
-  37 |             </label>
-Next.js build worker exited with code: 1 and signal: null
-
-DanielG@NYDEVVDI0027 MINGW64 /z/workspace/wire-client-frontend (SubmitDocument)
-$
+<label className="font-[Figtree] text-[16px] font-semibold">
+  The request <span>#{data?.caseNumber}</span> has been cancelled.
+</label>
