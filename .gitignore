@@ -1,22 +1,28 @@
-// src/app/(private)/Wire-Transfer---USD/[requestId]/page.tsx
-import PageTitle from "@/components/PageTitle";
-import PageTabs from "./page_tabs";
+DanielG@NYDEVVDI0027 MINGW64 /z/workspace/wire-client-frontend (SubmitDocument)
+$ npm run build
 
-type RouteParams = { requestId?: string };
-type PageProps   = { params: Promise<RouteParams> }; // 👈 params é Promise
+> wire-client@0.1.0 build
+> next build
 
-export default async function Page({ params }: PageProps) {
-  const { requestId } = await params; // 👈 await resolve o Promise
+   ▲ Next.js 15.2.4
+   - Environments: .env
 
-  return (
-    <>
-      <PageTitle title="Wire Transfer - USD" />
-      <div className="flex min-h-screen flex-col items-center">
-        <PageTabs
-          params={{ requestName: "wire-transfer", requestId }}
-          tabTriggerType="request"
-        />
-      </div>
-    </>
-  );
-}
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping linting
+   Checking validity of types  .Failed to compile.
+
+./src/app/(private)/cancel-screen/page.tsx:34:19
+Type error: 'data' is possibly 'undefined'.
+
+  32 |               The request{" "}
+  33 |               <label className="font-[Figtree] font-[400px] text-[16px] font-semibold">
+> 34 |                 #{data.caseNumber}
+     |                   ^
+  35 |               </label>{" "}
+  36 |               has been cancelled.
+  37 |             </label>
+Next.js build worker exited with code: 1 and signal: null
+
+DanielG@NYDEVVDI0027 MINGW64 /z/workspace/wire-client-frontend (SubmitDocument)
+$
