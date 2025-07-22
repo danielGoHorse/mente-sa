@@ -1,93 +1,264 @@
-/* ...imports */
-import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
-import { UploadedDocument } from "@/app/store/types";
-import api from "@/config/api"; // <-- ajuste o caminho correto
+export type ButtonProps = {
+  type: string;
+  label: string;
+  name: string;
+  icon?: string;
+  iconSize?: number;
+  theme: "primary" | "outline" | "text" | undefined;
+  method: string;
+  openModal?: boolean;
+  requestBody: string;
+  requestName?: boolean;
+  actionAfterSubmit?: any;
+  action: string;
+  size: "lg" | "sm" | undefined;
+  width: string | number | undefined;
+  disabled: boolean | undefined;
+  bringFields?: string[];
+  styles: any;
+};
 
-export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
-  const { getRequestConfig } = RequestConfigProvider(params.requestId);
-  const { userData } = useAuthStore((state) => state);
-  const { documentList, setDocumentList } = useDocumentStore((state) => state);
-  const { data } = getRequestConfig;
-  const [pendingComments, setPendingComments] = useState<string[]>([]);
-  const requestId = data?.requestId ? data.requestId : uuidv7();
-  const [requestQualificationIsOpen, setRequestQualificationIsOpen] = useState(false);
-  const [cancelRequestIsOpen, setCancelRequestIsOpen] = useState(false);
-  const [requestCanceled, setRequestCanceled] = useState(false);
-  const [openErrorModal, setOpenErrorModal] = useState<boolean>(false);
-  const { mutation } = useCancelRequestProvider();
-  const [dataCancelRequest, setDataCancelRequest] = useState<CancelRequestWarningProps>();
+export type QuestionBehavior = {
+  renderByFieldConditions?: {
+    fieldName: string;
+    fieldValues: string;
+  }[];
+};
 
-  const validationStatus = data?.timeline?.flat()?.find((item: any) => item?.name?.includes("Validation"));
-
-  useEffect(() => {
-    // NÃO limpar aqui, só ao desmontar
-    return () => {
-      setDocumentList([]);
-    };
-  }, [setDocumentList]);
-
-  if (!data) return null;
-
-  const workflowData = toHistoryData(data);
-  const historyData = parseHistoryToData(workflowData);
-
-  const mockedApprovals = [/* ... */];
-
-  const handleCancelRequest = (requestId: string, reason: string) => {
-    mutation.mutate(
-      { requestId },
-      {
-        onSuccess: (response) => {
-          const data = response?.data;
-          const formatted = {
-            userThatCanceled: data.userName,
-            date: data.date,
-            reason: data.note || reason,
-          };
-          setDataCancelRequest(formatted);
-          return formatted;
-        },
-      }
-    );
+export type Question = {
+  title: string;
+  attributes: {
+    behavior: QuestionBehavior;
+    styles: Record<string, string>;
   };
+};
 
-  async function onSubmit() {
-    try {
-      if (!documentList?.length) {
-        setOpenErrorModal(true);
-        return;
-      }
+export type Section = {
+  questions: Question[];
+  attributes: {
+    behavior: Record<string, string>;
+    styles: Record<string, string>;
+  };
+};
 
-      const docsForSubmit = documentList.map(
-        (d) => d.serverPath ?? `${d.documentUUID}/${d.documentName}`
-      );
+export type Container = {
+  sections: Section[];
+  attributes: {
+    behavior: Record<string, string>;
+    styles: Record<string, string>;
+  };
+};
 
-      const payload = {
-        // ...todos os campos que você já tem
-        documents: {
-          content: docsForSubmit,
-          required: false,
-        },
-        requestId,
-        comments: pendingComments,
-      };
+export type TCard = {
+  title: string;
+  border: boolean;
+  img: string;
+  size: string;
+  subTitle: string;
+  cardWidth: string;
+  cardHeight: string;
+};
 
-      await api.post("/v1/requests", payload);
-      // sucesso...
-    } catch (e) {
-      console.error(e);
-      setOpenErrorModal(true);
-    }
-  }
+export type frontEntries = {
+  card: TCard[];
+  containers: Container[];
+  attributes: {
+    behavior: Record<string, string>;
+    styles: Record<string, string>;
+  };
+};
 
-  return (
-    <Tabs defaultValue={tabTriggerType} className="min-h-screen w-full py-7 px-6">
-      {/* ...Triggers e Contents */}
-      {/* Botão Submit */}
-      <Button variant="submit" size="submit" onClick={onSubmit}>
-        Submit
-      </Button>
-      {/* ...resto */}
-    </Tabs>
-  );
+export type Document = {
+  itemRef?: string;
+  createdAt?: string | number | Date;
+  documentName: string;
+  documentSize?: string;
+  documentUUID?: string;
+  documentStatus?: string;
+  documentURL?: string;
+  documentURLPreview?: string;
+  uploadedBy: { fullName?: string; userId?: string };
+};
+
+export type ActiveRequests = {
+  requestId: string;
+  caseNumber: number;
+  caseId?: string;
+};
+
+export type IData = {
+  id?: string;
+  requestId?: string;
+  responseId?: string;
+  page?: string;
+  caseNumber?: string;
+  caseStatus?: string;
+  createdBy?: string;
+  requestConfigId?: string;
+  workflowConfigId?: string;
+  workflow?: any[];
+  documents?: Document[];
+  frontEntries: frontEntries;
+  backEntries: Record<string, Record<string, any>>;
+  options: {
+    validationRequired: false;
+  };
+  approvals: any[];
+  buttons: ButtonProps[];
+  version: string;
+  activeRequests: ActiveRequests[];
+  messageResult?: Record<string, any>;
+  data?: IData;
+  timeline?: TimeLineItems[];
+  actions?: ActionsItems[];
+  result?: string;
+};
+
+export type TimeLineItems = {
+  name: string;
+  status: string;
+};
+
+export type ActionsItems = {
+  firstName: string;
+  lastName: string;
+  comment: string;
+  stepName: string;
+  type: string;
+  subtype: string;
+  userID: string;
+  date: string;
+};
+
+export type CaseAttribute = {
+  name: string;
+  value: string;
+};
+
+export type CardDashboardData = {
+  application: number;
+  applicationName: string;
+  caseAttribute: CaseAttribute[];
+  createdBy: string;
+  createdOn: string;
+  currentActivity: string;
+  editedAt: string;
+  editedBy: string;
+  locked: boolean;
+  lockedBy: string;
+  status: number;
+};
+
+export type DashboardTableProps = {
+  field?: any;
+  reference: string;
+  initiator: string;
+  currentActivity: string;
+  status: number;
+  result: number;
+  department: string;
+  createdOn: string;
+  url: string;
+};
+
+export type DashboardFilterProps = {
+  reference: string;
+  initiator: string;
+  currentActivity: string;
+  task: string;
+  status: string;
+  result: string;
+  department: string;
+  createdOn: string;
+  accountOfficer: string;
+  clientName: string;
+  cif: string;
+  referenceNumber: string;
+  createdBy: string;
+};
+
+export type DashboardOptionProps = {
+  value: string;
+  label: string;
+};
+
+export interface BeneficiaryData {
+  beneficiaryEnabled: boolean;
+  usBankEnabled: boolean;
+  intermediaryBankEnabled: boolean;
+  selectedBeneficiary: string;
+  templateName: string;
+  bankCountry: string;
+  bankIdType: string;
+  intermediaryBankCountry: string;
+  beneficiaryBankIdType: string;
+  beneficiaryBankCountry: string;
+  beneficiaryCountry: string;
+  bankAba: string;
+  bankName: string;
+  bankCity: string;
+  swiftBicBeneficiary: string;
+  intermediaryBankName: string;
+  intermediaryBankCity: string;
+  beneficiaryBankName: string;
+  beneficiaryBankCity: string;
+  beneficiaryName: string;
+  addressLine1: string;
+  addressLine2: string;
+  beneficiaryCity: string;
+  beneficiaryState: string;
+  beneficiaryZipCode: string;
+  accountNumber: string;
+  obiEnabled: boolean;
+  obiReferences: string[];
+  isDomestic: boolean;
+}
+export type HistoryStep = {
+  id: number;
+  name: string;
+  status: "completed" | "pending" | "waiting" | "canceled" | "skipped";
+  successLabel?: string;
+  permissions: {
+    people: Array<{
+      userId: string;
+      firstName: string;
+      lastName: string;
+      action?: Array<{
+        type: string;
+        subtype: string;
+        date: string;
+        comment: string;
+      }>;
+    }>;
+  };
+};
+
+export interface HistoryData {
+  status: string;
+  data: Array<Array<HistoryStep>>;
+  cardRowData: Array<{
+    title: string;
+    value: string;
+    level: string;
+    date?: string;
+  }>;
+  dataDisplayData: Array<{
+    Id: string;
+    Status: string;
+    Date: string;
+  }>;
+  selectedBank: string;
+  approvalsSteps?: HistoryStep[]; // 👈 Agora usa o tipo acima!
+}
+
+
+export interface BankAccount {
+  id: string;
+  accountNumber: string;
+  name: string;
+  availableBalance: number;
+  origin: string;
+  cif?: string;
+  emailVerified?: boolean;
+  status?: string
 }
