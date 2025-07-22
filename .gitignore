@@ -1,12 +1,130 @@
-const handleViewDocument = (key: string) => {
-  const doc = documentList.find(
-    (i) => (i.serverPath ?? i.documentUUID) === key
-  );
-  if (!doc) return;
-  const link = document.createElement("a");
-  link.href = doc.serverUrlSigned ?? doc.documentURLPreview ?? "";
-  link.target = "_blank";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+interface DocumentUploaded {
+  documentName: string;
+  documentSize?: number | string;
+  documentStatus?: string;
+  documentUUID: string;
+  serverPath: string;          // "uuid/file.ext"
+  serverUrlSigned: string;     // signed url
+  documentURL?: string;        // blob local
+  documentURLPreview?: string; // blob local
+  uploadedBy: { fullName?: string; userId?: string };
+  createdAt: string;
+  itemRef?: string;
+}
+
+
+function extractServerPath(message: string) {
+  const match = message.match(/file\s(.+)\swas uploaded/i);
+  return match?.[1] ?? "";
+}
+
+
+const handleUpload = async (file: File, UUID: string) => {
+  props.onError("ResetError");
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("application", props.bucketName);
+  formData.append("randomUUID", UUID);
+
+  try {
+    const { data } = await axios.post(`${props.baseUrl}${props.pathUrl}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      onUploadProgress: (e) => {
+        const percent = Math.round((e.loaded * 100) / (e.total ?? 1));
+        setUploadProgress(percent);
+      },
+    });
+
+    setUploadProgress(null);
+    props.onError("Upload");
+
+    return {
+      serverPath: extractServerPath(data?.data?.message ?? ""),
+      serverUrlSigned: data?.data?.url ?? "",
+    };
+  } catch (error) {
+    setUploadProgress(null);
+    props.onError("UploadError");
+    return null;
+  }
+};
+
+
+async function processNewFiles(newFiles: File[]) {
+  // Evita duplicados por serverPath/UUID? Aqui ainda não temos, então por nome + itemRef/uuid
+  const existingNames = new Set(documentList.map(d => d.documentName.replace(/\s/g, "_")));
+
+  const first = newFiles[0];
+  if (!first) return;
+
+  if (existingNames.has(first.name.replace(/\s/g, "_"))) return;
+
+  const getUUID = documentList[0]?.documentUUID ?? uuid;
+
+  if (!handleFileValidation(first)) return;
+
+  const uploadResp = await handleUpload(first, getUUID);
+  if (!uploadResp) return;
+
+  const uploadedDocuments: DocumentUploaded[] = newFiles.map((document) => ({
+    itemRef: props.itemRef,
+    documentName: document.name,
+    documentSize: document.size,
+    documentStatus: "uploaded",
+    documentUUID: getUUID,
+    serverPath: uploadResp.serverPath,
+    serverUrlSigned: uploadResp.serverUrlSigned,
+    documentURL: URL.createObjectURL(document),
+    documentURLPreview: URL.createObjectURL(document),
+    uploadedBy: {
+      fullName: props.userData.fullName,
+      userId: props.userData.userName,
+    },
+    createdAt: new Date().toISOString(),
+  }));
+
+  const merged = [...documentList, ...uploadedDocuments];
+  setDocumentList(merged);
+  props.setDocumentList(merged);
+
+  if (fileInputRef.current) fileInputRef.current.value = "";
+}
+
+const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  e.preventDefault();
+  const newFiles = Array.from(e.dataTransfer.files);
+  processNewFiles(newFiles);
+};
+
+const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const newFiles = Array.from(e.target.files ?? []);
+  processNewFiles(newFiles);
+};
+
+
+
+const isFileSupported = (file: File) => {
+  const supported = [
+    ".PDF", ".EML", ".DOC", ".DOCX", ".XLS", ".XLSX", ".CSV",
+    ".PNG", ".JPG"
+  ];
+  const ext = file.name.split(".").pop()?.toUpperCase();
+  return !!ext && supported.includes(`.${ext}`);
+};
+
+const isFileSizeValid = (file: File) => {
+  const maxSize = 10 * 1024 * 1024;
+  return file.size <= maxSize;
+};
+
+const handleFileValidation = (file: File): boolean => {
+  if (!isFileSupported(file)) {
+    props.onError("NotSupported");
+    return false;
+  }
+  if (!isFileSizeValid(file)) {
+    props.onError("Large");
+    return false;
+  }
+  return true;
 };
