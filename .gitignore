@@ -1,215 +1,202 @@
 {
-    "code": 400,
-    "data": {
-        "error": {
-            "code": 400,
-            "data": {
-                "requests": null,
-                "errorMessages": [],
-                "jsonRequest": {
-                    "transferType": {
-                        "content": "usd-domestic",
-                        "required": true
-                    },
-                    "initiator": {
-                        "content": "Maria Peixoto",
-                        "required": true
-                    },
-                    "cifAccountNumber": {
-                        "content": "NAA0011",
-                        "required": true
-                    },
-                    "accountNumber": {
-                        "content": "17045091-0",
-                        "required": true
-                    },
-                    "availableBalance": {
-                        "content": "0",
-                        "required": false
-                    },
-                    "amountUSD": {
-                        "content": "23323",
-                        "required": true
-                    },
-                    "levelUrgency": {
-                        "content": "Normal",
-                        "required": false
-                    },
-                    "originSource": {
-                        "content": "email_ao",
-                        "required": true
-                    },
-                    "clientEmail": {
-                        "content": "temporaryEmail",
-                        "required": false
-                    },
-                    "temporaryClientEmail": {
-                        "content": "",
-                        "required": true,
-                        "errors": [
-                            "temporaryClientEmail is required"
-                        ]
-                    },
-                    "emailIsVerified": {
-                        "content": false,
-                        "required": false
-                    },
-                    "insufficientFunds": {
-                        "content": "yes",
-                        "required": false
-                    },
-                    "insufficientFundsComment": {
-                        "content": "",
-                        "required": false
-                    },
-                    "notificationContactAttempt": {
-                        "content": false,
-                        "required": false
-                    },
-                    "notificationProcesedPayPlus": {
-                        "content": false,
-                        "required": false
-                    },
-                    "notificationAdditionalUsers": {
-                        "content": false,
-                        "required": false
-                    },
-                    "notificationUsers": {
-                        "content": [],
-                        "required": false
-                    },
-                    "forceCallbackToggle": {
-                        "content": false,
-                        "required": false
-                    },
-                    "forceCallbackBestNumberCall": {
-                        "content": "",
-                        "required": false
-                    },
-                    "forceCallbackTemporaryPhoneNumber": {
-                        "content": "",
-                        "required": false
-                    },
-                    "emailAddress": {
-                        "content": [],
-                        "required": false
-                    },
-                    "documents": {
-                        "content": [
-                            "document.pdf"
-                        ],
-                        "required": false
-                    },
-                    "temporaryEmail": {
-                        "content": "",
-                        "required": false
-                    },
-                    "reasonTransaction": {
-                        "content": "donationGift",
-                        "required": true
-                    },
-                    "pleaseSpecify": {
-                        "content": "",
-                        "required": false
-                    },
-                    "bankAbaRoutingNumber": {
-                        "content": "",
-                        "required": false
-                    },
-                    "bankCountry": {
-                        "content": "US",
-                        "required": false
-                    },
-                    "beneficiaryCountry": {
-                        "content": "US",
-                        "required": false
-                    },
-                    "relationshipBeneficiary": {
-                        "content": "businessPartner",
-                        "required": true
-                    },
-                    "swiftBicBeneficiary": {
-                        "content": "",
-                        "required": false
-                    },
-                    "selectedBeneficiary": {
-                        "content": "",
-                        "required": false
-                    },
-                    "templateName": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryAccountNumber": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryBankCity": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryBankName": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryName": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryAddressLine1": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryAddressLine2": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryCity": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryState": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryZipCode": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryOBIToggle": {
-                        "content": false,
-                        "required": false
-                    },
-                    "beneficiaryOBIFFC1": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryOBIFFC2": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryOBIFFC3": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryOBIFFC4": {
-                        "content": "",
-                        "required": false
-                    },
-                    "beneficiaryToggle": {
-                        "content": false,
-                        "required": false
-                    },
-                    "accountOfficer": {
-                        "content": "Ana C/PatGad URU         BR 44 [153]",
-                        "required": false
-                    },
-                    "accountName": {
-                        "content": "JAIME NOWINSKI ZLOCISTY",
-                        "required": false
-                    }
-                }
-            }
-        }
+  "jsonRequest": {
+    "transferType": {
+      "content": "usd-domestic",
+      "required": true
+    },
+    "initiator": {
+      "content": "Maria Peixoto",
+      "required": true
+    },
+    "cifAccountNumber": {
+      "content": "NAA0011",
+      "required": true
+    },
+    "accountNumber": {
+      "content": "17045091-0",
+      "required": true
+    },
+    "availableBalance": {
+      "content": "0",
+      "required": false
+    },
+    "amountUSD": {
+      "content": "23323",
+      "required": true
+    },
+    "levelUrgency": {
+      "content": "Normal",
+      "required": false
+    },
+    "originSource": {
+      "content": "email_ao",
+      "required": true
+    },
+    "clientEmail": {
+      "content": "temporaryEmail",
+      "required": false
+    },
+    "temporaryClientEmail": {
+      "content": "",
+      "required": true
+    },
+    "emailIsVerified": {
+      "content": false,
+      "required": false
+    },
+    "insufficientFunds": {
+      "content": "yes",
+      "required": false
+    },
+    "insufficientFundsComment": {
+      "content": "",
+      "required": false
+    },
+    "notificationContactAttempt": {
+      "content": false,
+      "required": false
+    },
+    "notificationProcesedPayPlus": {
+      "content": false,
+      "required": false
+    },
+    "notificationAdditionalUsers": {
+      "content": false,
+      "required": false
+    },
+    "notificationUsers": {
+      "content": [],
+      "required": false
+    },
+    "forceCallbackToggle": {
+      "content": false,
+      "required": false
+    },
+    "forceCallbackBestNumberCall": {
+      "content": "",
+      "required": false
+    },
+    "forceCallbackTemporaryPhoneNumber": {
+      "content": "",
+      "required": false
+    },
+    "emailAddress": {
+      "content": [],
+      "required": false
+    },
+    "documents": {
+      "content": [
+        "document.pdf"
+      ],
+      "required": false
+    },
+    "temporaryEmail": {
+      "content": "",
+      "required": false
+    },
+    "reasonTransaction": {
+      "content": "donationGift",
+      "required": true
+    },
+    "pleaseSpecify": {
+      "content": "",
+      "required": false
+    },
+    "bankAbaRoutingNumber": {
+      "content": "",
+      "required": false
+    },
+    "bankCountry": {
+      "content": "US",
+      "required": false
+    },
+    "beneficiaryCountry": {
+      "content": "US",
+      "required": false
+    },
+    "relationshipBeneficiary": {
+      "content": "businessPartner",
+      "required": true
+    },
+    "swiftBicBeneficiary": {
+      "content": "",
+      "required": false
+    },
+    "selectedBeneficiary": {
+      "content": "",
+      "required": false
+    },
+    "templateName": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryAccountNumber": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryBankCity": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryBankName": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryName": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryAddressLine1": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryAddressLine2": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryCity": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryState": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryZipCode": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryOBIToggle": {
+      "content": false,
+      "required": false
+    },
+    "beneficiaryOBIFFC1": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryOBIFFC2": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryOBIFFC3": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryOBIFFC4": {
+      "content": "",
+      "required": false
+    },
+    "beneficiaryToggle": {
+      "content": false,
+      "required": false
+    },
+    "accountOfficer": {
+      "content": "Ana C/PatGad URU         BR 44 [153]",
+      "required": false
+    },
+    "accountName": {
+      "content": "JAIME NOWINSKI ZLOCISTY",
+      "required": false
     }
+  }
 }
