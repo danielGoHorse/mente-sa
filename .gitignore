@@ -1,17 +1,33 @@
-<CancelRequestModal
-  open={cancelRequestIsOpen}
-  onClose={() => setCancelRequestIsOpen(false)}
-  onSubmit={(reason) => {
-    if (data?.requestId) handleCancelRequest(data.requestId, reason);
-  }}
-  requestId={data?.requestId ?? ""}
-/>
+type CancelRequestWarning = {
+  userThatCanceled: string;
+  date: string;
+  reason: string;
+};
 
+function handleCancelRequest(
+  requestId: string | undefined,
+  reason: string,
+  mutation: ReturnType<typeof useCancelRequestProvider>["mutation"],
+  setDataCancelRequest: React.Dispatch<React.SetStateAction<CancelRequestWarning | undefined>>
+) {
+  if (!requestId) return; // nada a fazer sem id
 
-
-function handleCancelRequest(requestId: string, reason: string) { ... }
-// para
-function handleCancelRequest(requestId: string | undefined, reason: string) {
-  if (!requestId) return;
-  // ...
+  mutation.mutate(
+    { requestId, reason }, // ajuste se sua API precisa do reason no body
+    {
+      onSuccess: (response) => {
+        const r = response?.data;
+        const formatted: CancelRequestWarning = {
+          userThatCanceled: r.userName,
+          date: r.date,
+          reason: r.note || reason,
+        };
+        setDataCancelRequest(formatted);
+      },
+      onError: (err) => {
+        console.error("Erro ao cancelar request:", err);
+        // opcional: exibir toast/modal aqui
+      },
+    }
+  );
 }
