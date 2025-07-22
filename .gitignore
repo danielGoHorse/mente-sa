@@ -1,202 +1,200 @@
 {
-  "jsonRequest": {
     "transferType": {
-      "content": "usd-domestic",
-      "required": true
+        "content": "usd-domestic",
+        "required": true
     },
     "initiator": {
-      "content": "Maria Peixoto",
-      "required": true
+        "content": "Maria Peixoto",
+        "required": true
     },
     "cifAccountNumber": {
-      "content": "NAA0011",
-      "required": true
+        "content": "NAA0011",
+        "required": true
     },
     "accountNumber": {
-      "content": "17045091-0",
-      "required": true
+        "content": "17045091-0",
+        "required": true
     },
     "availableBalance": {
-      "content": "0",
-      "required": false
+        "content": "0",
+        "required": false
     },
     "amountUSD": {
-      "content": "23323",
-      "required": true
+        "content": "23323",
+        "required": true
     },
     "levelUrgency": {
-      "content": "Normal",
-      "required": false
+        "content": "Normal",
+        "required": false
     },
     "originSource": {
-      "content": "email_ao",
-      "required": true
+        "content": "email_ao",
+        "required": true
     },
     "clientEmail": {
-      "content": "temporaryEmail",
-      "required": false
+        "content": "temporaryEmail",
+        "required": false
     },
     "temporaryClientEmail": {
-      "content": "",
-      "required": true
+        "content": "",
+        "required": true
     },
     "emailIsVerified": {
-      "content": false,
-      "required": false
+        "content": false,
+        "required": false
     },
     "insufficientFunds": {
-      "content": "yes",
-      "required": false
+        "content": "yes",
+        "required": false
     },
     "insufficientFundsComment": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "notificationContactAttempt": {
-      "content": false,
-      "required": false
+        "content": false,
+        "required": false
     },
     "notificationProcesedPayPlus": {
-      "content": false,
-      "required": false
+        "content": false,
+        "required": false
     },
     "notificationAdditionalUsers": {
-      "content": false,
-      "required": false
+        "content": false,
+        "required": false
     },
     "notificationUsers": {
-      "content": [],
-      "required": false
+        "content": [],
+        "required": false
     },
     "forceCallbackToggle": {
-      "content": false,
-      "required": false
+        "content": false,
+        "required": false
     },
     "forceCallbackBestNumberCall": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "forceCallbackTemporaryPhoneNumber": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "emailAddress": {
-      "content": [],
-      "required": false
+        "content": [],
+        "required": false
     },
     "documents": {
-      "content": [
-        "document.pdf"
-      ],
-      "required": false
+        "content": [
+            "document.pdf"
+        ],
+        "required": false
     },
     "temporaryEmail": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "reasonTransaction": {
-      "content": "donationGift",
-      "required": true
+        "content": "donationGift",
+        "required": true
     },
     "pleaseSpecify": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "bankAbaRoutingNumber": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "bankCountry": {
-      "content": "US",
-      "required": false
+        "content": "US",
+        "required": false
     },
     "beneficiaryCountry": {
-      "content": "US",
-      "required": false
+        "content": "US",
+        "required": false
     },
     "relationshipBeneficiary": {
-      "content": "businessPartner",
-      "required": true
+        "content": "businessPartner",
+        "required": true
     },
     "swiftBicBeneficiary": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "selectedBeneficiary": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "templateName": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryAccountNumber": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryBankCity": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryBankName": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryName": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryAddressLine1": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryAddressLine2": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryCity": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryState": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryZipCode": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryOBIToggle": {
-      "content": false,
-      "required": false
+        "content": false,
+        "required": false
     },
     "beneficiaryOBIFFC1": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryOBIFFC2": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryOBIFFC3": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryOBIFFC4": {
-      "content": "",
-      "required": false
+        "content": "",
+        "required": false
     },
     "beneficiaryToggle": {
-      "content": false,
-      "required": false
+        "content": false,
+        "required": false
     },
     "accountOfficer": {
-      "content": "Ana C/PatGad URU         BR 44 [153]",
-      "required": false
+        "content": "Ana C/PatGad URU         BR 44 [153]",
+        "required": false
     },
     "accountName": {
-      "content": "JAIME NOWINSKI ZLOCISTY",
-      "required": false
+        "content": "JAIME NOWINSKI ZLOCISTY",
+        "required": false
     }
-  }
 }
