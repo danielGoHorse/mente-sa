@@ -1,3 +1,15 @@
-onSubmit={(reason) => {
-  handleCancelRequest(data?.requestId, reason, mutation, setDataCancelRequest);
-}}
+Request URL
+https://api.dev.k8s.safra.int/v1/file/link?application=conductor-client&path=9fa84395-32a7-4b14-b79e-82f23905a130%2Fdocument.pdf
+Request Method
+GET
+Status Code
+404 Not Found
+Remote Address
+192.168.100.240:443
+Referrer Policy
+strict-origin-when-cross-origin
+
+{
+  "message":"no Route matched with those values",
+  "request_id":"4af92e466079630785ba5553e870b306"
+}
