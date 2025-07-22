@@ -1,38 +1,342 @@
-// imports no topo
-import { useMemo, useEffect } from "react";
-import { UploadedDocument } from "@/app/store/types";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+
+import React, { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
+import { uuidv7 } from "uuidv7";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs";
+import { TabsNavigation } from "@/components/TabsNavigation";
+import { Documents } from "@/components/Documents";
+import Requests from "@/components/Requests";
+import History from "@/components/history/History";
+import InstructionEmail from "@/components/InstructionEmail";
+import { Comments } from "@/components/Comments";
+import { Button } from "@/components/Button";
+import CancelRequestModal from "@/components/CancelRequestModal";
+import RequestClarificationModal from "@/components/RequestClarificationModal";
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/Modal";
+import { Approvals } from "@/components/Approvals";
+
+import PrintIcon from "@/app/assets/svg/print-color.svg";
+import AlertColorIcon from "@/app/assets/svg/alert-color.svg";
+import CancelRequestIcon from "@/app/assets/svg/close.svg";
+
+import RequestConfigProvider from "@/app/providers/getRequestProvider";
+import { useCancelRequestProvider } from "@/app/providers/cancelRequestProvider";
+
+import { useAuthStore } from "@/app/store/auth/authStore";
 import { useDocumentStore } from "@/app/store/documentsStore/documentStore";
+import { UploadedDocument } from "@/app/store/types";
 
-// ... dentro do componente PageTabs, depois que você já tem const { data } = getRequestConfig;
-const { documentList, setDocumentList } = useDocumentStore((s) => s);
+import { toHistoryData } from "@/app/utils/toHistoryData";
+import { parseHistoryToData } from "@/app/utils/parseHistoryToData";
 
-// 1) Monta a lista vinda do backend
-const docsFromBackend = useMemo<UploadedDocument[]>(() => {
-  if (!data?.documents?.content?.length) return [];
+import api from "@/app/api";
 
-  return data.documents.content.map((path: string) => {
-    const [uuid, ...rest] = path.split("/");
-    const name = rest.join("/");
+type IPageTabsParams = {
+  params: {
+    requestName: string;
+    requestId?: string;
+  };
+  tabTriggerType: string;
+};
 
-    // Se você NÃO precisa de URL assinada (ou já tem uma rota pública), gere aqui.
-    // Caso tenha uma rota /v1/file/link, pode simplesmente deixar serverUrlSigned undefined
-    // e o preview/download usarão serverPath para gerar o link depois.
-    return {
-      serverPath: path,
-      documentUUID: uuid,
-      documentName: name,
-      createdAt: data.createdAt ?? new Date().toISOString(),
-      uploadedBy: { fullName: data.createdBy, userId: data.createdBy },
-      documentStatus: "uploaded",
-      // opcional: se tiver como montar direto
-      // serverUrlSigned: `${process.env.NEXT_PUBLIC_FILE_HOST}/${path}`
-    };
-  });
-}, [data]);
+type CancelRequestWarningProps = {
+  userThatCanceled: string;
+  date: string;
+  reason: string;
+};
 
-// 2) Hidrata o store uma única vez
-useEffect(() => {
-  if (documentList.length === 0 && docsFromBackend.length > 0) {
-    setDocumentList(docsFromBackend);
+export default function PageTabs({ params, tabTriggerType }: IPageTabsParams) {
+  // -------- Providers / Stores --------
+  const { getRequestConfig } = RequestConfigProvider(params.requestId);
+  const { data } = getRequestConfig;
+
+  const { userData } = useAuthStore((s) => s);
+  const { documentList, setDocumentList } = useDocumentStore((s) => s);
+
+  const { mutation } = useCancelRequestProvider();
+
+  // -------- Local state --------
+  const [pendingComments, setPendingComments] = useState<string[]>([]);
+  const [requestQualificationIsOpen, setRequestQualificationIsOpen] = useState(false);
+  const [cancelRequestIsOpen, setCancelRequestIsOpen] = useState(false);
+  const [requestCanceled, setRequestCanceled] = useState(false);
+  const [openErrorModal, setOpenErrorModal] = useState(false);
+  const [dataCancelRequest, setDataCancelRequest] = useState<CancelRequestWarningProps>();
+
+  // requestId (novo se não existir)
+  const requestId = data?.requestId ?? uuidv7();
+
+  // -------- Hooks dependentes de data (NÃO early return antes deles) --------
+  // Monta objetos UploadedDocument vindo do backend
+  const docsFromBackend = useMemo<UploadedDocument[]>(() => {
+    if (!data?.documents?.content?.length) return [];
+    return data.documents.content.map((path: string) => {
+      const [uuid, ...rest] = path.split("/");
+      const name = rest.join("/");
+      return {
+        serverPath: path,
+        documentUUID: uuid,
+        documentName: name,
+        createdAt: data.createdAt ?? new Date().toISOString(),
+        uploadedBy: { fullName: data.createdBy, userId: data.createdBy },
+        documentStatus: "uploaded",
+      };
+    });
+  }, [data]);
+
+  // Hidrata o store uma única vez
+  useEffect(() => {
+    if (documentList.length === 0 && docsFromBackend.length > 0) {
+      setDocumentList(docsFromBackend);
+    }
+  }, [documentList.length, docsFromBackend, setDocumentList]);
+
+  // -------- Se não tem data ainda, evita render do conteúdo --------
+  if (!data) return null;
+
+  // -------- Outras infos derivadas --------
+  const workflowData = toHistoryData(data);
+  const historyData = parseHistoryToData(workflowData);
+
+  const validationStatus = data?.timeline?.flat()?.find((i: any) =>
+    i?.name?.includes("Validation")
+  );
+
+  const mockedApprovals = [
+    { title: "Acceptance", userName: "GinaS", date: "2/12/2023", hour: "10:22 AM" },
+    { title: "Compliance", userName: "MarceloH", date: "2/12/2023", hour: "11:47 AM" },
+  ];
+
+  // -------- Handlers --------
+  const handleCancelRequest = (reqId: string, reason: string) => {
+    mutation.mutate(
+      { requestId: reqId },
+      {
+        onSuccess: (res) => {
+          const r = res?.data;
+          const formatted = {
+            userThatCanceled: r.userName,
+            date: r.date,
+            reason: r.note || reason,
+          };
+          setDataCancelRequest(formatted);
+        },
+      }
+    );
+  };
+
+  async function onSubmit() {
+    try {
+      // Exemplo de regra adicional
+      if (
+        data.clientEmail?.content === "temporaryEmail" &&
+        !data.temporaryClientEmail?.content
+      ) {
+        setOpenErrorModal(true);
+        return;
+      }
+
+      const docsForSubmit = documentList.map(
+        (d) => d.serverPath ?? `${d.documentUUID}/${d.documentName}`
+      );
+
+      const payload = {
+        // aqui você deve incluir os demais campos do formulário (ou mandar jsonRequest inteiro)
+        documents: { content: docsForSubmit, required: false },
+        requestId,
+        comments: pendingComments,
+      };
+
+      await api.post("/v1/requests", payload);
+      // sucesso: redirecione / feedback etc.
+    } catch (err) {
+      console.error(err);
+      setOpenErrorModal(true);
+    }
   }
-}, [documentList.length, docsFromBackend, setDocumentList]);
+
+  // -------- Render --------
+  return (
+    <Tabs defaultValue={tabTriggerType} className="min-h-screen w-full py-7 px-6">
+      <TabsList>
+        <TabsTrigger
+          value="request"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          {data.caseNumber ? `Request: ${data.caseNumber}` : "New Request"}
+        </TabsTrigger>
+
+        <TabsTrigger
+          value="documents"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          Documents
+        </TabsTrigger>
+
+        <TabsTrigger
+          value="history"
+          className="-mb-1 rounded-t-lg font-figtree flex h-[45px] cursor-pointer flex-row items-center justify-center bg-background-primary text-sm font-normal text-[#636574] aria-selected:!bg-white aria-selected:text-[#1e2347]"
+        >
+          History
+        </TabsTrigger>
+      </TabsList>
+
+      {/* REQUEST */}
+      <TabsContent value="request" forceMount className="aria-selected:block data-[state=inactive]:hidden">
+        {validationStatus?.status === "waiting" ? (
+          <Requests data={data} />
+        ) : (
+          <div className="w-full flex">
+            <div className="bg-white rounded-lg p-8">
+              <div className="w-full flex">
+                <div className="w-1/2 pr-4">
+                  <TabsNavigation
+                    tabs={[
+                      { label: "Creation", content: <CreationContent data={data} /> },
+                      {
+                        label: "Validations",
+                        content: (
+                          <ValidationContent
+                            data={data}
+                            cancelRequestWarning={dataCancelRequest}
+                          />
+                        ),
+                      },
+                    ]}
+                    initialTab={0}
+                  />
+                </div>
+
+                <div className="w-[6px] bg-[#F7F7F8] rounded-[15px] h-min-[605px] h-max-full"></div>
+
+                <div className="w-1/2 pl-4">
+                  <InstructionEmail />
+                </div>
+              </div>
+
+              <div className="my-8">
+                <Comments
+                  userName={userData.userName || ""}
+                  disabled={!!data}
+                  onOutput={(comments: string[]) => setPendingComments(comments)}
+                  requestId={requestId}
+                />
+              </div>
+
+              {data && <Approvals approvalsList={mockedApprovals} />}
+
+              <Dialog open={openErrorModal} onOpenChange={setOpenErrorModal}>
+                <DialogContent className="w-[400px] h-[286px] pb-0">
+                  <DialogTitle className="sr-only">Error</DialogTitle>
+                  <div className="flex flex-col justify-center items-center w-full">
+                    <div className="flex justify-center">
+                      <Image src={AlertColorIcon} alt="Alert Icon" width={56} height={56} />
+                    </div>
+                    <p className="text-[#1E2347] my-6 font-semibold text-lg text-center">
+                      Please fix the highlighted errors before submitting.
+                    </p>
+                    <DialogFooter className="w-full">
+                      <Button
+                        variant="modalError"
+                        size="modalError"
+                        onClick={() => setOpenErrorModal(false)}
+                      >
+                        Close
+                      </Button>
+                    </DialogFooter>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {!data ? (
+                <div className="flex justify-between gap-4 mt-6">
+                  <div className="flex gap-4">
+                    <Button variant="print" size="print" onClick={() => window.print()}>
+                      <Image
+                        src={PrintIcon}
+                        alt="print-icon"
+                        width={24}
+                        height={24}
+                        className="mr-2"
+                      />
+                      Print
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-between">
+                  <div className="flex justify-end mt-14">
+                    <Button
+                      variant="cancelRequest"
+                      size="cancelRequest"
+                      className="mr-2"
+                      onClick={() => setCancelRequestIsOpen(true)}
+                    >
+                      <Image src={CancelRequestIcon} alt="CancelRequest" />
+                      Cancel request
+                    </Button>
+                  </div>
+                  <div className="flex justify-end mt-14">
+                    <Button variant="submit" size="submit" onClick={onSubmit}>
+                      Submit
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {requestQualificationIsOpen && (
+              <RequestClarificationModal
+                open={requestQualificationIsOpen}
+                onOpenChange={setRequestQualificationIsOpen}
+              />
+            )}
+
+            {cancelRequestIsOpen && (
+              <CancelRequestModal
+                open={cancelRequestIsOpen}
+                onClose={() => setCancelRequestIsOpen(false)}
+                onSubmit={(reason) => {
+                  handleCancelRequest(data?.requestId, reason);
+                  setRequestCanceled(true);
+                }}
+                requestId={data?.requestId}
+              />
+            )}
+          </div>
+        )}
+      </TabsContent>
+
+      {/* DOCUMENTS */}
+      <TabsContent
+        value="documents"
+        className="mt-0 rounded-b-lg rounded-r-lg bg-white aria-selected:block data-[state=inactive]:hidden rounded-lg p-6"
+      >
+        <Documents
+          baseUrl={process.env.NEXT_PUBLIC_BASE_URL ?? ""}
+          bucketName="conductor-client"
+          pathUrl="/v1/file"
+          getListDocument={documentList}
+          showUploader={true}
+          userData={userData}
+          onUploadDocuments={(docs: UploadedDocument[]) => setDocumentList(docs)}
+        />
+      </TabsContent>
+
+      {/* HISTORY */}
+      <TabsContent value="history" className="mt-0 rounded-b-lg rounded-r-lg bg-white p-6">
+        <History
+          status={historyData.status}
+          data={historyData.data}
+          cardRowData={historyData.cardRowData}
+          dataDisplayData={historyData.dataDisplayData}
+          selectedBank={historyData.selectedBank}
+          approvalsSteps={historyData.approvalsSteps}
+        />
+      </TabsContent>
+    </Tabs>
+  );
+}
