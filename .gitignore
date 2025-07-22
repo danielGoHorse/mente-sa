@@ -1,13 +1,12 @@
-interface DocumentUploadedProps {
-  documentName: string;
-  documentSize?: string;
-  documentStatus?: string;
-  documentUUID?: string;
-  documentURL?: string;        // local blob (pode manter se quiser)
-  documentURLPreview?: string; // local blob
-  serverPath?: string;         // "uuid/file.ext" => vindo do backend
-  serverUrlSigned?: string;    // signed URL (preview/download)
-  uploadedBy: { fullName?: string; userId?: string };
-  createdAt?: string | number | Date;
-  itemRef?: string | undefined;
-}
+const handleViewDocument = (key: string) => {
+  const doc = documentList.find(
+    (i) => (i.serverPath ?? i.documentUUID) === key
+  );
+  if (!doc) return;
+  const link = document.createElement("a");
+  link.href = doc.serverUrlSigned ?? doc.documentURLPreview ?? "";
+  link.target = "_blank";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
