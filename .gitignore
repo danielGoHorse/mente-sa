@@ -1,42 +1,35 @@
 import { create } from 'zustand';
 
 export interface DocumentUploaded {
-  serverPath: string;
-  createdAt?: string | number | Date;
-  documentName: string;
-  documentSize?: string;
-  documentUUID?: string;
-  documentStatus?: string;
-  documentURL?: string;
-  documentURLPreview?: string;
+  serverPath: string;                           // obrigatório
+  documentName: string;                         // obrigatório
+  documentUUID: string;                         // obrigatório
+  createdAt: string;                            // ISO string
   uploadedBy: { fullName?: string; userId?: string };
-}
 
-export interface DocumentLinkData {
-  code: number;
-  data: {
-    url: string;
-    urlPreview: string;
-  };
+  // opcionais
+  documentSize?: number;
+  documentStatus?: string;
+  documentURL?: string;         // blob local
+  documentURLPreview?: string;  // blob local
+  serverUrlSigned?: string;     // URL assinada
+  itemRef?: string;
 }
 
 export interface FeeDocuments {
   documentList: DocumentUploaded[];
   setDocumentList: (documentList: DocumentUploaded[]) => void;
+  clearDocumentList: () => void;
 }
 
 export const useDocumentStore = create<FeeDocuments>((set) => ({
   documentList: [],
-  setDocumentList: (document: DocumentUploaded[]) => {
-    const documentsWithoutSpaces = document.map((doc) => {
-      const documentName = doc.documentName.replace(/\s/g, '_');
-      return { ...doc, documentName };
-    });
-    set({ documentList: documentsWithoutSpaces });
+  setDocumentList: (docs) => {
+    const withoutSpaces = docs.map((doc) => ({
+      ...doc,
+      documentName: doc.documentName.replace(/\s/g, '_'),
+    }));
+    set({ documentList: withoutSpaces });
   },
+  clearDocumentList: () => set({ documentList: [] }),
 }));
-
-
-Eu tenho isso...no caminho:
-
-Z:\workspace\wire-client-frontend\src\app\store\documentsStore\documentStore.ts
