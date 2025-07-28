@@ -1,20 +1,191 @@
-// src/app/(private)/cancel-screen/page.tsx
-export default function CancelScreen() {
-  const { data } = useCancelRequestProvider(); // exemplo
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import UploadDocumentIcon from "@/app/assets/svg/upload-document.svg";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import { UploadedDocument } from "@/app/store/types";
 
-  if (!data) {
-    return null; // ou um skeleton/loading
-  }
-
-  return (
-    <label className="font-[Figtree] text-[16px] font-semibold">
-      The request <span>#{data.caseNumber}</span> has been cancelled.
-    </label>
-  );
+interface DocumentUploadProps {
+  onError: (
+    reason: "Large" | "UploadError" | "NotSupported" | "Upload" | "ResetError"
+  ) => void;
+  setDocumentList: (document: UploadedDocument[]) => void;
+  documentList: UploadedDocument[];
+  disabled?: boolean;
+  userData: any;
+  baseUrl: string;
+  pathUrl: string;
+  bucketName: string;
+  itemRef?: string;
 }
 
+function extractServerPath(message: string): string {
+  const match = message.match(/file\s(.+)\swas uploaded/i);
+  return match?.[1] ?? "";
+}
+
+const Uploader: React.FC<DocumentUploadProps> = (props) => {
+  const [files, setFiles] = useState<File[]>([]);
+  const { documentList} = props;
+  const [uuid] = useState(crypto.randomUUID());
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [inputId] = useState(() => `file-input-${uuid}`);
+
+  const params = useParams();
 
 
-<label className="font-[Figtree] text-[16px] font-semibold">
-  The request <span>#{data?.caseNumber}</span> has been cancelled.
-</label>
+  const isFileSupported = (file: File) => {
+    const supported = [".PDF", ".EML", ".DOC", ".DOCX", ".XLS", ".XLSX", ".CSV", ".PNG", ".JPG"];
+    const ext = file.name.split(".").pop()?.toUpperCase();
+    return !!ext && supported.includes(`.${ext}`);
+  };
+
+  const isFileSizeValid = (file: File) => {
+    const maxSize = 10 * 1024 * 1024; // 10 MB
+    return file.size <= maxSize;
+  };
+
+  const handleFileValidation = (file: File): boolean => {
+    if (!isFileSupported(file)) {
+      props.onError("NotSupported");
+      return false;
+    }
+    if (!isFileSizeValid(file)) {
+      props.onError("Large");
+      return false;
+    }
+    return true;
+  };
+
+  const handleUpload = async (file: File, UUID: string) => {
+    props.onError("ResetError");
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("application", props.bucketName);
+    formData.append("randomUUID", UUID);
+
+    try {
+      const { data } = await axios.post(`${props.baseUrl}${props.pathUrl}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          const percent = Math.round((e.loaded * 100) / (e.total ?? 1));
+          setUploadProgress(percent);
+        },
+      });
+
+      setUploadProgress(null);
+      props.onError("Upload");
+
+      return {
+        serverPath: extractServerPath(data?.data?.message ?? ""),
+        serverUrlSigned: data?.data?.url ?? "",
+      };
+    } catch (error) {
+      setUploadProgress(null);
+      props.onError("UploadError");
+      return null;
+    }
+  };
+
+  async function processNewFiles(newFiles: File[]) {
+    const first = newFiles[0];
+    if (!first) return;
+
+    // evita duplicado por nome (melhore depois se necessário)
+    const exists = documentList.some(
+      (doc) => doc.documentName.replace(/\s/g, "_") === first.name.replace(/\s/g, "_")
+    );
+    if (exists) return;
+
+    const getUUID = documentList[0]?.documentUUID ?? uuid;
+
+    if (!handleFileValidation(first)) return;
+
+    const uploadResp = await handleUpload(first, getUUID);
+    if (!uploadResp) return;
+
+    const uploadedDocs: UploadedDocument[] = newFiles.map((document) => ({
+      itemRef: props.itemRef,
+      documentName: document.name,
+      documentSize: document.size,
+      documentStatus: "uploaded",
+      documentUUID: getUUID,
+      serverPath: uploadResp.serverPath,
+      serverUrlSigned: uploadResp.serverUrlSigned,
+      documentURL: URL.createObjectURL(document),
+      documentURLPreview: URL.createObjectURL(document),
+      uploadedBy: {
+        fullName: props.userData.fullName,
+        userId: props.userData.userName,
+      },
+      createdAt: new Date().toISOString(),
+    }));
+
+    const merged = [...documentList, ...uploadedDocs];
+    // setDocumentListLocal(merged);
+    props.setDocumentList(merged);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setFiles((prev) => [...prev, ...newFiles]);
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (props.disabled) return;
+    const newFiles = Array.from(e.dataTransfer.files);
+    processNewFiles(newFiles);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => e.preventDefault();
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = Array.from(e.target.files ?? []);
+    processNewFiles(newFiles);
+  };
+
+  return (
+    <div className={`${params.requestId && "cursor-not-allowed pointer-events-none"}`}>
+      <div className="w-full flex" onDrop={handleDrop} onDragOver={handleDragOver}>
+        <label
+          htmlFor={inputId}
+          className="box-border flex flex-col justify-center items-center p-[24px] gap-[16px] w-full h-[216px] bg-[#f7f7f8] border-[1px] border-dashed border-[#b8b8b8] rounded-[8px] flex-none order-1 self-stretch flex-grow-0 cursor-pointer"
+        >
+          {uploadProgress !== null ? (
+            <div className="w-[30%] h-2 bg-gray-200 rounded mt-2">
+              <div
+                className="h-full bg-blue-500 rounded transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          ) : (
+            <>
+              <Image src={UploadDocumentIcon} alt="upload-document-icon" />
+              <a className="font-[Figtree] not-italic font-normal text-[16px] leading-[24px] flex items-center text-center tracking-[0.12px] text-[#636574]">
+                Drag and drop your files here
+              </a>
+              <a className="font-[Figtree] not-italic font-normal text-[16px] leading-[24px] flex items-center text-center tracking-[0.12px] text-[#636574]">
+                Accepted file types: .pdf, .eml, .doc, .docx, .xls, .xlsx, .csv, .png, or .jpg (max 10 MB)
+              </a>
+            </>
+          )}
+
+          <input
+            id={inputId}
+            type="file"
+            accept=".pdf, .eml, .doc, .docx, .xls, .xlsx, .csv, .png, .jpg"
+            onChange={handleFileInputChange}
+            multiple
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            disabled={props.disabled}
+          />
+        </label>
+      </div>
+    </div>
+  );
+};
+
+export default Uploader;
