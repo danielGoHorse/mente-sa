@@ -1,165 +1,37 @@
-"use client";
+{isApprovalsStep ? (
+  <>
+    {/* Agrupamos tudo num contêiner relativo para posicionar o quadradinho */}
+    <div className="relative flex flex-col items-center">
+      {/* 1 ▸ CÍRCULO – fica na posição original */}
+      <Timeline.Circle status={statusValue} />
 
-import React, { Fragment, ReactNode, useState } from "react";
-import CardsRow, { CardsRowProps } from "./CardsRow/cardsRow";
-import DataDisplay from "./DataDisplay/dataDisplay";
-import Status from "./Status/status";
-import TableStep from "./TableStep/tableStep";
-import Timeline from "./Timeline/timeline";
-import TimelineScrollWrapper from "./timelineScrollWrapper";
-import TimelineApprovalsModal from "./TimelineApprovalsModal/timelineApprovalsModal";
-import { formatDateTime } from "@/app/utils/formatDateTime";
-import groupCardRows from "./CardsRow/groupCardRows";
+      {/* 2 ▸ QUADRADINHO – dispara o modal ao hover/focus */}
+      <span
+        className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 cursor-pointer"
+        onMouseEnter={() => setShowApprovalsModal(true)}
+        onFocus={() => setShowApprovalsModal(true)}
+      >
+        <Timeline.Link status={statusValue} />
+      </span>
 
-import { workflowStatus, StatusType, IHistory } from "./types"; // ajuste se o path for outro
+      {/* 3 ▸ Espaço extra para o texto não colar no quadradinho */}
+      <div className="h-4" />
 
-/* -------------------------------------------------------------------------- */
-/*                           COMPONENTE PRINCIPAL                             */
-/* -------------------------------------------------------------------------- */
-
-export default function History({
-  data,
-  timeLine,
-  cardRowData,
-  dataDisplayData,
-  selectedBank,
-  approvalsSteps = [],
-}: IHistory) {
-  /* ---------------------------------------------------------------------- */
-  /*                                STATES                                  */
-  /* ---------------------------------------------------------------------- */
-  const [showApprovalsModal, setShowApprovalsModal] = useState(false);
-
-  /* ---------------------------------------------------------------------- */
-  /*                          AGRUPA CARD-ROW DATA                          */
-  /* ---------------------------------------------------------------------- */
-  const groupedCardRow = groupCardRows(cardRowData ?? []);
-
-  /* ---------------------------------------------------------------------- */
-  /*                 MAPEAMENTO DE STATUS → LABEL / COR                     */
-  /* ---------------------------------------------------------------------- */
-  const safeStatusType = (value: any): StatusType => {
-    const allowed = ["completed", "pending", "rejected", "approved", "partial"];
-    return allowed.includes(value) ? (value as StatusType) : undefined;
-  };
-
-  const statusFieldMap: Record<string, string> = {
-    cancel: "rejected",
-    canceled: "-",
-    completed: "approved",
-    pending: "-",
-    return: "partial",
-    success: "approved",
-    waiting: "-",
-  };
-
-  const statusLabelMap: Record<string, string> = {
-    cancel: "Canceled",
-    canceled: "-",
-    completed: "Completed",
-    pending: "-",
-    return: "Requested change",
-    waiting: "-",
-  };
-
-  /* ---------------------------------------------------------------------- */
-  /*                                 RENDER                                  */
-  /* ---------------------------------------------------------------------- */
-  return (
-    <div className="p-6">
-      {/* --------------------------- CARD ROWS ---------------------------- */}
-      {cardRowData && (
-        <div className="flex flex-col gap-4 mb-6">
-          <CardsRow title="Approvals" data={groupedCardRow} />
-        </div>
-      )}
-
-      {/* ---------------------------- TIMELINE ---------------------------- */}
-      <div className="flex flex-col gap-4">
-        <h3 className="text-[#484A55] font-figtree text-base font-semibold leading-[24px] tracking-[0.12px]">
-          Timeline
-        </h3>
-
-        <TimelineScrollWrapper>
-          {data
-            .flatMap((sub, subIdx) =>
-              sub.map((step, idx) => ({
-                ...step,
-                subArrayIndex: subIdx,
-                isFromMultiple: sub.length > 1,
-                originalStatus: step.status as workflowStatus,
-                key: `${subIdx}-${idx}`,
-              }))
-            )
-            .map((step, idx, flat) => {
-              const isLast = idx === flat.length - 1;
-              const next = flat[idx + 1];
-              const statusValue = step.originalStatus;
-              const hasExtra =
-                !isLast &&
-                step.isFromMultiple &&
-                next?.isFromMultiple &&
-                step.subArrayIndex === next.subArrayIndex;
-
-              /* ---------- É o step “Approvals and Restrictions”? ---------- */
-              const isApprovalsStep = step.name === "Approvals and Restrictions";
-
-              return (
-                <Fragment key={step.key}>
-                  <Timeline.Step progress={!isLast} status={statusValue}>
-                    <div className="relative flex flex-col items-center min-h-[180px]">
-
-                      {/* seta extra entre steps múltiplos  */}
-                      {hasExtra && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2">
-                          <Timeline.Link status={next?.originalStatus} />
-                        </span>
-                      )}
-
-                      {/* ----------------- QUADRADO + CÍRCULO/TEXTO ---------------- */}
-                      {isApprovalsStep ? (
-                        <>
-                          {/* Quadradinho que abre o modal  */}
-                          <span
-                            className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 cursor-pointer"
-                            onMouseEnter={() => setShowApprovalsModal(true)}
-                            onFocus={() => setShowApprovalsModal(true)}
-                          >
-                            {/* Sem hoverContent – evita tooltip pequeno */}
-                            <Timeline.Link status={statusValue} />
-                          </span>
-
-                          {/* Círculo + texto (não disparam modal) */}
-                          <div className="pointer-events-none flex flex-col items-center">
-                            <Timeline.Circle status={statusValue} />
-                            <Timeline.Text>{step.name}</Timeline.Text>
-                          </div>
-
-                          {/* Modal de Approvals */}
-                          <TimelineApprovalsModal
-                            open={showApprovalsModal}
-                            onClose={() => setShowApprovalsModal(false)}
-                            data={approvalsSteps}
-                          />
-                        </>
-                      ) : (
-                        /* --------- Steps normais --------- */
-                        <>
-                          <Timeline.Circle status={statusValue} />
-                          <Timeline.Text>{step.name}</Timeline.Text>
-                        </>
-                      )}
-                    </div>
-                  </Timeline.Step>
-                </Fragment>
-              );
-            })}
-        </TimelineScrollWrapper>
-      </div>
-
-      {/* -------------------------- TABLE STEPS --------------------------- */}
-      {/* (Mantém seu código original ↓) */}
-      {/* ... */}
+      {/* 4 ▸ TEXTO */}
+      <Timeline.Text>{step.name}</Timeline.Text>
     </div>
-  );
-}
+
+    {/* MODAL */}
+    <TimelineApprovalsModal
+      open={showApprovalsModal}
+      onClose={() => setShowApprovalsModal(false)}
+      data={approvalsSteps}
+    />
+  </>
+) : (
+  /* renderização dos demais steps permanece igual */
+  <>
+    <Timeline.Circle status={statusValue} />
+    <Timeline.Text>{step.name}</Timeline.Text>
+  </>
+)}
