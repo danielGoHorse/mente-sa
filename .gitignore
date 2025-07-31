@@ -1,41 +1,30 @@
-/* …dentro do map … */
-const isApprovalsStep = item.name === "Approvals and Restrictions";
-
-return (
-  <Fragment key={item.key}>
-    <Timeline.Step progress={!isLast} status={statusValue}>
-      <div className="relative flex flex-col items-center justify-center min-h-[180px]">
-
-        {/* seta extra entre passos, caso exista */}
-        {hasExtra && (
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2">
-            <Timeline.Link status={next?.originalStatus} />
-          </span>
-        )}
-
         {isApprovalsStep ? (
+          /* ------------- NOVO BLOCO ------------- */
           <>
-            {/* ---------- único elemento que abre o modal ---------- */}
-            <Timeline.Link
-              status={statusValue}
-              hoverContent={
-                <div className="text-xs text-gray-700">
-                  <div><strong>Step:</strong> Approvals &amp; Restrictions</div>
-                  <div><strong>Status:</strong> {statusValue}</div>
-                  <div><strong>Total steps:</strong> {approvalsSteps.length}</div>
-                </div>
-              }
+            {/* Quadradinho que contém tooltip **e** dispara o modal */}
+            <span
+              className="absolute -top-3 left-1/2 -translate-x-1/2 z-10
+                         cursor-pointer group"
               onMouseEnter={() => setShowApprovalsModal(true)}
               onFocus={() => setShowApprovalsModal(true)}
-              className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 cursor-pointer"
-            />
+            >
+              <Timeline.Link
+                status={statusValue}
+                hoverContent={
+                  <div className="text-xs text-gray-700">
+                    <div><strong>Step:</strong> Approvals &amp; Restrictions</div>
+                    <div><strong>Status:</strong> {statusValue}</div>
+                    <div><strong>Total steps:</strong> {approvalsSteps.length}</div>
+                  </div>
+                }
+              />
+            </span>
 
-            {/* Círculo e texto – SEM eventos */}
-            <Timeline.Circle status={statusValue} className="pointer-events-none" />
-            <Timeline.Text className="pointer-events-none">
-              {item.name}
-            </Timeline.Text>
+            {/* Círculo + texto **sem** evento de modal */}
+            <Timeline.Circle status={statusValue} />
+            <Timeline.Text>{item.name}</Timeline.Text>
 
+            {/* Modal */}
             <TimelineApprovalsModal
               open={showApprovalsModal}
               onClose={() => setShowApprovalsModal(false)}
@@ -43,6 +32,7 @@ return (
             />
           </>
         ) : (
+          /* ------------- passos normais ------------- */
           <>
             <Timeline.Circle status={statusValue} />
             <Timeline.Text>{item.name}</Timeline.Text>
@@ -51,4 +41,3 @@ return (
       </div>
     </Timeline.Step>
   </Fragment>
-);
