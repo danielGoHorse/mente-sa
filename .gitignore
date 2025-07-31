@@ -1,56 +1,46 @@
-async function processNewFiles(newFiles: File[]) {
-  if (!newFiles.length) return;
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
 
-  // Filtra duplicados por nome e aplica validação individual
-  const toUpload = newFiles.filter((file) => {
-    const duplicate = documentList.some(
-      (doc) =>
-        doc.documentName.replace(/\s/g, "_") === file.name.replace(/\s/g, "_")
-    );
-    if (duplicate) return false;                  // já existe
+export default function TimelineScrollWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-    return handleFileValidation(file);            // só segue se for válido
-  });
+  const scrollLeft = () => {
+    scrollRef.current?.scrollBy({ left: -300, behavior: "smooth" });
+  };
 
-  if (!toUpload.length) return;
+  const scrollRight = () => {
+    scrollRef.current?.scrollBy({ left: 300, behavior: "smooth" });
+  };
 
-  const batchUUID = documentList[0]?.documentUUID ?? uuid;
+  return (
+    <div className="relative">
+      <button
+        onClick={scrollLeft}
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-[60] bg-white shadow rounded-full p-1"
+      >
+        <ChevronLeft size={20} className="left-0" />
+      </button>
+      <button
+        onClick={scrollRight}
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-[60] bg-white shadow rounded-full p-1"
+      >
+        <ChevronRight size={20} />
+      </button>
 
-  // Faz upload de todos — cada um recebe sua signedURL
-  const uploads = await Promise.all(
-    toUpload.map(async (file) => {
-      const resp = await handleUpload(file, batchUUID); // faz POST
-      return { file, resp };
-    })
+      <div
+        ref={scrollRef}
+        className="scroll-smooth no-scrollbar w-full overflow-hidden"
+       >
+        <div className="flex gap-6 min-w-fit px-8 py-2 items-stretch">
+          {children}
+        </div>
+      </div>
+    </div>
+
+    
   );
-
-  // Mapeia respostas recebidas em UploadedDocument[]
-  const uploadedDocs: UploadedDocument[] = uploads
-    .filter(({ resp }) => resp)                  // descarta falhas
-    .map(({ file, resp }) => ({
-      itemRef: props.itemRef,
-      documentName: file.name,
-      documentSize: file.size,
-      documentStatus: "uploaded",
-      documentUUID: batchUUID,
-      serverPath: resp!.serverPath,
-      serverUrlSigned: resp!.serverUrlSigned,
-      documentURL: URL.createObjectURL(file),
-      documentURLPreview: URL.createObjectURL(file),
-      uploadedBy: {
-        fullName: props.userData.fullName,
-        userId: props.userData.userName,
-      },
-      createdAt: new Date().toISOString(),
-    }));
-
-  if (!uploadedDocs.length) return;              // nada subiu
-
-  // Atualiza store e estado local
-  const merged = [...documentList, ...uploadedDocs];
-  props.setDocumentList(merged);
-  setFiles((prev) => [...prev, ...toUpload]);
-
-  if (fileInputRef.current) fileInputRef.current.value = "";
-  props.onError("Upload");
 }
