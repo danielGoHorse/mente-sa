@@ -1,18 +1,22 @@
 import { HistoryData } from "../store/types";
 
-
 type RawHistory = {
   status?: string;
-  data?: any[][];
-  workflow?: any[][];
+  data?: any[][];            // array de arrays, como vem da API
   cardRowData?: any[];
   dataDisplayData?: any[];
   selectedBank?: string;
 };
 
-
+/**
+ * Converte o formato cru do backend no objeto usado pelos componentes.
+ * - Mantém a ordem dos passos.
+ * - Agrupa “Approvals and Restrictions:*” num placeholder.
+ * - Renomeia apenas “Validation” → “Validations”.
+ */
 export function parseHistoryToData(history: RawHistory): HistoryData {
-  if (!history || !Array.isArray(history.data)) {
+  // Proteção para resposta vazia / inesperada
+  if (!history?.data || !Array.isArray(history.data)) {
     return {
       status: history?.status ?? "",
       data: [],
@@ -22,65 +26,54 @@ export function parseHistoryToData(history: RawHistory): HistoryData {
       approvalsSteps: [],
     };
   }
-  const approvalsSteps = (history.data.flat()).filter(
-    (s) => s.name && s.name.startsWith("Approvals and Restrictions")
+
+  /** Passos já achatados, na ordem recebida */
+  const flatSteps = history.data.flat();
+
+  /** Passos de Approvals (para o modal) */
+  const approvalsSteps = flatSteps.filter((s) =>
+    s.name?.startsWith("Approvals and Restrictions")
   );
 
-  const normalSteps = (history.data.flat()).filter(
-    (s) => !(s.name && s.name.startsWith("Approvals and Restrictions"))
-  );
+  /** Array final para o timeline */
+  const timelineSteps: any[] = [];
 
-  const timelineSteps = [];
+  let approvalsPlaceholderInserted = false;
 
-  const initiatorStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("initiator")
-  );
-  if (initiatorStep) timelineSteps.push(initiatorStep);
+  for (const step of flatSteps) {
+    const isApproval = step.name?.startsWith("Approvals and Restrictions");
+    if (isApproval) {
+      // Insere placeholder apenas UMA vez, na primeira ocorrência do grupo
+      if (!approvalsPlaceholderInserted) {
+        const groupStatus =
+          approvalsSteps.find((s) => s.status === "pending")?.status ??
+          approvalsSteps[0].status ??
+          "pending";
 
-  const validationStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("validation")
-  );
-  if (validationStep) timelineSteps.push({
-    ...validationStep,
-    name: "Validations",
-  });
+        timelineSteps.push({
+          id: 999,
+          name: "Approvals and Restrictions",
+          status: groupStatus,
+        });
+        approvalsPlaceholderInserted = true;
+      }
+      continue; // não adiciona passo individual
+    }
 
-  if (approvalsSteps.length > 0) {
-    const groupStatus =
-      approvalsSteps.find((s) => s.status === "pending")?.status ||
-      approvalsSteps[0].status ||
-      "pending";
-    timelineSteps.push({
-      id: 999,
-      name: "Approvals and Restrictions",
-      status: groupStatus,
-    });
+    // Renomeia “Validation” → “Validations” (exibição)
+    if (step.name?.toLowerCase() === "validation") {
+      timelineSteps.push({ ...step, name: "Validations" });
+    } else {
+      timelineSteps.push(step);
+    }
   }
 
-  const restrictionRemovalStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("restriction removal")
-  );
-  if (restrictionRemovalStep) timelineSteps.push(restrictionRemovalStep);
-
-  const wireRepairStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("wire repair")
-  );
-  if (wireRepairStep) timelineSteps.push(wireRepairStep);
-
-  const ofacStep = normalSteps.find((s) =>
-    s.name?.toLowerCase().includes("ofac")
-  );
-  if (ofacStep) timelineSteps.push(ofacStep);
-
-
-  // Finaliza
   return {
     status: history.status ?? "",
-    data: timelineSteps.map((step) => [step]), 
+    data: timelineSteps.map((s) => [s]), // cada passo em seu sub-array
     cardRowData: history.cardRowData ?? [],
     dataDisplayData: history.dataDisplayData ?? [],
     selectedBank: history.selectedBank ?? "",
-    approvalsSteps, 
+    approvalsSteps,
   };
 }
-
