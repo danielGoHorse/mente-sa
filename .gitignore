@@ -1,21 +1,22 @@
-<TableStep.Title
-  status={approvalStep.status as workflowStatus}
-  /* usamos flex para pôr tudo “numa linha”  */
-  className="flex items-center gap-1"
->
-  {/* 3.6, 3.7 ... */}
-  <span className="font-normal">{`${groupIdx + 1}.${idx + 1}`}</span>
+<TableStep.Title status={approvalStep.status as workflowStatus}>
+  {/* container flex só para estilizar o conteúdo */}
+  <div className="flex items-center gap-1">
+    {/* 3.6, 3.7 … */}
+    <span className="font-normal">
+      {`${groupIdx + 1}.${idx + 1}`}
+    </span>
 
-  {/* “Approvals and Restrictions: Credit (0/2)” */}
-  <span className="font-semibold ml-2">
-    {nameWithCount}
-  </span>
+    {/* “Approvals and Restrictions: Credit (0/2)” */}
+    <span className="font-semibold ml-2">
+      {nameWithCount}
+    </span>
 
-  {/* separador •  (opcional) */}
-  <span className="mx-1">•</span>
+    {/* separador • (opcional) */}
+    <span className="mx-1">•</span>
 
-  {/* texto extra  */}
-  <span className="text-xs leading-[18px] text-[#636574]">
-    Approval&nbsp;Level&nbsp;Required:&nbsp;PB&nbsp;C&nbsp;+&nbsp;PB&nbsp;B&nbsp;or&nbsp;above&nbsp;or&nbsp;11&nbsp;points
-  </span>
+    {/* texto extra */}
+    <span className="text-xs leading-[18px] text-[#636574]">
+      Approval&nbsp;Level&nbsp;Required:&nbsp;PB&nbsp;C&nbsp;+&nbsp;PB&nbsp;B&nbsp;or&nbsp;above&nbsp;or&nbsp;11&nbsp;points
+    </span>
+  </div>
 </TableStep.Title>
