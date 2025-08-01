@@ -1,37 +1,78 @@
-{isApprovalsStep ? (
-  <>
-    {/* Agrupamos tudo num contêiner relativo para posicionar o quadradinho */}
-    <div className="relative flex flex-col items-center">
-      {/* 1 ▸ CÍRCULO – fica na posição original */}
-      <Timeline.Circle status={statusValue} />
+import React from "react";
+import Timeline from "../Timeline/timeline";
+import Image from "next/image";
+import WrapperIcon from "@/app/assets/svg/Wrapper.svg"; 
 
-      {/* 2 ▸ QUADRADINHO – dispara o modal ao hover/focus */}
-      <span
-        className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 cursor-pointer"
-        onMouseEnter={() => setShowApprovalsModal(true)}
-        onFocus={() => setShowApprovalsModal(true)}
+interface TimelineApprovalsModalProps {
+  open: boolean;
+  onClose: () => void;
+  data: any[];
+}
+
+export default function TimelineApprovalsModal({
+  open,
+  onClose,
+  data,
+}: TimelineApprovalsModalProps) {
+  if (!open) return null;
+
+  const handleOverlayClose = () => onClose();
+  const stopPropagation = (e: React.MouseEvent) => e.stopPropagation();
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30"
+      onClick={handleOverlayClose}
+      onMouseLeave={handleOverlayClose}
+    >
+      <div
+        className="relative bg-white rounded-lg p-8 min-w-[400px]"
+        onClick={stopPropagation}
+        onMouseEnter={stopPropagation}
       >
-        <Timeline.Link status={statusValue} />
-      </span>
-
-      {/* 3 ▸ Espaço extra para o texto não colar no quadradinho */}
-      <div className="h-4" />
-
-      {/* 4 ▸ TEXTO */}
-      <Timeline.Text>{step.name}</Timeline.Text>
+        <button
+          className="absolute top-2 right-2"
+          onClick={onClose}
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+        <div className="mb-4 font-semibold">Approvals and Restrictions</div>
+        <Timeline.Root>
+          {data.map((step, i) => {
+            const isLast = i === data.length - 1;
+            return (
+              <Timeline.Step key={step.id || i} status={step.status} progress={!isLast}>
+                <div className="relative flex flex-col items-center group">
+                  <Timeline.Circle status={step.status} />
+                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <div className="w-[28px] h-[28px] flex items-center rounded-[5px] justify-center bg-white border border-[#DBDBDB] shadow">
+                      <Image src={WrapperIcon} alt="IconWrapper" />
+                    </div>
+                    <div
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 p-2 bg-white rounded shadow-lg z-20
+                        opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity"
+                    >
+                      <div className="text-xs text-gray-700">
+                        <div>
+                          <strong>Step:</strong>{" "}
+                          {step.name.split(":")[1]?.trim() || step.name}
+                        </div>
+                        <div>
+                          <strong>Status:</strong> {step.status}
+                        </div>
+                      </div>
+                    </div>
+                  </span>
+                  <Timeline.Text>
+                    {step.name.split(":")[1]?.trim() || step.name}
+                  </Timeline.Text>
+                </div>
+              </Timeline.Step>
+            );
+          })}
+        </Timeline.Root>
+      </div>
     </div>
-
-    {/* MODAL */}
-    <TimelineApprovalsModal
-      open={showApprovalsModal}
-      onClose={() => setShowApprovalsModal(false)}
-      data={approvalsSteps}
-    />
-  </>
-) : (
-  /* renderização dos demais steps permanece igual */
-  <>
-    <Timeline.Circle status={statusValue} />
-    <Timeline.Text>{step.name}</Timeline.Text>
-  </>
-)}
+  );
+}
