@@ -1,25 +1,353 @@
-<div
-  /* contêiner principal do modal */
-  className="relative bg-white rounded-lg p-8 min-w-[400px]"
-  onClick={stopPropagation}
-  onMouseEnter={stopPropagation}
->
-  {/* ─────────────────────────────────────────
-      ▸ PONTA (triângulo invertido)
-      ───────────────────────────────────────── */}
-  <span
-    className="
-      absolute           /* posição absoluta em relação ao contêiner */
-      left-1/2           /* centraliza horizontalmente */
-      -bottom-3          /* cola na parte de baixo e desce 3px */
-      -translate-x-1/2   /* corrige para o centro exato */
-      w-0 h-0            /* sem largura/altura, só bordas */
-      border-x-[12px] border-x-transparent   /* lados transparentes  */
-      border-t-[12px] border-t-white         /* topo branco → triângulo */
-      drop-shadow-sm                         /* mesmo sombreado do modal */
-      pointer-events-none                    /* não captura cliques */
-    "
-  />
-  {/* ─────────── FIM DO TRIÂNGULO ─────────── */}
+Chat, seguinte, quando eu monto esse cardrow, eu recebo os approvals e ele agrupa  tipo, se um approval precisa de 2 aprovadores, ele mostra ele vem com dois pending...e assim por diante...
+import React from 'react'
+import CardsRowScrollWrapper from '../cardsRowScrollWrapper'
 
-  {/* … resto do modal (botão ✕, título, timeline, etc.) */}
+export interface CardsRowProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string
+  data: Array<{
+    title: React.ReactNode
+    value: string // altere para string, se necessário!
+    level?: string // altere para string, se necessário!
+  }>
+}
+
+const CardsRow: React.FC<CardsRowProps> = ({ title, data }) => {
+  if (!data || !Array.isArray(data)) {
+    return <div>Dados inválidos</div>
+  } 
+
+  return (
+    <div>
+      {title && (
+        <h2
+          className="
+            font-semibold
+            text-base
+            leading-6
+            tracking-[0.12px]
+            text-[#484A55]
+            mb-4
+          "
+        >
+          {title}
+        </h2>
+      )}
+
+      <CardsRowScrollWrapper>
+        {data.map((item, index) => (
+          <div
+            key={index}
+            className="
+              flex
+              flex-1
+              bg-[#f0f0f0]
+              rounded-lg
+              py-3
+              px-4
+              gap-4
+              justify-between
+              w-[250px]
+            "
+          >
+            {/* Coluna Esquerda */}
+            <div
+              className={`flex flex-col ${item.level ? 'font-semibold' : ''}`}
+            >
+              <h3
+                className="
+                  font-normal
+                  text-[14px]
+                  leading-[21px]
+                  tracking-[0.12px]
+                  text-[#636574]
+                  m-0
+                "
+              >
+                {item.title}
+              </h3>
+              <div
+                className="
+                  font-semibold
+                  text-[14px]
+                  leading-[21px]
+                  tracking-[0.12px]
+                  text-[#484A55]
+                "
+              >
+                {/* Aqui faz o split do value */}
+                {item.value
+                  ? item.value.split('<br/>').map((line, idx) => (
+                      <div key={idx}>{line}</div>
+                    ))
+                  : null}
+              </div>
+            </div>
+
+            {/* Coluna Direita (apenas se tiver level) */}
+            {item.level && (
+              <div className="flex flex-col min-w-[42px]">
+                <h3
+                  className="
+                    font-normal
+                    text-[14px]
+                    leading-[21px]
+                    tracking-[0.12px]
+                    text-[#636574]
+                    m-0
+                  "
+                >
+                  Level
+                </h3>
+                <div
+                  className="
+                    font-semibold
+                    text-[14px]
+                    leading-[21px]
+                    tracking-[0.12px]
+                    text-[#484A55]
+                  "
+                >
+                  {item.level
+                    ? item.level.split('<br/>').map((line, idx) => (
+                        <div key={idx}>{line}</div>
+                      ))
+                    : null}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </CardsRowScrollWrapper>
+    </div>
+  )
+}
+
+export default CardsRow
+type CardRow = {
+    title: string;
+    value: string;
+    level: string;
+    date?: string;
+  };
+  
+  export default function groupCardRows(cardRows: CardRow[]): CardRow[] {
+    const grouped: Record<string, CardRow[]> = {};
+  
+    cardRows.forEach((item) => {
+      if (item.title.trim() === "Request Status") {
+        if (!grouped[item.title]) grouped[item.title] = [];
+        grouped[item.title].push(item);
+        return;
+      }
+  
+      let baseTitle = item.title
+        .replace(/^Approvals and Restrictions:\s?/, "") 
+        .replace(/\s+\d+$/, "") 
+        .trim();
+  
+      if (!grouped[baseTitle]) grouped[baseTitle] = [];
+      grouped[baseTitle].push(item);
+    });
+  
+    return Object.entries(grouped).map(([baseTitle, rows]) => ({
+      title: baseTitle,
+      value: rows.map((row) => row.value).join("<br/>"),
+      level: rows.map((row) => row.level).join("<br/>"),
+      date: rows.map((row) => row.date || "").join("<br/>"),
+    }));
+  }
+  
+
+Acontece que nesse cara aqui:
+
+   <div className="mt-10">
+        <TableStep.Root>
+          {data.map((group, groupIdx) =>
+            group.flatMap((item: any, itemIdx: number) => {
+              if (
+                item.name === "Approvals and Restrictions" &&
+                Array.isArray(approvalsSteps) &&
+                approvalsSteps.length > 0
+              ) {
+                return approvalsSteps.map((approvalStep: any, idx: number) => (
+
+                  <Fragment key={`approval-${approvalStep.id || idx}`}>
+                    <TableStep.Title status={approvalStep.status as workflowStatus}>
+                      <span className="font-normal">
+                        {`${groupIdx + 1}.${idx + 1} `}
+                      </span>
+                      <span className="font-semibold ml-2">
+                        {approvalStep.name}
+                      </span>
+                    </TableStep.Title>
+
+                    <TableStep.Columns>
+                      <TableStep.Line>Participant</TableStep.Line>
+                      <TableStep.Line>Signature</TableStep.Line>
+                      <TableStep.Line>Completed</TableStep.Line>
+                      <TableStep.Line>Status</TableStep.Line>
+                      <TableStep.Line>Result</TableStep.Line>
+                      <TableStep.Line>Comments</TableStep.Line>
+                    </TableStep.Columns>
+
+                    {approvalStep.permissions?.people?.map(
+                      (people: any, pidx: number, arr: any[]) => (
+                        <Fragment key={`${approvalStep.id}-${people.userId}-${pidx}`}>
+                          <TableStep.Body>
+                            <TableStep.Item>
+                              <div className="flex items-center text-[#636574]">
+                                {people.firstName} {people.lastName}
+                                {people.addedAt && people.addedBy && (
+                                  <div className="text-sm leading-[21px] font-normal text-[#636574]">
+                                    {" "}
+                                    - Added by {people.addedBy}
+                                  </div>
+                                )}
+                              </div>
+                            </TableStep.Item>
+                            <TableStep.Item>
+                              {people.action ? people.action[0].signature : "-"}
+                            </TableStep.Item>
+                            <TableStep.Item>
+                              {people.action ? formatDateTime(people.action[0].date) : "-"}
+                            </TableStep.Item>
+                            <TableStep.Item>
+                              {approvalStep.status === "completed" ||
+                                approvalStep.status === "pending"
+                                ? approvalStep.status === "pending"
+                                  ? "Active"
+                                  : (
+                                    <Status
+                                      width={164}
+                                      type={safeStatusType(
+                                        statusFieldMap[approvalStep.status]
+                                      )}
+                                    >
+                                      {statusLabelMap[approvalStep.status]}
+                                    </Status>
+                                  )
+                                : "-"}
+                            </TableStep.Item>
+                            <TableStep.Item>
+                              {people.action ? (
+                                <Status
+                                  width={164}
+                                  type={safeStatusType(
+                                    statusFieldMap[people.action[0].type] as workflowStatus
+                                  )}
+                                >
+                                  {people.action[0].type === "success"
+                                    ? approvalStep.successLabel
+                                    : people.action[0].subtype}
+                                </Status>
+                              ) : (
+                                "-"
+                              )}
+                            </TableStep.Item>
+                            <TableStep.Item>
+                              {people.action && people.action[0].comment
+                                ? people.action[0].comment
+                                : "-"}
+                            </TableStep.Item>
+                          </TableStep.Body>
+                          {pidx !== arr.length - 1 && (
+                            <div className="border-b border-[#EBEBEB] mx-10" />
+                          )}
+                        </Fragment>
+                      )
+                    )}
+                  </Fragment>
+                ));
+              }
+
+              // Os demais steps normais (não-approvals)
+              return (
+                <Fragment key={`${item.status}-${groupIdx}-${itemIdx}`}>
+                  <TableStep.Title status={item.status as workflowStatus}>
+                    {`${groupIdx + 1}. ${item.name}`}
+                  </TableStep.Title>
+
+                  <TableStep.Columns>
+                    <TableStep.Line>Participant</TableStep.Line>
+                    <TableStep.Line>Signature</TableStep.Line>
+                    <TableStep.Line>Completed</TableStep.Line>
+                    <TableStep.Line>Status</TableStep.Line>
+                    <TableStep.Line>Result</TableStep.Line>
+                    <TableStep.Line>Comments</TableStep.Line>
+                  </TableStep.Columns>
+
+                  {item.permissions?.people?.map(
+                    (people: any, idx: number, arr: any[]) => (
+                      <Fragment key={`${people.userId}-${idx}`}>
+                        <TableStep.Body>
+                          <TableStep.Item>
+                            <div className="flex items-center text-[#636574]">
+                              {people.firstName} {people.lastName}
+                              {people.addedAt && people.addedBy && (
+                                <div className="text-sm leading-[21px] font-normal text-[#636574]">
+                                  {" "}
+                                  - Added by {people.addedBy}
+                                </div>
+                              )}
+                            </div>
+                          </TableStep.Item>
+                          <TableStep.Item>
+                            {people.action ? people.action[0].signature : "-"}
+                          </TableStep.Item>
+                          <TableStep.Item>
+                            {people.action
+                              ? formatDateTime(people.action[0].date)
+                              : "-"}
+                          </TableStep.Item>
+                          <TableStep.Item>
+                            {item.status === "completed" || item.status === "pending"
+                              ? item.status === "pending"
+                                ? "Active"
+                                : (
+                                  <Status
+                                    width={164}
+                                    type={safeStatusType(statusFieldMap[item.status])}
+                                  >
+                                    {statusLabelMap[item.status]}
+                                  </Status>
+                                )
+                              : "-"}
+                          </TableStep.Item>
+                          <TableStep.Item>
+                            {people.action ? (
+                              <Status
+                                width={164}
+                                type={safeStatusType(statusFieldMap[people.action[0].type])}
+                              >
+                                {people.action[0].type === "success"
+                                  ? item.successLabel
+                                  : people.action[0].subtype}
+                              </Status>
+                            ) : (
+                              "-"
+                            )}
+                          </TableStep.Item>
+                          <TableStep.Item>
+                            {people.action && people.action[0].comment
+                              ? people.action[0].comment
+                              : "-"}
+                          </TableStep.Item>
+                        </TableStep.Body>
+                        {idx !== arr.length - 1 && (
+                          <div className="border-b border-[#EBEBEB] mx-10" />
+                        )}
+                      </Fragment>
+                    )
+                  )}
+                </Fragment>
+              );
+            })
+          )}
+        </TableStep.Root>
+      </div>
+
+Se o 4.1
+Approvals and Restrictions: Acceptance são dois aprovadores, ele tem que mostrar na tela assim:
+
+
+
