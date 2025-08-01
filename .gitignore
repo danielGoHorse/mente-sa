@@ -1,79 +1,191 @@
-import { HistoryData } from "../store/types";
+import React, { ReactNode, useRef } from "react";
+import FlagIcon from "@/app/assets/svg/flag.svg";
+import CheckIcon from "@/app/assets/svg/check.svg";
+import FlagGreenIcon from "@/app/assets/svg/flag-green.svg";
+import CloseGrayIcon from "@/app/assets/svg/close-gray.svg";
+import CloseWhiteIcon from "@/app/assets/svg/close-white.svg";
+import ChevronLeftLargeIcon from "@/app/assets/svg/chevron-left-large.svg";
+import ChevronRightLargeIcon from "@/app/assets/svg/chevron-right-large.svg";
+import WrapperIcon from "@/app/assets/svg/Wrapper.svg"; // novo ícone quadrado
+import { StaticImageData } from "next/image";
+import Image from "next/image";
 
-type RawHistory = {
-  status?: string;
-  data?: any[][];            // array de arrays, como vem da API
-  cardRowData?: any[];
-  dataDisplayData?: any[];
-  selectedBank?: string;
+type StatusType = "waiting" | "pending" | "completed" | "canceled" | "skipped";
+
+interface TimelineProps {
+  children?: ReactNode;
+}
+
+interface StepProps {
+  status?: StatusType;
+  progress?: boolean;
+  children?: ReactNode;
+}
+
+//
+// Root & Scroll
+//
+export const TimelineRoot: React.FC<TimelineProps> = ({ children }) => (
+  <div className="flex">{children}</div>
+);
+
+export const TimelineScroll: React.FC<TimelineProps> = ({ children }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scroll = (delta: number) => {
+    if (scrollRef.current) scrollRef.current.scrollLeft += delta;
+  };
+  return (
+    <div className="flex items-center">
+      <button
+        onClick={() => scroll(-100)}
+        className="w-[37px] h-[56px] flex items-center justify-center rounded border border-[#DBDBDB] bg-white"
+      >
+        <ChevronLeftLargeIcon />
+      </button>
+      <div
+        ref={scrollRef}
+        className="flex gap-[10px] w-full overflow-x-auto whitespace-nowrap scroll-smoth"
+      >
+        {children}
+      </div>
+      <button
+        onClick={() => scroll(100)}
+        className="w-[37px] h-[56px] flex items-center justify-center rounded border border-[#DBDBDB] bg-white"
+      >
+        <ChevronRightLargeIcon />
+      </button>
+    </div>
+  );
 };
 
-/**
- * Converte o formato cru do backend no objeto usado pelos componentes.
- * - Mantém a ordem dos passos.
- * - Agrupa “Approvals and Restrictions:*” num placeholder.
- * - Renomeia apenas “Validation” → “Validations”.
- */
-export function parseHistoryToData(history: RawHistory): HistoryData {
-  // Proteção para resposta vazia / inesperada
-  if (!history?.data || !Array.isArray(history.data)) {
-    return {
-      status: history?.status ?? "",
-      data: [],
-      cardRowData: [],
-      dataDisplayData: [],
-      selectedBank: "",
-      approvalsSteps: [],
-    };
-  }
-
-  /** Passos já achatados, na ordem recebida */
-  const flatSteps = history.data.flat();
-
-  /** Passos de Approvals (para o modal) */
-  const approvalsSteps = flatSteps.filter((s) =>
-    s.name?.startsWith("Approvals and Restrictions")
-  );
-
-  /** Array final para o timeline */
-  const timelineSteps: any[] = [];
-
-  let approvalsPlaceholderInserted = false;
-
-  for (const step of flatSteps) {
-    const isApproval = step.name?.startsWith("Approvals and Restrictions");
-    if (isApproval) {
-      // Insere placeholder apenas UMA vez, na primeira ocorrência do grupo
-      if (!approvalsPlaceholderInserted) {
-        const groupStatus =
-          approvalsSteps.find((s) => s.status === "pending")?.status ??
-          approvalsSteps[0].status ??
-          "pending";
-
-        timelineSteps.push({
-          id: 999,
-          name: "Approvals and Restrictions",
-          status: groupStatus,
-        });
-        approvalsPlaceholderInserted = true;
-      }
-      continue; // não adiciona passo individual
-    }
-
-    // Renomeia “Validation” → “Validations” (exibição)
-    if (step.name?.toLowerCase() === "validation") {
-      timelineSteps.push({ ...step, name: "Validations" });
-    } else {
-      timelineSteps.push(step);
-    }
-  }
-
-  return {
-    status: history.status ?? "",
-    data: timelineSteps.map((s) => [s]), // cada passo em seu sub-array
-    cardRowData: history.cardRowData ?? [],
-    dataDisplayData: history.dataDisplayData ?? [],
-    selectedBank: history.selectedBank ?? "",
-    approvalsSteps,
+//
+// Circle
+//
+export const TimelineCircle: React.FC<Pick<StepProps, "status">> = ({
+  status = "waiting",
+}) => {
+  const IconMap: Record<StatusType, StaticImageData> = {
+    waiting: FlagIcon,
+    pending: FlagGreenIcon,
+    completed: CheckIcon,
+    canceled: CloseWhiteIcon,
+    skipped: CloseGrayIcon,
   };
+  const BorderColorMap: Record<StatusType, string> = {
+    waiting: "#DBDBDB",
+    pending: "#008056",
+    completed: "#008056",
+    canceled: "#CA303D",
+    skipped: "#DBDBDB",
+  };
+  const BgColorMap: Record<StatusType, string> = {
+    waiting: "#FFFFFF",
+    pending: "#FFFFFF",
+    completed: "#008056",
+    canceled: "#CA303D",
+    skipped: "#F7F7F8",
+  };
+  const Icon = IconMap[status];
+  return (
+    <div
+      className="w-[56px] h-[56px] flex items-center justify-center rounded-full"
+      style={{
+        border: `1px solid ${BorderColorMap[status]}`,
+        backgroundColor: BgColorMap[status],
+      }}
+    >
+      <Image src={Icon} alt="icon" />
+    </div>
+  );
+};
+
+//
+// Link (quadrado com hoverContent)
+//
+export interface TimelineLinkProps {
+  status?: StatusType;
+  hoverContent?: ReactNode;
 }
+
+export const TimelineLink: React.FC<TimelineLinkProps> = ({
+  status = "waiting",
+  hoverContent,
+}) => {
+  const BorderColorMap: Record<StatusType, string> = {
+    waiting: "#DBDBDB",
+    pending: "#008056",
+    completed: "#008056",
+    canceled: "#CA303D",
+    skipped: "#DBDBDB",
+  };
+
+  return (
+    <div className="relative inline-block group mt-[7px]">
+      <div className="w-[28px] h-[28px] flex items-center rounded-[5px] justify-center bg-white">
+        <Image src={WrapperIcon} alt="IconWrapper" />
+      </div>
+      {hoverContent && (
+        <div
+          className="
+            absolute top-full left-1/2 -translate-x-1/2
+            mt-2 w-48 p-2 bg-white rounded shadow-lg
+            opacity-0 group-hover:opacity-100 transition-opacity
+          "
+        >
+          {hoverContent}
+        </div>
+      )}
+    </div>
+  );
+};
+
+//
+// Step & Text
+//
+export const TimelineStep: React.FC<StepProps> = ({
+  status = "waiting",
+  progress = false,
+  children,
+}) => {
+  const BorderColorMap: Record<StatusType, string> = {
+    waiting: "#DBDBDB",
+    pending: "#008056",
+    completed: "#008056",
+    canceled: "#CA303D",
+    skipped: "#DBDBDB",
+  };
+  const borderColor = BorderColorMap[status];
+
+  return (
+    <div
+      className="relative flex-none flex flex-col items-center"
+      style={{ width: 150 }}
+    >
+      {progress && (
+        <div
+          className="absolute  border-b left-[calc(55%+20px)] top-[46%] -translate-y-1/2 w-[calc(100%+10px-41px)]"
+          style={{ borderColor }}
+        />
+      )}
+      <div className="relative flex flex-col items-center gap-2">
+        {children}
+      </div>
+    </div>
+  );
+};
+
+export const TimelineText: React.FC<TimelineProps> = ({ children }) => (
+  <span className="text-[12px] font-normal leading-[18px] text-[#484A55] text-center font-figtree tracking-[0.12px] ">
+    {children}
+  </span>
+);
+
+const Timeline = {
+  Scroll: TimelineScroll,
+  Root: TimelineRoot,
+  Step: TimelineStep,
+  Circle: TimelineCircle,
+  Link: TimelineLink,
+  Text: TimelineText,
+};
+export default Timeline;
