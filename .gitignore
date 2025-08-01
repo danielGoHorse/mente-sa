@@ -1,16 +1,79 @@
-// ➜ src/utils/normalizeStatus.ts
-export function normalizeStatus(s: string | undefined) {
-  if (!s) return "-";
-  const map: Record<string, string> = {
-    done:       "completed",   // 🔸 novo alias
-    success:    "completed",
-    cancel:     "rejected",
-    rejected:   "rejected",
-    return:     "partial",
-    waiting:    "waiting",
-    pending:    "pending",
-    skipped:    "skipped",
-    completed:  "completed",
+import { HistoryData } from "../store/types";
+
+type RawHistory = {
+  status?: string;
+  data?: any[][];            // array de arrays, como vem da API
+  cardRowData?: any[];
+  dataDisplayData?: any[];
+  selectedBank?: string;
+};
+
+/**
+ * Converte o formato cru do backend no objeto usado pelos componentes.
+ * - Mantém a ordem dos passos.
+ * - Agrupa “Approvals and Restrictions:*” num placeholder.
+ * - Renomeia apenas “Validation” → “Validations”.
+ */
+export function parseHistoryToData(history: RawHistory): HistoryData {
+  // Proteção para resposta vazia / inesperada
+  if (!history?.data || !Array.isArray(history.data)) {
+    return {
+      status: history?.status ?? "",
+      data: [],
+      cardRowData: [],
+      dataDisplayData: [],
+      selectedBank: "",
+      approvalsSteps: [],
+    };
+  }
+
+  /** Passos já achatados, na ordem recebida */
+  const flatSteps = history.data.flat();
+
+  /** Passos de Approvals (para o modal) */
+  const approvalsSteps = flatSteps.filter((s) =>
+    s.name?.startsWith("Approvals and Restrictions")
+  );
+
+  /** Array final para o timeline */
+  const timelineSteps: any[] = [];
+
+  let approvalsPlaceholderInserted = false;
+
+  for (const step of flatSteps) {
+    const isApproval = step.name?.startsWith("Approvals and Restrictions");
+    if (isApproval) {
+      // Insere placeholder apenas UMA vez, na primeira ocorrência do grupo
+      if (!approvalsPlaceholderInserted) {
+        const groupStatus =
+          approvalsSteps.find((s) => s.status === "pending")?.status ??
+          approvalsSteps[0].status ??
+          "pending";
+
+        timelineSteps.push({
+          id: 999,
+          name: "Approvals and Restrictions",
+          status: groupStatus,
+        });
+        approvalsPlaceholderInserted = true;
+      }
+      continue; // não adiciona passo individual
+    }
+
+    // Renomeia “Validation” → “Validations” (exibição)
+    if (step.name?.toLowerCase() === "validation") {
+      timelineSteps.push({ ...step, name: "Validations" });
+    } else {
+      timelineSteps.push(step);
+    }
+  }
+
+  return {
+    status: history.status ?? "",
+    data: timelineSteps.map((s) => [s]), // cada passo em seu sub-array
+    cardRowData: history.cardRowData ?? [],
+    dataDisplayData: history.dataDisplayData ?? [],
+    selectedBank: history.selectedBank ?? "",
+    approvalsSteps,
   };
-  return map[s] ?? s;
 }
