@@ -1,95 +1,14 @@
-// …imports mantidos…
+<div class="sc-fGrmUS evfpUA"><svg width="72" height="73" viewBox="0 0 72 73" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0.5" y="1" width="71" height="71" rx="35.5" stroke="#DBDBDB"></rect><path d="M47.672 26.7324H24.328C23.8067 26.7324 23.384 27.1551 23.384 27.6764V45.3244C23.384 45.8458 23.8067 46.2684 24.328 46.2684H47.672C48.1934 46.2684 48.616 45.8458 48.616 45.3244V27.6764C48.616 27.1551 48.1934 26.7324 47.672 26.7324Z" fill="white"></path><path d="M47.2001 29.7V44.9H23.6001V46.1H46.8001H47.6001H48.4001V28.5L47.2001 29.7Z" fill="#EFEFEF"></path><path d="M24.8001 44.9004V28.1004L23.6001 26.9004V46.1004L24.8001 44.9004Z" fill="white"></path><path d="M48.616 27.6764C48.616 27.1564 48.192 26.7324 47.672 26.7324H24.328C23.808 26.7324 23.384 27.1564 23.384 27.6764V29.6204L33.228 39.4644C34 40.2404 35.024 40.6284 36.036 40.6284C37.052 40.6284 38.072 40.2404 38.844 39.4644L48.616 29.6924V27.6724V27.6764Z" fill="#EFEFEF"></path><path d="M46.9401 26.3398H24.6681L23.6121 26.5838L33.9081 36.8798C34.4881 37.4598 35.2521 37.7518 36.0121 37.7518C36.7721 37.7518 37.5361 37.4598 38.1161 36.8798L48.2601 26.7358L46.9441 26.3398H46.9401Z" fill="white"></path><path d="M49.2041 28.1079H49.2001V27.5039C49.2001 26.7239 48.5681 26.0879 47.7841 26.0879H24.2161C23.4361 26.0879 22.8001 26.7199 22.8001 27.5039V28.1039H22.7961L22.8001 28.1119V45.4959C22.8001 46.2759 23.4321 46.9119 24.2161 46.9119H47.7841C48.5641 46.9119 49.2001 46.2799 49.2001 45.4959V28.1119H49.2041V28.1079ZM24.2161 26.9599H47.7841C48.0801 26.9599 48.3201 27.1999 48.3201 27.4959V27.7399L38.2241 37.8359C37.6121 38.4479 36.8041 38.7559 36.0001 38.7559H35.9961C35.1921 38.7559 34.3881 38.4479 33.7721 37.8359L23.6801 27.7479V27.4999C23.6801 27.2039 23.9201 26.9639 24.2161 26.9639V26.9599ZM48.3201 45.4919C48.3201 45.7879 48.0801 46.0279 47.7841 46.0279H24.2161C23.9201 46.0279 23.6801 45.7879 23.6801 45.4919V28.9919L33.1521 38.4639C33.9361 39.2479 34.9681 39.6439 35.9961 39.6439H36.0041C37.0321 39.6439 38.0641 39.2479 38.8481 38.4639L48.3201 28.9919V45.4959V45.4919Z" fill="#1E2347"></path></svg><p class="sc-dsAqBj kwazZz">There is no Instruction Email for this Wire Transfer.</p></div>
 
-type StatusType =
-  | "waiting"
-  | "pending"
-  | "completed"
-  | "canceled"
-  | "skipped"
-  | "done";               // ← opcional: se quiser manter a tipagem exata
 
-// util simples (pode colocar no topo do arquivo)
-const normalizeStatus = (s: StatusType | undefined): StatusType =>
-  s === "done" ? "completed" : (s ?? "waiting");
 
-/* ------------------------------------------------------------------ */
-/* CÍRCULO ----------------------------------------------------------- */
-/* ------------------------------------------------------------------ */
-export const TimelineCircle: React.FC<Pick<StepProps, "status">> = ({
-  status,
-}) => {
-  const safeStatus = normalizeStatus(status);
-
-  const IconMap: Record<Exclude<StatusType, "done">, StaticImageData> = {
-    waiting: FlagIcon,
-    pending: FlagGreenIcon,
-    completed: CheckIcon,
-    canceled: CloseWhiteIcon,
-    skipped: CloseGrayIcon,
-  };
-
-  const BorderColorMap: Record<typeof safeStatus, string> = {
-    waiting: "#DBDBDB",
-    pending: "#008056",
-    completed: "#008056",
-    canceled: "#CA303D",
-    skipped: "#DBDBDB",
-  };
-
-  const BgColorMap: Record<typeof safeStatus, string> = {
-    waiting: "#FFFFFF",
-    pending: "#FFFFFF",
-    completed: "#008056",
-    canceled: "#CA303D",
-    skipped: "#F7F7F8",
-  };
-
-  const Icon = IconMap[safeStatus as keyof typeof IconMap];
-
-  return (
-    <div
-      className="w-[56px] h-[56px] flex items-center justify-center rounded-full"
-      style={{
-        border: `1px solid ${BorderColorMap[safeStatus]}`,
-        backgroundColor: BgColorMap[safeStatus],
-      }}
-    >
-      <Image src={Icon} alt="icon" />
-    </div>
-  );
-};
-
-/* ------------------------------------------------------------------ */
-/* STEP (barrinha de progresso usa o status para cor) ---------------- */
-/* ------------------------------------------------------------------ */
-export const TimelineStep: React.FC<StepProps> = ({
-  status,
-  progress = false,
-  children,
-}) => {
-  const safeStatus = normalizeStatus(status);
-
-  const BorderColorMap: Record<Exclude<StatusType, "done">, string> = {
-    waiting: "#DBDBDB",
-    pending: "#008056",
-    completed: "#008056",
-    canceled: "#CA303D",
-    skipped: "#DBDBDB",
-  };
-
-  return (
-    <div className="relative flex-none flex flex-col items-center" style={{ width: 150 }}>
-      {progress && (
-        <div
-          className="absolute border-b left-[calc(55%+20px)] top-[46%] -translate-y-1/2 w-[calc(100%+10px-41px)]"
-          style={{ borderColor: BorderColorMap[safeStatus as keyof typeof BorderColorMap] }}
-        />
-      )}
-      <div className="relative flex flex-col items-center gap-2">{children}</div>
-    </div>
-  );
-};
-
-/* ------------------------------------------------------------------ */
-/* OS OUTROS COMPONENTES (Link, Text, etc.) permanecem iguais -------- */
-/* ------------------------------------------------------------------ */
+    <div className="flex flex-col gap-2">
+        <span className="text-[#636574] font-semibold text-[16px] leading-[24px] tracking-[0.12px]">Message:</span>
+        <div className="border border-[#DBDBDB] rounded-lg p-4 bg-white">
+          <textarea
+            value={messageContent}
+            disabled
+            className="w-full h-[200px] resize-none border-none outline-none text-[#636574] text-[16px] leading-[24px] tracking-[0.12px] font-figtree"
+          />
+        </div>
+      </div>
